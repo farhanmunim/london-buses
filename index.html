@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>London Buses — farhan.app</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- Primary meta -->
+    <meta
+      name="description"
+      content="Interactive map of every London bus route — search routes, filter by type, and explore the full network."
+    />
+    <meta name="author" content="farhan.app" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="London Buses" />
+    <meta property="og:title" content="London Buses — farhan.app" />
+    <meta
+      property="og:description"
+      content="Search any London bus route and explore every line across the city on an interactive map."
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="London Buses — farhan.app" />
+    <meta
+      name="twitter:description"
+      content="Search any London bus route and explore every line across the city on an interactive map."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5GKHJN7K6"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J5GKHJN7K6');
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- ── Sidebar ──────────────────────────────── -->
+      <aside id="sidebar" aria-label="Route search and filters">
+        <!-- Brand -->
+        <div id="sidebar-header">
+          <a id="brand" href="/" aria-label="London Buses — return to home">
+            <div id="brand-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.8" fill="none" />
+                <line
+                  x1="8"
+                  y1="2"
+                  x2="8"
+                  y2="14"
+                  stroke="white"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+                <line
+                  x1="2"
+                  y1="8"
+                  x2="14"
+                  y2="8"
+                  stroke="white"
+                  stroke-width="1.8"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <span id="brand-name">London Buses</span>
+          </a>
+          <button id="sidebar-collapse-btn" aria-label="Collapse sidebar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M10 3L5 8l5 5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search -->
+        <div id="search-section">
+          <div id="search-field" role="search">
+            <svg
+              class="search-icon"
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="6" cy="6" r="4" stroke="currentColor" stroke-width="1.5" />
+              <path
+                d="M9.5 9.5L13 13"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search a route or click the map…"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="6"
+              aria-label="Search bus route"
+              aria-autocomplete="list"
+              aria-controls="autocomplete-list"
+              aria-expanded="false"
+            />
+            <button id="search-clear" aria-label="Clear" hidden>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path
+                  d="M1 1l10 10M11 1L1 11"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+          <ul id="autocomplete-list" role="listbox" aria-label="Route suggestions" hidden></ul>
+          <div id="search-pills" aria-label="Selected routes" hidden></div>
+        </div>
+
+        <!-- Filters (always visible) -->
+        <div id="filters-section" role="region" aria-label="Route filters">
+          <div class="filter-group">
+            <span class="filter-group-label" id="fg-routetype">Route type</span>
+            <div class="filter-chips" role="group" aria-labelledby="fg-routetype">
+              <button class="chip" data-filter="routetype" data-val="regular" aria-pressed="false">
+                Regular
+              </button>
+              <button class="chip" data-filter="routetype" data-val="prefix" aria-pressed="false">
+                Prefix
+              </button>
+              <button class="chip" data-filter="routetype" data-val="night" aria-pressed="false">
+                Night
+              </button>
+              <button class="chip" data-filter="routetype" data-val="school" aria-pressed="false">
+                School
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-group-label" id="fg-operator">Operator</span>
+            <div class="filter-chips" role="group" aria-labelledby="fg-operator">
+              <button class="chip" data-filter="operator" data-val="Arriva" aria-pressed="false">
+                Arriva
+              </button>
+              <button class="chip" data-filter="operator" data-val="First" aria-pressed="false">
+                First
+              </button>
+              <button class="chip" data-filter="operator" data-val="Go-Ahead" aria-pressed="false">
+                Go-Ahead
+              </button>
+              <button class="chip" data-filter="operator" data-val="Metroline" aria-pressed="false">
+                Metroline
+              </button>
+              <button
+                class="chip"
+                data-filter="operator"
+                data-val="Stagecoach London"
+                aria-pressed="false"
+              >
+                Stagecoach
+              </button>
+              <button class="chip" data-filter="operator" data-val="Transport UK" aria-pressed="false">
+                Transport UK
+              </button>
+              <button class="chip unknown-chip" data-filter="operator" data-val="__unknown__" aria-pressed="false">
+                Unknown
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-group-label" id="fg-frequency">Frequency</span>
+            <div class="filter-chips" role="group" aria-labelledby="fg-frequency">
+              <button class="chip" data-filter="frequency" data-val="high" aria-pressed="false">
+                High (&le;6 min)
+              </button>
+              <button class="chip" data-filter="frequency" data-val="regular" aria-pressed="false">
+                Regular (7–15 min)
+              </button>
+              <button class="chip" data-filter="frequency" data-val="low" aria-pressed="false">
+                Low (&gt;15 min)
+              </button>
+              <button class="chip unknown-chip" data-filter="frequency" data-val="__unknown__" aria-pressed="false">
+                Unknown
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-group-label" id="fg-deck">Deck type</span>
+            <div class="filter-chips" role="group" aria-labelledby="fg-deck">
+              <button class="chip" data-filter="deck" data-val="double" aria-pressed="false">
+                Double deck
+              </button>
+              <button class="chip" data-filter="deck" data-val="single" aria-pressed="false">
+                Single deck
+              </button>
+              <button class="chip unknown-chip" data-filter="deck" data-val="__unknown__" aria-pressed="false">
+                Unknown
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <span class="filter-group-label" id="fg-propulsion">Propulsion</span>
+            <div class="filter-chips" role="group" aria-labelledby="fg-propulsion">
+              <button class="chip" data-filter="propulsion" data-val="electric" aria-pressed="false">
+                Electric
+              </button>
+              <button class="chip" data-filter="propulsion" data-val="hydrogen" aria-pressed="false">
+                Hydrogen
+              </button>
+              <button class="chip" data-filter="propulsion" data-val="hybrid" aria-pressed="false">
+                Hybrid
+              </button>
+              <button class="chip" data-filter="propulsion" data-val="diesel" aria-pressed="false">
+                Diesel
+              </button>
+              <button class="chip unknown-chip" data-filter="propulsion" data-val="__unknown__" aria-pressed="false">
+                Unknown
+              </button>
+            </div>
+          </div>
+
+          <div id="filter-bar">
+            <span id="filter-stat" aria-live="polite" aria-atomic="true"
+              ><span id="filter-stat-count">–</span> routes</span
+            >
+            <div id="filter-actions">
+              <button
+                id="export-csv-btn"
+                aria-label="Export current view to CSV"
+                title="Export current view to CSV"
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path
+                    d="M6 1v7M3.5 5.5L6 8l2.5-2.5M1.5 10h9"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <button id="filter-clear-btn" hidden>Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="sidebar-divider"></div>
+
+        <!-- Content area: default state OR route detail -->
+        <div id="sidebar-content">
+          <!-- Default state (no route selected) -->
+          <div id="default-state">
+            <div id="operator-stats" aria-label="Operator statistics"></div>
+          </div>
+
+          <!-- Route detail state -->
+          <div id="route-detail" hidden role="region" aria-label="Route information">
+            <div id="route-detail-header">
+              <div id="route-badge-wrap">
+                <span id="route-badge-number">25</span>
+              </div>
+              <div id="route-detail-meta">
+                <span id="route-service-badge" class="service-tag regular">Regular</span>
+                <span id="route-stop-count" class="meta-chip">– stops</span>
+              </div>
+            </div>
+
+            <div id="route-endpoints">
+              <!-- Top endpoint (changes with direction) -->
+              <div class="endpoint-row" id="ep-primary">
+                <div class="endpoint-dot" id="ep-primary-dot"></div>
+                <div class="endpoint-info">
+                  <span class="endpoint-dir" id="ep-primary-dir">Outbound</span>
+                  <span class="endpoint-name" id="ep-primary-name">–</span>
+                </div>
+              </div>
+
+              <!-- Connector with toggle button -->
+              <div id="ep-connector" aria-hidden="true">
+                <div class="ep-connector-line"></div>
+                <button id="dir-toggle-btn" aria-label="Toggle direction" hidden>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path
+                      d="M6 1v10M3 8.5l3 3 3-3M3 3.5L6 .5l3 3"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Bottom endpoint -->
+              <div class="endpoint-row" id="ep-secondary">
+                <div class="endpoint-dot" id="ep-secondary-dot"></div>
+                <div class="endpoint-info">
+                  <span class="endpoint-dir" id="ep-secondary-dir">Inbound</span>
+                  <span class="endpoint-name" id="ep-secondary-name">–</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="route-meta" role="region" aria-label="Route details">
+              <div class="route-meta-row">
+                <span class="route-meta-label">Operator</span>
+                <span class="route-meta-value" id="meta-operator">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">Garage</span>
+                <span class="route-meta-value" id="meta-garage">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">Frequency</span>
+                <span class="route-meta-value" id="meta-frequency">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">Deck type</span>
+                <span class="route-meta-value" id="meta-deck">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">Propulsion</span>
+                <span class="route-meta-value" id="meta-propulsion">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">PVR</span>
+                <span class="route-meta-value" id="meta-pvr">–</span>
+              </div>
+              <div class="route-meta-row">
+                <span class="route-meta-label">Vehicle</span>
+                <span class="route-meta-value" id="meta-vehicle">–</span>
+              </div>
+            </div>
+
+            <div class="route-action-row">
+              <button id="stops-toggle-btn" aria-label="Toggle bus stops" aria-pressed="true" class="active">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <circle cx="6" cy="6" r="3" stroke="currentColor" stroke-width="1.4"/>
+                  <circle cx="6" cy="6" r="1" fill="currentColor"/>
+                </svg>
+                Stops
+              </button>
+              <button id="clear-route-btn" aria-label="Clear route">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                  <path
+                    d="M1 1l10 10M11 1L1 11"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar footer: dates → disclaimer → about / author -->
+        <div id="sidebar-footer">
+          <div class="footer-dates">
+            <span class="footer-item">Last updated <span id="footer-date">–</span></span>
+            <span class="footer-item">Next update <span id="footer-next-date">–</span></span>
+          </div>
+          <p class="sidebar-disclaimer">
+            Information may not be fully accurate or up to date. Not affiliated with Transport for London.
+          </p>
+          <div class="footer-links">
+            <button type="button" id="about-btn" class="footer-link">About</button>
+            <a class="footer-link" href="https://farhan.app" target="_blank" rel="noopener">Created by Farhan</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Map ──────────────────────────────────── -->
+      <main id="map-wrap" role="main" aria-label="London bus route map">
+        <div id="map"></div>
+
+        <!-- Sidebar expand button (shown when sidebar is collapsed) -->
+        <button id="sidebar-expand-btn" aria-label="Open sidebar" hidden>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M6 3l5 5-5 5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+
+        <!-- Status toast -->
+        <div id="status-toast" role="status" aria-live="polite" hidden>
+          <span id="status-dot"></span>
+          <span id="status-text"></span>
+        </div>
+      </main>
+    </div>
+
+    <!-- About modal -->
+    <div id="about-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="about-title">
+      <div class="modal-backdrop" data-close></div>
+      <div class="modal-panel">
+        <button class="modal-close" aria-label="Close" data-close>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <div class="modal-header">
+          <div class="modal-brand" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="white" stroke-width="1.8" fill="none"/>
+              <line x1="8" y1="2" x2="8" y2="14" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="2" y1="8" x2="14" y2="8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="modal-heading">
+            <h2 id="about-title" class="modal-title">London Buses</h2>
+            <span class="modal-subtitle">Every route on one map</span>
+          </div>
+        </div>
+
+        <p class="modal-lede">
+          An interactive map of every London bus route — search, filter by operator, propulsion, deck type, and more.
+        </p>
+
+        <section class="modal-section">
+          <span class="modal-section-tag">Data sources</span>
+          <ul class="credits-list">
+            <li>
+              <a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">Transport for London Unified API</a>
+              <span class="credits-note">route list · destinations · stops</span>
+            </li>
+            <li>
+              <a href="https://bus.data.tfl.gov.uk" target="_blank" rel="noopener">TfL Bus Open Data</a>
+              <span class="credits-note">weekly route geometry</span>
+            </li>
+            <li>
+              <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a>
+              <span class="credits-note">operator · vehicle · PVR · frequency</span>
+            </li>
+          </ul>
+          <p class="modal-note">
+            Data refreshes automatically every <strong>Monday at 05:00 UTC</strong> (06:00 BST / 05:00 GMT).
+          </p>
+        </section>
+
+        <section class="modal-section">
+          <span class="modal-section-tag">Built with</span>
+          <ul class="credits-list">
+            <li><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><span class="credits-note">map engine</span></li>
+            <li><a href="https://carto.com/" target="_blank" rel="noopener">CARTO Voyager</a><span class="credits-note">basemap tiles</span></li>
+            <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a><span class="credits-note">map data · © contributors</span></li>
+            <li><a href="https://vercel.com/font" target="_blank" rel="noopener">Geist</a><span class="credits-note">typeface · Vercel, via Google Fonts</span></li>
+            <li><a href="https://pages.cloudflare.com" target="_blank" rel="noopener">Cloudflare Pages</a><span class="credits-note">static hosting · auto-deploy</span></li>
+            <li><a href="https://github.com/features/actions" target="_blank" rel="noopener">GitHub Actions</a><span class="credits-note">weekly data refresh pipeline</span></li>
+          </ul>
+        </section>
+
+        <section class="modal-section">
+          <span class="modal-section-tag">Privacy</span>
+          <ul class="credits-list">
+            <li><span class="credits-plain">Anonymous analytics</span><span class="credits-note">Google Analytics · aggregate usage only</span></li>
+          </ul>
+        </section>
+
+        <section class="modal-section">
+          <span class="modal-section-tag">Developer</span>
+          <ul class="credits-list">
+            <li>
+              <a href="https://farhan.app" target="_blank" rel="noopener">Farhan Munim</a>
+              <span class="credits-note">farhan.app</span>
+            </li>
+            <li>
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener">github.com/farhanmunim</a>
+              <span class="credits-note">other projects</span>
+            </li>
+            <li>
+              <span class="credits-plain">mail[at]farhan[dot]app</span>
+              <span class="credits-note">contact</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
+
+    <script type="module" src="js/ui.js"></script>
+  </body>
+</html>

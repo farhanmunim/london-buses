@@ -1,0 +1,22 @@
+{
+  "name": "tfl-bus-map",
+  "version": "1.6.0",
+  "description": "Interactive London bus route map — farhan.app",
+  "type": "module",
+  "scripts": {
+    "refresh":               "node scripts/refresh.js",
+    "fetch-data":            "node scripts/fetch-data.js",
+    "fetch-route-details":   "node scripts/fetch-route-details.js",
+    "build-classifications": "node scripts/build-classifications.js",
+    "build-overview":        "node scripts/build-overview.js",
+    "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "adm-zip": "^0.5.16",
+    "fast-xml-parser": "^4.5.3",
+    "puppeteer": "^24.40.0"
+  }
+}

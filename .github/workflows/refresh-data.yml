@@ -1,0 +1,83 @@
+name: Weekly Data Refresh
+
+# Runs every Monday at 05:00 UTC (05:00 GMT in winter, 06:00 BST in summer)
+# Can also be triggered manually from the GitHub Actions tab
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.4.0
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Record the geometry ZIP date before refresh so we can detect if it changed
+      - name: Read previous geometry ZIP date
+        id: prev_zip
+        run: |
+          if [ -f data/geometry-source.json ]; then
+            echo "date=$(node -e "console.log(require('./data/geometry-source.json').zipDate ?? '')")" >> $GITHUB_OUTPUT
+          else
+            echo "date=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run full data refresh
+        env:
+          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+        run: npm run refresh
+
+      # Read the new geometry ZIP date
+      - name: Read new geometry ZIP date
+        id: new_zip
+        run: |
+          echo "date=$(node -e "console.log(require('./data/geometry-source.json').zipDate ?? '')")" >> $GITHUB_OUTPUT
+
+      - name: Commit and push summary data (always)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Always stage the aggregated/summary files that change weekly
+          git add \
+            data/routes-overview.geojson \
+            data/route_destinations.json \
+            data/route_classifications.json \
+            data/build-meta.json \
+            data/manifest.json \
+            data/geometry-source.json \
+            "data/routes-overview-*.geojson" || true
+
+          # Only stage individual route files if the geometry ZIP changed
+          if [ "${{ steps.prev_zip.outputs.date }}" != "${{ steps.new_zip.outputs.date }}" ]; then
+            echo "Geometry ZIP changed (${{ steps.prev_zip.outputs.date }} → ${{ steps.new_zip.outputs.date }}) — staging route files"
+            git add data/routes/ || true
+          else
+            echo "Geometry ZIP unchanged (${{ steps.new_zip.outputs.date }}) — skipping route files"
+          fi
+
+          # Only commit if there is something staged
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
+            git push
+          fi

@@ -1,0 +1,25 @@
+{
+  "description": "Manual per-route overrides. Any field set here wins over scraped/derived data. Route IDs are case-insensitive (use `N128` not `n128`). Entries whose key starts with an underscore (e.g. `_example`) are ignored — use them for documentation. Rebuild with `npm run build-classifications && npm run build-overview` to apply.",
+  "routes": {
+    "_example": {
+      "deck": "double",
+      "propulsion": "electric",
+      "operator": "Go-Ahead",
+      "garageName": "Camberwell",
+      "garageCode": "Q",
+      "vehicleType": "Enviro400EV 10.5m",
+      "pvr": 18,
+      "frequency": "high"
+    },
+    "_example2": {
+      "deck": "double",
+      "propulsion": "electric",
+      "operator": "Go-Ahead",
+      "garageName": "Camberwell",
+      "garageCode": "Q",
+      "vehicleType": "Enviro400EV 10.5m",
+      "pvr": 18,
+      "frequency": "high"
+    }
+  }
+}
