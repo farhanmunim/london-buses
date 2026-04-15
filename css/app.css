@@ -1396,7 +1396,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .section-summary-clear[hidden] { display: none !important; }
 
 /* Filter bar now only holds the Clear-all button, so right-align it */
-#filter-bar { justify-content: flex-end; }
+#filter-bar { justify-content: stretch; }
 
 /* Sticky filter bar */
 #filter-bar {
@@ -1409,7 +1409,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 #filter-stat-count,
 #filter-stat-garages { color: var(--text-1); font-weight: 600; }
 .filter-stat-sep { margin: 0 4px; color: var(--text-3); }
-#filter-actions { display: flex; gap: 4px; }
+#filter-actions { display: flex; gap: 4px; inline-size: 100%; }
+#filter-actions .btn { inline-size: 100%; }
 
 /* Status toast */
 #status-toast {
