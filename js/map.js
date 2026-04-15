@@ -54,6 +54,16 @@ function featureColor(props) {
   return _paintMode === 'operator' ? operatorColor(props) : typeColor(props);
 }
 
+// Look up a route's operator colour from the overview geojson. Used by popup
+// chip renderers so chips are always operator-coloured regardless of the
+// current paint mode (which only affects the lines on the map).
+function operatorColorForRoute(routeId) {
+  if (!_overviewGeoJson) return OPERATOR_FALLBACK_COLOR;
+  const id = String(routeId).toUpperCase();
+  const f  = _overviewGeoJson.features.find(x => x.properties?.routeId === id);
+  return f ? operatorColor(f.properties) : OPERATOR_FALLBACK_COLOR;
+}
+
 // Active filter state — null means "all pass"
 let _filters = {
   types:      null,
@@ -163,12 +173,15 @@ export function initMap() {
     const chips = [...routes.entries()]
       .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
       .map(([id, props]) => {
-        const color = featureColor(props);
+        // Always colour popup chips by operator — it's a directory of routes,
+        // not a visualisation of route type. Keeps chips consistent across
+        // popups regardless of the current paint-mode selection.
+        const color = operatorColor(props);
         return `<span class="map-id-popup__chip" data-route="${id}" style="--chip-col:${color}">${id}</span>`;
       }).join('');
 
     const html = `<div class="map-id-popup"><p class="map-id-popup__label">Routes here</p><div class="map-id-popup__chips">${chips}</div></div>`;
-    _identifyPopup = L.popup({ closeButton: false, className: 'map-id-popup-wrap', maxWidth: 260, offset: [0, -4] })
+    _identifyPopup = L.popup({ closeButton: true, className: 'map-id-popup-wrap', maxWidth: 260, offset: [0, -4] })
       .setLatLng(e.latlng).setContent(html).openOn(_map);
 
     // Wire chip clicks after popup is in DOM
@@ -293,9 +306,10 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
     const displayName = indicator ? `${name} <span style="opacity:.55">(${indicator})</span>` : name;
 
     const routeChips = routeIds.length
-      ? `<div class="map-popup__routes">${routeIds.map(r =>
-          `<span class="map-popup__route-chip" data-route="${r}">${r}</span>`
-        ).join('')}</div>`
+      ? `<div class="map-popup__routes">${routeIds.map(r => {
+          const col = operatorColorForRoute(r);
+          return `<span class="map-popup__route-chip" data-route="${r}" style="--chip-col:${col}">${r}</span>`;
+        }).join('')}</div>`
       : '';
 
     marker.bindPopup(

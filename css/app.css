@@ -1705,24 +1705,26 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   padding-top: var(--sp-3);
   border-top: 1px solid var(--border-c);
 }
+/* Stop-popup route chip — operator-coloured pill. Shares the same visual
+   treatment as .map-id-popup__chip so all popups feel consistent. Per-chip
+   colour arrives via the --chip-col custom property set by JS. */
 .map-popup__route-chip {
   display: inline-flex; align-items: center;
-  padding: 2px 8px;
-  background: hsl(var(--muted));
-  border: 1px solid var(--border-c);
-  color: var(--text-1);
+  padding: 3px 9px;
+  background: var(--chip-col, hsl(var(--muted)));
+  color: #fff;
+  border: 1px solid transparent;
   border-radius: var(--r-sm);
   font-size: var(--fs-xs);
   font-weight: 600;
   font-family: var(--font-mono);
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+  transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
 .map-popup__route-chip:hover {
-  background: hsl(var(--destructive));
-  color: hsl(var(--destructive-foreground));
-  border-color: hsl(var(--destructive));
   transform: translateY(-1px);
+  box-shadow: 0 2px 6px hsl(240 10% 3.9% / 0.18);
+  filter: brightness(1.08);
 }
 
 /* Identify popup (map-click: routes here) — uses the standard popup shell
