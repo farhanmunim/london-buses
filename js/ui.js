@@ -291,15 +291,42 @@ function applyFilters() {
   syncClearBtn();
 }
 
-// Show Clear when any filter chip is active OR a route has been searched/selected
+// Route filter keys (everything in the main filters block except garageoperator)
+const ROUTE_FILTER_KEYS = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
+
+function anyActive(key) {
+  return !!filtersSection.querySelector(`.chip.active[data-filter="${key}"]`);
+}
+function clearChips(keys) {
+  for (const key of keys) {
+    filtersSection.querySelectorAll(`.chip.active[data-filter="${key}"]`).forEach(c => {
+      c.classList.remove('active');
+      c.setAttribute('aria-pressed', 'false');
+    });
+  }
+  applyFilters();
+}
+
+// Show/hide Clear buttons:
+//   • Section clears — visible only when their own chips have any active
+//   • Global Clear-all — visible if any chip active OR a route has been searched
 function syncClearBtn() {
-  const btn = document.getElementById('filter-clear-btn');
-  if (!btn) return;
-  const anyChip   = !!filtersSection.querySelector('.chip.active[data-filter]');
+  const global = document.getElementById('filter-clear-btn');
+  const route  = document.getElementById('clear-route-filters-btn');
+  const garage = document.getElementById('clear-garage-filters-btn');
+
+  const anyRoute  = ROUTE_FILTER_KEYS.some(anyActive);
+  const anyGarage = anyActive('garageoperator');
   const anySearch = !!state.routeId || (document.getElementById('search-input')?.value.trim() ?? '') !== '';
   const anyPill   = !!document.querySelector('#search-pills .search-pill');
-  btn.hidden = !(anyChip || anySearch || anyPill);
+
+  if (route)  route.hidden  = !anyRoute;
+  if (garage) garage.hidden = !anyGarage;
+  if (global) global.hidden = !(anyRoute || anyGarage || anySearch || anyPill);
 }
+
+document.getElementById('clear-route-filters-btn')?.addEventListener('click', () => clearChips(ROUTE_FILTER_KEYS));
+document.getElementById('clear-garage-filters-btn')?.addEventListener('click', () => clearChips(['garageoperator']));
 
 document.addEventListener('app:searchstatechange', syncClearBtn);
 

@@ -1281,6 +1281,21 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .section-summary-count { color: var(--text-2); }
 .section-summary-count > span { color: var(--text-1); font-weight: 600; }
 
+.section-summary-clear {
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.section-summary-clear:hover { background: hsl(var(--background)); color: var(--text-1); }
+.section-summary-clear[hidden] { display: none !important; }
+
 /* Filter bar now only holds the Clear-all button, so right-align it */
 #filter-bar { justify-content: flex-end; }
 
