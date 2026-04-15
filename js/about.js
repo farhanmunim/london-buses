@@ -51,7 +51,8 @@
             <li><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><span class="credits-note">map engine</span></li>
             <li><a href="https://carto.com/" target="_blank" rel="noopener">CARTO Voyager</a><span class="credits-note">basemap tiles</span></li>
             <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a><span class="credits-note">map data · © contributors</span></li>
-            <li><a href="https://vercel.com/font" target="_blank" rel="noopener">Geist</a><span class="credits-note">typeface · Vercel, via Google Fonts</span></li>
+            <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a><span class="credits-note">source hosting · Actions for the weekly data refresh</span></li>
+            <li><a href="https://pages.cloudflare.com" target="_blank" rel="noopener">Cloudflare Pages</a><span class="credits-note">static hosting · global CDN</span></li>
           </ul>
         </section>
 
@@ -67,6 +68,18 @@
           <ul class="credits-list">
             <li><a href="https://farhan.app" target="_blank" rel="noopener">Farhan Munim</a><span class="credits-note">farhan.app</span></li>
           </ul>
+        </section>
+
+        <section class="modal-section modal-support">
+          <span class="modal-section-tag">Support</span>
+          <p class="modal-support__copy">
+            Support the development of this open source project.
+          </p>
+          <a class="modal-support__link" href="https://buymeacoffee.com/farhan.app" target="_blank" rel="noopener">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M10 3v2M13 3v2"/></svg>
+            Buy me a coffee
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
+          </a>
         </section>
       </div>
     </div>

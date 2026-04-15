@@ -51,7 +51,11 @@ if (nav) {
         setActive('about');
         document.getElementById('about-btn')?.click();
         break;
-      // 'changelog' — let the anchor navigate naturally
+      case 'roadmap':
+        closeDrawers();
+        setActive('roadmap');
+        document.getElementById('roadmap-btn')?.click();
+        break;
     }
   });
 

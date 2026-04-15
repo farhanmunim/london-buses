@@ -330,6 +330,8 @@
     <footer class="app-footer">
       <button type="button" id="about-btn" class="footer-link-btn">About</button>
       <span class="footer-sep"></span>
+      <button type="button" id="roadmap-btn" class="footer-link-btn">Roadmap</button>
+      <span class="footer-sep"></span>
       <a href="changelog.html">Changelog</a>
       <span class="footer-spacer"></span>
       <span class="footer-data">
@@ -361,14 +363,15 @@
         <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.01"/><path d="M11 12h1v5h1"/></svg>
         <span>About</span>
       </button>
-      <a class="m-nav-btn" href="changelog.html" data-action="changelog" aria-label="Changelog">
-        <svg class="icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
-        <span>Changelog</span>
-      </a>
+      <button type="button" class="m-nav-btn" data-action="roadmap" aria-label="Roadmap">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 6h16M4 12h10M4 18h6"/><circle cx="18" cy="12" r="2"/><circle cx="12" cy="18" r="2"/></svg>
+        <span>Roadmap</span>
+      </button>
     </nav>
 
     <script src="js/app.js" defer></script>
     <script src="js/about.js" defer></script>
+    <script src="js/roadmap.js" defer></script>
     <script type="module" src="js/ui.js"></script>
   </body>
 </html>

@@ -1472,6 +1472,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   /* Fluid padding — comfy on desktop, tighter on small phones */
   padding: clamp(1rem, 0.6rem + 2vw, 1.25rem);
 }
+/* Wider variant for dialogs that need a data table (e.g. Roadmap) */
+.modal-panel--wide { max-inline-size: 640px; }
 .modal-close {
   position: absolute; top: var(--sp-4); right: var(--sp-4);
   width: 26px; height: 26px;
@@ -1502,6 +1504,29 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   line-height: 1.55;
 }
 .modal-disclaimer strong { color: var(--amber-tx); }
+
+/* Support block inside the About modal — a friendly call-to-action without
+   being pushy. Warm amber because it's about coffee; tokens keep it
+   theme-aware in dark mode. */
+.modal-support__copy {
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+  margin-block: 0 var(--sp-4);
+}
+.modal-support__link {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-5);
+  background: var(--blue-bg);
+  color: var(--blue-tx);
+  border: 1px solid var(--blue-bd);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm); font-weight: 600;
+  text-decoration: none;
+  transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
+}
+.modal-support__link:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); filter: brightness(1.03); }
+.modal-support__link .icon-sm { opacity: 0.7; }
 
 .footer-disclaimer { color: var(--text-3); font-style: italic; }
 .modal-section { margin-top: var(--sp-6); }
@@ -1823,4 +1848,87 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 @media (max-width: 640px) {
   .garage-marker-pin { width: 28px; height: 28px; }
   .garage-marker-op { font-size: 10px; }
+}
+
+/* ============================================================================
+   ROADMAP MODAL — table of ideas and their delivery stage
+   ============================================================================ */
+
+.roadmap {
+  inline-size: 100%;
+  margin-block-start: var(--sp-5);
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.roadmap thead th {
+  text-align: start;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-c);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.roadmap thead th:last-child { text-align: end; }
+.roadmap tbody tr {
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+.roadmap tbody tr:last-child { border-bottom: none; }
+.roadmap td {
+  padding: var(--sp-3);
+  vertical-align: top;
+}
+.roadmap__title {
+  font-weight: 600;
+  color: var(--text-1);
+  white-space: nowrap;
+}
+.roadmap__desc {
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.roadmap__stage-cell {
+  text-align: end;
+  white-space: nowrap;
+}
+
+/* Stage pill — a compact badge echoing our chip primitive but scoped so the
+   palette doesn't drift if .chip evolves. */
+.roadmap__stage {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-c);
+  background: var(--muted-bg);
+  color: var(--text-2);
+  letter-spacing: 0.01em;
+}
+.roadmap__stage--idea     { background: var(--muted-bg);  color: var(--text-2);   border-color: var(--border-c); }
+.roadmap__stage--planned  { background: var(--blue-bg);   color: var(--blue-tx);  border-color: var(--blue-bd); }
+.roadmap__stage--building { background: var(--amber-bg);  color: var(--amber-tx); border-color: var(--amber-bd); }
+.roadmap__stage--shipped  { background: var(--green-bg);  color: var(--green-tx); border-color: var(--green-bd); }
+
+.roadmap__link {
+  display: inline-block;
+  margin-inline-start: 2px;
+  color: hsl(var(--info));
+  text-decoration: none;
+  border-bottom: 1px dashed hsl(var(--info) / 0.4);
+  font-size: var(--fs-xs);
+}
+.roadmap__link:hover { border-bottom-style: solid; }
+
+/* Stack the table on narrow screens so nothing gets squeezed. */
+@media (max-width: 560px) {
+  .roadmap, .roadmap thead, .roadmap tbody, .roadmap tr, .roadmap td, .roadmap th { display: block; }
+  .roadmap thead { display: none; }
+  .roadmap tbody tr {
+    padding-block: var(--sp-3);
+  }
+  .roadmap td { padding: 2px 0; }
+  .roadmap__title { font-size: var(--fs-md); }
+  .roadmap__stage-cell { text-align: start; margin-block-start: 4px; }
 }
