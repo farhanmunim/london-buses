@@ -911,7 +911,10 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   letter-spacing: 0.04em; text-transform: uppercase;
 }
 .cl-title {
-  font-size: 44px; font-weight: 600; color: var(--text-1);
+  /* Fluid type: scales smoothly from 26px on tiny phones to 44px on desktop
+     without needing the two media-query overrides below. */
+  font-size: clamp(1.625rem, 1rem + 2.5vw, 2.75rem);
+  font-weight: 600; color: var(--text-1);
   letter-spacing: -0.035em; line-height: 1.05;
 }
 .cl-sub {
@@ -946,7 +949,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   letter-spacing: 0.01em;
 }
 .cl-entry-title {
-  font-size: 28px; font-weight: 600;
+  font-size: clamp(1.125rem, 0.9rem + 1.5vw, 1.75rem);
+  font-weight: 600;
   color: var(--text-1); letter-spacing: -0.025em;
   line-height: 1.2;
   margin-bottom: 24px;
@@ -1088,8 +1092,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 
 @media (max-width: 640px) {
   .changelog-area { padding: 32px 18px 56px; }
-  .cl-title { font-size: 30px; letter-spacing: -0.03em; }
-  .cl-entry-title { font-size: 20px; }
+  /* .cl-title and .cl-entry-title scale fluidly via clamp() — no overrides needed */
   .cl-entry { padding-bottom: 44px; margin-bottom: 44px; }
   .cl-header { margin-bottom: 44px; }
   .cl-sub { font-size: var(--fs-md); }
@@ -1106,8 +1109,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 
 @media (max-width: 380px) {
-  .cl-title { font-size: 26px; }
-  .cl-entry-title { font-size: 18px; }
+  /* .cl-title + .cl-entry-title both scale via clamp() already */
   .cl-date { font-size: var(--fs-sm); }
   .changelog-area { padding: 24px 14px 48px; }
 }
@@ -1119,7 +1121,13 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 /* Map fills the canvas area (override blueprint padding/background) */
 .canvas-area#map-wrap { padding: 0; background: none; display: block; position: relative; }
 #map { position: absolute; inset: 0; background: hsl(var(--muted)); }
-.leaflet-container { font-family: var(--font-sans); background: hsl(var(--muted)); }
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: hsl(var(--muted));
+  /* Let the map handle pan/zoom gestures; prevents iOS double-tap zoom
+     from hijacking Leaflet's own zoom control. */
+  touch-action: pan-x pan-y;
+}
 [data-theme="dark"] #map { background: hsl(240 6% 10%); }
 
 /* Left panel lays out as: search (top) → scrolling body → sticky filter bar */
@@ -1346,12 +1354,14 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 #route-detail-header { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-4); }
 #route-badge-wrap {
   flex: none;
-  width: 48px; height: 48px;
+  /* Fluid badge — 40px on phones, 48px on desktop */
+  --badge-size: clamp(2.5rem, 2.2rem + 1vw, 3rem);
+  inline-size: var(--badge-size); block-size: var(--badge-size);
   display: inline-flex; align-items: center; justify-content: center;
   background: hsl(var(--destructive));
   color: hsl(var(--destructive-foreground));
   border-radius: var(--r-md);
-  font-weight: 700; font-size: 18px;
+  font-weight: 700; font-size: clamp(1rem, 0.9rem + 0.4vw, 1.125rem);
   letter-spacing: -0.02em;
 }
 #route-badge-number { line-height: 1; }
@@ -1417,13 +1427,15 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .modal-backdrop { position: absolute; inset: 0; background: var(--overlay); backdrop-filter: blur(4px); }
 .modal-panel {
   position: relative;
-  max-width: 480px; width: 100%;
-  max-height: 85dvh; overflow-y: auto;
+  inline-size: 100%; max-inline-size: 480px;
+  max-block-size: min(85dvh, 720px);
+  overflow-y: auto;
   background: hsl(var(--card));
   border: 1px solid var(--border-c);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-lg);
-  padding: var(--sp-7);
+  /* Fluid padding — comfy on desktop, tighter on small phones */
+  padding: clamp(1rem, 0.6rem + 2vw, 1.25rem);
 }
 .modal-close {
   position: absolute; top: var(--sp-4); right: var(--sp-4);
@@ -1487,8 +1499,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 
 /* Responsive */
 @media (max-width: 640px) {
-  .modal-panel { padding: var(--sp-5); max-height: 90dvh; }
-  #route-badge-wrap { width: 40px; height: 40px; font-size: 16px; }
+  .modal-panel { max-block-size: 90dvh; /* padding handled by clamp() */ }
+  /* #route-badge-wrap fluid via clamp() — no size override needed */
 }
 
 /* ============================================================================
