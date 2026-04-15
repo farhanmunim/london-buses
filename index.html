@@ -129,6 +129,14 @@
         <div class="panel-body">
           <!-- Filters -->
           <div id="filters-section" role="region" aria-label="Route filters">
+            <div class="paint-mode">
+              <span class="paint-mode__label" id="paint-mode-label">Colour routes by</span>
+              <div class="paint-mode__buttons" role="group" aria-labelledby="paint-mode-label">
+                <button type="button" class="paint-mode__btn is-active" data-mode="type"     aria-pressed="true">Type</button>
+                <button type="button" class="paint-mode__btn"           data-mode="operator" aria-pressed="false">Operator</button>
+              </div>
+            </div>
+
             <div class="filter-group">
               <span class="filter-group-label" id="fg-routetype">Route type</span>
               <div class="filter-chips" role="group" aria-labelledby="fg-routetype">

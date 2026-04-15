@@ -12,6 +12,7 @@ import './route-detail.js';  // right-panel route view, direction toggle, toasts
 import './panels.js';        // desktop panel collapse/expand + map resize
 import './toggles.js';       // topbar Show/Hide Routes & Garages toggles
 import './filters.js';       // filter chips + Clear buttons
+import './paint-mode.js';    // Colour-routes-by segmented control
 import './mobile-nav.js';    // mobile bottom nav (≤640px)
 import './export.js';        // XLSX export (3-sheet workbook)
 

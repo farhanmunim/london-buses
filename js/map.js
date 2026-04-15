@@ -19,12 +19,39 @@ const TYPE_COLORS = {
   school:     '#15803d', // green-700  — forest green, distinct from parks
 };
 
-function featureColor(props) {
+// Operator brand colours (shared with the garage markers). Duplicated near
+// the top so featureColor can reach them without forward-reference gymnastics.
+const OPERATOR_COLORS = {
+  'Arriva':            '#00A9CE',
+  'First':             '#E6007E',
+  'Go-Ahead':          '#CE1126',
+  'Metroline':         '#00205B',
+  'Stagecoach':        '#003876',
+  'Stagecoach London': '#003876',
+  'Transport UK':      '#005EB8',
+  'RATP':              '#00A859',
+  'RATP Dev':          '#00A859',
+};
+const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
+
+// Paint mode: how should route lines be coloured?
+//   'type'     — by route category (regular/prefix/night/24h/school)  [default]
+//   'operator' — by operator brand livery
+let _paintMode = 'type';
+
+function typeColor(props) {
   if (props.isPrefix)                   return TYPE_COLORS.prefix;
   if (props.routeType === 'night')      return TYPE_COLORS.night;
   if (props.routeType === 'twentyfour') return TYPE_COLORS.twentyfour;
   if (props.routeType === 'school')     return TYPE_COLORS.school;
   return TYPE_COLORS.regular;
+}
+function operatorColor(props) {
+  const op = props.operator;
+  return (op && OPERATOR_COLORS[op]) || OPERATOR_FALLBACK_COLOR;
+}
+function featureColor(props) {
+  return _paintMode === 'operator' ? operatorColor(props) : typeColor(props);
 }
 
 // Active filter state — null means "all pass"
@@ -428,6 +455,27 @@ export function resetMapView() {
 export function invalidateMapSize() {
   _map?.invalidateSize({ animate: false });
 }
+
+/**
+ * Switch between colouring route lines by type or by operator.
+ * Re-applies style to the overview layer and any active single/multi route.
+ * The selected route's outbound/inbound colours are deliberately untouched
+ * so they always read as two contrasting directions.
+ */
+export function setPaintMode(mode) {
+  _paintMode = mode === 'operator' ? 'operator' : 'type';
+  _overviewLayer?.setStyle(f => overviewStyle(f));
+  // Multi-route coloured layer recolours per feature. Single-route case keeps
+  // its fixed outbound/inbound red/blue because _outlineLayer is null there.
+  if (_outlineLayer && _routeLayer) {
+    _routeLayer.setStyle(f => ({
+      color: featureColor(f.properties),
+      weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
+    }));
+  }
+  return _paintMode;
+}
+export function getPaintMode() { return _paintMode; }
 
 // ── Garages layer ─────────────────────────────────────────────────────────────
 
