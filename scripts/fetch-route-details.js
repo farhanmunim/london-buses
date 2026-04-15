@@ -113,6 +113,57 @@ function normaliseOperator(name) {
   return OPERATOR_ALIASES[trimmed] ?? trimmed;
 }
 
+// ── bustimes.org cross-reference ─────────────────────────────────────────────
+//
+// Second independent operator source. Each London operator on bustimes.org has
+// a page listing every service it runs as /services/<routeId>-<slug>. We walk
+// those pages and build a `routeId → operator` map that survives anything
+// londonbusroutes.net might drop. Used as a tertiary fallback in Step 3.
+//
+// Kept inline in this file (rather than a new pipeline step) because the cost
+// is tiny — twelve HTML fetches — and the output lives alongside the routes.htm
+// operator map in route_details.json.
+
+const BUSTIMES_OPERATORS = [
+  ['Arriva',            '/operators/arriva-london'],
+  ['Go-Ahead',          '/operators/go-ahead-london'],
+  ['Go-Ahead',          '/operators/london-general'],
+  ['Go-Ahead',          '/operators/london-central'],
+  ['Go-Ahead',          '/operators/blue-triangle'],
+  ['Go-Ahead',          '/operators/metrobus-operated-by-go-ahead-london'],
+  ['Go-Ahead',          '/operators/docklands-buses'],
+  ['Metroline',         '/operators/metroline-travel'],
+  ['Stagecoach London', '/operators/stagecoach-london'],
+  ['Transport UK',      '/operators/abellio-london'],
+  ['First',             '/operators/first-in-london'],
+  ['Uno',               '/operators/uno'],
+];
+
+async function fetchBustimesOperators() {
+  console.log('Fetching bustimes.org operator cross-reference...');
+  const out = {};
+  const re  = /\/services\/([A-Za-z0-9]+)-/g;
+  for (const [brand, path] of BUSTIMES_OPERATORS) {
+    try {
+      const html = await fetchText('https://bustimes.org' + path);
+      const seen = new Set();
+      let m;
+      while ((m = re.exec(html)) !== null) {
+        const id = m[1].toUpperCase();
+        if (seen.has(id)) continue;
+        seen.add(id);
+        // First operator seen wins; don't overwrite if another op also lists it
+        if (!(id in out)) out[id] = brand;
+      }
+      re.lastIndex = 0;
+    } catch (err) {
+      console.warn(`  ${path}: ${err.message}`);
+    }
+  }
+  console.log(`  bustimes operator map: ${Object.keys(out).length} entries`);
+  return out;
+}
+
 async function fetchRouteAliasesAndOperators() {
   console.log('Fetching route alias map (routes.htm)...');
   let html;
@@ -194,7 +245,17 @@ async function fetchGarageLookup() {
 
     const code = codeM[1].toUpperCase();
     const garageName = cells[1]?.trim() || '';
-    if (code && garageName) lookup[code] = { operator: currentOp, garageName };
+    if (code && garageName) {
+      const entry = { operator: currentOp, garageName };
+      lookup[code] = entry;
+      // Some garages carry a secondary code in the last <TD> that details.htm
+      // uses instead of the anchor code (e.g. HO → Lea Interchange, with
+      // anchor LI). Register both so operator/garage lookups never miss.
+      const altCode = cells[cells.length - 1]?.trim().toUpperCase();
+      if (altCode && altCode !== code && /^[A-Z0-9]{1,4}$/.test(altCode) && !lookup[altCode]) {
+        lookup[altCode] = entry;
+      }
+    }
   }
 
   console.log(`  Parsed ${Object.keys(lookup).length} garage entries`);
@@ -338,6 +399,14 @@ async function main() {
   // Step 1b — route aliases + fallback operator map from routes.htm
   const { aliases, operators: operatorByRoute } = await fetchRouteAliasesAndOperators();
 
+  // Tertiary operator source — bustimes.org cross-reference
+  let operatorByRouteBustimes = {};
+  try {
+    operatorByRouteBustimes = await fetchBustimesOperators();
+  } catch (err) {
+    console.warn(`  Warning: bustimes.org unreachable (${err.message}) — continuing without cross-reference`);
+  }
+
   // Step 2 — details page
   let html;
   try {
@@ -418,8 +487,9 @@ async function main() {
     source:      'londonbusroutes.net',
     routeCount:  parsed,
     routes,
-    aliases,           // { 'N128': '128', ... } — night routes that are 24-hour aliases
-    operatorByRoute,   // { '128': 'Stagecoach London', ... } — tertiary operator source
+    aliases,                   // { 'N128': '128', ... } — night routes that are 24-hour aliases
+    operatorByRoute,           // { '128': 'Stagecoach London', ... } — from routes.htm
+    operatorByRouteBustimes,   // { '678': 'Stagecoach London', ... } — from bustimes.org
   };
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });

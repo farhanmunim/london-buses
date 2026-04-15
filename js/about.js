@@ -40,7 +40,8 @@
           <ul class="credits-list">
             <li><a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">Transport for London Unified API</a><span class="credits-note">route list · destinations · stops</span></li>
             <li><a href="https://bus.data.tfl.gov.uk" target="_blank" rel="noopener">TfL Bus Open Data</a><span class="credits-note">weekly route geometry</span></li>
-            <li><a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a><span class="credits-note">operator · vehicle · PVR · frequency</span></li>
+            <li><a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a><span class="credits-note">operator · vehicle · PVR · frequency · garages</span></li>
+            <li><a href="https://bustimes.org/regions/L" target="_blank" rel="noopener">bustimes.org</a><span class="credits-note">cross-reference · operator fallback</span></li>
           </ul>
           <p class="modal-note">Data refreshes automatically every <strong>Monday at 05:00 UTC</strong>.</p>
         </section>
@@ -51,6 +52,7 @@
             <li><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><span class="credits-note">map engine</span></li>
             <li><a href="https://carto.com/" target="_blank" rel="noopener">CARTO Voyager</a><span class="credits-note">basemap tiles</span></li>
             <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a><span class="credits-note">map data · © contributors</span></li>
+            <li><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a><span class="credits-note">geocoder · garage address → lat, lon</span></li>
             <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a><span class="credits-note">source hosting · Actions for the weekly data refresh</span></li>
             <li><a href="https://pages.cloudflare.com" target="_blank" rel="noopener">Cloudflare Pages</a><span class="credits-note">static hosting · global CDN</span></li>
           </ul>

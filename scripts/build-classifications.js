@@ -136,6 +136,12 @@ const operatorByRoute = {};
 for (const [k, v] of Object.entries(detailsFile.operatorByRoute ?? {})) {
   operatorByRoute[k.toUpperCase()] = v;
 }
+// bustimes.org cross-reference — used only when routes.htm doesn't yield an
+// operator. Independent source, resilient to londonbusroutes.net downtime.
+const operatorByRouteBustimes = {};
+for (const [k, v] of Object.entries(detailsFile.operatorByRouteBustimes ?? {})) {
+  operatorByRouteBustimes[k.toUpperCase()] = v;
+}
 // Daytime routes that are actually 24-hour services: derived from routes.htm
 // href-share detection. If N128 aliases to 128, then 128 runs 24/7.
 const twentyFourSet = new Set(Object.values(routeAliases));
@@ -207,7 +213,7 @@ for (const file of routeFiles) {
     deck:        self?.deck        ?? alias?.deck        ?? null,
     vehicleType: self?.vehicleType ?? alias?.vehicleType ?? null,
     propulsion:  self?.propulsion  ?? alias?.propulsion  ?? null,
-    operator:    self?.operator    ?? alias?.operator    ?? operatorByRoute[routeId] ?? null,
+    operator:    self?.operator    ?? alias?.operator    ?? operatorByRoute[routeId] ?? operatorByRouteBustimes[routeId] ?? null,
     garageName:  self?.garageName  ?? alias?.garageName  ?? null,
     garageCode:  self?.garageCode  ?? alias?.garageCode  ?? null,
     pvr:         self?.pvr         ?? alias?.pvr         ?? null,
