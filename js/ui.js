@@ -168,6 +168,22 @@ function renderOperatorStats(routes) {
 // ── Map resize on panel toggle ────────────────────────────────────────────────
 // Blueprint's Panels module collapses left/right panels via header click. Map
 // needs its size invalidated once the CSS transition settles.
+// Mobile-nav project-specific wiring. The blueprint's MobileNav module already
+// handles drawer toggling for Filters / Details / Map — we layer on what these
+// project-specific items should do.
+//   • Search (centre button): open the left drawer and focus the search input
+//   • About  (rightmost):     open the About modal
+document.getElementById('mobileNavNew')?.addEventListener('click', () => {
+  const leftPanel = document.getElementById('panelLeft');
+  if (leftPanel && !leftPanel.classList.contains('mobile-open')) {
+    window.AppShell?.Drawer?.toggle(leftPanel);
+  }
+  setTimeout(() => document.getElementById('search-input')?.focus(), 50);
+});
+document.getElementById('mobileNavSearch')?.addEventListener('click', () => {
+  document.getElementById('about-btn')?.click();
+});
+
 document.getElementById('leftPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 document.getElementById('rightPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 document.getElementById('rightCollapseTab')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
