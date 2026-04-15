@@ -99,6 +99,20 @@ export async function fetchRouteDestinations(routeId) {
  * @param {string} routeId
  * @returns {Promise<object[]>} Array of GeoJSON-style feature objects
  */
+/**
+ * Returns located garages: [{ code, name, operator, address, lat, lon }, …]
+ * Garages without a successful geocode are omitted.
+ */
+export async function fetchGarageLocations() {
+  try {
+    const data = await loadJson(`${BASE}/garage-locations.json`);
+    return Object.values(data.garages ?? {}).filter(g => g.lat != null && g.lon != null);
+  } catch (err) {
+    console.warn('garage-locations.json not available:', err.message);
+    return [];
+  }
+}
+
 export async function fetchStopsForRoute(routeId) {
   const id       = routeId.toUpperCase();
   const cacheKey = `tfl:stops:${id}`;

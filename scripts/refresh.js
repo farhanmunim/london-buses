@@ -20,10 +20,11 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const STEPS = [
-  { label: 'Step 1/4 — Fetch route geometry, stops & destinations', script: 'fetch-data.js' },
-  { label: 'Step 2/4 — Fetch supplementary route details',          script: 'fetch-route-details.js' },
-  { label: 'Step 3/4 — Build route classifications',                script: 'build-classifications.js' },
-  { label: 'Step 4/4 — Build overview layer & snapshot archive',    script: 'build-overview.js' },
+  { label: 'Step 1/5 — Fetch route geometry, stops & destinations', script: 'fetch-data.js' },
+  { label: 'Step 2/5 — Fetch supplementary route details',          script: 'fetch-route-details.js' },
+  { label: 'Step 3/5 — Build route classifications',                script: 'build-classifications.js' },
+  { label: 'Step 4/5 — Build overview layer & snapshot archive',    script: 'build-overview.js' },
+  { label: 'Step 5/5 — Build/refresh garage locations (geocode)',   script: 'build-garage-locations.js' },
 ];
 
 const started = Date.now();

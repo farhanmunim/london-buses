@@ -97,6 +97,7 @@ export function clearAll() {
 
 export function updateSearchClear() {
   searchClear.hidden = !searchInput.value && pillIds.size === 0;
+  document.dispatchEvent(new CustomEvent('app:searchstatechange'));
 }
 
 function renderPillsDOM() {

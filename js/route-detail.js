@@ -62,13 +62,11 @@ export function showRouteDetail(id, geojson, stops, destinations, classification
 
   defaultState.hidden   = true;
   routeDetail.hidden    = false;
-  filtersSection.hidden = true;
 }
 
 export function showDefaultState() {
   defaultState.hidden   = false;
   routeDetail.hidden    = true;
-  filtersSection.hidden = false;
 }
 
 // ── Direction toggle ──────────────────────────────────────────────────────────
@@ -123,10 +121,18 @@ export function hideStatus() {
 
 // ── Stops toggle ──────────────────────────────────────────────────────────────
 
+function syncStopsBtn(visible) {
+  if (!stopsToggleBtn) return;
+  stopsToggleBtn.setAttribute('aria-pressed', String(visible));
+  stopsToggleBtn.classList.toggle('active', visible);
+  const label = stopsToggleBtn.querySelector('.toggle-label');
+  const noun  = stopsToggleBtn.dataset.noun;
+  if (label && noun) label.textContent = `${visible ? 'Hide' : 'Show'} ${noun}`;
+}
+
 stopsToggleBtn?.addEventListener('click', () => {
   const nowVisible = setStopsVisible(stopsToggleBtn.getAttribute('aria-pressed') !== 'true');
-  stopsToggleBtn.setAttribute('aria-pressed', String(nowVisible));
-  stopsToggleBtn.classList.toggle('active', nowVisible);
+  syncStopsBtn(nowVisible);
 });
 
 // ── Clear route / filter-clear btn ───────────────────────────────────────────
@@ -142,13 +148,10 @@ function fullReset() {
   });
   // Re-apply now-empty filters to restore full overview
   document.dispatchEvent(new CustomEvent('app:filterscleared'));
-  // Reset stops toggle button state
-  if (stopsToggleBtn) {
-    stopsToggleBtn.setAttribute('aria-pressed', 'true');
-    stopsToggleBtn.classList.add('active');
-  }
+  // Reset stops toggle button state (keeps label in sync with the icon)
+  syncStopsBtn(true);
 }
 
-clearRouteBtn.addEventListener('click', fullReset);
+clearRouteBtn?.addEventListener('click', fullReset);
 
 document.getElementById('filter-clear-btn')?.addEventListener('click', fullReset);

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Changelog · London Buses</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/app.css" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("app-theme");
+          var theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <a href="index.html" class="topbar-logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <circle cx="8" cy="8" r="6" />
+            <line x1="8" y1="2" x2="8" y2="14" />
+            <line x1="2" y1="8" x2="14" y2="8" />
+          </svg>
+        </div>
+        <span>London Buses</span>
+      </a>
+      <a href="changelog.html" class="version-pill" title="View changelog">v2.0</a>
+
+      <button class="btn btn-ghost btn-icon btn-sm theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="icon icon-sm theme-icon-light" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+        </svg>
+        <svg class="icon icon-sm theme-icon-dark" viewBox="0 0 24 24">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+        </svg>
+      </button>
+
+      <div class="topbar-spacer"></div>
+
+      <a href="index.html" class="btn btn-outline btn-sm">
+        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
+        Back to map
+      </a>
+    </header>
+
+    <main class="changelog-main">
+      <div class="changelog-area">
+        <div class="changelog">
+          <header class="cl-header">
+            <span class="cl-eyebrow">Release notes</span>
+            <h1 class="cl-title">Changelog</h1>
+            <p class="cl-sub">
+              Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 05:00 UTC.
+            </p>
+          </header>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.0 — Full redesign, garages, and independent filters
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.0</span> Apr 15, 2026</div>
+            <a href="#v2_0" class="cl-entry-title">A completely new UI, operator garages, and multi-sheet export</a>
+            <div class="cl-hero">
+              <div class="hero-mock">
+                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
+                <div class="hm-body">
+                  <div class="hm-side">
+                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 60%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 75%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 50%"></span></div>
+                  </div>
+                  <div class="hm-main">
+                    <div class="hm-title"></div>
+                    <div class="hm-cards">
+                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                    </div>
+                    <div class="hm-table">
+                      <div class="hm-row sel"></div>
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="cl-body-text">
+              London Buses has been rebuilt from the ground up. The app now runs on a proper dashboard shell with a dedicated <strong>filters panel</strong> on the left, a <strong>route detail inspector</strong> on the right, both collapsible, plus a refreshed light/dark theme.
+            </p>
+            <p class="cl-body-text">
+              New this release: <strong>operator garages on the map</strong>. Every London bus garage is now plotted at its real address, colour-coded by the operator's brand livery (Arriva turquoise, Stagecoach navy, Go-Ahead red, and so on). Hover for address, operator, and how many routes run from there.
+            </p>
+            <p class="cl-body-text">
+              Filters are now <strong>split by concern</strong>. Route type / frequency / deck / propulsion / operator drive the route lines. A separate <em>Garage operator</em> filter drives the garage markers independently — so you can see one operator's route network overlaid with a competitor's garage footprint.
+            </p>
+            <p class="cl-body-text">
+              <strong>Export</strong> now produces a single <code>.xlsx</code> workbook with three sheets — Routes, Garages, and a Network overview — each honouring the currently applied filters.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v1.6 — Route classifications
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v1.6</span> Mar 03, 2026</div>
+            <a href="#v1_6" class="cl-entry-title">Route classifications and frequency filters</a>
+            <div class="cl-hero dark">
+              <div class="hero-mock">
+                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
+                <div class="hm-body">
+                  <div class="hm-side">
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 65%"></span></div>
+                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 55%"></span></div>
+                  </div>
+                  <div class="hm-main">
+                    <div class="hm-title" style="width: 30%"></div>
+                    <div class="hm-table">
+                      <div class="hm-row"></div>
+                      <div class="hm-row sel"></div>
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="cl-body-text">
+              Routes are now classified as <strong>Regular, Prefix, Night, School, or 24-hour</strong> — each rendered in its own hue on the map so the network reads at a glance. New sidebar filters let you narrow by service <strong>frequency</strong>, <strong>deck type</strong>, and <strong>propulsion</strong> (electric, hydrogen, hybrid, diesel).
+            </p>
+            <p class="cl-body-text">
+              Behind the scenes: a new weekly build step scrapes <code>londonbusroutes.net</code> for operational details (vehicle type, garage code, PVR, frequency bands) and merges them into the route dataset.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v1.4 — Multi-route compare
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v1.4</span> Jan 12, 2026</div>
+            <a href="#v1_4" class="cl-entry-title">Compare multiple routes on one map</a>
+            <div class="cl-hero">
+              <div class="hero-mock">
+                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
+                <div class="hm-body">
+                  <div class="hm-side">
+                    <div class="hm-si sel"><span class="d"></span><span class="l" style="width: 70%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 55%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 65%"></span></div>
+                  </div>
+                  <div class="hm-main">
+                    <div class="hm-title"></div>
+                    <div class="hm-cards">
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="cl-body-text">
+              Add multiple route numbers to the search to see them together. The selected routes render as dark-outlined coloured lines, with <strong>route-number labels</strong> pinned at each end, making it easy to compare corridors that serve the same neighbourhoods.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v1.2 — Filters and operator stats
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v1.2</span> Nov 18, 2025</div>
+            <a href="#v1_2" class="cl-entry-title">Operator filters and network stats</a>
+            <div class="cl-hero dark">
+              <div class="hero-mock">
+                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
+                <div class="hm-body">
+                  <div class="hm-side">
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 60%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 72%"></span></div>
+                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
+                  </div>
+                  <div class="hm-main">
+                    <div class="hm-title" style="width: 40%"></div>
+                    <div class="hm-table">
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                      <div class="hm-row sel"></div>
+                      <div class="hm-row"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="cl-body-text">
+              Chip-style <strong>operator filters</strong> (Arriva, First, Go-Ahead, Metroline, Stagecoach, Transport UK) let you isolate any operator's slice of the network. A new <strong>operator stats table</strong> in the sidebar shows per-operator share of routes, peak vehicle requirement, and electric-fleet percentage — recomputed live as you filter.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v1.0 — Initial launch
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v1.0</span> Sep 08, 2025</div>
+            <a href="#v1_0" class="cl-entry-title">Every London bus route on one map</a>
+            <div class="cl-hero">
+              <div class="hero-mock">
+                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
+                <div class="hm-body">
+                  <div class="hm-side">
+                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 62%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 48%"></span></div>
+                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 70%"></span></div>
+                  </div>
+                  <div class="hm-main">
+                    <div class="hm-title" style="width: 55%"></div>
+                    <div class="hm-cards">
+                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
+                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
+                    </div>
+                    <div class="hm-table">
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                      <div class="hm-row"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="cl-body-text">
+              First public release. An interactive Leaflet map showing every TfL bus route in London, sourced from the <strong>TfL Unified API</strong> and the <strong>TfL Bus Open Data</strong> feed. Type a route number to highlight its path, view outbound / inbound endpoints, and see every stop it serves.
+            </p>
+            <p class="cl-body-text">
+              Launched with an automated <strong>weekly refresh pipeline</strong> so the network is always up to date, and deployed on Cloudflare Pages.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </main>
+
+    <!-- APP FOOTER -->
+    <footer class="app-footer">
+      <button type="button" id="about-btn" class="footer-link-btn">About</button>
+      <span class="footer-sep"></span>
+      <a href="changelog.html" style="color: var(--text-1)">Changelog</a>
+      <span class="footer-spacer"></span>
+      <span class="footer-disclaimer">Not affiliated with TfL · data may be inaccurate</span>
+      <span class="footer-sep"></span>
+      <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+    <script src="js/about.js" defer></script>
+  </body>
+</html>

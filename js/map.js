@@ -5,16 +5,18 @@
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
 
-const COLOR_OUTBOUND = '#e1251b';
-const COLOR_INBOUND  = '#3b82f6';
+const COLOR_OUTBOUND = '#dc2626';
+const COLOR_INBOUND  = '#2563eb';
 
-// Per-type colors — chosen for visibility on CartoDB Voyager tiles
+// Per-type colors — a deliberately high-contrast categorical palette. Each hue
+// sits in its own wheel zone (red / mustard / teal / violet / green) and is
+// dark enough to punch through the CARTO Voyager cream basemap.
 const TYPE_COLORS = {
-  regular:    '#e1251b', // London bus red
-  prefix:     '#ea580c', // orange
-  twentyfour: '#0d9488', // teal
-  night:      '#8b5cf6', // violet (distinct from blue water)
-  school:     '#eab308', // yellow
+  regular:    '#dc2626', // red-600    — iconic London bus red
+  prefix:     '#a16207', // yellow-700 — dark mustard, no warm-red bleed
+  twentyfour: '#0e7490', // cyan-700   — deep teal, sits above water tiles
+  night:      '#6d28d9', // violet-700 — deep purple, separated from teal
+  school:     '#15803d', // green-700  — forest green, distinct from parks
 };
 
 function featureColor(props) {
@@ -42,6 +44,9 @@ let _routeLayer      = null;
 let _stopsLayer      = null;
 let _stopsVisible    = true;
 let _identifyPopup   = null;
+let _routeActive     = false; // true while a single or multi route is displayed
+let _garagesLayer    = null;
+let _stopsPref       = true;  // user's global preference (persisted)
 
 const _routeCanvas = L.canvas({ padding: 0.5 });
 const _stopsCanvas = L.canvas({ padding: 0.5 });
@@ -155,11 +160,25 @@ export function initMap() {
 
 // ── Overview layer ────────────────────────────────────────────────────────────
 
+// True when the user has ticked at least one filter chip.
+function hasActiveFilter() {
+  return Object.values(_filters).some(v => v !== null);
+}
+
 function overviewStyle(feature) {
+  // Behaviour:
+  //   • No route selected              → full overview (0.8)
+  //   • Route selected, no filters     → overview HIDDEN (0)
+  //   • Route selected, filters active → filtered routes shown as light underlay (0.2)
+  let opacity;
+  if (!_routeActive)           opacity = 0.8;
+  else if (hasActiveFilter())  opacity = 0.2;
+  else                         opacity = 0;
+
   return {
     color:   featureColor(feature.properties),
-    weight:  1.5,
-    opacity: _stopsLayer ? 0.1 : 0.55,
+    weight:  2.25,
+    opacity,
     lineCap: 'round',
   };
 }
@@ -169,6 +188,7 @@ export function renderOverview(geojson) {
   _overviewGeoJson = geojson;
   _overviewLayer = L.geoJSON(geojson, { style: overviewStyle, interactive: false }).addTo(_map);
   _overviewLayer.bringToBack();
+  if (!_routesVisible) _map.removeLayer(_overviewLayer);
 }
 
 /**
@@ -194,11 +214,14 @@ export function filterOverview(filters) {
     { style: overviewStyle, interactive: false }
   ).addTo(_map);
   _overviewLayer.bringToBack();
+  if (!_routesVisible) _map.removeLayer(_overviewLayer);
 
   return { routeCount: seen.size };
 }
 
-export function dimOverview()     { _overviewLayer?.setStyle({ opacity: 0.1 }); }
+// Re-apply the overview style using current route/filter state.
+// Called after routes are selected/cleared or filters change.
+export function dimOverview()     { _overviewLayer?.setStyle(f => overviewStyle(f)); }
 export function restoreOverview() { _overviewLayer?.setStyle(f => overviewStyle(f)); }
 
 // ── Selected route ────────────────────────────────────────────────────────────
@@ -209,11 +232,13 @@ export function clearRoute() {
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
   if (_identifyPopup) { _map.closePopup(_identifyPopup); _identifyPopup = null; }
   _stopsVisible = true;
+  _routeActive  = false;
   restoreOverview();
 }
 
 export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   clearRoute();
+  _routeActive = true;
   dimOverview();
 
   const dir   = String(direction);
@@ -223,7 +248,7 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   if (features.length) {
     _routeLayer = L.geoJSON(
       { type: 'FeatureCollection', features },
-      { style: { color, weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }, renderer: _routeCanvas }
+      { style: { color, weight: 6, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }, renderer: _routeCanvas }
     ).addTo(_map);
   }
 
@@ -278,6 +303,8 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
 
   _stopsLayer.addTo(_map);
   _stopsVisible = true;
+  if (!_stopsPref)    setStopsVisible(false);
+  if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
   fitToRoute();
 }
 
@@ -291,8 +318,9 @@ export function renderMultiRoute(ids) {
   if (_stopsLayer) { _map.removeLayer(_stopsLayer); _stopsLayer = null; }
   if (_identifyPopup) { _map.closePopup(_identifyPopup); _identifyPopup = null; }
 
-  if (!_overviewGeoJson || !ids.length) { restoreOverview(); return; }
+  if (!_overviewGeoJson || !ids.length) { _routeActive = false; restoreOverview(); return; }
 
+  _routeActive = true;
   dimOverview();
 
   const idSet    = new Set(ids.map(id => id.toUpperCase()));
@@ -304,14 +332,14 @@ export function renderMultiRoute(ids) {
 
   // Outline layer (added first = rendered underneath)
   _outlineLayer = L.geoJSON(fc, {
-    style:    { color: '#111', weight: 6.5, opacity: 0.22, lineCap: 'round', lineJoin: 'round' },
+    style:    { color: '#111', weight: 7.5, opacity: 0.22, lineCap: 'round', lineJoin: 'round' },
     renderer: _routeCanvas,
     interactive: false,
   }).addTo(_map);
 
   // Colour layer (added second = rendered on top)
   _routeLayer = L.geoJSON(fc, {
-    style:    f => ({ color: featureColor(f.properties), weight: 4, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
+    style:    f => ({ color: featureColor(f.properties), weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
     renderer: _routeCanvas,
     interactive: false,
   }).addTo(_map);
@@ -342,6 +370,7 @@ export function renderMultiRoute(ids) {
 
   const bounds = _routeLayer.getBounds();
   if (bounds.isValid()) _map.fitBounds(bounds, { padding: [48, 48] });
+  if (!_routesVisible) setRoutesVisible(false);
 }
 
 export function fitToRoute() {
@@ -399,5 +428,145 @@ export function resetMapView() {
 export function invalidateMapSize() {
   _map?.invalidateSize({ animate: false });
 }
+
+// ── Garages layer ─────────────────────────────────────────────────────────────
+
+// Operator → short display code + marker colour. Unknown operators fall back
+// to the first 2 chars of the name and a neutral slate colour.
+// Brand colours drawn from each operator's livery / corporate identity.
+const OPERATOR_META = {
+  'Arriva':            { short: 'AR', color: '#00A9CE' }, // Arriva turquoise
+  'First':             { short: 'FR', color: '#E6007E' }, // First Group pink
+  'Go-Ahead':          { short: 'GO', color: '#CE1126' }, // Go-Ahead / London General red
+  'Metroline':         { short: 'ML', color: '#00205B' }, // Metroline dark blue
+  'Stagecoach':        { short: 'SC', color: '#003876' }, // Stagecoach navy
+  'Stagecoach London': { short: 'SC', color: '#003876' },
+  'Transport UK':      { short: 'TU', color: '#005EB8' }, // Transport UK blue
+  'RATP':              { short: 'RP', color: '#00A859' }, // RATP Dev green
+  'RATP Dev':          { short: 'RP', color: '#00A859' },
+};
+function operatorMeta(name) {
+  if (!name) return { short: '??', color: '#475569' };
+  if (OPERATOR_META[name]) return OPERATOR_META[name];
+  const short = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+  return { short, color: '#475569' };
+}
+
+// All garage markers tagged with their full record, so we can filter them
+// from ui.js and also re-emit the filtered list for CSV/XLSX export.
+let _allGarages = []; // [{ marker, garage, routeCount }]
+
+export function renderGarages(garages, routeCounts = {}) {
+  if (_garagesLayer) return; // idempotent: call once at boot
+  _garagesLayer = L.layerGroup();
+  _allGarages = [];
+
+  for (const g of garages) {
+    if (g.lat == null || g.lon == null) continue;
+
+    const { short, color } = operatorMeta(g.operator);
+    const count = routeCounts[g.code] ?? 0;
+
+    const marker = L.marker([g.lat, g.lon], {
+      icon: L.divIcon({
+        className: 'garage-marker',
+        html: `<span class="garage-marker-pin" style="--garage-col:${color}" title="${g.name} — ${g.operator ?? ''}">
+                 <span class="garage-marker-op">${short}</span>
+               </span>`,
+        iconSize:   [32, 32],
+        iconAnchor: [16, 16],
+      }),
+      keyboard: false,
+    });
+
+    marker.bindPopup(
+      `<span class="popup-name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
+      `<dl class="popup-meta">` +
+        `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
+        `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
+      `</dl>`,
+      { closeButton: true, maxWidth: 280 }
+    );
+
+    _garagesLayer.addLayer(marker);
+    _allGarages.push({ marker, garage: g, routeCount: count });
+  }
+}
+
+/**
+ * Filter garage markers by operator. Pass a Set of allowed operator names, or
+ * null to show all. Returns the number of garages currently visible.
+ * The special value '__unknown__' matches garages with no operator set.
+ */
+export function filterGarages(operatorSet) {
+  if (!_garagesLayer) return 0;
+  let visible = 0;
+  for (const entry of _allGarages) {
+    const op = entry.garage.operator;
+    const match = !operatorSet
+      || (operatorSet.has('__unknown__') && !op)
+      || (op && operatorSet.has(op));
+    if (match) {
+      if (!_garagesLayer.hasLayer(entry.marker)) _garagesLayer.addLayer(entry.marker);
+      visible++;
+    } else {
+      if (_garagesLayer.hasLayer(entry.marker)) _garagesLayer.removeLayer(entry.marker);
+    }
+  }
+  return visible;
+}
+
+export function countVisibleGarages() {
+  if (!_allGarages.length) return 0;
+  return _garagesLayer
+    ? _allGarages.filter(e => _garagesLayer.hasLayer(e.marker)).length
+    : _allGarages.length;
+}
+
+/** Array of { ...garage, routeCount } for garages currently visible on the map. */
+export function getVisibleGarages() {
+  if (!_garagesLayer) return [];
+  return _allGarages
+    .filter(e => _garagesLayer.hasLayer(e.marker))
+    .map(e => ({ ...e.garage, routeCount: e.routeCount }));
+}
+
+/**
+ * Hide or show every route-line layer (overview + selected route + multi-route
+ * outline + stops). Garages and the basemap stay visible.
+ */
+let _routesVisible = true;
+export function setRoutesVisible(visible) {
+  _routesVisible = !!visible;
+  const layers = [_overviewLayer, _outlineLayer, _routeLayer, _stopsLayer];
+  for (const layer of layers) {
+    if (!layer || !_map) continue;
+    if (_routesVisible) { if (!_map.hasLayer(layer)) layer.addTo(_map); }
+    else                { if (_map.hasLayer(layer))  _map.removeLayer(layer); }
+  }
+  if (_routesVisible) _overviewLayer?.bringToBack();
+  return _routesVisible;
+}
+
+export function setGaragesVisible(visible) {
+  if (!_garagesLayer || !_map) return visible;
+  if (visible) {
+    if (!_map.hasLayer(_garagesLayer)) _garagesLayer.addTo(_map);
+  } else if (_map.hasLayer(_garagesLayer)) {
+    _map.removeLayer(_garagesLayer);
+  }
+  return visible;
+}
+
+// ── Global stops preference ───────────────────────────────────────────────────
+
+/** Remember the user's global stops preference so it persists across routes. */
+export function setStopsPreference(visible) {
+  _stopsPref = !!visible;
+  // If a route is currently showing, apply immediately.
+  if (_stopsLayer) setStopsVisible(_stopsPref);
+  return _stopsPref;
+}
+export function getStopsPreference() { return _stopsPref; }
 
 export { TYPE_COLORS };

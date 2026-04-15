@@ -2,8 +2,10 @@
  * ui.js — Application entry point and orchestrator
  */
 
-import { initMap, renderOverview, filterOverview, countVisibleRoutes, getVisibleRouteProps, invalidateMapSize } from './map.js';
-import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications } from './api.js';
+import { initMap, renderOverview, filterOverview, countVisibleRoutes, getVisibleRouteProps, invalidateMapSize,
+         renderGarages, setGaragesVisible, setStopsPreference, setRoutesVisible,
+         filterGarages, countVisibleGarages, getVisibleGarages } from './map.js';
+import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';
 import { state, sidebar, collapseBtn, expandBtn, filtersSection, footerDate, footerNextDate } from './state.js';
 import './search.js';
 import './route-detail.js';
@@ -48,9 +50,64 @@ Promise.all([
   }
 }).catch(err => console.warn('Boot preload failed:', err));
 
+// Garages load independently — don't block the main overview on it.
+// Route-count per garage is derived from classifications once they're loaded.
+Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garages, classifications]) => {
+  if (!garages.length) return;
+  const routeCounts = {};
+  for (const c of Object.values(classifications)) {
+    if (c.garageCode) routeCounts[c.garageCode] = (routeCounts[c.garageCode] ?? 0) + 1;
+  }
+  renderGarages(garages, routeCounts);
+  // Paired toggles were initialised at module load; re-apply visibility now
+  // that the layer actually exists. Buttons are already in the correct state.
+  setGaragesVisible(localStorage.getItem('garages-visible') === '1');
+  updateFilterStat(countVisibleRoutes());
+});
+
+// ── Garages toggle (topbar) ───────────────────────────────────────────────────
+// Stops toggle lives in the route detail panel and is wired by route-detail.js.
+
+// Paired toggles — one logical control can have multiple button copies
+// (e.g. in the topbar AND inside the filters panel). They all stay in sync.
+function wirePairedToggle({ ids, storageKey, defaultOn, apply }) {
+  const buttons = ids.map(id => document.getElementById(id)).filter(Boolean);
+  if (!buttons.length) return;
+  const stored = localStorage.getItem(storageKey);
+  const on = stored === null ? defaultOn : stored === '1';
+  const setAll = (state) => {
+    for (const b of buttons) {
+      b.setAttribute('aria-pressed', String(state));
+      b.classList.toggle('active', state);
+      const noun  = b.dataset.noun;
+      const label = b.querySelector('.toggle-label');
+      if (noun && label) label.textContent = `${state ? 'Hide' : 'Show'} ${noun}`;
+    }
+    apply(state);
+    localStorage.setItem(storageKey, state ? '1' : '0');
+  };
+  setAll(on);
+  for (const b of buttons) b.addEventListener('click', () => setAll(!(b.getAttribute('aria-pressed') === 'true')));
+}
+
+wirePairedToggle({
+  ids:        ['toggle-routes-btn', 'toggle-routes-btn-side'],
+  storageKey: 'routes-visible',
+  defaultOn:  true,
+  apply:      setRoutesVisible,
+});
+wirePairedToggle({
+  ids:        ['toggle-garages-btn', 'toggle-garages-btn-side'],
+  storageKey: 'garages-visible',
+  defaultOn:  false,
+  apply:      setGaragesVisible,
+});
+
 function updateFilterStat(routeCount) {
-  const el = document.getElementById('filter-stat-count');
-  if (el) el.textContent = routeCount.toLocaleString();
+  const routeEl  = document.getElementById('filter-stat-count');
+  const garageEl = document.getElementById('filter-stat-garages');
+  if (routeEl)  routeEl.textContent  = routeCount.toLocaleString();
+  if (garageEl) garageEl.textContent = countVisibleGarages().toLocaleString();
 }
 
 // ── Operator stats table ──────────────────────────────────────────────────────
@@ -108,19 +165,30 @@ function renderOperatorStats(routes) {
     </table>`;
 }
 
-// ── Sidebar collapse ──────────────────────────────────────────────────────────
+// ── Map resize on panel toggle ────────────────────────────────────────────────
+// Blueprint's Panels module collapses left/right panels via header click. Map
+// needs its size invalidated once the CSS transition settles.
+document.getElementById('leftPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
+document.getElementById('rightPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
+document.getElementById('rightCollapseTab')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 
-collapseBtn.addEventListener('click', () => {
-  sidebar.classList.add('collapsed');
-  expandBtn.hidden = false;
-  setTimeout(invalidateMapSize, 310);
-});
-
-expandBtn.addEventListener('click', () => {
-  sidebar.classList.remove('collapsed');
-  expandBtn.hidden = true;
-  setTimeout(invalidateMapSize, 310);
-});
+// Track each panel's collapsed state explicitly (MutationObserver on class).
+// Drives the `.visible` class on the corresponding reopen tab, and wires
+// the left tab's click to re-expand (blueprint only wires the right one).
+function wirePanelTab(panelId, tabId) {
+  const panel = document.getElementById(panelId);
+  const tab   = document.getElementById(tabId);
+  if (!panel || !tab) return;
+  const apply = () => tab.classList.toggle('visible', panel.classList.contains('collapsed'));
+  apply();
+  new MutationObserver(apply).observe(panel, { attributes: true, attributeFilter: ['class'] });
+  tab.addEventListener('click', () => {
+    panel.classList.remove('collapsed');
+    setTimeout(invalidateMapSize, 310);
+  });
+}
+wirePanelTab('panelRight', 'rightCollapseTab');
+wirePanelTab('panelLeft',  'leftCollapseTab');
 
 // ── Filters ───────────────────────────────────────────────────────────────────
 
@@ -143,85 +211,135 @@ function buildFilters() {
     return chips.length ? new Set(chips.map(c => c.dataset.val)) : null;
   }
   return {
-    types:      activeSet('routetype'),
-    deck:       activeSet('deck'),
-    frequency:  activeSet('frequency'),
-    operator:   activeSet('operator'),
-    propulsion: activeSet('propulsion'),
+    types:           activeSet('routetype'),
+    deck:            activeSet('deck'),
+    frequency:       activeSet('frequency'),
+    operator:        activeSet('operator'),
+    propulsion:      activeSet('propulsion'),
+    garageOperator:  activeSet('garageoperator'),
   };
 }
 
 function applyFilters() {
   const filters = buildFilters();
   const { routeCount } = filterOverview(filters);
+  filterGarages(filters.garageOperator); // dedicated — independent of route filters
   updateFilterStat(routeCount);
 
-  // Recompute stats from currently-visible routes. getVisibleRouteProps only
-  // carries properties embedded in the overview — merge in pvr from the full
-  // classifications map for the PVR column.
   const visible = [...getVisibleRouteProps().entries()].map(([id, props]) => ({
     ...props,
     pvr: state.classifications[id]?.pvr ?? null,
   }));
   renderOperatorStats(visible);
-
-  // Show clear button only when at least one filter is active
-  const filterClearBtn = document.getElementById('filter-clear-btn');
-  if (filterClearBtn) {
-    const hasActive = Object.values(filters).some(v => v !== null);
-    filterClearBtn.hidden = !hasActive;
-  }
+  syncClearBtn();
 }
 
-// ── About modal ───────────────────────────────────────────────────────────────
+// Show Clear when any filter chip is active OR a route has been searched/selected
+function syncClearBtn() {
+  const btn = document.getElementById('filter-clear-btn');
+  if (!btn) return;
+  const anyChip   = !!filtersSection.querySelector('.chip.active[data-filter]');
+  const anySearch = !!state.routeId || (document.getElementById('search-input')?.value.trim() ?? '') !== '';
+  const anyPill   = !!document.querySelector('#search-pills .search-pill');
+  btn.hidden = !(anyChip || anySearch || anyPill);
+}
 
-const aboutBtn   = document.getElementById('about-btn');
-const aboutModal = document.getElementById('about-modal');
+document.addEventListener('app:searchstatechange', syncClearBtn);
 
-function openAbout()  { if (aboutModal) aboutModal.hidden = false; }
-function closeAbout() { if (aboutModal) aboutModal.hidden = true;  }
+// About modal is now handled by js/about.js (shared with changelog.html).
 
-aboutBtn?.addEventListener('click', openAbout);
-aboutModal?.addEventListener('click', e => {
-  if (e.target.closest('[data-close]')) closeAbout();
-});
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && aboutModal && !aboutModal.hidden) closeAbout();
-});
-
-// ── CSV export ────────────────────────────────────────────────────────────────
+// ── Export ────────────────────────────────────────────────────────────────────
+// Single XLSX workbook with three sheets (Routes · Garages · Network overview),
+// each reflecting the current filter state. Uses SheetJS loaded from CDN.
 
 document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+  if (typeof XLSX === 'undefined') {
+    alert('Export library still loading — try again in a moment.');
+    return;
+  }
+
   const routes = getVisibleRouteProps();
   if (!routes.size) return;
 
-  const headers = ['route_id','route_type','is_prefix','deck','propulsion','operator','frequency','length_band','destination_outbound','destination_inbound'];
-  const rows = [...routes.entries()]
+  // Sheet 1 — Routes
+  const routeRows = [...routes.entries()]
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
     .map(([id, props]) => {
-      const dest = state.destinations[id] ?? {};
-      return [
-        id,
-        props.routeType   ?? '',
-        props.isPrefix ? 'yes' : 'no',
-        props.deck        ?? '',
-        props.propulsion  ?? '',
-        props.operator    ?? '',
-        props.frequency   ?? '',
-        props.lengthBand  ?? '',
-        dest.outbound?.destination ?? '',
-        dest.inbound?.destination  ?? '',
-      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+      const dest  = state.destinations[id] ?? {};
+      const cls   = state.classifications[id] ?? {};
+      return {
+        route_id:             id,
+        route_type:           props.routeType  ?? '',
+        is_prefix:            props.isPrefix ? 'yes' : 'no',
+        deck:                 props.deck       ?? '',
+        propulsion:           props.propulsion ?? '',
+        operator:             props.operator   ?? '',
+        frequency:            props.frequency  ?? '',
+        length_band:          props.lengthBand ?? '',
+        pvr:                  cls.pvr          ?? '',
+        vehicle:              cls.vehicleType  ?? '',
+        garage_name:          cls.garageName   ?? '',
+        garage_code:          cls.garageCode   ?? '',
+        destination_outbound: dest.outbound?.destination ?? '',
+        destination_inbound:  dest.inbound?.destination  ?? '',
+      };
     });
 
-  const csv  = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a    = Object.assign(document.createElement('a'), {
-    href: url, download: `tfl-routes-${new Date().toISOString().slice(0,10)}.csv`,
+  // Sheet 2 — Garages (respect operator filter)
+  const garageRows = getVisibleGarages()
+    .sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''))
+    .map(g => ({
+      garage_code:  g.code,
+      garage_name:  g.name,
+      operator:     g.operator ?? '',
+      address:      g.address  ?? '',
+      latitude:     g.lat,
+      longitude:    g.lon,
+      route_count:  g.routeCount ?? 0,
+    }));
+
+  // Sheet 3 — Network overview (per-operator aggregates over the filtered routes)
+  const visibleRouteList = [...routes.entries()].map(([id, props]) => ({
+    ...props,
+    pvr: state.classifications[id]?.pvr ?? null,
+  }));
+  const totalRoutes = visibleRouteList.length;
+  const totalPvr    = visibleRouteList.reduce((s, r) => s + (r.pvr ?? 0), 0);
+  const ops = {};
+  for (const r of visibleRouteList) {
+    const op = r.operator ?? 'Unknown';
+    ops[op] ??= { routes: 0, pvr: 0, ev: 0 };
+    ops[op].routes++;
+    ops[op].pvr += r.pvr ?? 0;
+    if (r.propulsion === 'electric') ops[op].ev++;
+  }
+  const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '–';
+  const overviewRows = Object.entries(ops)
+    .sort(([aK, aV], [bK, bV]) => {
+      if (aK === 'Unknown') return 1;
+      if (bK === 'Unknown') return -1;
+      return bV.routes - aV.routes;
+    })
+    .map(([op, v]) => ({
+      operator:         op,
+      routes:           v.routes,
+      route_share:      pct(v.routes, totalRoutes),
+      pvr_total:        v.pvr,
+      pvr_share:        pct(v.pvr, totalPvr),
+      electric_routes:  v.ev,
+      electric_share:   pct(v.ev, v.routes),
+    }));
+  overviewRows.push({
+    operator: 'TOTAL', routes: totalRoutes, route_share: '100%',
+    pvr_total: totalPvr, pvr_share: '100%',
+    electric_routes: visibleRouteList.filter(r => r.propulsion === 'electric').length,
+    electric_share: pct(visibleRouteList.filter(r => r.propulsion === 'electric').length, totalRoutes),
   });
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(routeRows),    'Routes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(garageRows),   'Garages');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(overviewRows), 'Network overview');
+
+  XLSX.writeFile(wb, `london-buses-${new Date().toISOString().slice(0, 10)}.xlsx`);
 });

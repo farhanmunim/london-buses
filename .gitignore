@@ -3,8 +3,12 @@ node_modules/
 *.log
 .DS_Store
 Thumbs.db
+.claude/
 screenshots/
 Reference/
+
+# Reference scaffolding alongside the repo but not part of the shipped app
+Web App Blueprint/
 
 # Intermediate build artefacts — not needed at runtime
 data/source/
