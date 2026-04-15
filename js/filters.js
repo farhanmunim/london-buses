@@ -75,6 +75,16 @@ function syncClearBtn() {
   if (route)  route.hidden  = !anyRoute;
   if (garage) garage.hidden = !anyGarage;
   if (global) global.hidden = !(anyRoute || anyGarage || anySearch || anyPill);
+
+  // Count label reads 'filtered routes' / 'filtered garages' only when a
+  // filter is actually narrowing the set. At rest it's a plain 'routes' /
+  // 'garages' so the word 'filtered' never claims something that isn't true.
+  setNoun('route',  anyRoute  ? 'filtered routes'  : 'routes');
+  setNoun('garage', anyGarage ? 'filtered garages' : 'garages');
+}
+function setNoun(scope, text) {
+  const el = document.querySelector(`.section-summary-noun[data-stat-noun="${scope}"]`);
+  if (el) el.textContent = text;
 }
 
 // ── Event wiring ─────────────────────────────────────────────────────────────
