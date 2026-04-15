@@ -15,6 +15,59 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Cross-browser form-control reset so buttons styled by class don't inherit
+   the browser's default gray pill appearance. Native behaviour (focus, click)
+   stays intact; visuals come entirely from the class-based styles below. */
+button, [type="button"], [type="submit"], [type="reset"] {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+:root { color-scheme: light dark; accent-color: hsl(var(--primary)); }
+
+/* Screen-reader-only skip link, visible when focused */
+.skip-link {
+  position: fixed;
+  top: var(--sp-3); left: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  z-index: var(--z-modal);
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--t-fast);
+}
+.skip-link:focus { transform: translateY(0); outline: 2px solid hsl(var(--primary-foreground)); outline-offset: 2px; }
+
+/* Focus-visible rings for every interactive primitive so keyboard users can
+   always locate focus. Built once, applied everywhere via :focus-visible. */
+.chip:focus-visible,
+.nav-item:focus-visible,
+.map-toggle:focus-visible,
+.m-nav-btn:focus-visible,
+.section-summary-clear:focus-visible,
+.version-pill:focus-visible,
+.panel-hd:focus-visible,
+.left-collapse-tab:focus-visible,
+.right-collapse-tab:focus-visible,
+.footer-link-btn:focus-visible,
+.topbar-logo:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
 /* ============================================================================
    1. THEME — override any of these on :root to re-skin the entire app.
    ---------------------------------------------------------------------------
@@ -387,6 +440,7 @@ a.btn-primary, a.btn-primary:hover, a.btn-primary:visited { color: hsl(var(--pri
    SHARED PANEL PRIMITIVES
 ══════════════════════════════════════════════ */
 .panel-hd {
+  width: 100%;
   height: var(--h-panel-hd);
   display: flex; align-items: center;
   padding: 0 var(--sp-6);
@@ -394,6 +448,7 @@ a.btn-primary, a.btn-primary:hover, a.btn-primary:visited { color: hsl(var(--pri
   gap: var(--sp-2); flex-shrink: 0;
   cursor: pointer;
   user-select: none;
+  text-align: left;
   transition: background var(--t-fast);
 }
 .panel-hd:hover { background: var(--muted-bg); }

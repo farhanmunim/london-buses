@@ -46,8 +46,10 @@
     </script>
   </head>
   <body>
+    <a class="skip-link" href="#map">Skip to map</a>
+
     <!-- TOPBAR -->
-    <header class="topbar">
+    <header class="topbar" role="banner">
       <a href="index.html" class="topbar-logo">
         <div class="logo-mark">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -91,20 +93,20 @@
 
     <!-- WORKSPACE -->
     <div class="workspace" id="workspace">
-      <div class="overlay" id="overlay"></div>
+      <div class="overlay" id="overlay" aria-hidden="true"></div>
 
-      <div class="left-collapse-tab" id="leftCollapseTab" title="Open filters">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
-      </div>
+      <button class="left-collapse-tab" id="leftCollapseTab" type="button" aria-label="Open filters panel" aria-controls="panelLeft">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
 
       <!-- LEFT PANEL — search + filters -->
-      <aside class="panel-left" id="panelLeft">
-        <div class="panel-hd" id="leftPanelHd" title="Toggle filters">
+      <aside class="panel-left" id="panelLeft" aria-label="Filters">
+        <button class="panel-hd" id="leftPanelHd" type="button" aria-label="Toggle filters panel" aria-expanded="true" aria-controls="panelLeft">
           <span class="panel-hd-title">Filters</span>
-          <div class="panel-hd-chevron">
+          <span class="panel-hd-chevron" aria-hidden="true">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
-          </div>
-        </div>
+          </span>
+        </button>
 
         <!-- Search -->
         <div id="search-section">
@@ -226,13 +228,13 @@
       </main>
 
       <!-- RIGHT PANEL — route detail / operator stats -->
-      <aside class="panel-right" id="panelRight">
-        <div class="panel-hd" id="rightPanelHd" title="Toggle inspector">
+      <aside class="panel-right" id="panelRight" aria-label="Route details">
+        <button class="panel-hd" id="rightPanelHd" type="button" aria-label="Toggle details panel" aria-expanded="true" aria-controls="panelRight">
           <span class="panel-hd-title">Details</span>
-          <div class="panel-hd-chevron">
+          <span class="panel-hd-chevron" aria-hidden="true">
             <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></svg>
-          </div>
-        </div>
+          </span>
+        </button>
 
         <div class="right-body">
           <!-- Default state: operator stats -->
@@ -311,9 +313,9 @@
         </div>
       </aside>
 
-      <div class="right-collapse-tab" id="rightCollapseTab" title="Open details">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
-      </div>
+      <button class="right-collapse-tab" id="rightCollapseTab" type="button" aria-label="Open details panel" aria-controls="panelRight">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+      </button>
     </div>
 
     <!-- APP FOOTER -->

@@ -229,14 +229,21 @@ document.getElementById('leftPanelHd')?.addEventListener('click', () => setTimeo
 document.getElementById('rightPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 document.getElementById('rightCollapseTab')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 
-// Track each panel's collapsed state explicitly (MutationObserver on class).
-// Drives the `.visible` class on the corresponding reopen tab, and wires
-// the left tab's click to re-expand (blueprint only wires the right one).
-function wirePanelTab(panelId, tabId) {
-  const panel = document.getElementById(panelId);
-  const tab   = document.getElementById(tabId);
+// Track each panel's collapsed state (MutationObserver on the .collapsed class)
+// and propagate it to:
+//   • the reopen tab's `.visible` class
+//   • the panel header button's `aria-expanded` attribute (a11y)
+// Also wires each reopen tab's click since the blueprint only handles the right one.
+function wirePanelTab(panelId, tabId, headerId) {
+  const panel  = document.getElementById(panelId);
+  const tab    = document.getElementById(tabId);
+  const header = document.getElementById(headerId);
   if (!panel || !tab) return;
-  const apply = () => tab.classList.toggle('visible', panel.classList.contains('collapsed'));
+  const apply = () => {
+    const collapsed = panel.classList.contains('collapsed');
+    tab.classList.toggle('visible', collapsed);
+    if (header) header.setAttribute('aria-expanded', String(!collapsed));
+  };
   apply();
   new MutationObserver(apply).observe(panel, { attributes: true, attributeFilter: ['class'] });
   tab.addEventListener('click', () => {
@@ -244,8 +251,8 @@ function wirePanelTab(panelId, tabId) {
     setTimeout(invalidateMapSize, 310);
   });
 }
-wirePanelTab('panelRight', 'rightCollapseTab');
-wirePanelTab('panelLeft',  'leftCollapseTab');
+wirePanelTab('panelRight', 'rightCollapseTab', 'rightPanelHd');
+wirePanelTab('panelLeft',  'leftCollapseTab',  'leftPanelHd');
 
 // ── Filters ───────────────────────────────────────────────────────────────────
 

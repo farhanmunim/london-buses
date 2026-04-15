@@ -82,21 +82,54 @@
     return modal;
   }
 
-  function open()  { ensureModal().hidden = false; }
-  function close() { const m = document.getElementById('about-modal'); if (m) m.hidden = true; }
+  // Focusable elements inside the modal, in tab order
+  const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  let lastTrigger = null;
+
+  function getFocusable(modal) { return [...modal.querySelectorAll(FOCUSABLE)].filter(el => !el.hidden); }
+
+  function open(trigger) {
+    const modal = ensureModal();
+    lastTrigger = trigger ?? document.activeElement;
+    modal.hidden = false;
+    // Move focus into the dialog — prefer the close button for predictable tabbing
+    const closeBtn = modal.querySelector('.modal-close');
+    (closeBtn ?? getFocusable(modal)[0])?.focus();
+  }
+  function close() {
+    const m = document.getElementById('about-modal');
+    if (!m || m.hidden) return;
+    m.hidden = true;
+    // Restore focus to whatever opened the dialog
+    lastTrigger?.focus?.();
+    lastTrigger = null;
+  }
+
+  function trapFocus(e) {
+    const modal = document.getElementById('about-modal');
+    if (!modal || modal.hidden || e.key !== 'Tab') return;
+    const items = getFocusable(modal);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last)  { e.preventDefault(); first.focus(); }
+  }
 
   function init() {
     // Any #about-btn (topbar, footer, mobile-nav) opens the dialog
     document.addEventListener('click', e => {
       const btn = e.target.closest('#about-btn');
-      if (btn) { e.preventDefault(); open(); return; }
+      if (btn) { e.preventDefault(); open(btn); return; }
       const closer = e.target.closest('#about-modal [data-close]');
       if (closer) close();
     });
     document.addEventListener('keydown', e => {
-      if (e.key !== 'Escape') return;
-      const m = document.getElementById('about-modal');
-      if (m && !m.hidden) close();
+      if (e.key === 'Escape') {
+        const m = document.getElementById('about-modal');
+        if (m && !m.hidden) close();
+      } else {
+        trapFocus(e);
+      }
     });
     // Pre-inject the modal so the first open is immediate
     ensureModal();
