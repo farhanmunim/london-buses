@@ -971,6 +971,39 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 .cl-inline-link:hover { border-bottom-style: solid; }
 
+/* Changelog closing support card — sits after the last entry as a gentle
+   "thanks, here's a tip jar" note. Not a banner; matches entry rhythm. */
+.cl-support {
+  margin-block-start: 72px;
+  padding: var(--sp-7);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  border-radius: var(--r-lg);
+  text-align: center;
+}
+.cl-support__title {
+  margin: 0 0 var(--sp-2);
+  font-size: clamp(1.125rem, 0.9rem + 0.8vw, 1.375rem);
+  font-weight: 600;
+  color: hsl(var(--primary-foreground));
+  letter-spacing: -0.02em;
+}
+.cl-support__copy {
+  margin: 0 0 var(--sp-5);
+  color: hsl(var(--primary-foreground) / 0.75);
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+/* Invert the support button inside the dark card so it stays readable:
+   a crisp light pill on the dark surface. */
+.cl-support .modal-support__link {
+  background: hsl(var(--primary-foreground));
+  color: hsl(var(--primary));
+  border-color: hsl(var(--primary-foreground));
+}
+.cl-support .modal-support__link:hover { filter: brightness(0.95); }
+
 /* Hero preview — on-theme visual */
 .cl-hero {
   width: 100%;
@@ -1516,28 +1549,42 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 .modal-disclaimer strong { color: var(--amber-tx); }
 
-/* Support block inside the About modal — a friendly call-to-action without
-   being pushy. Warm amber because it's about coffee; tokens keep it
-   theme-aware in dark mode. */
+/* Support block inside the About / Roadmap modals — a friendly call-to-action
+   in its own soft-card frame so it visually separates from surrounding text. */
+.modal-support {
+  margin-block-start: var(--sp-5);
+  padding: var(--sp-5) var(--sp-6);
+  background: var(--muted-bg);
+  border: 1px solid var(--border-c);
+  border-radius: var(--r-md);
+}
+.modal-support .modal-section-tag {
+  margin-block-end: var(--sp-3);
+  color: var(--text-2); /* slightly brighter than the default --text-3 so the
+                           label stays legible against the muted-bg frame */
+}
 .modal-support__copy {
-  color: var(--text-2);
+  color: var(--text-1); /* body copy inside the card: full contrast, not muted,
+                           because muted-bg already softens the whole block */
   font-size: var(--fs-sm);
   line-height: 1.55;
   margin-block: 0 var(--sp-4);
 }
+/* Filled blue pill — high contrast against both light muted-bg card and
+   dark-mode card. White text / icon is the clearest CTA treatment. */
 .modal-support__link {
   display: inline-flex; align-items: center; gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-5);
-  background: var(--blue-bg);
-  color: var(--blue-tx);
-  border: 1px solid var(--blue-bd);
+  background: hsl(var(--info));
+  color: #fff;
+  border: 1px solid hsl(var(--info));
   border-radius: var(--r-md);
   font-size: var(--fs-sm); font-weight: 600;
   text-decoration: none;
   transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
-.modal-support__link:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); filter: brightness(1.03); }
-.modal-support__link .icon-sm { opacity: 0.7; }
+.modal-support__link:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); filter: brightness(1.05); }
+.modal-support__link .icon-sm { opacity: 0.8; }
 
 .footer-disclaimer { color: var(--text-3); font-style: italic; }
 .modal-section { margin-top: var(--sp-6); }

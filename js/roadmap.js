@@ -96,6 +96,18 @@
           Have a suggestion? Open an issue on
           <a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">GitHub</a>.
         </p>
+
+        <section class="modal-section modal-support">
+          <span class="modal-section-tag">Support</span>
+          <p class="modal-support__copy">
+            Help move ideas from this list into the changelog.
+          </p>
+          <a class="modal-support__link" href="https://buymeacoffee.com/farhan.app" target="_blank" rel="noopener">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M10 3v2M13 3v2"/></svg>
+            Buy me a coffee
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M8 7h9v9"/></svg>
+          </a>
+        </section>
       </div>
     </div>`;
 
