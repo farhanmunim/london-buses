@@ -1351,7 +1351,22 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   color: hsl(var(--primary-foreground));
   border-color: hsl(var(--primary));
 }
-.filter-chips .filter-chip--unknown { opacity: 0.85; font-style: italic; }
+/* "Unknown" chip — muted grey so it reads as a catch-all for missing data
+   rather than just another option in the group. Keeps the same shape as
+   .chip-outline but with dimmer palette and italic copy. */
+.filter-chips .filter-chip--unknown {
+  background: var(--muted-bg);
+  color: var(--text-3);
+  border-color: var(--border-c);
+  font-style: italic;
+}
+.filter-chips .filter-chip--unknown:hover { color: var(--text-2); }
+.filter-chips .filter-chip--unknown[aria-pressed="true"],
+.filter-chips .filter-chip--unknown.active {
+  background: var(--text-3);
+  color: hsl(var(--card));
+  border-color: var(--text-3);
+}
 
 /* Garage filter group — visually separated so users can see it's an independent
    overlay control, not another route filter. */

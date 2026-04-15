@@ -39,15 +39,19 @@ const OUT_PATH   = path.join(DATA_DIR, 'route_classifications.json');
 
 // ── Route type derivation ─────────────────────────────────────────────────────
 
-function deriveType(routeId, serviceTypes) {
+function deriveType(routeId, serviceTypes, twentyFourSet) {
   const id = routeId.toUpperCase();
   const types = serviceTypes.map(s => s.toLowerCase());
 
   // Night routes: N-prefix or API confirms night-only
   if (/^N\d/.test(id) || (types.includes('night') && !types.includes('regular'))) return 'night';
 
-  // 24-hour routes: API returns both Regular and Night service types
+  // 24-hour routes: either the API returns both Regular + Night (rare these
+  // days), OR the daytime route has a corresponding N-prefix sibling sharing
+  // the same timetable page on routes.htm (the authoritative signal now that
+  // TfL's service_types is largely flat).
   if (types.includes('night') && types.includes('regular')) return 'twentyfour';
+  if (twentyFourSet?.has(id)) return 'twentyfour';
 
   // School routes: purely numeric IDs in the 600–799 range
   const num = parseInt(id, 10);
@@ -132,6 +136,9 @@ const operatorByRoute = {};
 for (const [k, v] of Object.entries(detailsFile.operatorByRoute ?? {})) {
   operatorByRoute[k.toUpperCase()] = v;
 }
+// Daytime routes that are actually 24-hour services: derived from routes.htm
+// href-share detection. If N128 aliases to 128, then 128 runs 24/7.
+const twentyFourSet = new Set(Object.values(routeAliases));
 
 // Load manual vehicle-type → (deck, propulsion) lookup used as fallback when
 // automatic derivation fails. Maintained manually via scripts/update-vehicle-lookup.js.
@@ -183,7 +190,7 @@ for (const file of routeFiles) {
   }
 
   const serviceTypes = destinations[routeId]?.service_types ?? [];
-  const type         = deriveType(routeId, serviceTypes);
+  const type         = deriveType(routeId, serviceTypes, twentyFourSet);
   const isPrefix     = deriveIsPrefix(routeId, type);
   const km           = routeLengthKm(geojson);
   const lengthBand   = deriveLengthBand(km);

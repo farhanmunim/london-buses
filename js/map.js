@@ -99,10 +99,11 @@ function matchesFilterSet(set, value) {
 function featurePassesFilter(props) {
   if (_filters.types) {
     const { routeType, isPrefix } = props;
-    const typeKey = isPrefix                 ? 'prefix'
-                  : routeType === 'night'    ? 'night'
-                  : routeType === 'school'   ? 'school'
-                  :                            'regular';
+    const typeKey = isPrefix                    ? 'prefix'
+                  : routeType === 'night'       ? 'night'
+                  : routeType === 'twentyfour'  ? 'twentyfour'
+                  : routeType === 'school'      ? 'school'
+                  :                               'regular';
     if (!_filters.types.has(typeKey)) return false;
   }
   if (!matchesFilterSet(_filters.deck,       props.deck))       return false;
