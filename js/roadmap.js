@@ -2,7 +2,7 @@
  * roadmap.js — Roadmap modal, injected on load so any #roadmap-btn on any
  * page opens the same dialog. Mirrors the About modal pattern.
  *
- * Items are defined as a plain array so a roadmap update is a one-line edit.
+ * Features are defined as a plain array so a roadmap update is a one-line edit.
  */
 
 (function () {
@@ -11,6 +11,12 @@
   const ITEMS = [
     { title: 'TfL zone map overlay',
       desc:  'Optional overlay tinting the map by TfL fare zone (1–9) for quick geographic context.',
+      stage: 'planned' },
+    { title: 'Postcode search',
+      desc:  'Enter any London postcode to centre the map on it and list the routes serving stops nearby.',
+      stage: 'planned' },
+    { title: 'Route tender details',
+      desc:  'Tender number, contract start / end, current bid winner and previous operator for each route.',
       stage: 'planned' },
     { title: 'Live road traffic map',
       desc:  'Overlay live road congestion so users can see how current traffic is affecting bus routes.',
@@ -23,9 +29,6 @@
       stage: 'idea' },
     { title: 'Live performance (EWT · OTD)',
       desc:  'Surface route-level Excess Wait Time and On-Time Departure from TfL’s operational metrics.',
-      stage: 'idea' },
-    { title: 'Route tender details',
-      desc:  'Tender number, contract start / end, current bid winner and previous operator for each route.',
       stage: 'idea' },
     { title: 'Saved views',
       desc:  'Bookmark a filter + paint-mode combination and restore it on any device via a shareable link.',
@@ -88,14 +91,14 @@
         </div>
 
         <p class="modal-lede">
-          A running list of ideas and commitments. Stages move left-to-right as items progress.
-          Shipped items are mirrored in the <a href="changelog.html">changelog</a>.
+          A running list of ideas and commitments. Stages move left-to-right as features progress.
+          Shipped features are mirrored in the <a href="changelog.html">changelog</a>.
         </p>
 
         <table class="roadmap">
           <thead>
             <tr>
-              <th scope="col">Item</th>
+              <th scope="col">Feature</th>
               <th scope="col">Description</th>
               <th scope="col">Stage</th>
             </tr>
