@@ -119,9 +119,19 @@ const destinations = JSON.parse(fs.readFileSync(destinationsPath, 'utf8')).route
 
 // Load supplementary route details (deck type + frequency) if available
 const detailsPath = path.join(DATA_DIR, 'source', 'route_details.json');
-const routeDetails = fs.existsSync(detailsPath)
-  ? (JSON.parse(fs.readFileSync(detailsPath, 'utf8')).routes ?? {})
-  : {};
+const detailsFile = fs.existsSync(detailsPath)
+  ? JSON.parse(fs.readFileSync(detailsPath, 'utf8'))
+  : { routes: {}, aliases: {}, operatorByRoute: {} };
+const routeDetails     = detailsFile.routes          ?? {};
+// Case-insensitive aliases: map every key to upper-case so lookups match
+const routeAliases = {};
+for (const [k, v] of Object.entries(detailsFile.aliases ?? {})) {
+  routeAliases[k.toUpperCase()] = String(v).toUpperCase();
+}
+const operatorByRoute = {};
+for (const [k, v] of Object.entries(detailsFile.operatorByRoute ?? {})) {
+  operatorByRoute[k.toUpperCase()] = v;
+}
 
 // Load manual vehicle-type → (deck, propulsion) lookup used as fallback when
 // automatic derivation fails. Maintained manually via scripts/update-vehicle-lookup.js.
@@ -178,17 +188,36 @@ for (const file of routeFiles) {
   const km           = routeLengthKm(geojson);
   const lengthBand   = deriveLengthBand(km);
 
-  const details     = routeDetails[routeId] ?? null;
-  const vehicleType = details?.vehicleType ?? null;
+  // Fallback chain for route data:
+  //   1. Scraped details for this routeId (details.htm)
+  //   2. If this is a night route that's actually a 24-hour alias of a daytime
+  //      route (per routes.htm href sharing), inherit from the daytime route
+  //   3. Operator-only fallback from routes.htm's 3rd column
+  const self    = routeDetails[routeId] ?? null;
+  const aliasId = routeAliases[routeId] ?? null;
+  const alias   = aliasId ? (routeDetails[aliasId] ?? null) : null;
+  const details = {
+    deck:        self?.deck        ?? alias?.deck        ?? null,
+    vehicleType: self?.vehicleType ?? alias?.vehicleType ?? null,
+    propulsion:  self?.propulsion  ?? alias?.propulsion  ?? null,
+    operator:    self?.operator    ?? alias?.operator    ?? operatorByRoute[routeId] ?? null,
+    garageName:  self?.garageName  ?? alias?.garageName  ?? null,
+    garageCode:  self?.garageCode  ?? alias?.garageCode  ?? null,
+    pvr:         self?.pvr         ?? alias?.pvr         ?? null,
+    freqWeekday: self?.freqWeekday ?? alias?.freqWeekday ?? null,
+    freqSunday:  self?.freqSunday  ?? alias?.freqSunday  ?? null,
+    freqEvening: self?.freqEvening ?? alias?.freqEvening ?? null,
+  };
+  const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
   // automatic derivation in fetch-route-details.js returned null.
   const fallback    = vehicleType ? vehicleLookup[vehicleType] : null;
-  const deck        = details?.deck       ?? fallback?.deck       ?? null;
-  const propulsion  = details?.propulsion ?? fallback?.propulsion ?? null;
-  const operator     = details?.operator    ?? null;
-  const garageName   = details?.garageName  ?? null;
-  const garageCode   = details?.garageCode  ?? null;
-  const pvr          = details?.pvr         ?? null;
+  const deck        = details.deck       ?? fallback?.deck       ?? null;
+  const propulsion  = details.propulsion ?? fallback?.propulsion ?? null;
+  const operator     = details.operator;
+  const garageName   = details.garageName;
+  const garageCode   = details.garageCode;
+  const pvr          = details.pvr;
   const frequency    = deriveFrequencyBand(details);
 
   // Manual overrides win over everything else (scraper + lookup)

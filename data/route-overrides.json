@@ -20,6 +20,9 @@
       "vehicleType": "Enviro400EV 10.5m",
       "pvr": 18,
       "frequency": "high"
-    }
+    },
+
+    "_N128_note": "N128 is the night branding of the 128 (24-hour service per londonbusroutes.net). Pipeline now auto-inherits via routes.htm href-share detection, but this explicit entry pins the operator in case the scrape fails.",
+    "N128": { "operator": "Stagecoach London" }
   }
 }

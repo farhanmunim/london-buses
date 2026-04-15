@@ -75,6 +75,89 @@ async function fetchText(url) {
   }
 }
 
+// ── Routes page parser ───────────────────────────────────────────────────────
+//
+// routes.htm has one row per (routeId, role) pair. Anchor names are `M<id>`
+// for the daytime table and `N<id>` for the night table. Rows sharing the
+// same `href="times/<filename>.htm"` belong to the same physical service —
+// meaning a night row whose href matches a main row is an alias of that
+// main route (a 24-hour service branded under two numbers).
+//
+// Returns:
+//   aliases:   { 'N128': '128', 'N277': '30', ... }  — night → daytime mapping
+//   operators: { '128': 'Stagecoach London', ... }   — operator from the 3rd <TD>
+//
+// Operator names on routes.htm are the legal subsidiary (e.g. "Arriva London",
+// "London General", "Blue Triangle") — we normalise them to the parent brands
+// used elsewhere in the app (Arriva, Go-Ahead, etc.).
+
+const OPERATOR_ALIASES = {
+  'Arriva London':          'Arriva',
+  'Metroline West':          'Metroline',
+  'Metroline West Ltd.':     'Metroline',
+  'Metroline Travel':        'Metroline',
+  'First Bus London':        'First',
+  'First Bus':               'First',
+  'London General':          'Go-Ahead',
+  'London Central':          'Go-Ahead',
+  'Go-Ahead London':         'Go-Ahead',
+  'Blue Triangle':           'Go-Ahead',
+  'Abellio London':          'Transport UK',
+  'Transport UK London Bus': 'Transport UK',
+  'Stagecoach East London':  'Stagecoach London',
+  'Stagecoach Selkent':      'Stagecoach London',
+};
+function normaliseOperator(name) {
+  if (!name) return null;
+  const trimmed = name.replace(/\s*Ltd\.?$/, '').trim();
+  return OPERATOR_ALIASES[trimmed] ?? trimmed;
+}
+
+async function fetchRouteAliasesAndOperators() {
+  console.log('Fetching route alias map (routes.htm)...');
+  let html;
+  try {
+    html = await fetchText('http://www.londonbusroutes.net/routes.htm');
+  } catch (err) {
+    console.warn(`  Warning: could not fetch routes.htm (${err.message}) — skipping alias inference`);
+    return { aliases: {}, operators: {} };
+  }
+
+  const rows = [];
+  const rowRe = /<TR[^>]*>\s*<TD[^>]*>\s*<a\s+name=["']?([MN][A-Z0-9]+)["']?\s+href=["']?([^"'>]+)["']?>([^<]+)<\/a>\s*<\/TD>\s*<TD[^>]*>([^<]*)<\/TD>\s*<TD[^>]*>([^<]*)<\/TD>/gi;
+  let m;
+  while ((m = rowRe.exec(html)) !== null) {
+    const [, anchor, href, label, _dest, operator] = m;
+    const role    = anchor[0];                // 'M' or 'N'
+    const routeId = label.trim().toUpperCase();
+    if (!routeId) continue;
+    // Night-table rows show the daytime id in the label (e.g. anchor N128 → label "128").
+    // So the actual route id for an N-row is the anchor number.
+    const realId = role === 'N' ? anchor.slice(1).toUpperCase() : routeId;
+    rows.push({ role, id: realId, href: href.trim(), operator: normaliseOperator(operator.trim()) });
+  }
+
+  // Group by href to find aliases
+  const byHref = {};
+  for (const r of rows) (byHref[r.href] ??= []).push(r);
+  const aliases  = {};
+  const operators = {};
+  for (const r of rows) {
+    // Night row: if a main-row in the same group exists, record alias
+    if (r.role === 'N') {
+      const group = byHref[r.href];
+      const main  = group.find(x => x.role === 'M');
+      const nightId = `N${r.id}`;
+      if (main) aliases[nightId] = main.id;
+      if (r.operator) operators[nightId] = r.operator;
+    } else {
+      if (r.operator) operators[r.id] = r.operator;
+    }
+  }
+  console.log(`  Parsed routes.htm: ${rows.length} rows, ${Object.keys(aliases).length} night→day aliases, ${Object.keys(operators).length} operator entries`);
+  return { aliases, operators };
+}
+
 // ── Step 1: Parse garages page → garage code lookup ──────────────────────────
 
 async function fetchGarageLookup() {
@@ -252,6 +335,9 @@ async function main() {
     console.warn(`  Warning: could not fetch garage list (${err.message}) — operator/garage names will be omitted`);
   }
 
+  // Step 1b — route aliases + fallback operator map from routes.htm
+  const { aliases, operators: operatorByRoute } = await fetchRouteAliasesAndOperators();
+
   // Step 2 — details page
   let html;
   try {
@@ -332,6 +418,8 @@ async function main() {
     source:      'londonbusroutes.net',
     routeCount:  parsed,
     routes,
+    aliases,           // { 'N128': '128', ... } — night routes that are 24-hour aliases
+    operatorByRoute,   // { '128': 'Stagecoach London', ... } — tertiary operator source
   };
 
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });

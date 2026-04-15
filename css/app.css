@@ -1623,6 +1623,11 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 /* Hide Leaflet attribution — we credit the sources in the About modal instead */
 .leaflet-control-attribution { display: none !important; }
 
+/* Pointer cursor on any interactive map element (route lines, stop markers,
+   garage pins) so the user knows they're clickable. */
+.leaflet-interactive { cursor: pointer !important; }
+.leaflet-pane .leaflet-marker-icon { cursor: pointer; }
+
 /* (3) Typography: match filter-group label to right-section-title exactly */
 .filter-group-label {
   font-size: 10.5px;
