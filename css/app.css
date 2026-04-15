@@ -806,8 +806,9 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   }
   .nav-item { height: 40px; }
 
-  /* Drawer panels — larger (92vw up to 380px) so content breathes, sit above
-     the mobile nav. Use top:52px to align below the topbar. */
+  /* Drawer panels — larger (92vw up to 380px), sit above the Leaflet map's
+     stacking context (Leaflet uses z-index up to 1000), below the mobile nav
+     and modals. */
   .panel-left,
   .panel-right {
     position: fixed;
@@ -815,7 +816,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
     bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
     width: min(92vw, 380px) !important;
     transition: transform var(--t-panel), box-shadow var(--t-panel);
-    z-index: 55;
+    z-index: 1100;
     box-shadow: none;
     overscroll-behavior: contain;
   }
@@ -828,7 +829,18 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   .left-collapse-tab,
   .right-collapse-tab { display: none !important; }
 
-  .overlay { display: block; bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px)); }
+  .overlay {
+    display: block;
+    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 1050;
+  }
+
+  /* Mobile nav sits on top of everything except full-screen modals */
+  .m-nav { z-index: 1200; }
+
+  /* Footer — hidden on small screens. The About modal carries the disclaimer
+     and credits; the mobile nav handles navigation. */
+  .app-footer { display: none !important; }
 
   .topbar-divider, .avatars, .breadcrumb,
   .hide-mobile { display: none !important; }
