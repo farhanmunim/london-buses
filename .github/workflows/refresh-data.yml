@@ -64,6 +64,7 @@ jobs:
             data/build-meta.json \
             data/manifest.json \
             data/geometry-source.json \
+            data/garage-locations.json \
             "data/routes-overview-*.geojson" || true
 
           # Only stage individual route files if the geometry ZIP changed
