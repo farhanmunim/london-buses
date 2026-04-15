@@ -107,7 +107,19 @@
               Filters are now <strong>split by concern</strong>. Route type / frequency / deck / propulsion / operator drive the route lines. A separate <em>Garage operator</em> filter drives the garage markers independently — so you can see one operator's route network overlaid with a competitor's garage footprint.
             </p>
             <p class="cl-body-text">
+              <strong>Palette switcher</strong>. The new <em>Colour routes by</em> control at the top of the filters panel flips every route line between the categorical palette (type) and the operator's brand livery (Arriva turquoise, Stagecoach navy, Go-Ahead red, …) — useful for comparing network shape vs operator share on the same map.
+            </p>
+            <p class="cl-body-text">
+              <strong>Context-aware layer toggles</strong> in the topbar let you show / hide routes and garages globally. With a route focused, the <em>Show routes</em> toggle controls only the faint context underlay — so you can switch between "route only" and "route in context" without losing the selection.
+            </p>
+            <p class="cl-body-text">
+              <strong>Smarter data pipeline</strong>. Night-route data (N128, N29, N9, …) that was previously blank now inherits from the daytime sibling when <code>routes.htm</code> confirms a 24-hour service. Unknown-operator routes dropped from 71 to 37 in a single refresh.
+            </p>
+            <p class="cl-body-text">
               <strong>Export</strong> now produces a single <code>.xlsx</code> workbook with three sheets — Routes, Garages, and a Network overview — each honouring the currently applied filters.
+            </p>
+            <p class="cl-body-text">
+              Elsewhere: a new <button type="button" data-roadmap-open class="cl-inline-link">Roadmap</button> dialog, per-section Clear buttons inside each filter group, fluid type + a11y pass (landmarks, focus trap on modals, keyboard-operable panel headers, focus-visible rings), and a rebuilt mobile nav with off-canvas drawers sized 92vw so the filter chips actually breathe on a phone.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">

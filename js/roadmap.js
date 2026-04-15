@@ -139,7 +139,8 @@
 
   function init() {
     document.addEventListener('click', e => {
-      const btn = e.target.closest('#roadmap-btn');
+      // Any #roadmap-btn OR element with [data-roadmap-open] triggers the dialog
+      const btn = e.target.closest('#roadmap-btn, [data-roadmap-open]');
       if (btn) { e.preventDefault(); open(btn); return; }
       const closer = e.target.closest('#roadmap-modal [data-close]');
       if (closer) close();

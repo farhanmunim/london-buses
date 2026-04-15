@@ -187,25 +187,17 @@ export function initMap() {
 
 // ── Overview layer ────────────────────────────────────────────────────────────
 
-// True when the user has ticked at least one filter chip.
-function hasActiveFilter() {
-  return Object.values(_filters).some(v => v !== null);
-}
-
 function overviewStyle(feature) {
-  // Behaviour:
-  //   • No route selected              → full overview (0.8)
-  //   • Route selected, no filters     → overview HIDDEN (0)
-  //   • Route selected, filters active → filtered routes shown as light underlay (0.2)
-  let opacity;
-  if (!_routeActive)           opacity = 0.8;
-  else if (hasActiveFilter())  opacity = 0.2;
-  else                         opacity = 0;
-
+  // Opacity depends only on whether a route is currently focused:
+  //   • No route focused  → full overview (0.8)
+  //   • Route focused     → faint context underlay (0.2)
+  // The Show/Hide routes toggle (setRoutesVisible) decides whether the
+  // overview layer is on the map at all, so it controls the *presence* of
+  // this faint context without requiring any opacity gymnastics.
   return {
     color:   featureColor(feature.properties),
     weight:  2.25,
-    opacity,
+    opacity: _routeActive ? 0.2 : 0.8,
     lineCap: 'round',
   };
 }
@@ -580,14 +572,23 @@ export function getVisibleGarages() {
 }
 
 /**
- * Hide or show every route-line layer (overview + selected route + multi-route
- * outline + stops). Garages and the basemap stay visible.
+ * Toggle the route-line layers.
+ *
+ * Behaviour depends on whether a route is currently focused:
+ *   • No route selected → hides / shows every route line (full overview).
+ *   • Route(s) selected → hides / shows only the *faint context overlay*
+ *     (the overview lines behind the focused route). The focused route
+ *     itself, its outline, and its stops stay put — the idea is to let
+ *     the user switch between "route only" and "route in context" views
+ *     without losing the selection.
  */
 let _routesVisible = true;
 export function setRoutesVisible(visible) {
   _routesVisible = !!visible;
-  const layers = [_overviewLayer, _outlineLayer, _routeLayer, _stopsLayer];
-  for (const layer of layers) {
+  const layersToToggle = _routeActive
+    ? [_overviewLayer]
+    : [_overviewLayer, _outlineLayer, _routeLayer, _stopsLayer];
+  for (const layer of layersToToggle) {
     if (!layer || !_map) continue;
     if (_routesVisible) { if (!_map.hasLayer(layer)) layer.addTo(_map); }
     else                { if (_map.hasLayer(layer))  _map.removeLayer(layer); }

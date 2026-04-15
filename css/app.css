@@ -960,6 +960,17 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 .cl-entry-title:hover { color: hsl(var(--info)); }
 
+/* Inline link-styled button inside changelog prose. Used for modal triggers
+   (e.g. the Roadmap dialog) so we keep native button semantics without the
+   browser's default button chrome. */
+.cl-inline-link {
+  padding: 0;
+  color: hsl(var(--info));
+  border-bottom: 1px dashed hsl(var(--info) / 0.4);
+  font: inherit;
+}
+.cl-inline-link:hover { border-bottom-style: solid; }
+
 /* Hero preview — on-theme visual */
 .cl-hero {
   width: 100%;
