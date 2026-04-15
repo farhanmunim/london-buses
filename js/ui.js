@@ -209,16 +209,12 @@ function renderOperatorStats(routes) {
       case 'map':     closeDrawers(); setActive('map'); break;
       case 'filters': openDrawer(leftPanel);  setActive('filters'); break;
       case 'details': openDrawer(rightPanel); setActive('details'); break;
-      case 'search':
-        openDrawer(leftPanel);
-        setActive('search');
-        setTimeout(() => document.getElementById('search-input')?.focus(), 60);
-        break;
       case 'about':
         closeDrawers();
         setActive('about');
         document.getElementById('about-btn')?.click();
         break;
+      // 'changelog' — let the anchor navigate naturally
     }
   });
 

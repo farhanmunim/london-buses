@@ -842,6 +842,11 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
      and credits; the mobile nav handles navigation. */
   .app-footer { display: none !important; }
 
+  /* On mobile, push the theme toggle to the far right of the topbar so it's
+     balanced (logo on the left, theme on the right). The topbar-spacer flex
+     grows between them. */
+  .topbar #themeToggle { order: 99; margin-left: auto; }
+
   .topbar-divider, .avatars, .breadcrumb,
   .hide-mobile { display: none !important; }
 
@@ -1379,7 +1384,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .stats-empty { color: var(--text-3); font-size: var(--fs-xs); font-style: italic; padding: var(--sp-3) 0; }
 
 /* About modal */
-.modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
+.modal { position: fixed; inset: 0; z-index: 1500; display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
 .modal[hidden] { display: none; }
 .modal-backdrop { position: absolute; inset: 0; background: var(--overlay); backdrop-filter: blur(4px); }
 .modal-panel {
