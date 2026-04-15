@@ -1519,11 +1519,25 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 /* Wider variant for dialogs that need a data table (e.g. Roadmap) */
 .modal-panel--wide { max-inline-size: 640px; }
 .modal-close {
-  position: absolute; top: var(--sp-4); right: var(--sp-4);
+  /* Sticky rather than absolute so the close button stays in the top-right
+     corner of the visible area as long content scrolls inside the panel.
+     `float: right` takes it out of normal flow so it doesn't push the header
+     down; `margin-block-end` pulls the following content back up where the
+     float would have reserved vertical space. */
+  position: sticky;
+  top: var(--sp-3);
+  float: right;
+  margin-inline-end: calc(-1 * var(--sp-2));
+  margin-block-end: calc(-26px - var(--sp-3));
   width: 26px; height: 26px;
   display: inline-flex; align-items: center; justify-content: center;
-  border: none; background: transparent; color: var(--text-2);
-  border-radius: var(--r-sm); cursor: pointer;
+  border: none;
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(4px);
+  color: var(--text-2);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  z-index: 2;
 }
 .modal-close:hover { background: var(--muted-bg); color: var(--text-1); }
 .modal-header { display: flex; align-items: center; gap: var(--sp-4); margin-bottom: var(--sp-5); }
