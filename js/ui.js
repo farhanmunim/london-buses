@@ -168,21 +168,65 @@ function renderOperatorStats(routes) {
 // ── Map resize on panel toggle ────────────────────────────────────────────────
 // Blueprint's Panels module collapses left/right panels via header click. Map
 // needs its size invalidated once the CSS transition settles.
-// Mobile-nav project-specific wiring. The blueprint's MobileNav module already
-// handles drawer toggling for Filters / Details / Map — we layer on what these
-// project-specific items should do.
-//   • Search (centre button): open the left drawer and focus the search input
-//   • About  (rightmost):     open the About modal
-document.getElementById('mobileNavNew')?.addEventListener('click', () => {
-  const leftPanel = document.getElementById('panelLeft');
-  if (leftPanel && !leftPanel.classList.contains('mobile-open')) {
-    window.AppShell?.Drawer?.toggle(leftPanel);
+// ── Mobile nav v2 ────────────────────────────────────────────────────────────
+// Self-contained. Does not depend on the blueprint's MobileNav module.
+// Drawer open/close is driven directly by toggling `.mobile-open` on the
+// panel + `.visible` on the overlay, matching the CSS in the ≤640px block.
+(function wireMobileNav() {
+  const nav = document.getElementById('m-nav');
+  if (!nav) return;
+
+  const leftPanel  = document.getElementById('panelLeft');
+  const rightPanel = document.getElementById('panelRight');
+  const overlay    = document.getElementById('overlay');
+
+  function setActive(action) {
+    nav.querySelectorAll('.m-nav-btn').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.action === action);
+    });
   }
-  setTimeout(() => document.getElementById('search-input')?.focus(), 50);
-});
-document.getElementById('mobileNavSearch')?.addEventListener('click', () => {
-  document.getElementById('about-btn')?.click();
-});
+  function closeDrawers() {
+    leftPanel?.classList.remove('mobile-open');
+    rightPanel?.classList.remove('mobile-open');
+    overlay?.classList.remove('visible');
+    document.body.classList.remove('drawer-open');
+  }
+  function openDrawer(panel) {
+    // Ensure only one drawer at a time
+    if (panel === leftPanel)  rightPanel?.classList.remove('mobile-open');
+    if (panel === rightPanel) leftPanel?.classList.remove('mobile-open');
+    panel?.classList.add('mobile-open');
+    overlay?.classList.add('visible');
+    document.body.classList.add('drawer-open');
+  }
+
+  nav.addEventListener('click', e => {
+    const btn = e.target.closest('.m-nav-btn');
+    if (!btn) return;
+    const action = btn.dataset.action;
+
+    switch (action) {
+      case 'map':     closeDrawers(); setActive('map'); break;
+      case 'filters': openDrawer(leftPanel);  setActive('filters'); break;
+      case 'details': openDrawer(rightPanel); setActive('details'); break;
+      case 'search':
+        openDrawer(leftPanel);
+        setActive('search');
+        setTimeout(() => document.getElementById('search-input')?.focus(), 60);
+        break;
+      case 'about':
+        closeDrawers();
+        setActive('about');
+        document.getElementById('about-btn')?.click();
+        break;
+    }
+  });
+
+  overlay?.addEventListener('click', () => { closeDrawers(); setActive('map'); });
+
+  // Start with Map highlighted
+  setActive('map');
+})();
 
 document.getElementById('leftPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));
 document.getElementById('rightPanelHd')?.addEventListener('click', () => setTimeout(invalidateMapSize, 310));

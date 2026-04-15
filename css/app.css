@@ -725,35 +725,55 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 /* ══════════════════════════════════════════════
    MOBILE NAV BAR
 ══════════════════════════════════════════════ */
-.mobile-nav {
+/* Mobile nav — v2 rebuild. Fixed to viewport bottom so it can't be pushed
+   around by layout shifts. Hidden on desktop. */
+.m-nav {
   display: none;
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
   height: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: var(--surface);
+  background: hsl(var(--card));
   border-top: 1px solid var(--border-c);
-  flex-shrink: 0;
-  z-index: 100;
+  box-shadow: 0 -2px 12px hsl(240 10% 3.9% / 0.08);
+  z-index: 600; /* above Leaflet overlays */
 }
-.mobile-nav-items { display: flex; height: 100%; width: 100%; flex: 1; }
-.mobile-nav-item {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 4px;
-  cursor: pointer; color: var(--text-3);
-  transition: color var(--t-fast);
-  font-size: 10.5px; font-weight: 500;
-  -webkit-tap-highlight-color: transparent;
-}
-.mobile-nav-item:hover, .mobile-nav-item.active { color: var(--text-1); }
-.mobile-nav-item.active .mobile-nav-icon { background: var(--accent-lt); color: var(--text-1); }
-.mobile-nav-item.brand-item.active .mobile-nav-icon { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
-.mobile-nav-icon {
-  width: 32px; height: 32px; border-radius: var(--r-md);
-  background: transparent;
-  display: flex; align-items: center; justify-content: center;
-  transition: background var(--t-fast), color var(--t-fast);
+.m-nav-btn {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  min-height: 56px;
+  padding: 6px 4px;
+  border: none; background: transparent;
   color: var(--text-3);
+  font-family: inherit; font-size: 10.5px; font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--t-fast);
 }
-.mobile-nav-item.active .mobile-nav-icon { color: var(--text-1); }
+.m-nav-btn .icon { width: 22px; height: 22px; }
+.m-nav-btn:hover,
+.m-nav-btn.is-active { color: var(--text-1); }
+.m-nav-btn.is-active .icon { color: hsl(var(--primary)); }
+
+/* Centre 'Map' button: a visual anchor — filled primary pill */
+.m-nav-btn.is-primary {
+  color: hsl(var(--primary-foreground));
+}
+.m-nav-btn.is-primary .icon {
+  width: 42px; height: 42px;
+  padding: 10px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: var(--r-pill);
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.35);
+  margin-top: -18px; /* raise so it pops above the bar */
+}
+.m-nav-btn.is-primary span { color: var(--text-2); margin-top: 2px; }
+.m-nav-btn.is-primary.is-active .icon { filter: brightness(1.1); }
+
+[data-theme="dark"] .m-nav { box-shadow: 0 -2px 12px hsl(240 10% 3.9% / 0.5); }
 
 /* ══════════════════════════════════════════════
    RESPONSIVE — TABLET  ≤ 900px
@@ -770,57 +790,45 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
    RESPONSIVE — MOBILE  ≤ 640px
 ══════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  .mobile-nav { display: flex; }
+  /* Show new mobile nav */
+  .m-nav { display: flex; align-items: stretch; }
 
-  /* Footer stays visible on mobile on every page — same treatment as changelog:
-     wraps to two lines when tight, comfortable tap padding.
-     On pages that have a mobile-nav, footer sits *below* it via flex order. */
+  /* Leave room above the fixed nav so content isn't hidden behind it */
+  .workspace { padding-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px)); }
+
+  /* Footer wraps on mobile with comfortable padding */
   .app-footer {
     display: flex; flex-wrap: wrap;
     height: auto; min-height: 40px;
     padding: var(--sp-3) var(--sp-4);
     row-gap: var(--sp-2);
-    order: 2;
+    margin-bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
   }
-  .mobile-nav { order: 1; }
-
-  /* Slightly taller nav rows for comfortable taps */
   .nav-item { height: 40px; }
 
-  .panel-left {
-    position: fixed;
-    left: 0; top: 0;
-    bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
-    width: min(86vw, 320px) !important;
-    transform: translateX(-100%);
-    transition: transform var(--t-panel), box-shadow var(--t-panel);
-    border-right: 1px solid var(--border-c);
-    z-index: 50; box-shadow: none;
-    overscroll-behavior: contain;
-  }
-  .panel-left.mobile-open {
-    transform: translateX(0);
-    box-shadow: var(--shadow-lg);
-  }
-
+  /* Drawer panels — larger (92vw up to 380px) so content breathes, sit above
+     the mobile nav. Use top:52px to align below the topbar. */
+  .panel-left,
   .panel-right {
     position: fixed;
-    right: 0; top: 0;
+    top: var(--topbar-h);
     bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
-    width: min(86vw, 340px) !important;
-    transform: translateX(100%);
+    width: min(92vw, 380px) !important;
     transition: transform var(--t-panel), box-shadow var(--t-panel);
-    border-left: 1px solid var(--border-c);
-    z-index: 50; box-shadow: none;
+    z-index: 55;
+    box-shadow: none;
     overscroll-behavior: contain;
   }
-  .panel-right.mobile-open {
-    transform: translateX(0);
-    box-shadow: var(--shadow-lg);
-  }
+  .panel-left  { left: 0;  transform: translateX(-100%); border-right: 1px solid var(--border-c); }
+  .panel-right { right: 0; transform: translateX( 100%); border-left:  1px solid var(--border-c); }
+  .panel-left.mobile-open,
+  .panel-right.mobile-open { transform: translateX(0); box-shadow: var(--shadow-lg); }
 
-  .right-collapse-tab { display: none; }
-  .overlay { display: block; }
+  /* Collapse tabs belong on desktop only */
+  .left-collapse-tab,
+  .right-collapse-tab { display: none !important; }
+
+  .overlay { display: block; bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px)); }
 
   .topbar-divider, .avatars, .breadcrumb,
   .hide-mobile { display: none !important; }
