@@ -362,8 +362,9 @@ a.btn-primary, a.btn-primary:hover, a.btn-primary:visited { color: hsl(var(--pri
   background: var(--overlay); opacity: 0;
   transition: opacity var(--t-panel);
   backdrop-filter: blur(2px);
+  pointer-events: none;  /* do NOT intercept taps while hidden */
 }
-.overlay.visible { opacity: 1; }
+.overlay.visible { opacity: 1; pointer-events: auto; }
 
 /* ══════════════════════════════════════════════
    SHARED PANEL PRIMITIVES
