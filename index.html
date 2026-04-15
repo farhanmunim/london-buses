@@ -148,7 +148,7 @@
                 <button class="chip chip-outline" data-filter="operator" data-val="Metroline" aria-pressed="false">Metroline</button>
                 <button class="chip chip-outline" data-filter="operator" data-val="Stagecoach London" aria-pressed="false">Stagecoach</button>
                 <button class="chip chip-outline" data-filter="operator" data-val="Transport UK" aria-pressed="false">Transport UK</button>
-                <button class="chip chip-outline unknown-chip" data-filter="operator" data-val="__unknown__" aria-pressed="false">Unknown</button>
+                <button class="chip chip-outline filter-chip--unknown" data-filter="operator" data-val="__unknown__" aria-pressed="false">Unknown</button>
               </div>
             </div>
 
@@ -158,7 +158,7 @@
                 <button class="chip chip-outline" data-filter="frequency" data-val="high" aria-pressed="false">High (&le;6 min)</button>
                 <button class="chip chip-outline" data-filter="frequency" data-val="regular" aria-pressed="false">Regular (7–15 min)</button>
                 <button class="chip chip-outline" data-filter="frequency" data-val="low" aria-pressed="false">Low (&gt;15 min)</button>
-                <button class="chip chip-outline unknown-chip" data-filter="frequency" data-val="__unknown__" aria-pressed="false">Unknown</button>
+                <button class="chip chip-outline filter-chip--unknown" data-filter="frequency" data-val="__unknown__" aria-pressed="false">Unknown</button>
               </div>
             </div>
 
@@ -167,7 +167,7 @@
               <div class="filter-chips" role="group" aria-labelledby="fg-deck">
                 <button class="chip chip-outline" data-filter="deck" data-val="double" aria-pressed="false">Double deck</button>
                 <button class="chip chip-outline" data-filter="deck" data-val="single" aria-pressed="false">Single deck</button>
-                <button class="chip chip-outline unknown-chip" data-filter="deck" data-val="__unknown__" aria-pressed="false">Unknown</button>
+                <button class="chip chip-outline filter-chip--unknown" data-filter="deck" data-val="__unknown__" aria-pressed="false">Unknown</button>
               </div>
             </div>
 
@@ -178,7 +178,7 @@
                 <button class="chip chip-outline" data-filter="propulsion" data-val="hydrogen" aria-pressed="false">Hydrogen</button>
                 <button class="chip chip-outline" data-filter="propulsion" data-val="hybrid" aria-pressed="false">Hybrid</button>
                 <button class="chip chip-outline" data-filter="propulsion" data-val="diesel" aria-pressed="false">Diesel</button>
-                <button class="chip chip-outline unknown-chip" data-filter="propulsion" data-val="__unknown__" aria-pressed="false">Unknown</button>
+                <button class="chip chip-outline filter-chip--unknown" data-filter="propulsion" data-val="__unknown__" aria-pressed="false">Unknown</button>
               </div>
             </div>
 
@@ -253,17 +253,17 @@
                   <span id="route-badge-number">25</span>
                 </div>
                 <div id="route-detail-meta">
-                  <span id="route-service-badge" class="service-tag regular">Regular</span>
+                  <span id="route-service-badge" class="route-detail__service-tag regular">Regular</span>
                   <span id="route-stop-count" class="chip chip-outline">– stops</span>
                 </div>
               </div>
 
               <div id="route-endpoints">
-                <div class="endpoint-row" id="ep-primary">
-                  <div class="endpoint-dot" id="ep-primary-dot"></div>
-                  <div class="endpoint-info">
-                    <span class="endpoint-dir" id="ep-primary-dir">Outbound</span>
-                    <span class="endpoint-name" id="ep-primary-name">–</span>
+                <div class="route-endpoint__row" id="ep-primary">
+                  <div class="route-endpoint__dot" id="ep-primary-dot"></div>
+                  <div class="route-endpoint__info">
+                    <span class="route-endpoint__direction" id="ep-primary-dir">Outbound</span>
+                    <span class="route-endpoint__name" id="ep-primary-name">–</span>
                   </div>
                 </div>
 
@@ -276,11 +276,11 @@
                   </button>
                 </div>
 
-                <div class="endpoint-row" id="ep-secondary">
-                  <div class="endpoint-dot" id="ep-secondary-dot"></div>
-                  <div class="endpoint-info">
-                    <span class="endpoint-dir" id="ep-secondary-dir">Inbound</span>
-                    <span class="endpoint-name" id="ep-secondary-name">–</span>
+                <div class="route-endpoint__row" id="ep-secondary">
+                  <div class="route-endpoint__dot" id="ep-secondary-dot"></div>
+                  <div class="route-endpoint__info">
+                    <span class="route-endpoint__direction" id="ep-secondary-dir">Inbound</span>
+                    <span class="route-endpoint__name" id="ep-secondary-name">–</span>
                   </div>
                 </div>
               </div>
@@ -299,7 +299,7 @@
               </dl>
             </div>
 
-            <div class="right-section route-action-row">
+            <div class="right-section route-detail__actions">
               <button id="stops-toggle-btn" class="btn btn-outline btn-sm active" type="button" aria-label="Toggle bus stops" aria-pressed="true" data-noun="stops">
                 <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
                 <span class="toggle-label">Hide stops</span>

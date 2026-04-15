@@ -6,7 +6,7 @@ import { initMap, renderOverview, filterOverview, countVisibleRoutes, getVisible
          renderGarages, setGaragesVisible, setStopsPreference, setRoutesVisible,
          filterGarages, countVisibleGarages, getVisibleGarages } from './map.js';
 import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';
-import { state, sidebar, collapseBtn, expandBtn, filtersSection, footerDate, footerNextDate } from './state.js';
+import { state, filtersSection, footerDate, footerNextDate } from './state.js';
 import './search.js';
 import './route-detail.js';
 
@@ -118,7 +118,7 @@ function renderOperatorStats(routes) {
   if (!container) return;
 
   if (!routes.length) {
-    container.innerHTML = '<p class="stats-empty">No routes match the current filters.</p>';
+    container.innerHTML = '<p class="operator-stats__empty">No routes match the current filters.</p>';
     return;
   }
 
@@ -145,7 +145,7 @@ function renderOperatorStats(routes) {
   const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '–';
 
   container.innerHTML = `
-    <table class="stats-table" aria-label="Operator statistics">
+    <table class="operator-stats__table" aria-label="Operator statistics">
       <thead>
         <tr>
           <th>Operator</th>
@@ -157,7 +157,7 @@ function renderOperatorStats(routes) {
       <tbody>
         ${sorted.map(([op, v]) => `
           <tr>
-            <td class="stat-op">${op}</td>
+            <td class="operator-stats__op">${op}</td>
             <td>${pct(v.routes, totalRoutes)}</td>
             <td>${pct(v.pvr, totalPvr)}</td>
             <td>${pct(v.ev, v.routes)}</td>

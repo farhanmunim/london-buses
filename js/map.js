@@ -136,16 +136,16 @@ export function initMap() {
       .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
       .map(([id, props]) => {
         const color = featureColor(props);
-        return `<span class="id-chip" data-route="${id}" style="--chip-col:${color}">${id}</span>`;
+        return `<span class="map-id-popup__chip" data-route="${id}" style="--chip-col:${color}">${id}</span>`;
       }).join('');
 
-    const html = `<div class="id-popup"><p class="id-popup-label">Routes here</p><div class="id-chips">${chips}</div></div>`;
-    _identifyPopup = L.popup({ closeButton: false, className: 'id-popup-wrap', maxWidth: 260, offset: [0, -4] })
+    const html = `<div class="map-id-popup"><p class="map-id-popup__label">Routes here</p><div class="map-id-popup__chips">${chips}</div></div>`;
+    _identifyPopup = L.popup({ closeButton: false, className: 'map-id-popup-wrap', maxWidth: 260, offset: [0, -4] })
       .setLatLng(e.latlng).setContent(html).openOn(_map);
 
     // Wire chip clicks after popup is in DOM
     setTimeout(() => {
-      document.querySelectorAll('.id-chip[data-route]').forEach(chip => {
+      document.querySelectorAll('.map-id-popup__chip[data-route]').forEach(chip => {
         chip.addEventListener('click', () => {
           _map.closePopup(_identifyPopup);
           _identifyPopup = null;
@@ -273,15 +273,15 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
     const displayName = indicator ? `${name} <span style="opacity:.55">(${indicator})</span>` : name;
 
     const routeChips = routeIds.length
-      ? `<div class="popup-routes">${routeIds.map(r =>
-          `<span class="popup-route-chip" data-route="${r}">${r}</span>`
+      ? `<div class="map-popup__routes">${routeIds.map(r =>
+          `<span class="map-popup__route-chip" data-route="${r}">${r}</span>`
         ).join('')}</div>`
       : '';
 
     marker.bindPopup(
-      `<span class="popup-name">${displayName}</span>` +
-      `${towards ? `<span class="popup-id" style="color:var(--t2)">${towards}</span><br>` : ''}` +
-      `<span class="popup-id">${id}</span>` +
+      `<span class="map-popup__name">${displayName}</span>` +
+      `${towards ? `<span class="map-popup__id" style="color:var(--t2)">${towards}</span><br>` : ''}` +
+      `<span class="map-popup__id">${id}</span>` +
       routeChips,
       { closeButton: true, maxWidth: 260 }
     );
@@ -289,7 +289,7 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
     // Wire route chip clicks after popup opens
     marker.on('popupopen', () => {
       setTimeout(() => {
-        document.querySelectorAll('.popup-route-chip[data-route]').forEach(chip => {
+        document.querySelectorAll('.map-popup__route-chip[data-route]').forEach(chip => {
           chip.addEventListener('click', () => {
             marker.closePopup();
             document.dispatchEvent(new CustomEvent('map:routeclick', { detail: chip.dataset.route }));
@@ -480,8 +480,8 @@ export function renderGarages(garages, routeCounts = {}) {
     });
 
     marker.bindPopup(
-      `<span class="popup-name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
-      `<dl class="popup-meta">` +
+      `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
+      `<dl class="map-popup__meta">` +
         `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
         `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>`,

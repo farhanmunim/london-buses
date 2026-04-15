@@ -23,9 +23,9 @@ export const pillIds = new Set();
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
 
-export const sidebar           = document.getElementById('sidebar');
-export const collapseBtn       = document.getElementById('sidebar-collapse-btn');
-export const expandBtn         = document.getElementById('sidebar-expand-btn');
+// `sidebar`, `collapseBtn`, `expandBtn` existed in v1 for the old custom
+// sidebar layout. v2 uses the blueprint's collapsible panel primitives, so
+// the shell handles collapse/expand — these exports have been removed.
 export const searchInput       = document.getElementById('search-input');
 export const searchClear       = document.getElementById('search-clear');
 export const autocompleteList  = document.getElementById('autocomplete-list');

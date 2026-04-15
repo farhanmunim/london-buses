@@ -30,7 +30,7 @@ export function showRouteDetail(id, geojson, stops, destinations, classification
   else if (classification?.type === 'school')     { svcLabel = 'School';   svcCls = 'school'; }
   else                                            { svcLabel = 'Regular';  svcCls = 'regular'; }
   routeServiceBadge.textContent = svcLabel;
-  routeServiceBadge.className   = `service-tag ${svcCls}`;
+  routeServiceBadge.className   = `route-detail__service-tag ${svcCls}`;
 
   _destOutbound = destinations?.outbound?.destination ?? '–';
   _destInbound  = destinations?.inbound?.destination  ?? '–';
@@ -86,17 +86,17 @@ function syncDirTabs(dir) {
   setTimeout(() => dirToggleBtn?.classList.remove('spinning'), 240);
 
   if (isOutbound) {
-    epPrimaryDot.className    = 'endpoint-dot outbound';
+    epPrimaryDot.className    = 'route-endpoint__dot outbound';
     epPrimaryDir.textContent  = 'Outbound';
     epPrimaryName.textContent = _destOutbound;
-    epSecondaryDot.className   = 'endpoint-dot inbound';
+    epSecondaryDot.className   = 'route-endpoint__dot inbound';
     epSecondaryDir.textContent = 'Inbound';
     epSecondaryName.textContent = _destInbound;
   } else {
-    epPrimaryDot.className    = 'endpoint-dot inbound';
+    epPrimaryDot.className    = 'route-endpoint__dot inbound';
     epPrimaryDir.textContent  = 'Inbound';
     epPrimaryName.textContent = _destInbound;
-    epSecondaryDot.className   = 'endpoint-dot outbound';
+    epSecondaryDot.className   = 'route-endpoint__dot outbound';
     epSecondaryDir.textContent = 'Outbound';
     epSecondaryName.textContent = _destOutbound;
   }

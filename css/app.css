@@ -1264,7 +1264,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   color: hsl(var(--primary-foreground));
   border-color: hsl(var(--primary));
 }
-.filter-chips .unknown-chip { opacity: 0.85; font-style: italic; }
+.filter-chips .filter-chip--unknown { opacity: 0.85; font-style: italic; }
 
 /* Garage filter group — visually separated so users can see it's an independent
    overlay control, not another route filter. */
@@ -1356,7 +1356,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 #route-badge-number { line-height: 1; }
 #route-detail-meta { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
-.service-tag {
+.route-detail__service-tag {
   display: inline-block; padding: 2px 8px;
   font-size: var(--fs-xs); font-weight: 600;
   border-radius: var(--r-pill);
@@ -1364,20 +1364,20 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   background: var(--muted-bg);
   color: var(--text-2);
 }
-.service-tag.night      { background: var(--blue-bg);   color: var(--blue-tx);   border-color: var(--blue-bd); }
-.service-tag.twentyfour { background: var(--green-bg);  color: var(--green-tx);  border-color: var(--green-bd); }
-.service-tag.school     { background: var(--amber-bg);  color: var(--amber-tx);  border-color: var(--amber-bd); }
-.service-tag.prefix     { background: var(--violet-bg); color: var(--violet-tx); border-color: var(--violet-bd); }
+.route-detail__service-tag.night      { background: var(--blue-bg);   color: var(--blue-tx);   border-color: var(--blue-bd); }
+.route-detail__service-tag.twentyfour { background: var(--green-bg);  color: var(--green-tx);  border-color: var(--green-bd); }
+.route-detail__service-tag.school     { background: var(--amber-bg);  color: var(--amber-tx);  border-color: var(--amber-bd); }
+.route-detail__service-tag.prefix     { background: var(--violet-bg); color: var(--violet-tx); border-color: var(--violet-bd); }
 
 /* Endpoints */
 #route-endpoints { display: flex; flex-direction: column; gap: 4px; }
-.endpoint-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-1) 0; }
-.endpoint-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-3); flex: none; }
-.endpoint-dot.outbound { background: hsl(var(--destructive)); box-shadow: 0 0 6px hsl(var(--destructive) / 0.4); }
-.endpoint-dot.inbound  { background: hsl(var(--info)); box-shadow: 0 0 6px hsl(var(--info) / 0.4); }
-.endpoint-info { display: flex; flex-direction: column; min-width: 0; }
-.endpoint-dir { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
-.endpoint-name { font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
+.route-endpoint__row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-1) 0; }
+.route-endpoint__dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-3); flex: none; }
+.route-endpoint__dot.outbound { background: hsl(var(--destructive)); box-shadow: 0 0 6px hsl(var(--destructive) / 0.4); }
+.route-endpoint__dot.inbound  { background: hsl(var(--info)); box-shadow: 0 0 6px hsl(var(--info) / 0.4); }
+.route-endpoint__info { display: flex; flex-direction: column; min-width: 0; }
+.route-endpoint__direction{ font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
+.route-endpoint__name { font-size: var(--fs-sm); color: var(--text-1); font-weight: 500; }
 #ep-connector { position: relative; margin-left: 4px; height: 12px; display: flex; align-items: center; }
 .ep-connector-line { width: 2px; height: 100%; background: var(--border-c); margin-left: 4px; }
 #dir-toggle-btn {
@@ -1392,24 +1392,24 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 #dir-toggle-btn:hover { color: var(--text-1); border-color: var(--border-2); }
 #dir-toggle-btn.spinning { transform: translateY(-50%) rotate(180deg); }
 
-.route-action-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.route-detail__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 #stops-toggle-btn.active { background: var(--muted-bg); color: var(--text-1); border-color: var(--border-2); }
 
 /* Stats table */
-.stats-table { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
-.stats-table thead th {
+.operator-stats__table { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
+.operator-stats__table thead th {
   text-align: right; padding: var(--sp-2);
   font-weight: 500; color: var(--text-3);
   border-bottom: 1px solid var(--border-c);
   text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px;
 }
-.stats-table thead th:first-child { text-align: left; }
-.stats-table tbody tr { border-bottom: 1px solid var(--border-c); }
-.stats-table tbody tr:last-child { border-bottom: none; }
-.stats-table tbody tr:hover { background: var(--muted-bg); }
-.stats-table td { padding: var(--sp-2); text-align: right; color: var(--text-1); }
-.stats-table td.stat-op { text-align: left; font-weight: 500; }
-.stats-empty { color: var(--text-3); font-size: var(--fs-xs); font-style: italic; padding: var(--sp-3) 0; }
+.operator-stats__table thead th:first-child { text-align: left; }
+.operator-stats__table tbody tr { border-bottom: 1px solid var(--border-c); }
+.operator-stats__table tbody tr:last-child { border-bottom: none; }
+.operator-stats__table tbody tr:hover { background: var(--muted-bg); }
+.operator-stats__table td { padding: var(--sp-2); text-align: right; color: var(--text-1); }
+.operator-stats__table td.operator-stats__op { text-align: left; font-weight: 500; }
+.operator-stats__empty { color: var(--text-3); font-size: var(--fs-xs); font-style: italic; padding: var(--sp-3) 0; }
 
 /* About modal */
 .modal { position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
@@ -1522,8 +1522,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .leaflet-popup-close-button:hover { color: var(--text-1) !important; background: transparent !important; }
 
 /* Popup meta list — consistent key/value rows (used by garages, stops) */
-.popup-meta { margin: var(--sp-2) 0 0; display: flex; flex-direction: column; gap: 2px; }
-.popup-meta > div {
+.map-popup__meta { margin: var(--sp-2) 0 0; display: flex; flex-direction: column; gap: 2px; }
+.map-popup__meta > div {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: var(--sp-3);
@@ -1531,21 +1531,21 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   padding: 3px 0;
   border-bottom: 1px solid hsl(var(--border) / 0.6);
 }
-.popup-meta > div:last-child { border-bottom: none; }
-.popup-meta dt { font-size: var(--fs-xs); color: var(--text-2); font-weight: 500; }
-.popup-meta dd { margin: 0; font-size: var(--fs-xs); color: var(--text-1); font-weight: 500; text-align: right; }
+.map-popup__meta > div:last-child { border-bottom: none; }
+.map-popup__meta dt { font-size: var(--fs-xs); color: var(--text-2); font-weight: 500; }
+.map-popup__meta dd { margin: 0; font-size: var(--fs-xs); color: var(--text-1); font-weight: 500; text-align: right; }
 
 /* Stop popup (route highlighted) */
-.popup-name { display: block; font-weight: 600; font-size: var(--fs-sm); color: var(--text-1); margin-bottom: 2px; }
-.popup-id   { font-size: var(--fs-xs); color: var(--text-3); font-family: var(--font-mono); letter-spacing: 0.04em; }
+.map-popup__name { display: block; font-weight: 600; font-size: var(--fs-sm); color: var(--text-1); margin-bottom: 2px; }
+.map-popup__id   { font-size: var(--fs-xs); color: var(--text-3); font-family: var(--font-mono); letter-spacing: 0.04em; }
 
-.popup-routes {
+.map-popup__routes {
   display: flex; flex-wrap: wrap; gap: 4px;
   margin-top: var(--sp-3);
   padding-top: var(--sp-3);
   border-top: 1px solid var(--border-c);
 }
-.popup-route-chip {
+.map-popup__route-chip {
   display: inline-flex; align-items: center;
   padding: 2px 8px;
   background: hsl(var(--muted));
@@ -1558,7 +1558,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   cursor: pointer;
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
 }
-.popup-route-chip:hover {
+.map-popup__route-chip:hover {
   background: hsl(var(--destructive));
   color: hsl(var(--destructive-foreground));
   border-color: hsl(var(--destructive));
@@ -1567,8 +1567,8 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 
 /* Identify popup (map-click: routes here) — uses the standard popup shell
    so it matches the garage popup in padding, radius, and tip. */
-.id-popup { min-width: 180px; }
-.id-popup-label {
+.map-id-popup{ min-width: 180px; }
+.map-id-popup__label {
   display: block;
   margin-bottom: var(--sp-3);
   padding-bottom: var(--sp-2);
@@ -1579,10 +1579,10 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   letter-spacing: 0.08em;
   color: var(--text-3);
 }
-.id-chips {
+.map-id-popup__chips {
   display: flex; flex-wrap: wrap; gap: 4px;
 }
-.id-chip {
+.map-id-popup__chip {
   display: inline-flex; align-items: center;
   padding: 3px 9px;
   border-radius: var(--r-sm);
@@ -1595,7 +1595,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   cursor: pointer;
   transition: transform var(--t-fast), box-shadow var(--t-fast), filter var(--t-fast);
 }
-.id-chip:hover {
+.map-id-popup__chip:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 6px hsl(240 10% 3.9% / 0.18);
   filter: brightness(1.08);
@@ -1637,7 +1637,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .leaflet-bar a:hover { background: hsl(var(--muted)) !important; }
 
 /* Dark mode: keep popups on dark card */
-[data-theme="dark"] .popup-route-chip { background: hsl(var(--muted)); }
+[data-theme="dark"] .map-popup__route-chip { background: hsl(var(--muted)); }
 
 /* ============================================================================
    LONDON BUSES — post-v2 refinements
