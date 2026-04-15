@@ -10,8 +10,9 @@ import { setPaintMode } from './map.js';
 const STORAGE_KEY = 'paint-mode';
 const container = document.querySelector('.paint-mode__buttons');
 if (container) {
+  // Default is 'operator' unless the user has explicitly stored 'type'.
   const stored = localStorage.getItem(STORAGE_KEY);
-  const initial = stored === 'operator' ? 'operator' : 'type';
+  const initial = stored === 'type' ? 'type' : 'operator';
 
   function apply(mode) {
     setPaintMode(mode);

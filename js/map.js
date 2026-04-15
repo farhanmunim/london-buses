@@ -35,9 +35,9 @@ const OPERATOR_COLORS = {
 const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
 
 // Paint mode: how should route lines be coloured?
-//   'type'     — by route category (regular/prefix/night/24h/school)  [default]
-//   'operator' — by operator brand livery
-let _paintMode = 'type';
+//   'operator' — by operator brand livery  [default]
+//   'type'     — by route category (regular/prefix/night/24h/school)
+let _paintMode = 'operator';
 
 function typeColor(props) {
   if (props.isPrefix)                   return TYPE_COLORS.prefix;

@@ -132,18 +132,8 @@
             <div class="paint-mode">
               <span class="paint-mode__label" id="paint-mode-label">Colour routes by</span>
               <div class="paint-mode__buttons" role="group" aria-labelledby="paint-mode-label">
-                <button type="button" class="paint-mode__btn is-active" data-mode="type"     aria-pressed="true">Type</button>
-                <button type="button" class="paint-mode__btn"           data-mode="operator" aria-pressed="false">Operator</button>
-              </div>
-            </div>
-
-            <div class="filter-group">
-              <span class="filter-group-label" id="fg-routetype">Route type</span>
-              <div class="filter-chips" role="group" aria-labelledby="fg-routetype">
-                <button class="chip chip-outline" data-filter="routetype" data-val="regular" aria-pressed="false">Regular</button>
-                <button class="chip chip-outline" data-filter="routetype" data-val="prefix" aria-pressed="false">Prefix</button>
-                <button class="chip chip-outline" data-filter="routetype" data-val="night" aria-pressed="false">Night</button>
-                <button class="chip chip-outline" data-filter="routetype" data-val="school" aria-pressed="false">School</button>
+                <button type="button" class="paint-mode__btn is-active" data-mode="operator" aria-pressed="true">Operator</button>
+                <button type="button" class="paint-mode__btn"           data-mode="type"     aria-pressed="false">Type</button>
               </div>
             </div>
 
@@ -157,6 +147,16 @@
                 <button class="chip chip-outline" data-filter="operator" data-val="Stagecoach London" aria-pressed="false">Stagecoach</button>
                 <button class="chip chip-outline" data-filter="operator" data-val="Transport UK" aria-pressed="false">Transport UK</button>
                 <button class="chip chip-outline filter-chip--unknown" data-filter="operator" data-val="__unknown__" aria-pressed="false">Unknown</button>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-group-label" id="fg-routetype">Route type</span>
+              <div class="filter-chips" role="group" aria-labelledby="fg-routetype">
+                <button class="chip chip-outline" data-filter="routetype" data-val="regular" aria-pressed="false">Regular</button>
+                <button class="chip chip-outline" data-filter="routetype" data-val="prefix" aria-pressed="false">Prefix</button>
+                <button class="chip chip-outline" data-filter="routetype" data-val="night" aria-pressed="false">Night</button>
+                <button class="chip chip-outline" data-filter="routetype" data-val="school" aria-pressed="false">School</button>
               </div>
             </div>
 

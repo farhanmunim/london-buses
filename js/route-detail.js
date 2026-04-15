@@ -135,23 +135,27 @@ stopsToggleBtn?.addEventListener('click', () => {
   syncStopsBtn(nowVisible);
 });
 
-// ── Clear route / filter-clear btn ───────────────────────────────────────────
-// Both clear everything: route, pills, AND all filter chips. Fresh-state reset.
+// ── Clear buttons ─────────────────────────────────────────────────────────────
+// Two different "clears" with different scope:
+//   • Clear route (route detail panel) — mirrors the search-field X: drops the
+//     selected route + pills, but *keeps* filter chips intact.
+//   • Clear all (filter panel footer)  — full reset: route + pills + every
+//     filter chip.
+// Dynamic import avoids a circular dep (search.js imports route-detail.js).
 
-function fullReset() {
-  // Dynamic import to avoid circular dependency (search.js imports route-detail.js)
+function clearRouteOnly() {
   import('./search.js').then(m => m.clearAll());
-  // Also clear all filter chips
+  syncStopsBtn(true);
+}
+function fullReset() {
+  import('./search.js').then(m => m.clearAll());
   document.querySelectorAll('#filters-section .chip[data-filter]').forEach(c => {
     c.classList.remove('active');
     c.setAttribute('aria-pressed', 'false');
   });
-  // Re-apply now-empty filters to restore full overview
   document.dispatchEvent(new CustomEvent('app:filterscleared'));
-  // Reset stops toggle button state (keeps label in sync with the icon)
   syncStopsBtn(true);
 }
 
-clearRouteBtn?.addEventListener('click', fullReset);
-
+clearRouteBtn?.addEventListener('click', clearRouteOnly);
 document.getElementById('filter-clear-btn')?.addEventListener('click', fullReset);
