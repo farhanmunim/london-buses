@@ -22,7 +22,7 @@
       desc:  'Tender number, contract start / end, current bid winner and previous operator for each route.',
       stage: 'idea' },
     { title: 'Headway integration',
-      desc:  'Link to Headway for richer operational insights alongside each route.',
+      desc:  'Link to {link} for richer operational insights alongside each route.',
       link:  { href: 'https://headway.plumby.io/', label: 'headway.plumby.io' },
       stage: 'idea' },
   ];
@@ -35,14 +35,18 @@
   };
 
   function rowHtml({ title, desc, stage, link }) {
-    const label    = STAGE_LABEL[stage] ?? stage;
+    const label = STAGE_LABEL[stage] ?? stage;
+    // desc is HTML-escaped so it's safe, but we then splice in a safely-built
+    // <a> wherever the string contains the `{link}` placeholder. This lets a
+    // description embed an inline link without giving items raw HTML access.
     const linkHtml = link
-      ? ` <a class="roadmap__link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`
+      ? `<a class="roadmap__link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`
       : '';
+    const descHtml = escapeHtml(desc).replace('{link}', linkHtml);
     return `
       <tr>
         <td class="roadmap__title">${escapeHtml(title)}</td>
-        <td class="roadmap__desc">${escapeHtml(desc)}${linkHtml}</td>
+        <td class="roadmap__desc">${descHtml}</td>
         <td class="roadmap__stage-cell"><span class="roadmap__stage roadmap__stage--${stage}">${label}</span></td>
       </tr>`;
   }
