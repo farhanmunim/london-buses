@@ -61,7 +61,8 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
   renderGarages(garages, routeCounts);
   // Paired toggles were initialised at module load; re-apply visibility now
   // that the layer actually exists. Buttons are already in the correct state.
-  setGaragesVisible(localStorage.getItem('garages-visible') === '1');
+  // Default ON; only hide if the user explicitly toggled off in a prior session
+  setGaragesVisible(localStorage.getItem('garages-visible') !== '0');
   updateFilterStat(countVisibleRoutes());
 });
 
@@ -99,7 +100,7 @@ wirePairedToggle({
 wirePairedToggle({
   ids:        ['toggle-garages-btn', 'toggle-garages-btn-side'],
   storageKey: 'garages-visible',
-  defaultOn:  false,
+  defaultOn:  true,
   apply:      setGaragesVisible,
 });
 
