@@ -104,6 +104,24 @@
   --topbar-h:       52px;
   --mobile-nav-h:   68px;
 
+  /* ── Stacking order ─────────────────────────
+     Documented in one place so the whole app stack is legible. Leaflet uses
+     z-index up to 1000 for its controls, so any UI that must overlay the
+     map reads from --z-above-map and above. */
+  --z-behind:            -1;
+  --z-base:               1;
+  --z-leaflet-pane:     400;   /* approximate — Leaflet panes range 200–700 */
+  --z-map-hud:          500;   /* in-map HUD (status toast) */
+  --z-desktop-panel:     50;
+  --z-desktop-panel-tab: 51;   /* reopen-tab on collapsed panel */
+  --z-topbar:            99;
+  --z-overlay:           49;   /* desktop overlay — below panels */
+  --z-dropdown:        1000;   /* autocomplete list */
+  --z-above-map:       1050;   /* mobile drawer overlay */
+  --z-drawer:          1100;   /* mobile drawer panels */
+  --z-mobile-nav:      1200;   /* fixed bottom nav */
+  --z-modal:           1500;   /* About / other full-screen dialogs */
+
   /* ── Spacing ─────────────────────────────── */
   --sp-1:  4px;  --sp-2:  6px;  --sp-3:  8px;
   --sp-4: 10px;  --sp-5: 12px;  --sp-6: 16px; --sp-7: 20px;
@@ -198,7 +216,6 @@
   background-color: hsl(240 6% 7%);
   background-image: radial-gradient(circle, hsl(240 5% 18%) 1px, transparent 1px);
 }
-[data-theme="dark"] .c-sidenav { background: hsl(240 6% 8%); }
 [data-theme="dark"] .c-thead   { background: hsl(240 6% 8%); }
 [data-theme="dark"] .cl-hero {
   background: hsl(240 6% 7%);
@@ -262,7 +279,7 @@ button { font-family: inherit; }
   padding-right: calc(var(--sp-6) + env(safe-area-inset-right, 0px));
   gap: var(--sp-3);
   flex-shrink: 0;
-  z-index: 100;
+  z-index: var(--z-topbar);
 }
 .topbar-logo {
   font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.02em;
@@ -357,7 +374,7 @@ a.btn-primary, a.btn-primary:hover, a.btn-primary:visited { color: hsl(var(--pri
 /* OVERLAY */
 .overlay {
   display: none;
-  position: fixed; inset: 0; z-index: 49;
+  position: fixed; inset: 0; z-index: var(--z-overlay);
   height: 100dvh;
   background: var(--overlay); opacity: 0;
   transition: opacity var(--t-panel);
@@ -460,7 +477,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   padding: 0 var(--sp-6);
   gap: var(--sp-5);
   font-size: var(--fs-xs); color: var(--text-3);
-  z-index: 99;
+  z-index: var(--z-topbar);
 }
 .app-footer a {
   color: var(--text-2); text-decoration: none; font-weight: 500;
@@ -490,7 +507,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   display: flex; flex-direction: column;
   flex-shrink: 0; overflow: hidden;
   transition: width var(--t-panel);
-  z-index: 50;
+  z-index: var(--z-desktop-panel);
 }
 .panel-left.collapsed { width: var(--panel-w-rail); }
 .panel-left.collapsed .panel-hd-title,
@@ -563,66 +580,9 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
     radial-gradient(circle, hsl(240 5% 88%) 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.canvas {
-  width: 100%; max-width: 920px;
-  background: var(--surface); border-radius: var(--r-lg);
-  border: 1px solid var(--border-c);
-  box-shadow: var(--shadow-md);
-  overflow: hidden; display: flex; flex-direction: column;
-}
-.c-topbar {
-  height: 52px; background: var(--surface); border-bottom: 1px solid var(--border-c);
-  display: flex; align-items: center; padding: 0 var(--sp-7); gap: var(--sp-4); flex-shrink: 0;
-}
-.c-logo { width: 22px; height: 22px; background: hsl(var(--primary)); border-radius: var(--r-sm); opacity: .9; flex-shrink: 0; }
-.c-sk    { height: 8px; border-radius: var(--r-pill); background: var(--border-c); }
-.c-sk-dk { height: 8px; border-radius: var(--r-pill); background: var(--border-2); }
-.c-sk-btn { height: 26px; width: 64px; background: hsl(var(--primary)); border-radius: var(--r-md); opacity: .9; flex-shrink: 0; }
-.c-body { display: flex; min-height: 380px; }
-.c-sidenav {
-  width: 180px; border-right: 1px solid var(--border-c);
-  padding: var(--sp-5) var(--sp-2); flex-shrink: 0;
-  display: flex; flex-direction: column; gap: 2px;
-  background: hsl(240 5% 99%);
-}
-.c-nav-row {
-  height: 30px; border-radius: var(--r-md);
-  display: flex; align-items: center; padding: 0 var(--sp-4); gap: var(--sp-3);
-}
-.c-nav-row.sel { background: var(--accent-lt); }
-.c-dot { width: 12px; height: 12px; border-radius: var(--r-sm); background: var(--border-c); flex-shrink: 0; }
-.c-nav-row.sel .c-dot { background: hsl(var(--primary)); opacity: .85; }
-.c-lbl { height: 7px; border-radius: var(--r-pill); background: var(--border-c); flex: 1; }
-.c-nav-row.sel .c-lbl { background: hsl(var(--primary)); opacity: .25; }
-.c-content { flex: 1; padding: var(--sp-7); display: flex; flex-direction: column; gap: var(--sp-7); }
-.c-title-ph { height: 14px; width: 32%; border-radius: var(--r-pill); background: var(--border-2); }
-.c-cards { display: flex; gap: var(--sp-5); }
-.c-card {
-  flex: 1; height: 78px; border: 1px solid var(--border-c); border-radius: var(--r-lg);
-  padding: var(--sp-5) var(--sp-6); display: flex; flex-direction: column; justify-content: space-between;
-  background: var(--surface); box-shadow: var(--shadow-sm);
-}
-.c-card.hl { border-color: hsl(var(--primary)); background: hsl(var(--primary)); }
-.c-card .ck-top { height: 7px; border-radius: var(--r-pill); background: var(--border-c); width: 55%; }
-.c-card .ck-bot { height: 14px; border-radius: var(--r-pill); background: var(--border-2); width: 38%; }
-.c-card.hl .ck-top { background: hsl(var(--primary-foreground)); opacity: .35; }
-.c-card.hl .ck-bot { background: hsl(var(--primary-foreground)); opacity: .8; }
-.c-table { border: 1px solid var(--border-c); border-radius: var(--r-lg); overflow: hidden; background: var(--surface); }
-.c-thead {
-  height: var(--h-thead); background: hsl(240 5% 98%); border-bottom: 1px solid var(--border-c);
-  display: flex; align-items: center; padding: 0 var(--sp-6);
-}
-.c-th-ph { height: 7px; border-radius: var(--r-pill); background: var(--border-2); }
-.c-trow {
-  height: var(--h-row); display: flex; align-items: center;
-  padding: 0 var(--sp-6); border-bottom: 1px solid var(--border-c);
-  transition: background var(--t-fast);
-}
-.c-trow:last-child { border-bottom: none; }
-.c-trow:hover { background: var(--muted-bg); }
-.c-trow.sel { background: var(--accent-lt); }
-.c-td-ph { height: 7px; border-radius: var(--r-pill); background: var(--border-c); }
-.c-pill-col { width: 80px; flex-shrink: 0; display: flex; justify-content: flex-end; margin-left: auto; }
+/* (Blueprint wireframe placeholder styles .canvas + .c-* + .ck-* removed —
+    the London Buses canvas hosts a Leaflet #map directly, so none of the
+    card / side-nav / table mock shapes are referenced any more.) */
 
 /* ══════════════════════════════════════════════
    RIGHT PANEL
@@ -633,7 +593,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   display: flex; flex-direction: column;
   flex-shrink: 0; overflow: hidden;
   transition: width var(--t-panel);
-  z-index: 50;
+  z-index: var(--z-desktop-panel);
 }
 .panel-right.collapsed { width: 0; border-left-width: 0; }
 .panel-right.collapsed .panel-hd-chevron { transform: rotate(180deg); }
@@ -645,7 +605,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   background: var(--surface); border: 1px solid var(--border-c);
   border-right: none; border-radius: var(--r-md) 0 0 var(--r-md);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; z-index: 51;
+  cursor: pointer; z-index: var(--z-desktop-panel-tab);
   color: var(--text-3);
   transition: background var(--t-fast), color var(--t-fast), opacity var(--t-panel);
   opacity: 0; pointer-events: none;
@@ -738,7 +698,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   background: hsl(var(--card));
   border-top: 1px solid var(--border-c);
   box-shadow: 0 -2px 12px hsl(240 10% 3.9% / 0.08);
-  z-index: 600; /* above Leaflet overlays */
+  z-index: var(--z-mobile-nav); /* mobile nav default fallback */
 }
 .m-nav-btn {
   flex: 1;
@@ -817,7 +777,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
     bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
     width: min(92vw, 380px) !important;
     transition: transform var(--t-panel), box-shadow var(--t-panel);
-    z-index: 1100;
+    z-index: var(--z-drawer);
     box-shadow: none;
     overscroll-behavior: contain;
   }
@@ -833,11 +793,11 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   .overlay {
     display: block;
     bottom: calc(var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px));
-    z-index: 1050;
+    z-index: var(--z-above-map);
   }
 
   /* Mobile nav sits on top of everything except full-screen modals */
-  .m-nav { z-index: 1200; }
+  .m-nav { z-index: var(--z-mobile-nav); }
 
   /* Footer — hidden on small screens. The About modal carries the disclaimer
      and credits; the mobile nav handles navigation. */
@@ -852,9 +812,6 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   .hide-mobile { display: none !important; }
 
   .canvas-area { padding: 14px; }
-  .c-sidenav { display: none; }
-  .c-cards { flex-wrap: wrap; }
-  .c-cards .c-card { min-width: calc(50% - var(--sp-3)); }
 }
 
 @media (max-width: 380px) {
@@ -1133,7 +1090,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   color: hsl(var(--primary-foreground));
   border: 1px solid hsl(var(--primary));
   cursor: pointer;
-  z-index: 1000;
+  z-index: var(--z-above-map);
   opacity: 0; pointer-events: none;
   transition: opacity var(--t-panel);
 }
@@ -1322,7 +1279,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   border-radius: var(--r-pill);
   box-shadow: var(--shadow-md);
   font-size: var(--fs-xs); color: var(--text-1);
-  z-index: 500;
+  z-index: var(--z-map-hud);
 }
 #status-dot { width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--info)); }
 #status-toast.loading #status-dot { animation: lb-blink 1s ease-in-out infinite; }
@@ -1400,7 +1357,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 .stats-empty { color: var(--text-3); font-size: var(--fs-xs); font-style: italic; padding: var(--sp-3) 0; }
 
 /* About modal */
-.modal { position: fixed; inset: 0; z-index: 1500; display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
+.modal { position: fixed; inset: 0; z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
 .modal[hidden] { display: none; }
 .modal-backdrop { position: absolute; inset: 0; background: var(--overlay); backdrop-filter: blur(4px); }
 .modal-panel {
