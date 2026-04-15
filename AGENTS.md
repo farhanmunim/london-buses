@@ -6,7 +6,17 @@ A comprehensive reference for any AI agent or developer working in this reposito
 
 ## Project Overview
 
-An interactive map of every London bus route. Users can search routes, filter by type/operator/propulsion/frequency/deck, view route details and stops, compare multiple routes side-by-side, and see live per-operator statistics. Deployed as a static site (no server, no build step at deploy time).
+An interactive map of every London bus route. Users can:
+
+- Search routes, filter route lines by type / operator / propulsion / frequency / deck
+- Filter garage markers by operator independently of the route filter (competitor analysis)
+- View per-route detail: direction toggle, endpoints, operator, garage, PVR, vehicle, stops
+- Toggle route-line colour between route type and operator brand livery
+- Compare multiple routes side-by-side (pill-based multi-select)
+- See live per-operator statistics, recomputed as filters change
+- Export the currently filtered view as a 3-sheet XLSX workbook
+
+Deployed as a static site (no server, no build step at deploy time).
 
 **Live site:** [london-buses.farhan.app](https://london-buses.farhan.app) (Cloudflare Pages auto-deployed from `main`).
 
@@ -14,15 +24,18 @@ An interactive map of every London bus route. Users can search routes, filter by
 
 ## Technology Stack
 
-| Layer     | Choice                                                         |
-| --------- | -------------------------------------------------------------- |
-| Map       | Leaflet.js 1.9.4 (CDN)                                         |
-| Fonts     | Geist + Geist Mono (via Google Fonts)                          |
-| Tiles     | CartoDB Voyager (no key needed) + © OpenStreetMap contributors |
-| Hosting   | Cloudflare Pages (static)                                      |
-| Analytics | Google Analytics — anonymous, aggregate only                   |
-| CI / Data | GitHub Actions (weekly cron + manual trigger)                  |
-| Runtime   | Vanilla JS ES modules — no bundler, no framework               |
+| Layer       | Choice                                                                          |
+| ----------- | ------------------------------------------------------------------------------- |
+| Shell       | Web App Blueprint (shadcn-aligned dashboard shell, single-file CSS + AppShell JS) |
+| Map         | Leaflet.js 1.9.4 (CDN)                                                          |
+| Fonts       | Geist + Geist Mono (via Google Fonts)                                           |
+| Tiles       | CartoDB Voyager (no key needed) + © OpenStreetMap contributors                  |
+| XLSX export | SheetJS `xlsx-0.20.3` (CDN, loaded `defer`)                                     |
+| Geocoder    | Photon (primary, OSM-backed) → Nominatim (fallback) for garage locations        |
+| Hosting     | Cloudflare Pages (static)                                                       |
+| Analytics   | Google Analytics (G-J5GKHJN7K6) on both `index.html` and `changelog.html`       |
+| CI / Data   | GitHub Actions (weekly cron + manual trigger)                                   |
+| Runtime     | Vanilla JS ES modules — no bundler, no framework                                |
 
 ---
 
@@ -30,21 +43,34 @@ An interactive map of every London bus route. Users can search routes, filter by
 
 ```
 /
-├── index.html                       # Single-page app shell (search, map, sidebar, About modal)
-├── css/style.css                    # All styles — design tokens, components, responsive
+├── index.html                       # Main app page — topbar + left filter panel + map + right detail panel + mobile nav
+├── changelog.html                   # Release notes (same shell, no panels)
+├── favicon.svg                      # London Buses mark (matches topbar logo)
+├── css/app.css                      # Single stylesheet — design tokens, primitives, shell, page styles
 ├── js/
-│   ├── ui.js                        # Entry point — boots map, filters, stats, About modal, CSV export
-│   ├── map.js                       # Leaflet map, overview layer, route/stop rendering
+│   ├── ui.js                        # Boot orchestrator — loads data, hydrates state, wires footer dates
+│   ├── app.js                       # Web App Blueprint shell controller (Drawer/Panels/Tabs/Nav/Theme)
+│   ├── map.js                       # Leaflet map, overview layer, route/stop rendering, garage markers
 │   ├── api.js                       # Data access — static files + live TfL StopPoints API
+│   ├── state.js                     # Shared state object and DOM refs
 │   ├── search.js                    # Search input, autocomplete, multi-route pills
 │   ├── route-detail.js              # Route detail panel, direction toggle, stops toggle
-│   └── state.js                     # Shared state object and DOM refs
+│   ├── filters.js                   # Filter chip handling + per-section Clear buttons
+│   ├── stats.js                     # Per-operator stats table + filter-stat count renderer
+│   ├── toggles.js                   # Topbar Show/Hide Routes & Garages (paired-button helper)
+│   ├── paint-mode.js                # "Colour routes by Type vs Operator" segmented control
+│   ├── panels.js                    # Desktop panel collapse/expand + reopen-tab wiring
+│   ├── mobile-nav.js                # Bottom-bar mobile nav (≤640px) + drawer open/close
+│   ├── export.js                    # 3-sheet XLSX export via SheetJS
+│   ├── about.js                     # About modal — injects HTML, traps focus, works on every page
+│   └── roadmap.js                   # Roadmap modal — same pattern; items defined as a plain array
 ├── scripts/
-│   ├── refresh.js                   # Orchestrator: runs all 4 build steps in sequence
+│   ├── refresh.js                   # Orchestrator: runs all 5 build steps in sequence
 │   ├── fetch-data.js                # Step 1 — geometry ZIP + destinations from TfL API
-│   ├── fetch-route-details.js       # Step 2 — vehicle/operator/PVR/frequency scrape
+│   ├── fetch-route-details.js       # Step 2 — vehicle / operator / PVR / frequency scrape + night-route aliases
 │   ├── build-classifications.js     # Step 3 — merge into final per-route record
 │   ├── build-overview.js            # Step 4 — simplified overview GeoJSON + snapshot archive
+│   ├── build-garage-locations.js    # Step 5 — scrape garage addresses + geocode via Photon (cached)
 │   └── update-vehicle-lookup.js     # Maintenance — adds new vehicle types to lookup
 ├── data/
 │   ├── routes/                      # Per-route GeoJSON files (one per route ID)
@@ -53,17 +79,19 @@ An interactive map of every London bus route. Users can search routes, filter by
 │   ├── routes-overview-YYYY-MM-DD.geojson  # Weekly snapshot archive (last 4 kept)
 │   ├── route_destinations.json      # Inbound/outbound names per route (from TfL API)
 │   ├── route_classifications.json   # Final per-route record (joined from all sources)
+│   ├── garage-locations.json        # Garage code → { name, operator, address, lat, lon } (geocoded)
 │   ├── vehicle-lookup.json          # Manual vehicle type → (deck, propulsion) lookup
 │   ├── route-overrides.json         # Manual per-route field overrides (highest priority)
 │   ├── build-meta.json              # Timestamps for footer display
 │   ├── geometry-source.json         # ZIP date for CI change detection
 │   ├── manifest.json                # Snapshot history
-│   └── source/                      # (gitignored) intermediate scraper output
+│   └── source/                      # (gitignored) intermediate scraper output incl. night-route aliases
 ├── .github/workflows/
 │   └── refresh-data.yml             # Weekly data refresh (Monday 05:00 UTC) + manual dispatch
+├── Reference/                       # (gitignored) dev-only artefacts — puppeteer verify scripts, refactor plan
 ├── .env                             # Local only — BUS_API_KEY=... (never committed)
 ├── AGENTS.md                        # This file
-├── CHANGELOG.md                     # Release history
+├── CHANGELOG.md                     # Release history (markdown; the user-facing page is changelog.html)
 └── package.json
 ```
 
@@ -87,6 +115,8 @@ Quick reference for every data point the app uses — what it is, where it comes
 | Build metadata            | Last-build + next-refresh timestamps for footer                                                                            | Generated by build step 4                                           | Build-time write                                                      | `data/build-meta.json`                                                                            | Weekly CI                                                                    | None                                                                                |
 | Geometry source marker    | Date of the TfL geometry ZIP last ingested (for CI change detection)                                                       | Build step 1                                                        | Build-time write                                                      | `data/geometry-source.json`                                                                       | Weekly CI                                                                    | None                                                                                |
 | Snapshot manifest         | History of dated overview snapshots                                                                                        | Build step 4                                                        | Build-time write                                                      | `data/manifest.json`                                                                              | Weekly CI                                                                    | None                                                                                |
+| Garage locations          | Code → `{ name, operator, address, lat, lon }` for every London bus garage                                                 | `londonbusroutes.net/garages.htm` (name, address) + Photon (geocode) | Build-time scrape + geocode; cache reuses entries with unchanged address | `data/garage-locations.json`                                                                      | Weekly CI (cached; only re-geocodes new/changed addresses)                   | Photon has no strict rate limit; 1.5 s courtesy delay. Nominatim fallback with 60 s backoff on 429. |
+| Night-route aliases       | Map of `N<ID>` → daytime sibling when both share a `times/<id>.htm` URL (24-hour service)                                  | `londonbusroutes.net/routes.htm`                                    | Build step 2 parses routes.htm + builds href-share graph              | Embedded in `data/source/route_details.json` under `aliases` + `operatorByRoute`                  | Weekly CI                                                                    | Used by Step 3 as a fallback so night routes inherit operator/garage/deck from the daytime route. |
 
 **Security note:** `BUS_API_KEY` is used **only** in build scripts (GitHub Actions secret + local `.env`). It never reaches the browser. All runtime API calls from the browser are unauthenticated.
 
@@ -149,16 +179,25 @@ Output: `data/source/route_details.json` (gitignored — intermediate).
 
 **Note:** londonbusroutes.net only supports HTTP (no HTTPS). Data is non-sensitive, public.
 
+**Also** parses `routes.htm` on the same site to build two maps alongside the per-route record:
+
+- **Aliases** — for every row tagged `<a name="N<id>">` that shares its `href="times/<id>.htm"` with a `<a name="M<id>">` row, record `N<id>` → `<id>`. This flags 24-hour services that are branded under both a day and a night number but are the *same physical route*.
+- **Operator by route** — the 3rd `<TD>` of each row gives a subsidiary operator name (Arriva London, London General, Blue Triangle, …) which the script normalises to the parent brand (Arriva, Go-Ahead, …) to match the garage lookup.
+
+Both maps are included in `data/source/route_details.json` for Step 3 to consume.
+
 ### Step 3 — `scripts/build-classifications.js`
 
 Merges all inputs into a single authoritative per-route record.
 
-**Precedence (highest wins):**
+**Precedence (highest wins) for route-level fields:**
 
 1. `data/route-overrides.json` — manual per-route field overrides
-2. `data/source/route_details.json` — scraped operator/deck/propulsion/PVR/frequency
-3. `data/vehicle-lookup.json` — vehicle-type → (deck, propulsion) fallback when direct derivation returned null
-4. Derived from route ID / geometry — type, isPrefix, lengthBand
+2. `data/source/route_details.json[routeId]` — scraped data for the route itself
+3. **Night-route alias fallback** — if the record is missing fields and `aliases[routeId]` points at a daytime route, inherit from that route (this is how `N128` now reports the same operator / garage / deck as `128`)
+4. `data/source/route_details.json.operatorByRoute[routeId]` — operator-only fallback from `routes.htm`
+5. `data/vehicle-lookup.json` — vehicle-type → (deck, propulsion) fallback when direct derivation returned null
+6. Derived from route ID / geometry — type, isPrefix, lengthBand
 
 Route type:
 
@@ -186,6 +225,19 @@ Output: `data/route_classifications.json`
 - Writes `routes-overview.geojson`, dated snapshot archive (max 4 kept), updates `manifest.json` + `build-meta.json`
 
 **Critical:** If classifications change, Step 4 MUST be re-run. The overview GeoJSON must stay in sync with `route_classifications.json` or filter results and detail panels will disagree.
+
+### Step 5 — `scripts/build-garage-locations.js`
+
+**Source: `londonbusroutes.net/garages.htm` (name + address) + Photon (geocoding)**
+
+1. Fetches `garages.htm` and parses each garage row for `{ code, name, operator, address }`
+2. Loads `data/garage-locations.json` as a cache; any garage whose scraped address matches the cached entry is reused verbatim (zero lookups on a stable week)
+3. For new or changed addresses, geocodes via **Photon** (primary, OSM-backed) with a 1.5 s courtesy delay; falls back to **Nominatim** with 60 s cooldown on 429
+4. Rejects hits outside a London bounding box (`51.28–51.72, -0.55–0.35`) to avoid ambiguous matches (e.g. "Harrow" in Scotland)
+5. Progressively loosens the query if needed: full address → drop leading house number → `"<name> bus garage, London"`
+6. Writes `data/garage-locations.json` with `{ generatedAt, count, garages: { <code>: { ... lat, lon } } }`
+
+**Weekly impact:** since the cache is address-keyed, a typical weekly run performs zero geocoder calls and finishes in under a second.
 
 ---
 
@@ -228,30 +280,51 @@ Then commit and push. Weekly CI will not overwrite your manual entries.
 
 ## Frontend Architecture
 
+Every module has a single responsibility and a JSDoc header stating what it exports and what it depends on. `ui.js` is a thin boot orchestrator (≤80 lines); all interactive wiring lives in focused modules.
+
 ### Module Graph
 
 ```
-ui.js ──→ map.js
-       ──→ api.js
-       ──→ state.js
-       ──→ search.js ──→ api.js
-                     ──→ map.js
-                     ──→ route-detail.js ──→ map.js
-                                         ──→ state.js
-                                         ──→ search.js  (dynamic import — avoids circular dep)
+ui.js (boot) ──→ map.js · api.js · state.js · stats.js
+              ──→ search.js · route-detail.js
+              ──→ panels.js · toggles.js · filters.js
+              ──→ paint-mode.js · mobile-nav.js · export.js
+
+about.js   ── standalone (injects modal HTML, works on every page)
+roadmap.js ── standalone (same pattern)
+app.js     ── Web App Blueprint AppShell (Drawer / Panels / Tabs / Theme)
 ```
+
+### Shell — `js/app.js` (Web App Blueprint)
+
+Exposes `window.AppShell` with six modules:
+
+| Module      | Responsibility                                                                |
+| ----------- | ----------------------------------------------------------------------------- |
+| `Drawer`    | Mobile off-canvas for left/right panels, overlay, body scroll-lock            |
+| `Panels`    | Desktop collapse/expand for left + right panels (click on `.panel-hd`)        |
+| `Tabs`      | Generic tab switcher (unused in London Buses, kept for parity)                |
+| `Nav`       | Sidebar `.nav-item` active state (unused here)                                |
+| `MobileNav` | Blueprint's default bottom-nav wiring — **replaced by our own** `mobile-nav.js` |
+| `Theme`     | Light/dark toggle, persists to `localStorage` under `app-theme`               |
 
 ### `api.js` — Data Access
 
 - In-memory cache keyed by URL / route ID
-- All destination keys normalised to uppercase on load (handles legacy lowercase data)
+- All destination keys normalised to uppercase on load
 - `fetchStopsForRoute(id)` — calls `https://api.tfl.gov.uk/Line/<id>/StopPoints` live (no API key needed, no large file in git); falls back to `[]` on error
+- `fetchGarageLocations()` — loads `data/garage-locations.json`, filters out garages missing coords
 
 ### `map.js` — Leaflet Map
 
-- Overview: `routes-overview.geojson` rendered as faint colour-coded polylines (per `routeType`)
-- Click-to-identify: finds routes within 6 px of click, shows popup with clickable route chips
-- Stop popups: name, NaPTAN ID, "towards" text, clickable chips for other routes serving that stop
+- Overview layer: `routes-overview.geojson` rendered as polylines whose colour is chosen by `featureColor(props)`
+  - **Paint mode** (set by `setPaintMode(mode)`): `type` uses the categorical palette (regular red, prefix mustard, 24-hour teal, night violet, school green); `operator` uses brand liveries (Arriva turquoise, First pink, Go-Ahead red, Metroline dark blue, Stagecoach navy, Transport UK blue, RATP green)
+  - **Opacity**: 0.8 when no route is focused, 0.2 when one is (faint context underlay)
+  - **Visibility**: `setRoutesVisible(visible)` is *context-aware* — when a route is focused, it toggles only the overview; when nothing is focused, it toggles every route-line layer
+- Click-to-identify: finds routes within 6 px of click, shows popup with clickable `.map-id-popup__chip` route chips
+- Stop popups: `.map-popup__name`, `.map-popup__id`, and clickable `.map-popup__route-chip` for every other route serving that stop
+- Multi-route mode: `renderMultiRoute()` dims the overview, draws selected routes with a dark outline + colour layer + endpoint labels
+- **Garage markers**: `renderGarages(garages, routeCounts)` places a colour-coded pin per garage using its operator's brand livery; `setGaragesVisible(visible)` toggles the layer; `filterGarages(operatorSet)` hides/shows markers by operator
 
 ### Filter Semantics
 
@@ -263,21 +336,47 @@ if (value == null) return X.has('__unknown__')
 return X.has(value)
 ```
 
-Applies to: `deck`, `frequency`, `operator`, `propulsion`. The `Route type` group has no Unknown chip (every route has a type).
+**Two independent filter groups** are now maintained:
 
-### `ui.js` — Boot + orchestration
+| Group           | Chip `data-filter` values                                             | Drives                   |
+| --------------- | --------------------------------------------------------------------- | ------------------------ |
+| Route filters   | `routetype`, `operator`, `frequency`, `deck`, `propulsion`            | Route-line overlay + stats table + Routes/Network sheets in export |
+| Garage filter   | `garageoperator`                                                      | Garage markers + Garages sheet in export                           |
 
-- Boots map, loads overview + route index + destinations + classifications in parallel
-- Wires filter chip clicks, CSV export, About modal open/close
-- `renderOperatorStats(routes)` — dynamic per-operator table (Routes %, PVR %, EV %) that recomputes from `getVisibleRouteProps()` whenever filters change
+The garage filter is deliberately separate so a user can overlay (say) Stagecoach routes with Arriva's garage footprint for competitor analysis.
+
+### `ui.js` — Boot orchestrator
+
+- Loads overview + route index + destinations + classifications in parallel, then garage locations in a second Promise
+- Hydrates `state.routeIndex / destinations / classifications`
+- Computes footer "last updated / next refresh" dates from `data/build-meta.json`
+- Imports every interactive module so each wires its own listeners on load
 
 ### `state.js`
 
-All DOM refs centralised here. Import only what each module needs.
+All shared DOM refs and the `state` object centralised here. Import only what each module needs.
 
-### Multi-Route Mode
+### Export — `export.js`
 
-Activated when pills are used. `renderMultiRoute()` dims the overview, draws selected routes with a dark outline + colour layer + endpoint labels.
+Single XLSX workbook with three sheets, all honouring current filter state:
+
+- **Routes** — per-route data (type, deck, propulsion, operator, frequency, PVR, vehicle, garage, destinations)
+- **Garages** — per-garage data (code, name, operator, address, latitude, longitude, route_count)
+- **Network overview** — per-operator aggregates (route share, PVR share, EV share, plus TOTAL row)
+
+SheetJS is loaded from CDN with `defer`; the export handler surfaces a friendly message if the library hasn't loaded yet.
+
+### Modals — `about.js` / `roadmap.js`
+
+Both modals are self-contained:
+
+- Inject their HTML into `<body>` on load so they're available on every page that ships the script tag (index + changelog)
+- Open via any element carrying the matching id (`#about-btn` / `#roadmap-btn`) OR the matching data attribute (`[data-roadmap-open]`), allowing inline triggers in prose without id collisions
+- Trap Tab / Shift+Tab focus while open
+- Move focus to the close button on open, restore to the trigger on close
+- Close on Escape, backdrop click, or the `[data-close]` buttons
+
+Roadmap items are defined as a plain array at the top of `roadmap.js` — adding a new entry is a one-line edit. Each item accepts an optional `{ link: { href, label } }` rendered safely (both strings HTML-escaped).
 
 ---
 
@@ -313,7 +412,8 @@ Files committed per run:
 
 - **Discontinued routes**: some routes exist in the weekly geometry ZIP but are not in TfL's active `/Line/Mode/bus` list (e.g. `N6, N12, T1–T3, UL*, NEL1, 108D, 281N, 481D`). These render on the map but have no destinations, operator, deck, etc. Mitigation options: filter out at build time, or keep them under the `Unknown` filter chip (current behaviour).
 - **Letter-only routes without scraper data**: even in londonbusroutes.net, coverage is not exhaustive. Use `route-overrides.json` to fill gaps.
-- **24-hour routes**: TfL API no longer distinguishes them — all routes return `"Regular"` for `service_types`. The `twentyfour` filter type has been removed from the UI.
+- **24-hour routes**: TfL API no longer distinguishes them reliably — most routes return `"Regular"` even if they run nightly. `build-classifications.js` still assigns `type: 'twentyfour'` when `service_types` contains both `Regular` and `Night`, and the map palette reserves a colour for it, but the route-type filter chip was removed from the UI (the route-type group only shows Regular / Prefix / Night / School). The night-route alias fallback (Step 2 → Step 3) fills the practical gap by letting `N128` etc. inherit data from the daytime sibling when routes.htm confirms a 24-hour service.
+- **Garage coordinates**: garages with no address on `londonbusroutes.net` or a geocoder miss are written with `lat: null, lon: null` and skipped by `renderGarages`. Add manual coords via `route-overrides.json` (future) or patch `data/garage-locations.json` directly.
 
 ---
 
@@ -328,7 +428,32 @@ Files committed per run:
 | No framework or bundler                    | Static hosting, zero deploy-time build, simple deployment               |
 | Unified `Unknown` filter semantics         | Consistent handling; users never silently lose routes with missing data |
 | Manual override files checked into git     | Curation decisions are versioned, visible in diffs, not clobbered by CI |
-| `twentyfour` type removed                  | TfL API stopped exposing distinguishing data                            |
+| Route / garage filters split               | Lets a user overlay one operator's route network with another's garages (competitor analysis) |
+| Paint mode as a view switch, not a filter  | Colour encoding is a perception choice, not a data filter — shouldn't affect which routes show |
+| XLSX export (SheetJS) replaces CSV         | A multi-sheet workbook keeps Routes / Garages / Network overview together and respects filter state in one file |
+| z-index centralised on `:root`             | All stacking decisions documented in one place; prevents "arms race" of ever-higher values |
+| BEM for project-specific classes only      | Blueprint primitives (`.btn`, `.chip`, `.nav-item`, `.panel-hd`) keep their flat shadcn-style names; only the app-layer classes get `block__element--modifier` naming |
+| Photon before Nominatim for geocoding      | Nominatim blocks after small bursts; Photon tolerates sustained use with the same OSM data |
+
+---
+
+## CSS system
+
+- Single stylesheet (`css/app.css`, ~1900L) organised as Tokens → Base → Primitives → Shell → Pages → Responsive → Dark.
+- All stacking decisions tokenised on `:root` (`--z-overlay`, `--z-topbar`, `--z-desktop-panel`, `--z-map-hud`, `--z-above-map`, `--z-drawer`, `--z-mobile-nav`, `--z-modal`). No literal `z-index: N` values anywhere else.
+- Fluid type via `clamp()` on the changelog title / entry title, route badge, modal padding — reduces the number of media-query overrides needed.
+- Three media queries cover genuine layout-mode changes (≤900 / ≤640 / ≤380). Breakpoint-specific size tweaks belong in those; everything else should scale fluidly.
+- Dark mode: shadcn neutral palette on `[data-theme="dark"]`. All downstream tokens resolve via `var()` so components pick it up automatically; only bespoke colours (Leaflet tiles, hero backgrounds) need explicit dark-mode rules.
+
+## Accessibility
+
+- `<header role="banner">`, `<main>`, `<aside aria-label>`, `<footer>`, `<nav>` landmarks on both pages.
+- Panel headers and reopen tabs are `<button>` elements with `aria-expanded` and `aria-controls`. A MutationObserver in `panels.js` flips `aria-expanded` in lock-step with the `.collapsed` class so keyboard users hear the state change.
+- Every interactive primitive has a visible focus ring via `:focus-visible`.
+- Modals (About, Roadmap) trap focus while open and restore focus to the trigger on close.
+- `aria-live="polite"` on the filter stat region.
+- Skip link on every page targets the main content.
+- Every decorative SVG carries `aria-hidden="true"`; every icon-only button carries `aria-label`.
 
 ---
 
@@ -337,4 +462,6 @@ Files committed per run:
 - TfL API key only used in build scripts — never exposed to the browser
 - No sensitive data in committed files
 - Static output only — no server-side logic
+- Never introduce a bundler or framework — the no-build-at-deploy contract is load-bearing for the Cloudflare Pages setup
+- Keep Google Analytics aggregate-only and include the same snippet on every user-facing HTML page (currently `index.html` + `changelog.html`)
 - Analytics is anonymous aggregate only — no user accounts, no fingerprinting
