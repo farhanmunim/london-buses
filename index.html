@@ -75,13 +75,13 @@
       <div class="topbar-spacer"></div>
 
       <div id="map-layer-toggles" role="group" aria-label="Map layers">
-        <button id="toggle-routes-btn" class="btn btn-sm map-toggle active" type="button" aria-pressed="true" data-noun="routes" title="Show or hide all route lines">
+        <button id="toggle-routes-btn" class="btn btn-sm map-toggle active" type="button" aria-pressed="true" data-noun="route lines" title="Show or hide all route lines">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M4 17c4 0 4-10 8-10s4 10 8 10"/></svg>
-          <span class="toggle-label">Hide routes</span>
+          <span class="toggle-label">Hide route lines</span>
         </button>
-        <button id="toggle-garages-btn" class="btn btn-sm map-toggle" type="button" aria-pressed="false" data-noun="garages" title="Show or hide operator garages">
+        <button id="toggle-garages-btn" class="btn btn-sm map-toggle" type="button" aria-pressed="false" data-noun="garage markers" title="Show or hide operator garage markers">
           <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
-          <span class="toggle-label">Show garages</span>
+          <span class="toggle-label">Show garage markers</span>
         </button>
       </div>
 
@@ -203,7 +203,7 @@
             <!-- Garages — independent from route filters, so users can overlay
                  a competitor's garages onto a filtered route view. -->
             <div class="filter-group filter-group-garages">
-              <span class="filter-group-label" id="fg-garageoperator">Garage</span>
+              <span class="filter-group-label" id="fg-garageoperator">Garage markers</span>
               <div class="filter-chips" role="group" aria-labelledby="fg-garageoperator">
                 <button class="chip chip-outline" data-filter="garageoperator" data-val="Arriva" aria-pressed="false">Arriva</button>
                 <button class="chip chip-outline" data-filter="garageoperator" data-val="First" aria-pressed="false">First</button>
