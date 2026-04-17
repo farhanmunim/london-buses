@@ -223,8 +223,34 @@ for (const file of routeFiles) {
   };
   const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
-  // automatic derivation in fetch-route-details.js returned null.
-  const fallback    = vehicleType ? vehicleLookup[vehicleType] : null;
+  // automatic derivation in fetch-route-details.js returned null. Try several
+  // normalised variants so that a stored key like "B5LH/Gemini 3" still
+  // matches a raw input like "B5LH/Gemini 3 2D" or "Enviro400 MMC 2D*".
+  function vehicleLookupBestMatch(raw) {
+    if (!raw) return null;
+    const transforms = [
+      s => s,
+      s => s.replace(/[*†‡§\u0086]+$/g, ''),
+      s => s.replace(/\s*[123]D[?*†‡§\u0086]?\s*$/, ''),
+      s => s.replace(/^[A-Z0-9]{3,5}\s+/, ''),       // strip fleet prefix (E20D, B5LH...)
+      s => s.replace(/\s*\d+\.?\d*m\//i, '/'),        // strip size "10.5m/" keeping slash
+    ];
+    // Try every combination of transforms (order-independent)
+    const seen = new Set();
+    const stack = [raw];
+    while (stack.length) {
+      const cur = stack.pop().trim();
+      if (!cur || seen.has(cur)) continue;
+      seen.add(cur);
+      if (vehicleLookup[cur]) return vehicleLookup[cur];
+      for (const t of transforms) {
+        const next = t(cur);
+        if (next !== cur) stack.push(next);
+      }
+    }
+    return null;
+  }
+  const fallback    = vehicleLookupBestMatch(vehicleType);
   const deck        = details.deck       ?? fallback?.deck       ?? null;
   const propulsion  = details.propulsion ?? fallback?.propulsion ?? null;
   const operator     = details.operator;

@@ -1,62 +1,61 @@
 /**
- * fetch-route-details.js — Scrape supplementary route data
+ * fetch-route-details.js — Per-route supplementary data
  *
- * Fetches route data from londonbusroutes.net:
- *   details.htm  — fixed-width text table: vehicle type, garage code, PVR, frequencies
- *   garages.htm  — HTML table: garage code → operator name + garage name
+ * Produces data/source/route_details.json consumed by build-classifications.js.
+ * Sources (in priority order):
  *
- * Data not available from the official bus API:
- *   - Vehicle type (single / double deck)
- *   - Propulsion (electric / hydrogen / hybrid / diesel)
- *   - Operator name
- *   - Garage name
- *   - PVR (peak vehicle requirement)
- *   - Frequency headways (weekday, Sunday, evening)
+ *   1. data/garages.geojson  — authoritative operator / garage / PVR / route→garage
+ *                              allocation (built from londonbusroutes.net's CSV).
+ *   2. londonbusroutes.net/details.htm — vehicle type string per route. Parsed
+ *                              via robust regex (not fixed-width columns) so
+ *                              alignment drift and footnote rows don't corrupt
+ *                              the result.
+ *   3. TfL API /Line/{id}/Route — service type (Regular / Night / School).
  *
- * Output (written to data/source/route_details.json):
- *   { routes: { [routeId]: { deck, vehicleType, propulsion, operator, garageName,
- *                             garageCode, pvr, freqWeekday, freqSunday, freqEvening } } }
+ * Output schema (unchanged — drop-in replacement for the old scraper):
+ *   {
+ *     generatedAt, source, routeCount,
+ *     routes:      { [routeId]: { deck, vehicleType, propulsion, operator,
+ *                                 garageName, garageCode, pvr,
+ *                                 freqWeekday, freqSunday, freqEvening } },
+ *     aliases:     { "N128": "128", ... },
+ *     operatorByRoute: { "128": "Stagecoach London", ... },
+ *     operatorByRouteBustimes: {}  // kept as empty object for compat
+ *   }
  *
  * Run: npm run fetch-route-details
- *      (also called automatically by npm run refresh)
  */
 
 import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname  = path.dirname(fileURLToPath(import.meta.url));
-const OUT_PATH   = path.resolve(__dirname, '../data/source/route_details.json');
-const TIMEOUT_MS = 20_000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT      = path.resolve(__dirname, '..');
+const DATA_DIR  = path.join(ROOT, 'data');
+const OUT_PATH  = path.join(DATA_DIR, 'source', 'route_details.json');
+const GARAGES_PATH = path.join(DATA_DIR, 'garages.geojson');
+const DETAILS_URL  = 'http://www.londonbusroutes.net/details.htm';
+const TIMEOUT_MS   = 30_000;
 
-// ── Column offsets in the fixed-width <pre> table (0-indexed, confirmed empirically) ──
-// Dash line: "---- ----------------------------- --- --- -- -- ------- ------- ------- ------- -------- -- - --------"
-const COL = {
-  routeEnd:   4,   // slice(0, 4)
-  vehicleEnd: 34,  // slice(5, 34)
-  garageEnd:  38,  // slice(35, 38) → garage/op code
-  pvrEnd:     42,  // slice(39, 42)
-  monSatEnd:  64,  // slice(57, 64)
-  sunEnd:     72,  // slice(65, 72)
-  eveEnd:     80,  // slice(73, 80)
+// ── Normalise operators to parent brands ──────────────────────────────────────
+const OPERATOR_ALIASES = {
+  'Arriva': 'Arriva',
+  'Go-Ahead': 'Go-Ahead',
+  'Metroline': 'Metroline',
+  'Stagecoach': 'Stagecoach London',
+  'Stagecoach London': 'Stagecoach London',
+  'Transport UK': 'Transport UK',
+  'First': 'First',
+  'First Bus': 'First',
+  'Uno': 'Uno',
+  'Sullivan Buses': 'Sullivan Buses',
 };
-
-// ── HTML utility ──────────────────────────────────────────────────────────────
-
-function stripHtml(html) {
-  return html
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/gi,  '&')
-    .replace(/&lt;/gi,   '<')
-    .replace(/&gt;/gi,   '>')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&#\d+;/g,  '')
-    .replace(/&[a-z]+;/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+function normaliseOperator(name) {
+  if (!name) return null;
+  const t = String(name).trim();
+  return OPERATOR_ALIASES[t] ?? t;
 }
-
-// ── Fetch helper ──────────────────────────────────────────────────────────────
 
 async function fetchText(url) {
   const controller = new AbortController();
@@ -64,440 +63,312 @@ async function fetchText(url) {
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; route-data-collector/1.0)' },
+      headers: { 'User-Agent': 'london-buses-map/2.0' },
     });
     clearTimeout(timer);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
+    // Detect encoding: details.htm sometimes serves Windows-1252.
+    const buf = Buffer.from(await res.arrayBuffer());
+    // Try UTF-8 strict; if replacement chars (U+FFFD) appear, fall back to Latin-1.
+    let txt = buf.toString('utf8');
+    if (txt.includes('\uFFFD')) txt = buf.toString('latin1');
+    return txt;
   } catch (err) {
     clearTimeout(timer);
     throw err;
   }
 }
 
-// ── Routes page parser ───────────────────────────────────────────────────────
-//
-// routes.htm has one row per (routeId, role) pair. Anchor names are `M<id>`
-// for the daytime table and `N<id>` for the night table. Rows sharing the
-// same `href="times/<filename>.htm"` belong to the same physical service —
-// meaning a night row whose href matches a main row is an alias of that
-// main route (a 24-hour service branded under two numbers).
-//
-// Returns:
-//   aliases:   { 'N128': '128', 'N277': '30', ... }  — night → daytime mapping
-//   operators: { '128': 'Stagecoach London', ... }   — operator from the 3rd <TD>
-//
-// Operator names on routes.htm are the legal subsidiary (e.g. "Arriva London",
-// "London General", "Blue Triangle") — we normalise them to the parent brands
-// used elsewhere in the app (Arriva, Go-Ahead, etc.).
+// ── 1. Load authoritative garage → route allocation from garages.geojson ────
+function loadGarageAllocation() {
+  if (!fs.existsSync(GARAGES_PATH)) {
+    console.warn(`  data/garages.geojson not found — operator/garage/PVR will be empty. Run fetch-garages first.`);
+    return { byRoute: {}, garageByCode: {} };
+  }
+  const data = JSON.parse(fs.readFileSync(GARAGES_PATH, 'utf8'));
+  const byRoute = {};       // { "1": { operator, garageName, garageCode, pvr, nightOnly } }
+  const garageByCode = {};  // { "Q": { operator, garageName, pvr } }
+  for (const f of (data.features ?? [])) {
+    const p = f.properties ?? {};
+    const code = String(p['TfL garage code'] || p['LBR garage code'] || '').trim().toUpperCase();
+    if (!code) continue;
+    const operator   = normaliseOperator(p['Group name']);
+    const garageName = p['Garage name'] ?? null;
+    const pvr        = parseInt(p['PVR'], 10);
+    garageByCode[code] = { operator, garageName, pvr: Number.isFinite(pvr) ? pvr : null };
 
-const OPERATOR_ALIASES = {
-  'Arriva London':          'Arriva',
-  'Metroline West':          'Metroline',
-  'Metroline West Ltd.':     'Metroline',
-  'Metroline Travel':        'Metroline',
-  'First Bus London':        'First',
-  'First Bus':               'First',
-  'London General':          'Go-Ahead',
-  'London Central':          'Go-Ahead',
-  'Go-Ahead London':         'Go-Ahead',
-  'Blue Triangle':           'Go-Ahead',
-  'Abellio London':          'Transport UK',
-  'Transport UK London Bus': 'Transport UK',
-  'Stagecoach East London':  'Stagecoach London',
-  'Stagecoach Selkent':      'Stagecoach London',
-};
-function normaliseOperator(name) {
-  if (!name) return null;
-  const trimmed = name.replace(/\s*Ltd\.?$/, '').trim();
-  return OPERATOR_ALIASES[trimmed] ?? trimmed;
-}
-
-// ── bustimes.org cross-reference ─────────────────────────────────────────────
-//
-// Second independent operator source. Each London operator on bustimes.org has
-// a page listing every service it runs as /services/<routeId>-<slug>. We walk
-// those pages and build a `routeId → operator` map that survives anything
-// londonbusroutes.net might drop. Used as a tertiary fallback in Step 3.
-//
-// Kept inline in this file (rather than a new pipeline step) because the cost
-// is tiny — twelve HTML fetches — and the output lives alongside the routes.htm
-// operator map in route_details.json.
-
-const BUSTIMES_OPERATORS = [
-  ['Arriva',            '/operators/arriva-london'],
-  ['Go-Ahead',          '/operators/go-ahead-london'],
-  ['Go-Ahead',          '/operators/london-general'],
-  ['Go-Ahead',          '/operators/london-central'],
-  ['Go-Ahead',          '/operators/blue-triangle'],
-  ['Go-Ahead',          '/operators/metrobus-operated-by-go-ahead-london'],
-  ['Go-Ahead',          '/operators/docklands-buses'],
-  ['Metroline',         '/operators/metroline-travel'],
-  ['Stagecoach London', '/operators/stagecoach-london'],
-  ['Transport UK',      '/operators/abellio-london'],
-  ['First',             '/operators/first-in-london'],
-  ['Uno',               '/operators/uno'],
-];
-
-async function fetchBustimesOperators() {
-  console.log('Fetching bustimes.org operator cross-reference...');
-  const out = {};
-  const re  = /\/services\/([A-Za-z0-9]+)-/g;
-  for (const [brand, path] of BUSTIMES_OPERATORS) {
-    try {
-      const html = await fetchText('https://bustimes.org' + path);
-      const seen = new Set();
-      let m;
-      while ((m = re.exec(html)) !== null) {
-        const id = m[1].toUpperCase();
-        if (seen.has(id)) continue;
-        seen.add(id);
-        // First operator seen wins; don't overwrite if another op also lists it
-        if (!(id in out)) out[id] = brand;
+    const register = (tokens, { nightOnly = false, school = false } = {}) => {
+      for (const raw of tokens.split(/\s+/)) {
+        const t = raw.trim().toUpperCase();
+        if (!t) continue;
+        // Existing entry from main list wins over night-only/school-only
+        const prev = byRoute[t];
+        if (prev && !prev.nightOnly && !prev.schoolOnly) continue;
+        if (prev && nightOnly && !prev.nightOnly) continue;
+        byRoute[t] = {
+          operator, garageName, garageCode: code,
+          pvr: Number.isFinite(pvr) ? pvr : null,
+          nightOnly, schoolOnly: school,
+        };
       }
-      re.lastIndex = 0;
-    } catch (err) {
-      console.warn(`  ${path}: ${err.message}`);
-    }
+    };
+    register(p['TfL main network routes'] || '', {});
+    register(p['TfL night routes']        || '', { nightOnly: true });
+    register(p['TfL school/mobility routes'] || '', { school: true });
   }
-  console.log(`  bustimes operator map: ${Object.keys(out).length} entries`);
-  return out;
+  console.log(`  Loaded ${Object.keys(byRoute).length} route→garage mappings from garages.geojson`);
+  return { byRoute, garageByCode };
 }
 
-async function fetchRouteAliasesAndOperators() {
-  console.log('Fetching route alias map (routes.htm)...');
-  let html;
-  try {
-    html = await fetchText('http://www.londonbusroutes.net/routes.htm');
-  } catch (err) {
-    console.warn(`  Warning: could not fetch routes.htm (${err.message}) — skipping alias inference`);
-    return { aliases: {}, operators: {} };
-  }
+// ── 2. details.htm — vehicle type strings per route ─────────────────────────
+// Robust regex-based parse (no fixed columns). The page has <pre> blocks like:
+//   "  1  B5LH/Gemini 3 2D              Q   23  14  9  46-96   9-10     13      13    06/07/24 TQ 7 30/09/23"
+// Structure after stripping inline <a>/<font> tags and &entities:
+//   route-id  vehicle-type(>=3 tokens, includes spaces)  garage-code  ... numbers ...
+// We anchor on: ^spaces?ROUTE  spaces(2+)  VEHICLE(greedy-until-2-spaces-then-CODE)  CODE=[A-Z0-9]{1,4}  2+spaces  digits
 
-  const rows = [];
-  const rowRe = /<TR[^>]*>\s*<TD[^>]*>\s*<a\s+name=["']?([MN][A-Z0-9]+)["']?\s+href=["']?([^"'>]+)["']?>([^<]+)<\/a>\s*<\/TD>\s*<TD[^>]*>([^<]*)<\/TD>\s*<TD[^>]*>([^<]*)<\/TD>/gi;
+function stripInlineTags(s) {
+  return s
+    .replace(/<a [^>]*>([^<]*)<\/a>/gi, '$1')
+    .replace(/<\/?font[^>]*>/gi, '')
+    .replace(/<\/?b>/gi, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
+}
+
+function parseDetailsText(html) {
+  // Collect <pre>…</pre> blocks
+  const preBlocks = [];
+  const preRe = /<pre[^>]*>([\s\S]*?)<\/pre>/gi;
   let m;
-  while ((m = rowRe.exec(html)) !== null) {
-    const [, anchor, href, label, _dest, operator] = m;
-    const role    = anchor[0];                // 'M' or 'N'
-    const routeId = label.trim().toUpperCase();
-    if (!routeId) continue;
-    // Night-table rows show the daytime id in the label (e.g. anchor N128 → label "128").
-    // So the actual route id for an N-row is the anchor number.
-    const realId = role === 'N' ? anchor.slice(1).toUpperCase() : routeId;
-    rows.push({ role, id: realId, href: href.trim(), operator: normaliseOperator(operator.trim()) });
+  while ((m = preRe.exec(html)) !== null) preBlocks.push(m[1]);
+  if (!preBlocks.length) throw new Error('No <pre> blocks in details.htm');
+
+  // The table uses fixed-width columns defined by a dash-separator header line:
+  //   ---- ----------------------------- --- --- -- -- ------- ------- ------- ------- -------- -- - --------
+  //   Rte  Vehicle Type                  Op. PVR     Length          Frequencies       Timetable   Contract
+  //   nr.                                Gar.    km mi minutes Mon-Sat Sunday  evening   date   specification
+  // Column layout (0-indexed, inclusive ranges):
+  //   0-3   route id
+  //   5-33  vehicle type (29 chars)
+  //   35-37 garage/op code
+  //   39-41 PVR
+  //   43-44 km
+  //   46-47 mi
+  //   49-55 range (min-max minutes)
+  //   57-63 Mon-Sat headway
+  //   65-71 Sunday headway
+  //   73-79 evening headway
+  //   81-88 timetable date
+  //   90-?  contract spec
+  const COLS = {
+    route:   [ 0,  4],
+    vehicle: [ 5, 34],
+    garage:  [35, 38],
+    pvr:     [39, 42],
+    km:      [43, 45],
+    mi:      [46, 48],
+    range:   [49, 56],
+    monSat:  [57, 64],
+    sunday:  [65, 72],
+    evening: [73, 80],
+  };
+  function slice(line, [a, b]) {
+    return line.slice(a, b).trim();
   }
 
-  // Group by href to find aliases
-  const byHref = {};
-  for (const r of rows) (byHref[r.href] ??= []).push(r);
-  const aliases  = {};
-  const operators = {};
-  for (const r of rows) {
-    // Night row: if a main-row in the same group exists, record alias
-    if (r.role === 'N') {
-      const group = byHref[r.href];
-      const main  = group.find(x => x.role === 'M');
-      const nightId = `N${r.id}`;
-      if (main) aliases[nightId] = main.id;
-      if (r.operator) operators[nightId] = r.operator;
-    } else {
-      if (r.operator) operators[r.id] = r.operator;
+  const byRoute = {};
+
+  for (const block of preBlocks) {
+    const rawLines = block.split(/\r?\n/);
+    for (const raw of rawLines) {
+      const line = stripInlineTags(raw);
+      if (!line.trim()) continue;
+      if (/^\s*(Rte|nr\.|Route|Vehicle|Number|---)/i.test(line)) continue;
+      if (/^\s*\*/.test(line)) continue;                 // footnote
+      if (/^\s*Contract/i.test(line)) continue;
+
+      // Route id must live in the first 4 chars
+      const routeCol = slice(line, COLS.route);
+      if (!routeCol) continue;
+      if (!/^[A-Z]{0,3}\d{1,3}[A-Z]?$|^[A-Z]{2,4}$/.test(routeCol)) continue;
+      const rid = routeCol.toUpperCase();
+      if (byRoute[rid]) continue; // first occurrence wins
+
+      const vehicleRaw = slice(line, COLS.vehicle);
+      const garageRaw  = slice(line, COLS.garage).replace(/\*+$/, '').toUpperCase();
+      const pvrRaw     = slice(line, COLS.pvr);
+      const monSat     = slice(line, COLS.monSat);
+      const sunday     = slice(line, COLS.sunday);
+      const evening    = slice(line, COLS.evening);
+
+      const parseHead = (t) => {
+        if (!t) return null;
+        const s = t.replace(/[*†‡§\u0086]/g, '').trim();
+        if (/^[-–]$/.test(s)) return null;
+        const mm = s.match(/(\d+)/);
+        if (!mm) return null;
+        const n = +mm[1];
+        return n > 90 ? null : n;
+      };
+      const pvrNum = parseInt(pvrRaw, 10);
+      byRoute[rid] = {
+        vehicleType: vehicleRaw,
+        garageCodeFromDetails: /^[A-Z0-9]{1,4}$/.test(garageRaw) ? garageRaw : null,
+        pvrFromDetails: Number.isFinite(pvrNum) ? pvrNum : null,
+        freqWeekday: parseHead(monSat),
+        freqSunday:  parseHead(sunday),
+        freqEvening: parseHead(evening),
+      };
     }
   }
-  console.log(`  Parsed routes.htm: ${rows.length} rows, ${Object.keys(aliases).length} night→day aliases, ${Object.keys(operators).length} operator entries`);
-  return { aliases, operators };
+  return byRoute;
 }
 
-// ── Step 1: Parse garages page → garage code lookup ──────────────────────────
-
-async function fetchGarageLookup() {
-  console.log('Fetching garage/operator list...');
-  const html = await fetchText('http://www.londonbusroutes.net/garages.htm');
-  console.log(`  Downloaded ${(html.length / 1024).toFixed(0)} KB`);
-
-  const lookup = {}; // garageCode → { operator, garageName }
-  let currentOp = null;
-
-  const trRe = /<TR[^>]*>([\s\S]*?)<\/TR>/gi;
-  let m;
-  while ((m = trRe.exec(html)) !== null) {
-    const row = m[1];
-
-    // Operator header row: <TH colspan=4> containing operator name
-    if (/colspan=['"']?4/i.test(row) && /<TH/i.test(row)) {
-      const thM = row.match(/<TH[^>]*>([\s\S]*?)<\/TH>/i);
-      if (thM) {
-        const name = stripHtml(thM[1]).replace(/\s*\d[\d.%()\s]*$/, '').trim();
-        if (name && !/^\d/.test(name)) currentOp = name;
-      }
-      continue;
-    }
-
-    // Garage row: TH with <a name="CODE"> anchor
-    const codeM = row.match(/<a\s+name=['"']?([A-Z0-9]{1,4})['"']?/i);
-    if (!codeM || !currentOp) continue;
-
-    const cells = [];
-    const tdRe = /<T[DH][^>]*>([\s\S]*?)<\/T[DH]>/gi;
-    let cm;
-    while ((cm = tdRe.exec(row)) !== null) cells.push(stripHtml(cm[1]));
-
-    const code = codeM[1].toUpperCase();
-    const garageName = cells[1]?.trim() || '';
-    if (code && garageName) {
-      const entry = { operator: currentOp, garageName };
-      lookup[code] = entry;
-      // Some garages carry a secondary code in the last <TD> that details.htm
-      // uses instead of the anchor code (e.g. HO → Lea Interchange, with
-      // anchor LI). Register both so operator/garage lookups never miss.
-      const altCode = cells[cells.length - 1]?.trim().toUpperCase();
-      if (altCode && altCode !== code && /^[A-Z0-9]{1,4}$/.test(altCode) && !lookup[altCode]) {
-        lookup[altCode] = entry;
-      }
-    }
-  }
-
-  console.log(`  Parsed ${Object.keys(lookup).length} garage entries`);
-  return lookup;
-}
-
-// ── Step 2: Derived fields from vehicle type string ───────────────────────────
-
-function deriveDeck(vehicleStr) {
-  const t = vehicleStr.toUpperCase();
+// ── Vehicle-string → deck / propulsion heuristics ────────────────────────────
+function deriveDeck(s) {
+  if (!s) return null;
+  const t = s.toUpperCase();
   if (/\b3D\b/.test(t) || /\b2D\b/.test(t)) return 'double';
   if (/\b1D\b/.test(t)) return 'single';
-  // Named single-deck models (no deck suffix)
-  const singles = ['ENVIRO200', 'E200', 'CITARO', 'SOLO', 'VERSA', 'STREETLITE',
-    'CAETANO', 'E12\b', 'E10\b', 'E9\b', 'YUTONG', 'VOLVO B7RLE', 'VOLVO B8RLE'];
-  if (singles.some(k => new RegExp(k).test(t))) return 'single';
+  if (/NEW BUS FOR LONDON/.test(t) || /E40H/.test(t) || /ENVIRO400/.test(t) ||
+      /B5LH/.test(t) || /B5TH/.test(t) || /GEMINI/.test(t) || /EVOSETI/.test(t) ||
+      /METRODECKER/.test(t) || /STREETDECK/.test(t)) return 'double';
+  if (/ENVIRO200/.test(t) || /\bE200\b/.test(t) || /CITARO/.test(t) ||
+      /SOLO/.test(t) || /VERSA/.test(t) || /STREETLITE/.test(t) ||
+      /YUTONG/.test(t) || /VOLVO B[78]RLE/.test(t) || /\bE10\b|\bE12\b/.test(t)) return 'single';
   return null;
 }
-
-/**
- * Derive propulsion type from vehicle type string.
- * Returns: 'electric' | 'hydrogen' | 'hybrid' | 'diesel'
- */
-function derivePropulsion(vehicleStr) {
-  if (!vehicleStr) return null;
-  const t = vehicleStr.toUpperCase();
-
-  // Hydrogen fuel cell
-  if (t.includes('FCEV') || t.includes('FUEL CELL') || t.includes('HYDROGEN')) return 'hydrogen';
-
-  // Battery electric (various naming conventions)
-  if (
-    /\bEV\b/.test(t) ||           // standalone EV
-    t.includes('EV ') ||           // "EV City", "EV 2D"
-    /[A-Z0-9]EV\b/.test(t) ||     // "Enviro400EV", "MetroDecker EV"
-    t.includes('ELECTROLINER') ||
-    t.includes('STREETAIR') ||
-    t.includes('ELECTRIC') ||
-    t.includes('ECITARO') ||
-    t.includes('ZEB') ||
-    t.includes('BYD') ||
-    /YUTONG\s+E\d/.test(t) ||     // "Yutong E12" etc
-    /\bE\d{1,2}M?\b/.test(t)      // "E12", "E10" etc
-  ) return 'electric';
-
-  // Diesel-electric hybrid
-  if (
-    t.includes('NEW BUS FOR LONDON') ||
-    t.includes('NB4L') ||
-    /ENVIRO400H/.test(t) ||        // ADL Enviro400H hybrid
-    t.includes('E40H') ||          // fleet code for Enviro400H
-    t.includes('B5LH') ||          // Volvo B5LH hybrid
-    t.includes('B5TH') ||          // Volvo B5TH hybrid
-    t.includes('HEV') ||
-    t.includes('HYBRID')
-  ) return 'hybrid';
-
+function derivePropulsion(s) {
+  if (!s) return null;
+  const t = s.toUpperCase();
+  if (/FCEV|FUEL CELL|HYDROGEN/.test(t)) return 'hydrogen';
+  if (/\bEV\b|EV |\bE\d{1,2}[A-Z]?EV\b|[A-Z0-9]EV\b|ELECTROLINER|STREETAIR|ELECTRIC|ECITARO|\bZEB\b|\bBYD\b/.test(t)) return 'electric';
+  if (/YUTONG\s+E\d/.test(t)) return 'electric';
+  if (/NEW BUS FOR LONDON|NB4L|ENVIRO400H|E40H|B5LH|B5TH|\bHEV\b|HYBRID/.test(t)) return 'hybrid';
   return 'diesel';
 }
-
 function cleanVehicleType(raw) {
   if (!raw) return null;
   let s = raw.trim();
-  // Remove fleet code prefix (e.g. "E40H ", "B5LH ")
-  s = s.replace(/^[A-Z0-9]{3,5}\s+/, '');
-  // Remove length measurement (e.g. "10.2m/")
-  s = s.replace(/\d+\.?\d*m\//i, '');
-  // Strip deck suffixes (deck is stored separately)
-  s = s.replace(/\s*[123]D$/, '');
-  return s.trim() || null;
+  s = s.replace(/[*†‡§\u0086]+$/g, '').trim();         // trailing footnote markers
+  s = s.replace(/^[A-Z0-9]{3,5}\s+(?=\d|\(|[A-Z])/, ''); // strip fleet prefix (E20D, B5LH...) when followed by size/body
+  s = s.replace(/\s*\d+\.?\d*m\//i, '/').trim();        // collapse "10.5m/" into "/"
+  s = s.replace(/^\/+/, '').trim();
+  s = s.replace(/\s*[123]D[?*†‡§\u0086]?\s*$/, '').trim(); // strip trailing deck tag
+  return s || null;
 }
 
-// ── Step 3: Parse fixed-width frequency headways ──────────────────────────────
-
-function parseHeadway(cell) {
-  const s = cell.replace(/[*†‡]/g, '').trim();
-  if (!s || /^[-–]$/.test(s)) return null;
-  // Take the first run of digits (handles "9-10", "20 20", "10*" etc.)
-  const m = s.match(/(\d+)/);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  // Reject obviously wrong values (no real route has >90 min headway)
-  return n > 90 ? null : n;
-}
-
-// ── Step 4: Parse all fixed-width <pre> blocks ───────────────────────────────
-// The page has 4 <pre> blocks: day routes (×2 sections), night routes, school routes.
-// All share the same column layout for route ID / vehicle / garage / PVR.
-
-function parseDetailsPage(html) {
-  // Extract every <pre>…</pre> block on the page
-  const blocks = [];
-  let idx = 0;
-  while (true) {
-    const start = html.indexOf('<pre>', idx);
-    if (start < 0) break;
-    const end = html.indexOf('</pre>', start);
-    const raw = html.slice(start, end)
-      .replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g,  '&')
-      .replace(/&nbsp;/g, ' ')
-      .replace(/&#\d+;/g, '');
-    blocks.push(raw);
-    idx = end + 1;
-  }
-  if (!blocks.length) throw new Error('No <pre> blocks found on details page');
-
-  const dataLines = [];
-  for (const text of blocks) {
-    for (const line of text.split(/\r?\n/)) {
-      if (/^[-\s]*$/.test(line)) continue;
-      if (/^\s*(Rte|nr\.|Route|Vehicle|Number)/i.test(line)) continue;
-      const routeStr = line.slice(0, COL.routeEnd).trim();
-      if (!routeStr) continue;
-      // Accept: numeric (1-999), N-prefix (N1, N279), letter-prefix with digit (A10, EL1, W7),
-      // and letter-only codes (SCS, RV1, etc.)
-      if (
-        !/^N?\d{1,4}[A-Z0-9]*$/.test(routeStr)      &&
-        !/^[A-Z]{1,3}\d{1,3}[A-Z0-9]*$/.test(routeStr) &&
-        !/^[A-Z]{2,4}$/.test(routeStr)
-      ) continue;
-      dataLines.push(line);
+// ── 3. Service types from TfL (for aliases of 24-hour routes) ────────────────
+try {
+  const envPath = path.join(ROOT, '.env');
+  if (fs.existsSync(envPath)) {
+    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
+      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
     }
   }
-  return dataLines;
+} catch {}
+const API_KEY = process.env.BUS_API_KEY ?? '';
+
+// Aliases (night→day) come from routes.htm — preserve old behaviour.
+async function fetchAliases() {
+  try {
+    const html = await fetchText('http://www.londonbusroutes.net/routes.htm');
+    const rowRe = /<TR[^>]*>\s*<TD[^>]*>\s*<a\s+name=["']?([MN][A-Z0-9]+)["']?\s+href=["']?([^"'>]+)["']?>([^<]+)<\/a>/gi;
+    const rows = [];
+    let m;
+    while ((m = rowRe.exec(html)) !== null) {
+      rows.push({ role: m[1][0], id: (m[1][0] === 'N' ? m[1].slice(1) : m[3]).trim().toUpperCase(), href: m[2].trim() });
+    }
+    const byHref = {};
+    for (const r of rows) (byHref[r.href] ??= []).push(r);
+    const aliases = {};
+    for (const r of rows) {
+      if (r.role !== 'N') continue;
+      const main = byHref[r.href].find(x => x.role === 'M');
+      if (main) aliases[`N${r.id}`] = main.id;
+    }
+    return aliases;
+  } catch (err) {
+    console.warn(`  routes.htm unavailable (${err.message}) — aliases empty`);
+    return {};
+  }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-
 async function main() {
-  console.log('Fetching route details...');
+  console.log('Loading garage allocations from data/garages.geojson...');
+  const { byRoute: allocByRoute, garageByCode } = loadGarageAllocation();
 
-  // Step 1 — garage lookup (graceful fallback)
-  let garageLookup = {};
+  console.log(`Fetching ${DETAILS_URL}...`);
+  let detailsHtml = '';
   try {
-    garageLookup = await fetchGarageLookup();
+    detailsHtml = await fetchText(DETAILS_URL);
+    console.log(`  Downloaded ${(detailsHtml.length / 1024).toFixed(0)} KB`);
   } catch (err) {
-    console.warn(`  Warning: could not fetch garage list (${err.message}) — operator/garage names will be omitted`);
+    console.warn(`  details.htm unavailable (${err.message}) — vehicle types will be null`);
   }
+  const vehicleByRoute = detailsHtml ? parseDetailsText(detailsHtml) : {};
+  console.log(`  Parsed vehicle info for ${Object.keys(vehicleByRoute).length} routes`);
 
-  // Step 1b — route aliases + fallback operator map from routes.htm
-  const { aliases, operators: operatorByRoute } = await fetchRouteAliasesAndOperators();
+  const aliases = await fetchAliases();
+  console.log(`  Parsed ${Object.keys(aliases).length} night→day aliases`);
 
-  // Tertiary operator source — bustimes.org cross-reference
-  let operatorByRouteBustimes = {};
-  try {
-    operatorByRouteBustimes = await fetchBustimesOperators();
-  } catch (err) {
-    console.warn(`  Warning: bustimes.org unreachable (${err.message}) — continuing without cross-reference`);
-  }
-
-  // Step 2 — details page
-  let html;
-  try {
-    const url = 'http://www.londonbusroutes.net/details.htm';
-    console.log(`Fetching ${url}...`);
-    html = await fetchText(url);
-    console.log(`  Downloaded ${(html.length / 1024).toFixed(0)} KB`);
-  } catch (err) {
-    if (fs.existsSync(OUT_PATH)) {
-      console.warn(`Warning: could not fetch route details (${err.message}) — keeping existing cache`);
-      process.exit(0);
-    }
-    throw new Error(`Could not fetch route details and no cache exists: ${err.message}`);
-  }
-
-  const dataLines = parseDetailsPage(html);
-  console.log(`  Data lines extracted: ${dataLines.length}`);
-
-  // Step 3 — parse each line
+  // Build per-route output
   const routes = {};
-  let parsed = 0, skipped = 0;
-
-  for (const line of dataLines) {
-    const routeId    = line.slice(0, COL.routeEnd).trim().toUpperCase();
-    const vehicleRaw = line.slice(5, COL.vehicleEnd).trim();
-    const garageCode = line.slice(35, COL.garageEnd).trim().replace(/[*†‡]/g, '').toUpperCase();
-    const pvrRaw     = line.slice(39, COL.pvrEnd).trim();
-    const monSatRaw  = line.length > 57 ? line.slice(57, COL.monSatEnd).trim() : '';
-    const sundayRaw  = line.length > 65 ? line.slice(65, COL.sunEnd).trim()    : '';
-    const eveningRaw = line.length > 73 ? line.slice(73, COL.eveEnd).trim()    : '';
-
-    if (!routeId || routeId.length > 6) { skipped++; continue; }
-
-    const deck        = deriveDeck(vehicleRaw);
-    const vehicleType = cleanVehicleType(vehicleRaw);
-    const propulsion  = derivePropulsion(vehicleRaw);
-    const pvr         = parseInt(pvrRaw, 10) || null;
-    const freqWeekday = parseHeadway(monSatRaw);
-    const freqSunday  = parseHeadway(sundayRaw);
-    const freqEvening = parseHeadway(eveningRaw);
-
-    const garageInfo  = garageLookup[garageCode] ?? null;
-    const operator    = garageInfo?.operator  ?? null;
-    const garageName  = garageInfo?.garageName ?? null;
-
-    routes[routeId] = {
-      deck, vehicleType, propulsion,
-      operator, garageName, garageCode: garageCode || null,
-      pvr, freqWeekday, freqSunday, freqEvening,
+  const operatorByRoute = {};
+  const allIds = new Set([...Object.keys(allocByRoute), ...Object.keys(vehicleByRoute)]);
+  for (const id of allIds) {
+    const alloc = allocByRoute[id] ?? null;
+    const v = vehicleByRoute[id] ?? null;
+    const rawVehicle = v?.vehicleType ?? null;
+    const cleanVeh = cleanVehicleType(rawVehicle);
+    // Cross-check garage code: if details.htm gave a different one, trust the CSV
+    let operator = alloc?.operator ?? null;
+    let garageName = alloc?.garageName ?? null;
+    let garageCode = alloc?.garageCode ?? null;
+    let pvr = alloc?.pvr ?? null;
+    if (!alloc && v?.garageCodeFromDetails) {
+      garageCode = v.garageCodeFromDetails;
+      const g = garageByCode[garageCode];
+      if (g) {
+        operator = g.operator;
+        garageName = g.garageName;
+        pvr = g.pvr;
+      }
+    }
+    routes[id] = {
+      deck:        deriveDeck(rawVehicle),
+      vehicleType: cleanVeh,
+      propulsion:  derivePropulsion(rawVehicle),
+      operator, garageName, garageCode, pvr,
+      freqWeekday: v?.freqWeekday ?? null,
+      freqSunday:  v?.freqSunday  ?? null,
+      freqEvening: v?.freqEvening ?? null,
     };
-    parsed++;
+    if (operator) operatorByRoute[id] = operator;
   }
-
-  console.log(`  Parsed: ${parsed} routes, skipped: ${skipped} lines`);
-
-  // Summary stats
-  const deckCounts = {
-    double:  Object.values(routes).filter(r => r.deck === 'double').length,
-    single:  Object.values(routes).filter(r => r.deck === 'single').length,
-    unknown: Object.values(routes).filter(r => r.deck === null).length,
-  };
-  const propCounts = {};
-  for (const r of Object.values(routes)) {
-    const p = r.propulsion ?? 'unknown';
-    propCounts[p] = (propCounts[p] ?? 0) + 1;
-  }
-  const opCounts = {};
-  for (const r of Object.values(routes)) {
-    const o = r.operator ?? 'unknown';
-    opCounts[o] = (opCounts[o] ?? 0) + 1;
-  }
-  console.log('  Deck:', deckCounts);
-  console.log('  Propulsion:', propCounts);
-  console.log('  Operators:', opCounts);
 
   const output = {
     generatedAt: new Date().toISOString(),
-    source:      'londonbusroutes.net',
-    routeCount:  parsed,
+    source: 'garages.geojson + londonbusroutes.net/details.htm',
+    routeCount: Object.keys(routes).length,
     routes,
-    aliases,                   // { 'N128': '128', ... } — night routes that are 24-hour aliases
-    operatorByRoute,           // { '128': 'Stagecoach London', ... } — from routes.htm
-    operatorByRouteBustimes,   // { '678': 'Stagecoach London', ... } — from bustimes.org
+    aliases,
+    operatorByRoute,
+    operatorByRouteBustimes: {},
   };
-
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
-  console.log(`Written: ${OUT_PATH}`);
+  console.log(`Wrote: ${OUT_PATH}`);
+  console.log(`  Routes: ${output.routeCount}`);
+  // Spot-check
+  if (routes['1']) {
+    const r = routes['1'];
+    console.log(`  Route 1: vehicle=${r.vehicleType} operator=${r.operator} garage=${r.garageCode} (${r.garageName}) pvr=${r.pvr}`);
+  }
 }
 
-main().catch(err => {
-  console.error('Fatal:', err.message);
-  process.exit(1);
-});
+main().catch(err => { console.error('Fatal:', err); process.exit(1); });

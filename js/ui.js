@@ -45,11 +45,27 @@ Promise.all([
 // Route-count per garage is derived from classifications once they're loaded.
 Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garages, classifications]) => {
   if (!garages.length) return;
-  const routeCounts = {};
-  for (const c of Object.values(classifications)) {
-    if (c.garageCode) routeCounts[c.garageCode] = (routeCounts[c.garageCode] ?? 0) + 1;
+  // Group routes by garage code so the garage popup can show per-route chips
+  // and total PVR. Entry shape: { routeId, pvr, operator, type }.
+  const garageRoutes = {};
+  for (const [routeId, c] of Object.entries(classifications)) {
+    if (!c.garageCode) continue;
+    (garageRoutes[c.garageCode] ??= []).push({
+      routeId,
+      pvr:      c.pvr ?? null,
+      operator: c.operator ?? null,
+      type:     c.type ?? null,
+    });
   }
-  renderGarages(garages, routeCounts);
+  // Sort each garage's routes alphanumerically (numeric first, then letter-prefix)
+  const routeSortKey = id => [/^\d/.test(id) ? 0 : 1, id.padStart(6, '0')];
+  for (const list of Object.values(garageRoutes)) {
+    list.sort((a, b) => {
+      const [ka, la] = routeSortKey(a.routeId), [kb, lb] = routeSortKey(b.routeId);
+      return ka - kb || la.localeCompare(lb);
+    });
+  }
+  renderGarages(garages, garageRoutes);
   // Default ON; only hide if the user explicitly opted out in a prior session
   setGaragesVisible(localStorage.getItem('garages-visible') !== '0');
   updateFilterStat(countVisibleRoutes());

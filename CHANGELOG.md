@@ -104,3 +104,23 @@ _2026-04-14_
 - **Hardened CI**: Correct write permissions, current runner versions, stops endpoint fix
 
 ---
+
+## v2.2 – TfL-first Data Pipeline & Accuracy Overhaul
+
+_2026-04-17_
+
+- **TfL-first data sourcing**: Pipeline now uses the TfL Unified API as the authoritative source for route lists, destinations, stops, named bus/coach stations, and timetables. Scraping from londonbusroutes.net and bustimes.org is retained only as a fallback for routes TfL omits — TfL values are never overwritten by scraped values.
+- **Fixed wrong route classifications**: Route 1 was tagged as a Bombardier CR4000 tram (operator "First", garage "Therapia Lane") because the previous scraper parsed `details.htm` by drifting fixed-width column offsets. Rewritten to join the authoritative `garages.csv` (operator / garage / PVR / vehicle) with a robust regex over `details.htm`. Mojibake like `Enviro400 MMC 2D�` is fixed via UTF-8 → Latin-1 fallback.
+- **New destinations schema**: `data/route_destinations.json` now stores `{ destination, qualifier, full }` per direction (matches the reference implementation) instead of the previous `{ destination, originator }` which was leaking raw stop names.
+- **Numeric frequencies**: New `data/frequencies.json` with mean headways per band (`peak_am`, `peak_pm`, `offpeak`, `overnight`, `weekend`) sourced from TfL `/Line/<id>/Timetable` with bustimes.org grid fallback for TfL-gap routes.
+- **New datasets**: `data/stops.geojson` (all London bus stops from TfL `/StopPoint/Mode/bus`, gitignored — 4.7 MB), `data/bus_stations.geojson` (~50 named bus/coach stations), `data/garages.geojson` (authoritative garage CSV + postcodes.io geocoding), `data/route_summary.csv` (flattened spreadsheet view of every route).
+- **Postcode-based garage geocoding**: Garage lat/lon now derived from UK postcodes via postcodes.io (bulk, unauthenticated) with results cached in `data/source/geocode_cache.json` — force-committed so weekly runs skip re-geocoding on a stable week.
+- **Vehicle-lookup combinatorial matcher**: `build-classifications.js` now tries stripped variants (`2D`/`3D`, fleet prefix, size) so `B5LH/Gemini 3 2D` matches the canonical `B5LH/Gemini 3` key — closes ~55 missing deck/propulsion rows.
+- **Pipeline grew to 10 steps**: `refresh.js` now orchestrates geometry → destinations → stops → garages → frequencies → route-details → classifications → overview → legacy garage-locations → route summary.
+- **Weekly CI workflow**: Now stages the new data files (`frequencies.json`, `garages.geojson`, `route_summary.csv`) so they deploy to Cloudflare Pages, uses `git add -A` so pruned dated snapshots are actually removed, and force-adds the geocode cache.
+- **Removed Puppeteer** (~170 MB unused devDep) — shaves noticeable time off every CI `npm ci`.
+- **About modal overhaul**: Added "Not a journey planner" lede, split Data Sources from Built-with, added attributions for TfL Open Data Licence, ONS/OGL v3, OSM ODbL, SheetJS (Apache 2.0), Geist (SIL OFL). New Privacy section discloses Google Analytics aggregate-only usage.
+- **CSS fix**: Data Sources list now stacks name + description when descriptions are long (via the new `credits-list--inline` variant for short notes); fixes the squashed two-column layout after adding fuller attributions.
+- **Hardened `.gitignore`**: Broader env/secret patterns (`*.env`, `.env.*`, `*.pem`, `*.key`, `secrets.json`, `credentials.json`), editor dirs (`.vscode/`, `.idea/`), Claude `settings.json`, OS cruft.
+
+---

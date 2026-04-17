@@ -29,7 +29,7 @@
           </div>
         </div>
 
-        <p class="modal-lede">An interactive map of every London bus route — search, filter by operator, propulsion, deck type, and more.</p>
+        <p class="modal-lede">An interactive map of every London bus route — search, filter by operator, propulsion, deck type, and more. <strong>Not a journey planner</strong> — for live times and travel advice, use <a href="https://tfl.gov.uk/plan-a-journey/" target="_blank" rel="noopener">tfl.gov.uk</a>.</p>
 
         <div class="modal-disclaimer" role="note">
           <strong>Disclaimer.</strong> This site is an independent project and is <strong>not affiliated with, endorsed by, or operated by Transport for London (TfL), London Buses, or any bus operator</strong>. Data is compiled from public sources and may be incomplete, out of date, or inaccurate. You are responsible for verifying anything before acting on it; I take no responsibility for how this information is used.
@@ -38,36 +38,46 @@
         <section class="modal-section">
           <span class="modal-section-tag">Data sources</span>
           <ul class="credits-list">
-            <li><a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">Transport for London Unified API</a><span class="credits-note">route list · destinations · stops</span></li>
-            <li><a href="https://bus.data.tfl.gov.uk" target="_blank" rel="noopener">TfL Bus Open Data</a><span class="credits-note">weekly route geometry</span></li>
-            <li><a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a><span class="credits-note">operator · vehicle · PVR · frequency · garages</span></li>
-            <li><a href="https://bustimes.org/regions/L" target="_blank" rel="noopener">bustimes.org</a><span class="credits-note">cross-reference · operator fallback</span></li>
+            <li><a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">TfL Unified API</a><span class="credits-note">route list · destinations · bus stops · named bus/coach stations · timetable headways — Powered by TfL Open Data; contains OS data © Crown copyright &amp; database rights 2016</span></li>
+            <li><a href="https://bus.data.tfl.gov.uk" target="_blank" rel="noopener">TfL Bus Open Data (S3)</a><span class="credits-note">weekly detailed route geometry (Route_Geometry ZIP)</span></li>
+            <li><a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a><span class="credits-note">authoritative vehicle type · PVR · operator / garage assignment · garage CSV · used only as fallback for routes TfL omits</span></li>
+            <li><a href="https://bustimes.org/regions/L" target="_blank" rel="noopener">bustimes.org</a><span class="credits-note">timetable + destination scrape fallback for the handful of routes absent from TfL</span></li>
+            <li><a href="https://postcodes.io" target="_blank" rel="noopener">postcodes.io</a><span class="credits-note">bulk postcode → lat/lon geocoding for garages (ONS data · OGL v3)</span></li>
+            <li><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a><span class="credits-note">legacy garage-locations geocoder (OpenStreetMap-backed)</span></li>
           </ul>
-          <p class="modal-note">Data refreshes automatically every <strong>Monday at 05:00 UTC</strong>.</p>
+          <p class="modal-note">Data refreshes automatically every <strong>Monday at 05:00 UTC</strong>. TfL data is used under the terms of the <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" target="_blank" rel="noopener">TfL Open Data Licence</a>.</p>
         </section>
 
         <section class="modal-section">
           <span class="modal-section-tag">Built with</span>
-          <ul class="credits-list">
-            <li><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><span class="credits-note">map engine</span></li>
-            <li><a href="https://carto.com/" target="_blank" rel="noopener">CARTO Voyager</a><span class="credits-note">basemap tiles</span></li>
-            <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a><span class="credits-note">map data · © contributors</span></li>
-            <li><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a><span class="credits-note">geocoder · garage address → lat, lon</span></li>
+          <ul class="credits-list credits-list--inline">
+            <li><a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a><span class="credits-note">map engine · BSD-2</span></li>
+            <li><a href="https://carto.com/attribution/" target="_blank" rel="noopener">CARTO Voyager</a><span class="credits-note">basemap tiles</span></li>
+            <li><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a><span class="credits-note">basemap data · © contributors · ODbL</span></li>
+            <li><a href="https://sheetjs.com" target="_blank" rel="noopener">SheetJS Community</a><span class="credits-note">XLSX export · Apache 2.0</span></li>
+            <li><a href="https://vercel.com/font" target="_blank" rel="noopener">Geist</a><span class="credits-note">typeface · SIL OFL</span></li>
             <li><a href="https://github.com" target="_blank" rel="noopener">GitHub</a><span class="credits-note">source hosting · Actions for the weekly data refresh</span></li>
             <li><a href="https://pages.cloudflare.com" target="_blank" rel="noopener">Cloudflare Pages</a><span class="credits-note">static hosting · global CDN</span></li>
           </ul>
         </section>
 
         <section class="modal-section">
+          <span class="modal-section-tag">Privacy</span>
+          <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
+            Uses <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Analytics</a> (aggregate page-view statistics only — no accounts, no user-level tracking, no advertising cookies). No personal data is collected or stored by this site. Your browser does make direct requests to the TfL API for live bus-stop data when you open a route.
+          </p>
+        </section>
+
+        <section class="modal-section">
           <span class="modal-section-tag">Source</span>
-          <ul class="credits-list">
+          <ul class="credits-list credits-list--inline">
             <li><a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">github.com/farhanmunim/london-buses</a><span class="credits-note">open source · MIT</span></li>
           </ul>
         </section>
 
         <section class="modal-section">
           <span class="modal-section-tag">Developer</span>
-          <ul class="credits-list">
+          <ul class="credits-list credits-list--inline">
             <li><a href="https://farhan.app" target="_blank" rel="noopener">Farhan Munim</a><span class="credits-note">farhan.app</span></li>
           </ul>
         </section>

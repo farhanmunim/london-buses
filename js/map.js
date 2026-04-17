@@ -31,6 +31,7 @@ const OPERATOR_COLORS = {
   'Transport UK':      '#005EB8',
   'RATP':              '#00A859',
   'RATP Dev':          '#00A859',
+  'Uno':               '#FDB913',
 };
 const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
 
@@ -512,6 +513,7 @@ const OPERATOR_META = {
   'Transport UK':      { short: 'TU', color: '#005EB8' }, // Transport UK blue
   'RATP':              { short: 'RP', color: '#00A859' }, // RATP Dev green
   'RATP Dev':          { short: 'RP', color: '#00A859' },
+  'Uno':               { short: 'UN', color: '#FDB913' }, // Uno Bus amber
 };
 function operatorMeta(name) {
   if (!name) return { short: '??', color: '#475569' };
@@ -524,18 +526,45 @@ function operatorMeta(name) {
 // from ui.js and also re-emit the filtered list for CSV/XLSX export.
 let _allGarages = []; // [{ marker, garage, routeCount }]
 
-export function renderGarages(garages, routeCounts = {}) {
+export function renderGarages(garages, garageRoutes = {}) {
   if (_garagesLayer) return; // idempotent: call once at boot
   _garagesLayer = L.layerGroup();
   _allGarages = [];
 
+  // Group garages that share (near-)identical coords so we can fan overlapping
+  // markers out in a tiny circle. Two garages at the same building (e.g. Ash
+  // Grove = AE Arriva + HK Stagecoach) would otherwise stack and only the top
+  // one would be clickable.
+  const OFFSET_DEG = 0.00025; // ~18 m — enough to separate pins, not to mislead
+  const keyOf = g => `${g.lat.toFixed(5)},${g.lon.toFixed(5)}`;
+  const clusters = new Map();
+  for (const g of garages) {
+    if (g.lat == null || g.lon == null) continue;
+    const k = keyOf(g);
+    if (!clusters.has(k)) clusters.set(k, []);
+    clusters.get(k).push(g);
+  }
+
   for (const g of garages) {
     if (g.lat == null || g.lon == null) continue;
 
-    const { short, color } = operatorMeta(g.operator);
-    const count = routeCounts[g.code] ?? 0;
+    const cluster = clusters.get(keyOf(g));
+    let lat = g.lat, lon = g.lon;
+    if (cluster.length > 1) {
+      const i = cluster.indexOf(g);
+      const angle = (2 * Math.PI * i) / cluster.length - Math.PI / 2; // start north
+      lat = g.lat + OFFSET_DEG * Math.sin(angle);
+      // Longitude spacing grows with latitude; scale so visual gap is symmetric
+      lon = g.lon + OFFSET_DEG * Math.cos(angle) / Math.cos(g.lat * Math.PI / 180);
+    }
 
-    const marker = L.marker([g.lat, g.lon], {
+    const { short, color } = operatorMeta(g.operator);
+    const routes   = garageRoutes[g.code] ?? [];
+    const count    = routes.length;
+    const totalPvr = routes.reduce((sum, r) => sum + (Number.isFinite(r.pvr) ? r.pvr : 0), 0);
+    const hasPvr   = routes.some(r => Number.isFinite(r.pvr));
+
+    const marker = L.marker([lat, lon], {
       icon: L.divIcon({
         className: 'garage-marker',
         html: `<span class="garage-marker-pin" style="--garage-col:${color}" title="${g.name} — ${g.operator ?? ''}">
@@ -547,14 +576,37 @@ export function renderGarages(garages, routeCounts = {}) {
       keyboard: false,
     });
 
+    const chipsHtml = routes.length
+      ? `<div class="map-id-popup__chips map-popup__route-chips">${routes.map(r => {
+          const col = OPERATOR_COLORS[r.operator] ?? OPERATOR_FALLBACK_COLOR;
+          return `<span class="map-id-popup__chip" data-route="${r.routeId}" style="--chip-col:${col}">${r.routeId}</span>`;
+        }).join('')}</div>`
+      : '';
+
     marker.bindPopup(
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
         `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
+        `<div><dt>Total PVR</dt><dd>${hasPvr ? totalPvr : '–'}</dd></div>` +
         `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
-      `</dl>`,
-      { closeButton: true, maxWidth: 280 }
+      `</dl>` +
+      chipsHtml,
+      { closeButton: true, maxWidth: 320 }
     );
+
+    // Wire chip clicks when the popup opens (same pattern as stop-popup chips)
+    marker.on('popupopen', () => {
+      setTimeout(() => {
+        const root = marker.getPopup()?.getElement();
+        if (!root) return;
+        root.querySelectorAll('.map-id-popup__chip[data-route]').forEach(chip => {
+          chip.addEventListener('click', () => {
+            marker.closePopup();
+            document.dispatchEvent(new CustomEvent('map:routeclick', { detail: chip.dataset.route }));
+          });
+        });
+      }, 0);
+    });
 
     _garagesLayer.addLayer(marker);
     _allGarages.push({ marker, garage: g, routeCount: count });

@@ -56,8 +56,9 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Always stage the aggregated/summary files that change weekly
-          git add \
+          # Always stage the aggregated/summary files that change weekly.
+          # -A so deleted snapshots (pruned by build-overview) are also staged.
+          git add -A \
             data/routes-overview.geojson \
             data/route_destinations.json \
             data/route_classifications.json \
@@ -65,7 +66,14 @@ jobs:
             data/manifest.json \
             data/geometry-source.json \
             data/garage-locations.json \
-            "data/routes-overview-*.geojson" || true
+            data/frequencies.json \
+            data/garages.geojson \
+            data/route_summary.csv \
+            data/routes-overview-*.geojson || true
+
+          # Persist the postcodes.io geocode cache across runs to avoid
+          # re-geocoding every garage weekly.
+          git add -f data/source/geocode_cache.json || true
 
           # Only stage individual route files if the geometry ZIP changed
           if [ "${{ steps.prev_zip.outputs.date }}" != "${{ steps.new_zip.outputs.date }}" ]; then

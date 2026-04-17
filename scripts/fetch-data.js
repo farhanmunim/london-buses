@@ -280,64 +280,19 @@ function processZip(zipBuffer, dateToken) {
   console.log(`  Index written (${routeIds.length} routes)`);
 }
 
-// --- Step 3: Route destinations ----------------------------------------------
-
-async function fetchDestinations() {
-  console.log('\nFetching route destinations...');
-  const lines = await fetchJson(apiUrl('/Line/Mode/bus'));
-  const routeIds = lines.map(l => l.id.toUpperCase()).sort();
-  console.log(`  ${routeIds.length} routes found`);
-
-  const routes = {};
-  let done = 0;
-
-  await batchRun(routeIds, async (id) => {
-    try {
-      const data = await fetchJson(apiUrl(`/Line/${encodeURIComponent(id)}/Route`));
-      const entry = { inbound: null, outbound: null, service_types: [] };
-
-      for (const section of (data.routeSections ?? [])) {
-        const dir = section.direction?.toLowerCase();
-        if (dir === 'inbound' || dir === 'outbound') {
-          entry[dir] = {
-            destination: section.destinationName ?? null,
-            originator: section.originationName ?? null,
-          };
-        }
-      }
-      entry.service_types = (data.serviceTypes ?? []).map(s => s.name);
-      routes[id] = entry;
-    } catch {
-      routes[id] = { inbound: null, outbound: null, service_types: [] };
-    }
-    done++;
-    if (done % 100 === 0) console.log(`  ${done}/${routeIds.length}`);
-  }, 5, 350); // 350 req/min — safely under TfL's 500 req/min limit with API key
-
-  return { routeIds, routes };
-}
-
 // --- Main --------------------------------------------------------------------
+// NOTE: Route destinations now live in `fetch-route-destinations.js` (produces
+// reference-shape { destination, qualifier, full } records). This script only
+// handles geometry.
 
 async function main() {
-  console.log('=== London Buses – Data Refresh ===\n');
+  console.log('=== London Buses – Geometry Refresh ===\n');
   fs.mkdirSync(ROUTES_DIR, { recursive: true });
 
-  // Geometry
   const { date: dateToken, key: zipKey } = await findLatestZipKey();
   const zipBuffer = await downloadZip(zipKey);
   processZip(zipBuffer, dateToken);
 
-  // Destinations
-  const { routeIds, routes } = await fetchDestinations();
-  writeJson(path.join(DATA_DIR, 'route_destinations.json'), {
-    generated_at_utc: new Date().toISOString(),
-    route_count: routeIds.length,
-    routes,
-  });
-  console.log('\nWrote route_destinations.json');
-
-  // Write a small file recording the geometry ZIP date so CI can detect changes
   writeJson(path.join(DATA_DIR, 'geometry-source.json'), {
     zipDate: dateToken,
     generatedAt: new Date().toISOString(),

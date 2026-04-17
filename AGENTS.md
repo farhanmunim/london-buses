@@ -65,27 +65,39 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── about.js                     # About modal — injects HTML, traps focus, works on every page
 │   └── roadmap.js                   # Roadmap modal — same pattern; items defined as a plain array
 ├── scripts/
-│   ├── refresh.js                   # Orchestrator: runs all 5 build steps in sequence
-│   ├── fetch-data.js                # Step 1 — geometry ZIP + destinations from TfL API
-│   ├── fetch-route-details.js       # Step 2 — vehicle / operator / PVR / frequency scrape + night-route aliases
-│   ├── build-classifications.js     # Step 3 — merge into final per-route record
-│   ├── build-overview.js            # Step 4 — simplified overview GeoJSON + snapshot archive
-│   ├── build-garage-locations.js    # Step 5 — scrape garage addresses + geocode via Photon (cached)
+│   ├── refresh.js                   # Orchestrator: runs all 10 build steps in sequence
+│   ├── fetch-data.js                # Step 1 — geometry ZIP → per-route GeoJSON (TfL S3)
+│   ├── fetch-route-destinations.js  # Step 2 — TfL /Line API → destinations {destination,qualifier,full} + scrape fallback
+│   ├── fetch-stops.js               # Step 3 — TfL StopPoint API → stops.geojson + bus_stations.geojson
+│   ├── fetch-garages.js             # Step 4 — londonbusroutes CSV + postcodes.io → garages.geojson (cached)
+│   ├── fetch-frequencies.js         # Step 5 — TfL timetables → frequencies.json (+ bustimes.org fallback)
+│   ├── fetch-route-details.js       # Step 6 — join garages CSV + details.htm → vehicle/operator/PVR/deck
+│   ├── build-classifications.js     # Step 7 — merge into final per-route record
+│   ├── build-overview.js            # Step 8 — simplified overview GeoJSON + snapshot archive
+│   ├── build-garage-locations.js    # Step 9 — legacy garage-locations.json for frontend (Photon-geocoded)
+│   ├── build-route-summary.js       # Step 10 — route_summary.csv (all fields flattened for spreadsheet use)
 │   └── update-vehicle-lookup.js     # Maintenance — adds new vehicle types to lookup
 ├── data/
 │   ├── routes/                      # Per-route GeoJSON files (one per route ID)
 │   │   └── index.json               # List of all route IDs
 │   ├── routes-overview.geojson      # Simplified full-network overview layer
 │   ├── routes-overview-YYYY-MM-DD.geojson  # Weekly snapshot archive (last 4 kept)
-│   ├── route_destinations.json      # Inbound/outbound names per route (from TfL API)
+│   ├── route_destinations.json      # Inbound/outbound {destination, qualifier, full} per route (TfL API)
 │   ├── route_classifications.json   # Final per-route record (joined from all sources)
-│   ├── garage-locations.json        # Garage code → { name, operator, address, lat, lon } (geocoded)
+│   ├── frequencies.json             # Numeric headways per route {peak_am,peak_pm,offpeak,overnight,weekend}
+│   ├── garages.geojson              # Garage code → geometry + properties (CSV-sourced, postcodes.io geocoded)
+│   ├── garage-locations.json        # Legacy garage lookup consumed by frontend (Photon-geocoded)
+│   ├── stops.geojson                # (gitignored, 4.7MB) All London bus stops — not consumed by frontend yet
+│   ├── bus_stations.geojson         # Named bus/coach stations (NaptanBusCoachStation, ~50 features)
+│   ├── route_summary.csv            # Flat CSV of every field per route — for spreadsheet / BI use
 │   ├── vehicle-lookup.json          # Manual vehicle type → (deck, propulsion) lookup
 │   ├── route-overrides.json         # Manual per-route field overrides (highest priority)
 │   ├── build-meta.json              # Timestamps for footer display
 │   ├── geometry-source.json         # ZIP date for CI change detection
 │   ├── manifest.json                # Snapshot history
-│   └── source/                      # (gitignored) intermediate scraper output incl. night-route aliases
+│   └── source/                      # (gitignored *except* geocode_cache.json) intermediate data
+│       ├── route_details.json       # Scraper + garage-CSV join (intermediate for Step 7)
+│       └── geocode_cache.json       # postcodes.io cache — force-committed so weekly runs skip re-geocoding
 ├── .github/workflows/
 │   └── refresh-data.yml             # Weekly data refresh (Monday 05:00 UTC) + manual dispatch
 ├── Reference/                       # (gitignored) dev-only artefacts — puppeteer verify scripts, refactor plan
@@ -104,10 +116,12 @@ Quick reference for every data point the app uses — what it is, where it comes
 | Data point                | What it is                                                                                                                 | Source                                                              | Retrieval                                                             | Storage                                                                                           | Refresh frequency                                                            | Rate limits / notes                                                                 |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Route geometry (detailed) | Full-resolution polyline for each route (per direction)                                                                    | TfL S3 bucket — `Route_Geometry_YYYYMMDD.zip` (XML per route)       | Build-time download + XML parse + Douglas-Peucker simplify (0.00005°) | `data/routes/<ID>.geojson` (one file per route) + `data/routes/index.json`                        | Weekly CI, **only if ZIP date changed** (tracked via `geometry-source.json`) | No key required for S3 listing; single ZIP download per run                         |
-| Route destinations        | Inbound/outbound terminus names                                                                                            | TfL API — `/Line/Mode/bus` + `/Line/<id>/Route`                     | Build-time authenticated HTTPS calls                                  | `data/route_destinations.json` (single file, keyed by uppercase ID)                               | Weekly CI                                                                    | TfL key required; 500 req/min limit, scripts throttle to 350 req/min                |
+| Route destinations        | Inbound/outbound `{ destination, qualifier, full }` per route                                                              | **Primary:** TfL API `/Line/Mode/bus` + `/Line/<id>/Route` + `/StopPoint/Route`  **Fallback:** londonbusroutes.net `routes.htm` for routes TfL omits | Build-time fetch + dashed-description parse (fallback) + hardcoded override for route 969 | `data/route_destinations.json` (keyed by uppercase ID)                                            | Weekly CI                                                                    | TfL key required; 500 req/min, scripts throttle to 350 req/min                      |
+| Frequencies (numeric)     | Mean headway (minutes) per route per band: `peak_am`, `peak_pm`, `offpeak`, `overnight`, `weekend`                         | **Primary:** TfL `/Line/<id>/Timetable/<firstStop>`  **Fallback:** londonbusroutes.net `times/<id>.htm` pre-grids | Build-time fetch + HHMM grid parse (fallback only for TfL-gap routes) | `data/frequencies.json`                                                                           | Weekly CI                                                                    | TfL throttle; 200 ms delay on scrape fallback                                       |
+| Stops + bus stations      | Every London bus stop + named bus/coach stations (~50)                                                                     | TfL `/StopPoint/Mode/bus` (paginated) + `/StopPoint/Type/NaptanBusCoachStation` | Build-time fetch                                                      | `data/stops.geojson` (gitignored) + `data/bus_stations.geojson` (committed)                       | Weekly CI                                                                    | TfL throttle                                                                        |
 | Route classifications     | Per-route merged record: type, isPrefix, lengthBand, operator, deck, propulsion, PVR, headways, frequencyBand, vehicleType | Merged at build time from scraper + overrides + lookup + geometry   | Build step 3 combines all inputs with precedence rules                | `data/route_classifications.json` (single file)                                                   | Weekly CI                                                                    | Pure build step — no external calls                                                 |
-| Route details (raw)       | Scraped vehicle type, garage code, PVR, headways per route                                                                 | londonbusroutes.net — `details.htm` (fixed-width `<pre>`)           | Build-time HTTP fetch + column-slice parse                            | `data/source/route_details.json` (gitignored — intermediate)                                      | Weekly CI                                                                    | **HTTP only, no HTTPS**; no auth; public data; no published rate limit — be polite  |
-| Garages                   | Garage code → `{ operator, garageName }`                                                                                   | londonbusroutes.net — `garages.htm` (HTML table)                    | Build-time HTTP fetch + HTML parse                                    | Merged inline into `route_details.json` (not stored separately)                                   | Weekly CI                                                                    | Same as above — HTTP only, no auth                                                  |
+| Route details (raw)       | Per-route vehicle type, garage code, PVR, headways                                                                         | **Primary:** londonbusroutes.net `garages.csv` (authoritative operator/garage/PVR)  **Secondary:** `details.htm` for vehicle type | Build-time HTTP fetch + regex parse (no fixed-width slicing — that was the previous bug) | `data/source/route_details.json` (gitignored — intermediate for Step 7)                           | Weekly CI                                                                    | **HTTP only, no HTTPS**; no auth; public data; UTF-8 with cp1252 fallback for mojibake fix |
+| Garages (geometry)        | Garage code → `{ name, operator, address, lat, lon, routes }`                                                              | londonbusroutes.net `garages.csv` + postcodes.io bulk geocoding     | Build-time fetch + postcode lookup (cached across runs)               | `data/garages.geojson` + `data/source/geocode_cache.json` (force-committed)                       | Weekly CI                                                                    | postcodes.io is unauthenticated; cache skips lookups on stable weeks                |
 | Routes overview           | Simplified full-network GeoJSON with classification properties embedded                                                    | Derived from `data/routes/*.geojson` + `route_classifications.json` | Build step 4 — aggressive simplify (0.0005°, 4dp ≈ 11 m)              | `data/routes-overview.geojson` + dated snapshot `routes-overview-YYYY-MM-DD.geojson` (max 4 kept) | Weekly CI                                                                    | Pure build step                                                                     |
 | Bus stops (per route)     | Stop name, coords, NaPTAN ID, "towards" text, lines served                                                                 | TfL API — `/Line/<id>/StopPoints`                                   | **Live from browser** on route click                                  | In-memory cache in `api.js` (not persisted)                                                       | Live, cached for session                                                     | No key required (public endpoint, ~500 req/min per IP); falls back to `[]` on error |
 | Vehicle lookup            | Vehicle type string → `{ deck, propulsion }` fallback                                                                      | Manual curation via `npm run update-vehicle-lookup`                 | Hand-edited                                                           | `data/vehicle-lookup.json`                                                                        | On demand (manual)                                                           | None                                                                                |
@@ -124,79 +138,79 @@ Quick reference for every data point the app uses — what it is, where it comes
 
 ## Data Pipeline
 
-Runs weekly via GitHub Actions (`npm run refresh`). Each step depends on the previous.
+Runs weekly via GitHub Actions (`npm run refresh`). Ten steps, each depending on the previous where noted.
 
-### Step 1 — `scripts/fetch-data.js`
+**Guiding principle: TfL API first — scrape only to fill gaps.** londonbusroutes.net and bustimes.org fallbacks run *only* for routes the TfL API did not return. TfL-sourced values are never overwritten by scraped ones. This was a 2026-04 rework after the previous scraper-first pipeline produced systematically wrong data (route 1 tagged as a Bombardier CR4000 tram, etc.).
 
-**Source: TfL official APIs (primary)**
+### Step 1 — `scripts/fetch-data.js` — Geometry
 
-1. Lists TfL's S3 bucket for the latest `Route_Geometry_YYYYMMDD.zip`
-2. Downloads + extracts — each ZIP entry is an XML file per route
-3. Parses XML, applies Douglas-Peucker simplification (0.00005°), writes `data/routes/<ID>.geojson`
-4. Fetches `/Line/Mode/bus` → all active route IDs, then `/Line/<id>/Route` for each → `data/route_destinations.json`
-5. Route IDs are **uppercased** on write (TfL API returns lowercase; uppercase is canonical throughout)
-6. Writes `data/geometry-source.json` with the ZIP date for CI change detection
+**Source: TfL S3 bucket (no auth).**
 
-Rate limit: 350 req/min (safely under TfL's 500/min limit with API key).
-Routes 700–799 excluded (coaching, not bus).
+1. Lists the bucket for the latest `Route_Geometry_YYYYMMDD.zip`
+2. Downloads + extracts (XML per route)
+3. Parses + Douglas-Peucker simplifies (0.00005°), writes `data/routes/<ID>.geojson`
+4. Uppercases all route IDs
+5. Writes `data/geometry-source.json` with the ZIP date for CI change detection
 
-### Step 2 — `scripts/fetch-route-details.js`
+Routes 700–799 excluded (coaching).
 
-**Source: londonbusroutes.net (supplementary — TfL API lacks this data)**
+### Step 2 — `scripts/fetch-route-destinations.js` — Destinations
 
-Fetches:
+**Primary: TfL API** (`/Line/Mode/bus` → route IDs, then `/Line/<id>/Route` + `/StopPoint/Route`). Emits reference-shape `{ inbound, outbound, service_types }` where each direction is `{ destination, qualifier, full }`.
 
-- `garages.htm` — HTML table mapping garage code → `{ operator, garageName }`
-- `details.htm` — fixed-width `<pre>` text (4 blocks: day routes ×2, night, school)
+**Fallback: londonbusroutes.net `routes.htm`** — parses dashed `Origin - ... - Destination` descriptions for routes absent from TfL.
 
-Fixed-width column positions (0-indexed, empirically verified):
+**Hardcoded override:** route 969 (Whitton–Roehampton Vale mobility route) is not surfaced in either source; a small HARDCODED block at the end of the script fills it.
 
-| Field           | Slice     |
-| --------------- | --------- |
-| Route ID        | `[0:4]`   |
-| Vehicle type    | `[5:34]`  |
-| Garage code     | `[35:38]` |
-| PVR             | `[39:42]` |
-| Mon–Sat headway | `[57:64]` |
-| Sunday headway  | `[65:72]` |
-| Evening headway | `[73:80]` |
+Throttled at 350 req/min. Output: `data/route_destinations.json`.
 
-Route-ID regex accepts:
+### Step 3 — `scripts/fetch-stops.js` — Stops + Bus Stations
 
-- Numeric (1–999) with optional letter suffix: `25`, `108D`
-- N-prefix: `N1`, `N279`
-- Letter-prefix with digit: `A10`, `EL1`, `W7`
-- Letter-only: `SCS`, `RV1`
+- `stops.geojson` from `/StopPoint/Mode/bus` (paginated) — gitignored (4.7 MB, not used by frontend yet).
+- `bus_stations.geojson` from `/StopPoint/Type/NaptanBusCoachStation` — ~50 named termini with centroid fallback + child-name de-genericising.
 
-Derives:
+### Step 4 — `scripts/fetch-garages.js` — Garages
 
-- `deck`: `double` / `single` / `null`
-- `propulsion`: `electric` / `hydrogen` / `hybrid` / `diesel`
-- `operator`: via garage code → `garages.htm` lookup
-- Headways capped at 90 min to reject garbage from column overlaps on night block
+**Source: londonbusroutes.net `garages.csv` + postcodes.io bulk geocoding.**
 
-Output: `data/source/route_details.json` (gitignored — intermediate).
+- Parses the CSV for `{ code, name, operator, address, routes }`
+- Bulk-geocodes postcodes via postcodes.io (unauthenticated, very liberal limits)
+- Caches results in `data/source/geocode_cache.json` (force-committed so subsequent weekly runs do zero geocoding on a stable week)
+- Writes `data/garages.geojson`
 
-**Note:** londonbusroutes.net only supports HTTP (no HTTPS). Data is non-sensitive, public.
+### Step 5 — `scripts/fetch-frequencies.js` — Numeric Frequencies
 
-**Also** parses `routes.htm` on the same site to build two maps alongside the per-route record:
+**Primary: TfL `/Line/<id>/Timetable/<firstStop>`** — parses schedule intervals into per-band headways (peak_am, peak_pm, offpeak, overnight, weekend).
 
-- **Aliases** — for every row tagged `<a name="N<id>">` that shares its `href="times/<id>.htm"` with a `<a name="M<id>">` row, record `N<id>` → `<id>`. This flags 24-hour services that are branded under both a day and a night number but are the *same physical route*.
-- **Operator by route** — the 3rd `<TD>` of each row gives a subsidiary operator name (Arriva London, London General, Blue Triangle, …) which the script normalises to the parent brand (Arriva, Go-Ahead, …) to match the garage lookup.
+**Fallback: londonbusroutes.net `times/<id>.htm`** `<pre>` grids — parsed only for routes still missing values after the TfL pass. Day-type inferred from the heading above each grid (Mon-Fri / Sat / Sun).
 
-Both maps are included in `data/source/route_details.json` for Step 3 to consume.
+Routes with no published timetable (most schools + some seasonal) end up with all-zero headways — acceptable, not a bug.
 
-### Step 3 — `scripts/build-classifications.js`
+Output: `data/frequencies.json`.
+
+### Step 6 — `scripts/fetch-route-details.js` — Vehicle / Operator / PVR
+
+**Primary: `garages.csv`** (same CSV as Step 4) — the *authoritative* source for operator / garage code / garage name / PVR per route. This replaced the previous column-slice parser that was drifting across footnotes and producing wrong rows (route 1 picking up a tram line).
+
+**Secondary: `details.htm`** — parsed with a robust regex (no fixed-width slicing) to pull the vehicle-type string, with UTF-8 → Latin-1 fallback to fix mojibake (`2D�` etc.).
+
+**`routes.htm` pass** still provides:
+- **Aliases** — `N<id>` → daytime `<id>` when both share a `times/<id>.htm`. Used by Step 7 so night routes inherit operator/garage/deck from the daytime sibling.
+- **Operator-by-route fallback** (normalised to parent brand).
+
+Derives `deck` (double/single/null) + `propulsion` (electric/hydrogen/hybrid/diesel). Output: `data/source/route_details.json` (gitignored).
+
+### Step 7 — `scripts/build-classifications.js`
 
 Merges all inputs into a single authoritative per-route record.
 
 **Precedence (highest wins) for route-level fields:**
 
 1. `data/route-overrides.json` — manual per-route field overrides
-2. `data/source/route_details.json[routeId]` — scraped data for the route itself
-3. **Night-route alias fallback** — if the record is missing fields and `aliases[routeId]` points at a daytime route, inherit from that route (this is how `N128` now reports the same operator / garage / deck as `128`)
+2. `data/source/route_details.json[routeId]` — authoritative data for the route itself (garage-CSV + details.htm)
+3. **Night-route alias fallback** — if the record is missing fields and `aliases[routeId]` points at a daytime route, inherit from that route (so `N128` reports the same operator / garage / deck as `128`)
 4. `data/source/route_details.json.operatorByRoute[routeId]` — operator-only fallback from `routes.htm`
-5. `data/vehicle-lookup.json` — vehicle-type → (deck, propulsion) fallback when direct derivation returned null
+5. `data/vehicle-lookup.json` — vehicle-type → (deck, propulsion) fallback; `vehicleLookupBestMatch()` tries combinatorial clean transforms (strips `2D`/`3D`, fleet prefix, size) so variants like `B5LH/Gemini 3 2D` match the canonical `B5LH/Gemini 3` key
 6. Derived from route ID / geometry — type, isPrefix, lengthBand
 
 Route type:
@@ -218,15 +232,15 @@ Length band (Haversine, direction 1 only):
 
 Output: `data/route_classifications.json`
 
-### Step 4 — `scripts/build-overview.js`
+### Step 8 — `scripts/build-overview.js`
 
 - Applies aggressive simplification (0.0005°, 4dp precision ≈ 11 m)
 - Embeds all classification properties on every feature for client-side filtering
 - Writes `routes-overview.geojson`, dated snapshot archive (max 4 kept), updates `manifest.json` + `build-meta.json`
 
-**Critical:** If classifications change, Step 4 MUST be re-run. The overview GeoJSON must stay in sync with `route_classifications.json` or filter results and detail panels will disagree.
+**Critical:** If classifications change, Step 8 MUST be re-run. The overview GeoJSON must stay in sync with `route_classifications.json` or filter results and detail panels will disagree.
 
-### Step 5 — `scripts/build-garage-locations.js`
+### Step 9 — `scripts/build-garage-locations.js` (legacy)
 
 **Source: `londonbusroutes.net/garages.htm` (name + address) + Photon (geocoding)**
 
@@ -238,6 +252,12 @@ Output: `data/route_classifications.json`
 6. Writes `data/garage-locations.json` with `{ generatedAt, count, garages: { <code>: { ... lat, lon } } }`
 
 **Weekly impact:** since the cache is address-keyed, a typical weekly run performs zero geocoder calls and finishes in under a second.
+
+Kept as a separate step because the frontend (`api.js → fetchGarageLocations`) still reads `garage-locations.json` rather than the newer `garages.geojson`. Both files are regenerated weekly; consolidating to a single source is on the roadmap.
+
+### Step 10 — `scripts/build-route-summary.js`
+
+Joins destinations + classifications + frequencies + garages into `data/route_summary.csv`, one row per route with every human-readable field flattened (matches the reference RouteMapster CSV layout). Not consumed by the frontend — intended for spreadsheet / BI / ad-hoc analysis.
 
 ---
 
@@ -403,8 +423,10 @@ Workflow (`.github/workflows/refresh-data.yml`):
 
 Files committed per run:
 
-- Always: `routes-overview.geojson`, `route_destinations.json`, `route_classifications.json`, `build-meta.json`, `manifest.json`, `geometry-source.json`, snapshot archive
-- Only when the geometry ZIP date changed: `data/routes/` (individual route files)
+- **Always:** `routes-overview.geojson`, `route_destinations.json`, `route_classifications.json`, `frequencies.json`, `garages.geojson`, `route_summary.csv`, `garage-locations.json`, `build-meta.json`, `manifest.json`, `geometry-source.json`, dated snapshot archive (pruned via `git add -A`)
+- **Force-added:** `data/source/geocode_cache.json` (to persist postcodes.io cache across runs)
+- **Only when the geometry ZIP date changed:** `data/routes/` (individual route files)
+- **Never committed:** `data/stops.geojson` (gitignored — 4.7 MB, not used by frontend)
 
 ---
 

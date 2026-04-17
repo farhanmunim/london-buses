@@ -1627,18 +1627,24 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--text-3);
 }
-.credits-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.credits-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
 .credits-list li {
-  display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-4);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   font-size: var(--fs-sm);
+  line-height: 1.45;
 }
 .credits-list li:hover { background: var(--muted-bg); }
-.credits-list a { color: var(--text-1); text-decoration: none; border-bottom: 1px dashed var(--border-2); }
+.credits-list a { color: var(--text-1); text-decoration: none; border-bottom: 1px dashed var(--border-2); font-weight: 500; }
 .credits-list a:hover { color: hsl(var(--info)); border-bottom-color: hsl(var(--info)); }
 .credits-plain { color: var(--text-1); font-family: var(--font-mono); font-size: var(--fs-xs); }
-.credits-note { color: var(--text-3); font-size: var(--fs-xs); text-align: right; }
+.credits-note { color: var(--text-3); font-size: var(--fs-xs); text-align: left; }
+
+/* Inline variant for sections where notes are short (Built-with, Source, Developer).
+   Adds class="credits-list credits-list--inline" to keep the compact two-column row. */
+.credits-list--inline li { flex-direction: row; justify-content: space-between; align-items: baseline; gap: var(--sp-4); }
+.credits-list--inline .credits-note { text-align: right; }
 .modal-note { margin-top: var(--sp-3); font-size: var(--fs-xs); color: var(--text-2); padding: 0 var(--sp-3); }
 
 /* Footer tweaks */
@@ -1747,6 +1753,15 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 .map-id-popup__chips {
   display: flex; flex-wrap: wrap; gap: 4px;
+}
+/* Garage popup — chips sit below the <dl>. Give them a little breathing room,
+   an eyebrow label matching the "Routes here" style, and cap the scroll height
+   so garages running 30+ routes don't blow the popup height out. */
+.map-popup__route-chips {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  max-height: 160px; overflow-y: auto;
 }
 .map-id-popup__chip {
   display: inline-flex; align-items: center;

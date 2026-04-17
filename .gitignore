@@ -1,15 +1,50 @@
+# Dependencies
 node_modules/
+
+# Secrets — NEVER commit any environment / API-key files
 .env
-*.log
+.env.*
+*.env
+.env.local
+.env.development
+.env.production
+*.pem
+*.key
+secrets.json
+credentials.json
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS cruft
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Agent / assistant artefacts (not part of the shipped app)
 .claude/
+settings.json
 screenshots/
-Reference/
+reference/
 
-# Reference scaffolding alongside the repo but not part of the shipped app
-Web App Blueprint/
-
-# Intermediate build artefacts — not needed at runtime
+# Intermediate build artefacts — not shipped at runtime.
+# geocode_cache.json is force-added in the weekly workflow to persist
+# postcodes.io results across runs.
 data/source/
+
+# Large unconsumed dataset — regenerated weekly, not used by frontend
 data/stops.geojson
+
+# Temp files
+*.tmp
+*.bak
+*~
