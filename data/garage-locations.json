@@ -1,47 +1,7 @@
 {
-  "generatedAt": "2026-04-17T16:55:18.715Z",
-  "count": 86,
+  "generatedAt": "2026-04-17T17:13:58.759Z",
+  "count": 76,
   "garages": {
-    "FC": {
-      "code": "FC",
-      "name": "Byfleet",
-      "operator": "Falcon Coaches",
-      "address": "20a Wintersells Road, Byfleet, Surrey, KT14 7LF",
-      "lat": 51.349772,
-      "lon": -0.479059
-    },
-    "PT": {
-      "code": "PT",
-      "name": "Purfleet",
-      "operator": "First",
-      "address": "Juliette Close, Purfleet Industrial Park, Aveley, South Ockendon, RM15 4YF",
-      "lat": 51.493925,
-      "lon": 0.231665
-    },
-    "SP": {
-      "code": "SP",
-      "name": "Copthorne",
-      "operator": "Go-Ahead",
-      "address": "Unit 3 Silverwood, Snow Hill, Copthorne, West Sussex, RH10 3EN",
-      "lat": 51.13785,
-      "lon": -0.090224
-    },
-    "HC": {
-      "code": "HC",
-      "name": "Hounslow",
-      "operator": "Diamond Bus South-East",
-      "address": "Coach Travel Centre, Bedfont Road, Stanwell, Middx, TW19 7LZ",
-      "lat": 51.453245,
-      "lon": -0.45884
-    },
-    "TP": {
-      "code": "TP",
-      "name": "Thorpe Park",
-      "operator": "Sullivan Buses",
-      "address": "Thorpe Park, Staines Road, Chertsey, KT16 8PH",
-      "lat": 51.401329,
-      "lon": -0.525726
-    },
     "A": {
       "code": "A",
       "name": "Sutton",
@@ -65,14 +25,6 @@
       "address": "Regents Avenue, Palmers Green, London, N13 5UR",
       "lat": 51.612839,
       "lon": -0.108213
-    },
-    "AE": {
-      "code": "AE",
-      "name": "Ash Grove",
-      "operator": "Arriva",
-      "address": "Mare Street, South Hackney, London, E8 4RH",
-      "lat": 51.53572,
-      "lon": -0.057655
     },
     "AF": {
       "code": "AF",
@@ -354,14 +306,6 @@
       "lat": 51.493448,
       "lon": 0.003631
     },
-    "MY": {
-      "code": "MY",
-      "name": "Crawley",
-      "operator": "Go-Ahead",
-      "address": "Wheatstone Close, Manor Royal, Crawley, West Sussex, RH10 9UA",
-      "lat": 51.139062,
-      "lon": -0.161935
-    },
     "N": {
       "code": "N",
       "name": "Norwood",
@@ -458,14 +402,6 @@
       "lat": 51.515664,
       "lon": 0.18476
     },
-    "RP": {
-      "code": "RP",
-      "name": "Park Royal",
-      "operator": "First",
-      "address": "Atlas Road, Harlesden, London, NW10 6DN",
-      "lat": 51.529976,
-      "lon": -0.251556
-    },
     "RR": {
       "code": "RR",
       "name": "River Road",
@@ -498,14 +434,6 @@
       "lat": 51.476457,
       "lon": -0.361549
     },
-    "SH": {
-      "code": "SH",
-      "name": "Slough",
-      "operator": "First",
-      "address": "Stanley Cottages, Stoke Road, Slough, SL2 5AQ",
-      "lat": 51.512943,
-      "lon": -0.593132
-    },
     "SI": {
       "code": "SI",
       "name": "Silvertown",
@@ -521,14 +449,6 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AQ",
       "lat": 51.426275,
       "lon": -0.035919
-    },
-    "SN": {
-      "code": "SN",
-      "name": "North Mymms",
-      "operator": "Sullivan Buses",
-      "address": "Swanland Road, Water End, North Mymms AL9 7TS",
-      "lat": 51.724027,
-      "lon": -0.222522
     },
     "SO": {
       "code": "SO",

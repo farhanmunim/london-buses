@@ -42,6 +42,15 @@ for (const f of fc.features ?? []) {
   if (!code) { skipped++; continue; }
   if (garages[code]) continue; // dedupe rows that appear twice in the CSV
 
+  // Skip garages with no current TfL routes — this is a London bus map, and
+  // the CSV includes out-of-scope operators (Sullivan, Diamond, Falcon, ...)
+  // whose depots would otherwise render as empty pins.
+  const hasRoutes =
+       (p['TfL main network routes']    || '').trim()
+    || (p['TfL night routes']           || '').trim()
+    || (p['TfL school/mobility routes'] || '').trim();
+  if (!hasRoutes) { skipped++; continue; }
+
   const coords = f.geometry?.coordinates;
   const [lon, lat] = Array.isArray(coords) ? coords : [null, null];
 
