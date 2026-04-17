@@ -82,16 +82,13 @@
             <div class="cl-date"><span class="cl-version">v2.2</span> Apr 17, 2026</div>
             <a href="#v2_2" class="cl-entry-title">Accurate data: TfL-first pipeline with scrape fallbacks</a>
             <p class="cl-body-text">
-              Every route's operator, garage, vehicle type, PVR, deck, propulsion and destinations are now <strong>verified against the TfL Unified API</strong>. Previously a small number of routes were tagged with rubbish (route 1 was a "Bombardier CR4000" tram from Therapia Lane — it's obviously a Go-Ahead double-decker from Camberwell); that class of bug is fixed.
+              Every route's operator, garage, vehicle type, PVR, deck, propulsion and destinations are now <strong>verified against the TfL Unified API</strong>, correcting a number of routes that were previously mis-assigned.
             </p>
             <p class="cl-body-text">
-              The data pipeline was rewritten to put TfL first and use <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a> and <a href="https://bustimes.org" target="_blank" rel="noopener">bustimes.org</a> <em>only</em> as fallbacks for the handful of routes TfL omits. TfL values never get overwritten by scraped ones.
+              The data pipeline was rewritten to put TfL first and use <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a> and <a href="https://bustimes.org" target="_blank" rel="noopener">bustimes.org</a> <em>only</em> as fallbacks for the handful of routes TfL omits. TfL values are never overwritten by scraped ones.
             </p>
             <p class="cl-body-text">
-              New under the hood: numeric <strong>frequencies</strong> per peak band, a <strong>garages</strong> geodataset (postcodes.io geocoded), <strong>all London bus stops</strong>, named bus/coach stations, and a flat <strong>route_summary.csv</strong>. The About modal now shows full data-source attributions (TfL Open Data Licence, ONS OGL v3, OSM ODbL) and a privacy disclosure. "Not a journey planner" is now spelled out in the lede — use <a href="https://tfl.gov.uk/plan-a-journey/" target="_blank" rel="noopener">tfl.gov.uk</a> for live times.
-            </p>
-            <p class="cl-body-text">
-              Pipeline and hosting tidy-up: weekly CI now ships the new datasets, persists its geocode cache across runs, prunes dated snapshots correctly, and drops ~170 MB of unused Puppeteer. Faster builds, lighter repo, cleaner Cloudflare Pages deploys.
+              New under the hood: numeric <strong>frequencies</strong> per peak band, a <strong>garages</strong> geodataset (postcodes.io geocoded), <strong>all London bus stops</strong>, named bus/coach stations, and a flat <strong>route_summary.csv</strong>.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
