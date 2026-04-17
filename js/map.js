@@ -561,8 +561,10 @@ export function renderGarages(garages, garageRoutes = {}) {
     const { short, color } = operatorMeta(g.operator);
     const routes   = garageRoutes[g.code] ?? [];
     const count    = routes.length;
-    const totalPvr = routes.reduce((sum, r) => sum + (Number.isFinite(r.pvr) ? r.pvr : 0), 0);
-    const hasPvr   = routes.some(r => Number.isFinite(r.pvr));
+    // Garage total PVR comes straight from the source CSV (the PVR field on the
+    // garage row is already a garage-wide total). Summing route-level PVRs would
+    // also work if each route had its true PVR, but the source data often doesn't.
+    const totalPvr = Number.isFinite(g.pvr) ? g.pvr : null;
 
     const marker = L.marker([lat, lon], {
       icon: L.divIcon({
@@ -587,7 +589,7 @@ export function renderGarages(garages, garageRoutes = {}) {
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
         `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
-        `<div><dt>Total PVR</dt><dd>${hasPvr ? totalPvr : '–'}</dd></div>` +
+        `<div><dt>Total PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
         `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>` +
       chipsHtml,

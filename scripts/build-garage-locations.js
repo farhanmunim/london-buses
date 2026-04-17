@@ -54,6 +54,8 @@ for (const f of fc.features ?? []) {
   const coords = f.geometry?.coordinates;
   const [lon, lat] = Array.isArray(coords) ? coords : [null, null];
 
+  const pvrNum = parseInt(p['PVR'], 10);
+
   garages[code] = {
     code,
     name:     p['Garage name'] || '',
@@ -61,6 +63,7 @@ for (const f of fc.features ?? []) {
     address:  p['Garage address'] || '',
     lat:      Number.isFinite(lat) ? lat : null,
     lon:      Number.isFinite(lon) ? lon : null,
+    pvr:      Number.isFinite(pvrNum) ? pvrNum : null,
   };
 }
 

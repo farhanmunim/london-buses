@@ -329,14 +329,16 @@ async function main() {
     let operator = alloc?.operator ?? null;
     let garageName = alloc?.garageName ?? null;
     let garageCode = alloc?.garageCode ?? null;
-    let pvr = alloc?.pvr ?? null;
+    // Route-level PVR comes from details.htm (per route). The garages CSV PVR is
+    // a garage-wide total and must NOT be written to each route or it multiplies
+    // when summed. Garage totals belong on the garage record, not the route.
+    let pvr = v?.pvrFromDetails ?? null;
     if (!alloc && v?.garageCodeFromDetails) {
       garageCode = v.garageCodeFromDetails;
       const g = garageByCode[garageCode];
       if (g) {
         operator = g.operator;
         garageName = g.garageName;
-        pvr = g.pvr;
       }
     }
     routes[id] = {
