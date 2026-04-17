@@ -866,6 +866,10 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   .topbar-divider, .avatars, .breadcrumb,
   .hide-mobile { display: none !important; }
 
+  /* Header map-layer toggles become icon-only on mobile to save space. */
+  #map-layer-toggles .map-toggle { padding: 0; width: var(--h-btn-sm); }
+  #map-layer-toggles .toggle-label { display: none; }
+
   .canvas-area { padding: 14px; }
 }
 

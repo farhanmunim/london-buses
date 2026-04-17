@@ -265,14 +265,19 @@ export function clearRoute() {
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
   if (_identifyPopup) { _map.closePopup(_identifyPopup); _identifyPopup = null; }
   _stopsVisible = true;
+  const wasActive = _routeActive;
   _routeActive  = false;
   restoreOverview();
+  if (wasActive) _exitRouteFocus();
 }
 
 export function renderRoute(routeGeoJson, stopsFeatures, direction) {
+  _suppressRoutesTransition = true;
   clearRoute();
+  _suppressRoutesTransition = false;
   _routeActive = true;
   dimOverview();
+  _enterRouteFocus();
 
   const dir   = String(direction);
   const color = dir === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
@@ -352,10 +357,18 @@ export function renderMultiRoute(ids) {
   if (_stopsLayer) { _map.removeLayer(_stopsLayer); _stopsLayer = null; }
   if (_identifyPopup) { _map.closePopup(_identifyPopup); _identifyPopup = null; }
 
-  if (!_overviewGeoJson || !ids.length) { _routeActive = false; restoreOverview(); return; }
+  if (!_overviewGeoJson || !ids.length) {
+    const wasActive = _routeActive;
+    _routeActive = false;
+    restoreOverview();
+    if (wasActive) _exitRouteFocus();
+    return;
+  }
 
+  const wasActive = _routeActive;
   _routeActive = true;
   dimOverview();
+  if (!wasActive) _enterRouteFocus();
 
   const idSet    = new Set(ids.map(id => id.toUpperCase()));
   const features = _overviewGeoJson.features.filter(f => idSet.has(f.properties.routeId));
@@ -596,10 +609,20 @@ export function getVisibleGarages() {
  *     itself, its outline, and its stops stay put — the idea is to let
  *     the user switch between "route only" and "route in context" views
  *     without losing the selection.
+ *
+ * We track two booleans:
+ *   • _routesVisible  — actual current overview visibility
+ *   • _routesBaseline — user's persisted preference for when no route is focused
+ *
+ * On route focus we auto-hide the overview (transient); on clear we restore to
+ * the baseline. The header toggle still flips visibility during focus but that
+ * transient flip doesn't overwrite the user's baseline preference.
  */
-let _routesVisible = true;
-export function setRoutesVisible(visible) {
-  _routesVisible = !!visible;
+let _routesVisible  = true;
+let _routesBaseline = true;
+let _suppressRoutesTransition = false;
+
+function _applyRoutesVisibility() {
   const layersToToggle = _routeActive
     ? [_overviewLayer]
     : [_overviewLayer, _outlineLayer, _routeLayer, _stopsLayer];
@@ -609,8 +632,37 @@ export function setRoutesVisible(visible) {
     else                { if (_map.hasLayer(layer))  _map.removeLayer(layer); }
   }
   if (_routesVisible) _overviewLayer?.bringToBack();
+}
+function _dispatchRoutesVisibility() {
+  document.dispatchEvent(new CustomEvent('map:routesvisibilitychange', { detail: _routesVisible }));
+}
+function _enterRouteFocus() {
+  if (_suppressRoutesTransition) return;
+  if (_routesVisible) {
+    _routesVisible = false;
+    _applyRoutesVisibility();
+    _dispatchRoutesVisibility();
+  }
+}
+function _exitRouteFocus() {
+  if (_suppressRoutesTransition) return;
+  if (_routesVisible !== _routesBaseline) {
+    _routesVisible = _routesBaseline;
+    _applyRoutesVisibility();
+    _dispatchRoutesVisibility();
+  }
+}
+
+export function setRoutesVisible(visible) {
+  _routesVisible = !!visible;
+  // A click only updates the persisted baseline when no route is focused;
+  // during focus the toggle is transient so baseline is preserved.
+  if (!_routeActive) _routesBaseline = _routesVisible;
+  _applyRoutesVisibility();
   return _routesVisible;
 }
+
+export function isRouteActive() { return _routeActive; }
 
 export function setGaragesVisible(visible) {
   if (!_garagesLayer || !_map) return visible;
