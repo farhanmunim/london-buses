@@ -74,7 +74,10 @@ function syncClearBtn() {
 
   if (route)  route.hidden  = !anyRoute;
   if (garage) garage.hidden = !anyGarage;
-  if (global) global.hidden = !(anyRoute || anyGarage || anySearch || anyPill);
+  const anyActiveAll = anyRoute || anyGarage || anySearch || anyPill;
+  if (global) global.hidden = !anyActiveAll;
+  const bar = document.getElementById('filter-bar');
+  if (bar) bar.hidden = !anyActiveAll;
 
   // Count label reads 'filtered routes' / 'filtered garages' only when a
   // filter is actually narrowing the set. At rest it's a plain 'routes' /

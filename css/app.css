@@ -1425,6 +1425,7 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
   font-size: var(--fs-xs); color: var(--text-2);
   background: hsl(var(--card));
 }
+#filter-bar[hidden] { display: none !important; }
 #filter-stat-count,
 #filter-stat-garages { color: var(--text-1); font-weight: 600; }
 .filter-stat-sep { margin: 0 4px; color: var(--text-3); }
