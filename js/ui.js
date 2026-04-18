@@ -26,20 +26,29 @@ import { updateFilterStat, renderOperatorStats } from './stats.js';
 
 initMap();
 
+// Small-file metadata first so the sidebar (search, stats, filter counts) can
+// populate before the 1.3 MB overview GeoJSON finishes downloading.
 Promise.all([
-  fetch('./data/routes-overview.geojson').then(r => r.json()),
   fetchRouteIndex(),
   fetchAllDestinations(),
   fetchRouteClassifications(),
-]).then(([overview, ids, dests, classifications]) => {
-  renderOverview(overview);
+]).then(([ids, dests, classifications]) => {
   state.routeIndex      = ids;
   state.destinations    = dests;
   state.classifications = classifications;
-  updateFilterStat(countVisibleRoutes());
   renderOperatorStats(Object.values(classifications));
   updateFooterDates();
-}).catch(err => console.warn('Boot preload failed:', err));
+}).catch(err => console.warn('Metadata preload failed:', err));
+
+// Low-priority so it yields to the above on slow connections; the map tiles
+// are already painting while this streams in.
+fetch('./data/routes-overview.geojson', { priority: 'low' })
+  .then(r => r.json())
+  .then(overview => {
+    renderOverview(overview);
+    updateFilterStat(countVisibleRoutes());
+  })
+  .catch(err => console.warn('Overview load failed:', err));
 
 // Garages load independently so they don't block the initial map paint.
 // Route-count per garage is derived from classifications once they're loaded.

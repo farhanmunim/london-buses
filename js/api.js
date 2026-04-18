@@ -90,16 +90,6 @@ export async function fetchRouteDestinations(routeId) {
 }
 
 /**
- * Fetches stops for a route live from the TfL API.
- * Using the API directly ensures authoritative, up-to-date stop data without
- * committing large static files to the repository.
- *
- * Falls back to an empty array on network error so route rendering still works.
- *
- * @param {string} routeId
- * @returns {Promise<object[]>} Array of GeoJSON-style feature objects
- */
-/**
  * Returns located garages: [{ code, name, operator, address, lat, lon }, …]
  * Garages without a successful geocode are omitted.
  */
@@ -113,36 +103,36 @@ export async function fetchGarageLocations() {
   }
 }
 
+/**
+ * Fetches stops for a route live from the TfL API. Throws on network error —
+ * callers decide whether to show a fallback or surface the failure to the user.
+ * @param {string} routeId
+ * @returns {Promise<object[]>} Array of GeoJSON-style feature objects
+ */
 export async function fetchStopsForRoute(routeId) {
   const id       = routeId.toUpperCase();
   const cacheKey = `tfl:stops:${id}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
-  try {
-    const res = await fetch(`${TFL_API}/Line/${encodeURIComponent(id)}/StopPoints`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    // TfL wraps the array in a `value` key for some endpoints
-    const stops = Array.isArray(data) ? data : (data.value ?? []);
+  const res = await fetch(`${TFL_API}/Line/${encodeURIComponent(id)}/StopPoints`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  const stops = Array.isArray(data) ? data : (data.value ?? []);
 
-    const features = stops
-      .filter(s => s.lat && s.lon)
-      .map(s => ({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
-        properties: {
-          id:        s.naptanId ?? '',
-          name:      s.commonName ?? 'Stop',
-          indicator: s.indicator ?? null,
-          towards:   s.additionalProperties?.find(p => p.key === 'Towards')?.value ?? null,
-          routes:    (s.lines ?? []).map(l => l.id.toUpperCase()).sort().join(','),
-        },
-      }));
+  const features = stops
+    .filter(s => s.lat && s.lon)
+    .map(s => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+      properties: {
+        id:        s.naptanId ?? '',
+        name:      s.commonName ?? 'Stop',
+        indicator: s.indicator ?? null,
+        towards:   s.additionalProperties?.find(p => p.key === 'Towards')?.value ?? null,
+        routes:    (s.lines ?? []).map(l => l.id.toUpperCase()).sort().join(','),
+      },
+    }));
 
-    _cache.set(cacheKey, features);
-    return features;
-  } catch (err) {
-    console.warn(`Could not load stops for ${id}:`, err.message);
-    return [];
-  }
+  _cache.set(cacheKey, features);
+  return features;
 }

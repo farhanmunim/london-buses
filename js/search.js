@@ -28,13 +28,22 @@ export async function doSearch(rawId) {
   showDefaultState();
 
   try {
-    const [geojson, stops, destinations, classification] = await Promise.all([
+    // Stops come from the live TfL API and can fail independently of the
+    // static route data. Fetch them alongside the rest but don't let a stops
+    // failure block rendering the route itself.
+    const stopsPromise = fetchStopsForRoute(id).catch(err => {
+      console.warn(`Stops unavailable for ${id}:`, err.message);
+      return null; // sentinel — "failed" rather than "genuinely empty"
+    });
+
+    const [geojson, stopsResult, destinations, classification] = await Promise.all([
       fetchRouteGeoJson(id),
-      fetchStopsForRoute(id),
+      stopsPromise,
       fetchRouteDestinations(id),
       fetchRouteClassification(id),
     ]);
 
+    const stops = stopsResult ?? [];
     state.routeId       = id;
     state.routeGeoJson  = geojson;
     state.stopsFeatures = stops;
@@ -42,7 +51,8 @@ export async function doSearch(rawId) {
 
     renderRoute(geojson, stops, '1');
     showRouteDetail(id, geojson, stops, destinations, classification);
-    hideStatus();
+    if (stopsResult === null) showStatus('Stops unavailable — route shown without stops', 'error');
+    else hideStatus();
   } catch (err) {
     const is404 = err.message.includes('404') || err.message.includes('HTTP 4');
     showStatus(is404 ? `Route "${id}" not found` : 'Something went wrong', 'error');

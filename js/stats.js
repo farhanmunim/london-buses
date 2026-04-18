@@ -24,7 +24,10 @@ export function renderOperatorStats(routes) {
   if (!container) return;
 
   if (!routes.length) {
-    container.innerHTML = '<p class="operator-stats__empty">No routes match the current filters.</p>';
+    container.replaceChildren(Object.assign(document.createElement('p'), {
+      className: 'operator-stats__empty',
+      textContent: 'No routes match the current filters.',
+    }));
     return;
   }
 
@@ -50,24 +53,42 @@ export function renderOperatorStats(routes) {
 
   const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '–';
 
-  container.innerHTML = `
-    <table class="operator-stats__table" aria-label="Operator statistics">
-      <thead>
-        <tr>
-          <th>Operator</th>
-          <th title="Share of total routes">Routes</th>
-          <th title="Share of peak vehicle requirement">PVR</th>
-          <th title="Proportion of routes with electric vehicles">EV</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${sorted.map(([op, v]) => `
-          <tr>
-            <td class="operator-stats__op">${op}</td>
-            <td>${pct(v.routes, totalRoutes)}</td>
-            <td>${pct(v.pvr, totalPvr)}</td>
-            <td>${pct(v.ev, v.routes)}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`;
+  const table = document.createElement('table');
+  table.className = 'operator-stats__table';
+  table.setAttribute('aria-label', 'Operator statistics');
+
+  const head = document.createElement('thead');
+  const hr = document.createElement('tr');
+  const headers = [
+    ['Operator', null],
+    ['Routes', 'Share of total routes'],
+    ['PVR',    'Share of peak vehicle requirement'],
+    ['EV',     'Proportion of routes with electric vehicles'],
+  ];
+  for (const [label, title] of headers) {
+    const th = document.createElement('th');
+    th.textContent = label;
+    if (title) th.title = title;
+    hr.appendChild(th);
+  }
+  head.appendChild(hr);
+  table.appendChild(head);
+
+  const tbody = document.createElement('tbody');
+  for (const [op, v] of sorted) {
+    const tr = document.createElement('tr');
+    const td0 = document.createElement('td');
+    td0.className = 'operator-stats__op';
+    td0.textContent = op;
+    tr.appendChild(td0);
+    for (const cell of [pct(v.routes, totalRoutes), pct(v.pvr, totalPvr), pct(v.ev, v.routes)]) {
+      const td = document.createElement('td');
+      td.textContent = cell;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+
+  container.replaceChildren(table);
 }

@@ -10,7 +10,7 @@ Interactive map of every London bus route. Search routes, filter by type, operat
 - Full route detail on click — geometry, stops, direction toggle, operator, vehicle, frequency
 - Multi-route comparison mode with endpoint labels
 - Per-operator statistics that update live as you filter
-- CSV export of the current filter selection
+- XLSX export (Routes / Garages / Network overview) of the current filter selection
 
 ## How it works
 

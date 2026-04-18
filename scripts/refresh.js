@@ -4,7 +4,7 @@
  * Pipeline order:
  *   1. fetch-data.js                — geometry ZIP → per-route GeoJSON
  *   2. fetch-route-destinations.js  — TfL API → data/route_destinations.json (ref shape)
- *   3. fetch-stops.js               — TfL API → data/stops.geojson + bus_stations.geojson
+ *   3. fetch-stops.js               — TfL API → data/stops.geojson
  *   4. fetch-garages.js             — londonbusroutes.net CSV + postcodes.io → data/garages.geojson
  *   5. fetch-frequencies.js         — TfL timetables → data/frequencies.json
  *   6. fetch-route-details.js       — join garages + details.htm → data/source/route_details.json

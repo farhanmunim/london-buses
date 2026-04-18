@@ -7,7 +7,6 @@
  *
  * Outputs:
  *   data/stops.geojson          — all roadside bus stops
- *   data/bus_stations.geojson   — parent/station-level bus-station groupings
  *
  * Run: npm run fetch-stops
  */
@@ -20,7 +19,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
 const DATA_DIR  = path.join(ROOT, 'data');
 const OUT_STOPS    = path.join(DATA_DIR, 'stops.geojson');
-const OUT_STATIONS = path.join(DATA_DIR, 'bus_stations.geojson');
 const BASE_URL  = 'https://api.tfl.gov.uk';
 
 try {
@@ -160,75 +158,6 @@ function buildStopFeature(sp) {
   };
 }
 
-async function fetchBusStations() {
-  // TfL's /StopPoint/Type/NaptanBusCoachStation endpoint returns up to 50 per
-  // page. Paginate until exhausted. Each record has lat/lon and a `children`
-  // array of roadside stops that belong to it.
-  const out = [];
-  const seen = new Set();
-  for (let page = 1; page <= 50; page++) {
-    const url = apiUrl('/StopPoint/Type/NaptanBusCoachStation', { page });
-    const batch = await fetchJson(url).catch(() => null);
-    if (!Array.isArray(batch) || !batch.length) break;
-    let added = 0;
-    for (const sp of batch) {
-      const id = sp.naptanId ?? sp.id;
-      if (!id || seen.has(id)) continue;
-      seen.add(id);
-      out.push(sp);
-      added++;
-    }
-    if (added === 0) break;
-    await new Promise(r => setTimeout(r, 80));
-  }
-  return out;
-}
-
-function buildBusStations(stations) {
-  const features = [];
-  for (const sp of stations) {
-    const id = sp.naptanId ?? sp.id;
-    let lat = sp.lat, lon = sp.lon;
-    // Station header can lack lat/lon when children provide it — fall back to centroid.
-    const children = Array.isArray(sp.children) ? sp.children : [];
-    if (lat == null || lon == null) {
-      const childLocs = children.filter(c => c.lat != null && c.lon != null);
-      if (childLocs.length) {
-        lat = childLocs.reduce((s, c) => s + Number(c.lat), 0) / childLocs.length;
-        lon = childLocs.reduce((s, c) => s + Number(c.lon), 0) / childLocs.length;
-      }
-    }
-    if (lat == null || lon == null) continue;
-
-    // commonName is often generic ("Bus Station", "Coach Station"). Prefer a
-    // descriptive child name when the station's own name is generic.
-    let name = sp.commonName || '';
-    if (/^(bus|coach) (station|interchange)$/i.test(name) || /^(station interchange|interchange|hospital)$/i.test(name)) {
-      const descriptive = children
-        .map(c => c.commonName)
-        .filter(Boolean)
-        .find(n => !/^(bus|coach) (station|interchange)$/i.test(n));
-      if (descriptive) name = descriptive;
-    }
-
-    const stops = children.map(c => c.naptanId ?? c.id).filter(Boolean).sort();
-    const postcode = addlProp(sp, 'Postcode') ?? (children[0] ? addlProp(children[0], 'Postcode') : '') ?? '';
-    features.push({
-      type: 'Feature',
-      geometry: { type: 'Point', coordinates: [Number(lon), Number(lat)] },
-      properties: {
-        parent_id: id,
-        name,
-        display_name: name,
-        postcode: postcode ? String(postcode).trim() : '',
-        stops,
-      },
-    });
-  }
-  features.sort((a, b) => String(a.properties.name).localeCompare(b.properties.name));
-  return { type: 'FeatureCollection', features };
-}
-
 async function main() {
   console.log('Fetching all TfL bus StopPoints...');
   const raw = await fetchAllStops();
@@ -246,13 +175,6 @@ async function main() {
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(OUT_STOPS, JSON.stringify(stopsFc), 'utf8');
   console.log(`Wrote ${features.length} stops to ${OUT_STOPS} (dropped ${dropped} non-bus)`);
-
-  console.log('Fetching bus/coach stations from TfL...');
-  const stationStops = await fetchBusStations();
-  console.log(`  Fetched ${stationStops.length} station records`);
-  const stations = buildBusStations(stationStops);
-  fs.writeFileSync(OUT_STATIONS, JSON.stringify(stations, null, 2), 'utf8');
-  console.log(`Wrote ${stations.features.length} bus stations to ${OUT_STATIONS}`);
 }
 
 main().catch(err => { console.error('Fatal:', err); process.exit(1); });
