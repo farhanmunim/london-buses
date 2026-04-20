@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-17T15:59:49Z",
+  "generated_at_utc": "2026-04-20T07:23:22Z",
   "route_count": 677,
   "routes": {
     "1": {
@@ -1219,16 +1219,13 @@
       }
     },
     "87": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Aldwych",
-        "qualifier": "",
+        "qualifier": "Aldwych / Drury Lane",
         "full": "Aldwych"
-      },
-      "inbound": {
-        "destination": "Wandsworth",
-        "qualifier": "",
-        "full": "Wandsworth"
       }
     },
     "88": {
@@ -3083,16 +3080,13 @@
       }
     },
     "215": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Walthamstow",
-        "qualifier": "",
-        "full": "Walthamstow"
-      },
-      "inbound": {
-        "destination": "Lee Valley Campsite",
-        "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "destination": "Walthamstow Central",
+        "qualifier": "Walthamstow Bus Station",
+        "full": "Walthamstow Central, Walthamstow Bus Station"
       }
     },
     "216": {
@@ -7449,55 +7443,63 @@
       }
     },
     "B11": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Bexleyheath Bus Garage",
-        "qualifier": "",
-        "full": "Bexleyheath Bus Garage"
+        "destination": "South Thamesmead, Yarnton Way",
+        "qualifier": "St Andrew's Parish Church",
+        "full": "South Thamesmead, Yarnton Way, St Andrew's Parish Church"
       },
       "inbound": {
-        "destination": "Thamesmead South",
+        "destination": "Bexleyheath, Bus Garage",
         "qualifier": "",
-        "full": "Thamesmead South"
+        "full": "Bexleyheath, Bus Garage"
       }
     },
     "B12": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Erith",
-        "qualifier": "",
-        "full": "Erith"
+        "destination": "Joyden's Wood",
+        "qualifier": "St Mary's Road",
+        "full": "Joyden's Wood, St Mary's Road"
       },
       "inbound": {
-        "destination": "Joydens Wood",
-        "qualifier": "",
-        "full": "Joydens Wood"
+        "destination": "Erith",
+        "qualifier": "Erith Town Centre / Riverside",
+        "full": "Erith"
       }
     },
     "B13": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Bexleyheath",
-        "qualifier": "",
-        "full": "Bexleyheath"
+        "destination": "New Eltham",
+        "qualifier": "New Eltham Station / Southwood Road",
+        "full": "New Eltham"
       },
       "inbound": {
-        "destination": "New Eltham",
-        "qualifier": "",
-        "full": "New Eltham"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Bexleyheath Library",
+        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
       }
     },
     "B14": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Bexleyheath",
+        "destination": "Orpington Station",
         "qualifier": "",
-        "full": "Bexleyheath"
+        "full": "Orpington Station"
       },
       "inbound": {
-        "destination": "Orpington",
-        "qualifier": "",
-        "full": "Orpington"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Bexleyheath Library",
+        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
       }
     },
     "B15": {
