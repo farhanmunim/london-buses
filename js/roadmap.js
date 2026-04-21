@@ -9,6 +9,12 @@
   // Each entry: { title, desc, stage }
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
+    { title: 'Data enrichment pipeline fix',
+      desc:  'Harden the scraper fallbacks and add TfL open-data CSV feeds (operator, PVR) so vehicle / deck / propulsion / PVR never blank out when a third-party source is down.',
+      stage: 'planned' },
+    { title: 'UI improvements',
+      desc:  'Polish pass on the detail view — e.g. highlighting the operating garage on the map when a route is selected, plus smaller quality-of-life tweaks.',
+      stage: 'planned' },
     { title: 'TfL zone map overlay',
       desc:  'Optional overlay tinting the map by TfL fare zone (1–9) for quick geographic context.',
       stage: 'planned' },
