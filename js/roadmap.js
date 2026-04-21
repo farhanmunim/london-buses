@@ -10,7 +10,6 @@
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
     { title: 'Data enrichment pipeline fix',
-      desc:  'Keep every route detail populated, even when upstream sources fail.',
       notes: [
         'Fix weekly data pipeline automation',
         'Restore the route frequency datapoint',
@@ -54,7 +53,7 @@
     const linkHtml = link
       ? `<a class="roadmap__link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`
       : '';
-    const descHtml = escapeHtml(desc).replace('{link}', linkHtml);
+    const descHtml = desc ? escapeHtml(desc).replace('{link}', linkHtml) : '';
     const notesHtml = Array.isArray(notes) && notes.length
       ? `<ul class="roadmap__notes">${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`
       : '';
