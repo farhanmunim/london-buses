@@ -2031,6 +2031,15 @@ a.version-pill:hover { background: var(--surface); border-color: var(--border-2)
 }
 .roadmap__link:hover { border-bottom-style: solid; }
 
+.roadmap__notes {
+  margin: 6px 0 0;
+  padding-inline-start: 18px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  line-height: 1.5;
+}
+.roadmap__notes li + li { margin-block-start: 2px; }
+
 /* Stack the table on narrow screens so nothing gets squeezed. */
 @media (max-width: 560px) {
   .roadmap, .roadmap thead, .roadmap tbody, .roadmap tr, .roadmap td, .roadmap th { display: block; }

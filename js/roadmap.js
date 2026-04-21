@@ -6,11 +6,17 @@
  */
 
 (function () {
-  // Each entry: { title, desc, stage }
+  // Each entry: { title, desc, stage, notes?, link? }
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
     { title: 'Data enrichment pipeline fix',
       desc:  'Keep every route detail populated, even when upstream sources fail.',
+      notes: [
+        'Fix weekly data pipeline automation',
+        'Restore the route frequency datapoint',
+        'Show EV % per garage in its tooltip',
+        'Last-known-good fallback when scrapes fail',
+      ],
       stage: 'building' },
     { title: 'UI improvements',
       desc:  'Small polish pass — starting with highlighting the operating garage for a selected route.',
@@ -40,7 +46,7 @@
     shipped:  'Shipped',
   };
 
-  function rowHtml({ title, desc, stage, link }) {
+  function rowHtml({ title, desc, stage, link, notes }) {
     const label = STAGE_LABEL[stage] ?? stage;
     // desc is HTML-escaped so it's safe, but we then splice in a safely-built
     // <a> wherever the string contains the `{link}` placeholder. This lets a
@@ -49,10 +55,13 @@
       ? `<a class="roadmap__link" href="${escapeHtml(link.href)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`
       : '';
     const descHtml = escapeHtml(desc).replace('{link}', linkHtml);
+    const notesHtml = Array.isArray(notes) && notes.length
+      ? `<ul class="roadmap__notes">${notes.map(n => `<li>${escapeHtml(n)}</li>`).join('')}</ul>`
+      : '';
     return `
       <tr>
         <td class="roadmap__title">${escapeHtml(title)}</td>
-        <td class="roadmap__desc">${descHtml}</td>
+        <td class="roadmap__desc">${descHtml}${notesHtml}</td>
         <td class="roadmap__stage-cell"><span class="roadmap__stage roadmap__stage--${stage}">${label}</span></td>
       </tr>`;
   }
