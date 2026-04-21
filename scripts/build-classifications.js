@@ -5,8 +5,10 @@
  * by fetch-data.js — no external CSV or third-party source needed.
  *
  * Inputs:
- *   data/route_destinations.json   — service_types per route (from API)
- *   data/routes/<id>.geojson       — geometry for length calculation
+ *   data/route_destinations.json    — service_types per route (from API)
+ *   data/routes/<id>.geojson        — geometry for length calculation
+ *   data/frequencies.json           — TfL-primary numeric headways per route
+ *   data/source/route_details.json  — scraper-sourced vehicle / operator / PVR / headways (fallback)
  *
  * Output:
  *   data/route_classifications.json — routeId → { type, isPrefix, lengthBand }
@@ -100,11 +102,26 @@ function deriveLengthBand(km) {
 // ── Frequency band ────────────────────────────────────────────────────────────
 
 /**
- * Derive a frequency band from a weekday headway in minutes.
- * Uses the weekday headway as the primary signal; falls back to Sunday/Evening.
+ * Derive a frequency band from the best available headway (minutes between buses).
+ *
+ * Primary source: TfL-derived numeric headways in frequencies.json
+ *   { peak_am, peak_pm, offpeak, overnight, weekend }
+ * Fallback:       scraper-derived headways from details.htm
+ *   { freqWeekday, freqSunday, freqEvening }
+ *
+ * Preference order for the band signal:
+ *   TfL offpeak → TfL peak_am → TfL peak_pm → TfL weekend → TfL overnight
+ *     → scraper Mon-Sat → scraper Sunday → scraper evening
+ *
+ * Zero headways in TfL data mean "no service in that band" and are skipped.
  */
-function deriveFrequencyBand(details) {
-  const h = details?.freqWeekday ?? details?.freqSunday ?? details?.freqEvening;
+function deriveFrequencyBand(tflFreq, details) {
+  const firstPositive = (...vals) => vals.find(v => typeof v === 'number' && v > 0) ?? null;
+  const h = firstPositive(
+    tflFreq?.offpeak, tflFreq?.peak_am, tflFreq?.peak_pm,
+    tflFreq?.weekend, tflFreq?.overnight,
+    details?.freqWeekday, details?.freqSunday, details?.freqEvening,
+  );
   if (h == null) return null;
   if (h <= 6)  return 'high';
   if (h <= 15) return 'regular';
@@ -120,6 +137,17 @@ if (!fs.existsSync(destinationsPath)) {
   process.exit(1);
 }
 const destinations = JSON.parse(fs.readFileSync(destinationsPath, 'utf8')).routes ?? {};
+
+// TfL-primary numeric headways (minutes). Authoritative source for frequency
+// banding; the scraper-derived headways in route_details.json are used only
+// as a fallback for routes the TfL API didn't cover.
+const frequenciesPath = path.join(DATA_DIR, 'frequencies.json');
+const tflFrequencies  = fs.existsSync(frequenciesPath)
+  ? JSON.parse(fs.readFileSync(frequenciesPath, 'utf8'))
+  : {};
+if (Object.keys(tflFrequencies).length) {
+  console.log(`Loaded TfL frequencies for ${Object.keys(tflFrequencies).length} routes`);
+}
 
 // Load supplementary route details (deck type + frequency) if available
 const detailsPath = path.join(DATA_DIR, 'source', 'route_details.json');
@@ -257,7 +285,7 @@ for (const file of routeFiles) {
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
   const pvr          = details.pvr;
-  const frequency    = deriveFrequencyBand(details);
+  const frequency    = deriveFrequencyBand(tflFrequencies[routeId], details);
 
   // Manual overrides win over everything else (scraper + lookup)
   const override = routeOverrides[routeId] ?? {};
