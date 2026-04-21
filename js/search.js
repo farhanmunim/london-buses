@@ -9,6 +9,7 @@ import {
 
 import { renderRoute, renderMultiRoute, clearRoute, resetMapView } from './map.js';
 import { showRouteDetail, showDefaultState, showStatus, hideStatus } from './route-detail.js';
+import { highlightGaragesForRoute } from './map.js';
 
 import {
   state, pillIds,
@@ -51,6 +52,7 @@ export async function doSearch(rawId) {
 
     renderRoute(geojson, stops, '1');
     showRouteDetail(id, geojson, stops, destinations, classification);
+    highlightGaragesForRoute(id);
     if (stopsResult === null) showStatus('Stops unavailable — route shown without stops', 'error');
     else hideStatus();
   } catch (err) {
@@ -93,6 +95,7 @@ export function clearAll() {
   pillIds.clear();
   renderPillsDOM();
   clearRoute();
+  highlightGaragesForRoute(null);
   resetMapView();
   state.routeId       = null;
   state.routeGeoJson  = null;
@@ -137,6 +140,7 @@ function renderPillsDOM() {
 
 function applyMultiRoute() {
   clearRoute();
+  highlightGaragesForRoute(null);
   showDefaultState();
   renderMultiRoute([...pillIds]);
 }

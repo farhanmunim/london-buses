@@ -1,12 +1,12 @@
 /**
  * fetch-route-destinations.js — Passenger-facing destination cache (TfL API)
  *
- * Ports RouteMapster's fetch_route_destinations.py. For every bus line, finds
- * its origin/destination StopPoints from /Line/{id}/Route, then calls
- * /StopPoint/{stopId}/Route to get the vehicleDestinationText (the blind)
- * and destinationName (stop name qualifier), aggregating by direction.
+ * For every bus line, finds its origin/destination StopPoints from
+ * /Line/{id}/Route, then calls /StopPoint/{stopId}/Route to get the
+ * vehicleDestinationText (the blind) and destinationName (stop name
+ * qualifier), aggregating by direction.
  *
- * Output shape (reference-compatible):
+ * Output shape:
  *   { "routes": { "1": {
  *       "inbound":  { "destination": "...", "qualifier": "...", "full": "..." },
  *       "outbound": { ... },

@@ -1,17 +1,18 @@
 /**
- * fetch-frequencies.js — Per-route headway cache by time band
+ * fetch-frequencies.js — Per-route frequency-band cache
  *
- * Simplified port of RouteMapster's build_frequency_cache.py. For each bus line
- * calls /Line/{id}/Timetable/{firstStopId} (both directions), then derives the
- * average headway (minutes between buses) in each band:
- *   peak_am   07:00-10:00 weekday
- *   peak_pm   16:00-19:00 weekday
- *   offpeak   10:00-16:00 weekday (falls back to 19:00-22:00 if interpeak empty)
- *   overnight 00:00-05:00 weekday (0 means no service)
- *   weekend   09:00-19:00 saturday
+ * For each bus line, calls /Line/{id}/Timetable/{firstStopId} and derives the
+ * representative headway (minutes between buses) for whichever service window
+ * is most meaningful for that route. Daytime routes use the weekday off-peak
+ * window; night-only routes use overnight; mixed service routes fall through
+ * in that order. The headway is then binned into three categorical bands:
  *
- * Output: data/frequencies.json
- *   { "1": { "peak_am": 6.5, "peak_pm": 6.5, "offpeak": 6.5, "overnight": 0, "weekend": 5.0 } }
+ *   high     ≤ 6 min
+ *   regular  7–15 min
+ *   low      > 15 min
+ *
+ * Output: data/frequencies.json — flat map { "1": "high", "N86": "regular" }.
+ * null means "no published timetable" (distinct from any band).
  *
  * Run: npm run fetch-frequencies
  */
@@ -57,21 +58,50 @@ async function fetchJson(url, retries = 4) {
 
 function round1(v) { return Math.round(v * 10) / 10; }
 
+// Bin a representative headway (minutes between buses) into a categorical band.
+// Input is the first positive signal from the preference chain; null means "no
+// timetable" and returns null so the frontend can render an explicit unknown.
+function bandForHeadway(h) {
+  if (h == null || h <= 0) return null;
+  if (h <= 6)  return 'high';
+  if (h <= 15) return 'regular';
+  return 'low';
+}
+
+// Pick the first positive headway from a preference chain. 0 means "TfL says
+// no service in that window" so we skip it rather than reporting 0-min headway.
+const firstPositive = (...vals) => vals.find(v => typeof v === 'number' && v > 0) ?? null;
+
 // Expand a TfL "schedule" day-type into a set of minute-of-day departure times.
 // The timetable endpoint returns structure: timetable.routes[*].schedules[*]
 //   with name ("Monday - Friday"/"Saturday"/"Sunday"), knownJourneys[*]{hour,minute}
+// TfL names night-route schedules things like "Saturday Night/Sunday Morning"
+// and "Mo-Th Nights/Tu-Fr Morning", which don't match naive weekday/saturday/
+// sunday filters. First-match keyword picks the right bucket.
+function classifyScheduleName(name) {
+  if (/mon/.test(name) && /fri/.test(name)) return 'weekday';
+  if (/mon/.test(name) && /thu/.test(name)) return 'weekday';
+  if (/weekday/.test(name))                 return 'weekday';
+  if (/sat/.test(name))                     return 'saturday';
+  if (/sun/.test(name))                     return 'sunday';
+  if (/fri/.test(name))                     return 'weekday';
+  return null;
+}
+
+// Expand TfL schedules for a given day-type into sorted minutes-after-midnight.
+// dayType is 'weekday' | 'saturday' | 'sunday' | 'any' (all schedules).
+// TfL encodes after-midnight departures as hour ≥ 24 (e.g. 24:18 = 00:18 next
+// day) so we wrap via modulo — without it night journeys land at 1400+ minutes
+// and miss every band.
 function journeysFor(timetable, dayType) {
   const out = [];
   for (const rt of (timetable?.timetable?.routes ?? [])) {
     for (const sch of (rt.schedules ?? [])) {
       const name = (sch.name ?? '').toLowerCase();
-      const match = dayType === 'weekday' ? /monday|weekday/.test(name) && !/saturday|sunday/.test(name)
-                  : dayType === 'saturday' ? /saturday/.test(name)
-                  : /sunday/.test(name);
-      if (!match) continue;
+      if (dayType !== 'any' && classifyScheduleName(name) !== dayType) continue;
       for (const j of (sch.knownJourneys ?? [])) {
         const h = Number(j.hour), m = Number(j.minute);
-        if (Number.isFinite(h) && Number.isFinite(m)) out.push(h * 60 + m);
+        if (Number.isFinite(h) && Number.isFinite(m)) out.push((h % 24) * 60 + m);
       }
     }
   }
@@ -131,17 +161,26 @@ async function main() {
         const tt = await fetchJson(apiUrl(`/Line/${encodeURIComponent(id)}/Timetable/${encodeURIComponent(stopId)}`));
         if (!tt) { done++; continue; }
 
-        const weekday = journeysFor(tt, 'weekday');
+        const weekday  = journeysFor(tt, 'weekday');
         const saturday = journeysFor(tt, 'saturday');
+        // Overnight service is measured over the union of every schedule that
+        // plausibly runs through the small hours. This catches night-only
+        // routes (schedules named "Nights" / "Friday Nights") that contain no
+        // weekday schedule at all.
+        const nightAll = journeysFor(tt, 'any');
 
-        const peak_am   = headwayInBand(weekday, 7 * 60, 10 * 60) ?? 0;
-        const peak_pm   = headwayInBand(weekday, 16 * 60, 19 * 60) ?? 0;
-        let offpeak = headwayInBand(weekday, 10 * 60, 16 * 60);
-        if (offpeak == null) offpeak = headwayInBand(weekday, 19 * 60, 22 * 60) ?? 0;
-        const overnight = headwayInBand(weekday, 0,        5 * 60)  ?? 0;
-        const weekend   = headwayInBand(saturday, 9 * 60,  19 * 60) ?? 0;
-
-        out[id] = { peak_am, peak_pm, offpeak, overnight, weekend };
+        // Preference chain: weekday off-peak → weekday AM peak → weekday PM
+        // peak → Saturday → overnight. Whichever window first yields a real
+        // headway is the route's representative signal for banding.
+        const signal = firstPositive(
+          headwayInBand(weekday,  10 * 60, 16 * 60),
+          headwayInBand(weekday,   7 * 60, 10 * 60),
+          headwayInBand(weekday,  16 * 60, 19 * 60),
+          headwayInBand(saturday,  9 * 60, 19 * 60),
+          headwayInBand(nightAll, 23 * 60,  5 * 60),
+          headwayInBand(weekday,   0,       5 * 60),
+        );
+        out[id] = bandForHeadway(signal);
       } catch (err) {
         // skip
       }
@@ -184,16 +223,12 @@ async function main() {
         const res = await fetch(url, { headers: { 'User-Agent': 'london-buses-map/2.0 (personal project)' } });
         if (!res.ok) continue;
         const html = await res.text();
-        const preBlocks = [...html.matchAll(/<pre[^>]*>([\s\S]*?)<\/pre>/gi)].map(m => m[1]);
-        if (!preBlocks.length) continue;
 
         // Each <pre> is one day-type timetable; the site usually orders them
-        // Mon-Fri / Sat / Sun. Detect via nearby headings (<h2>/<h3>/<b>)
-        // before each <pre>, or fall back to block index.
+        // Mon-Fri / Sat / Sun. Detect day via nearby heading before each <pre>,
+        // falling back to block index.
         const dayTypeOrder = ['weekday', 'saturday', 'sunday'];
         const dayTables = {};
-        // Find surrounding labels: split html before each <pre>
-        const splitRe = /<pre[^>]*>/i;
         const preBlocksWithCtx = [];
         let cursor = 0, idx = 0;
         const preIter = /<pre[^>]*>([\s\S]*?)<\/pre>/gi;
@@ -205,7 +240,8 @@ async function main() {
           // heading patterns like "XX Mondays to Fridays towards ..."
           const tail = before.slice(-180);
           let dayType = null;
-          if (/mondays?\s+to\s+fridays?|mon\s*-\s*fri|weekdays?/.test(tail)) dayType = 'weekday';
+          if (/nights?/.test(tail)) dayType = 'night';
+          else if (/mondays?\s+to\s+fridays?|mon\s*-\s*fri|weekdays?/.test(tail)) dayType = 'weekday';
           else if (/saturdays?/.test(tail)) dayType = 'saturday';
           else if (/sundays?/.test(tail)) dayType = 'sunday';
           if (!dayType) dayType = dayTypeOrder[Math.min(idx, 2)];
@@ -228,18 +264,19 @@ async function main() {
 
         const weekday  = dayTables.weekday  || [];
         const saturday = dayTables.saturday || [];
+        const sunday   = dayTables.sunday   || [];
+        const night    = dayTables.night    || [];
+        const nightAll = [...weekday, ...saturday, ...sunday, ...night].sort((a, b) => a - b);
 
-        const peak_am   = headwayInBand(weekday, 7 * 60, 10 * 60) ?? 0;
-        const peak_pm   = headwayInBand(weekday, 16 * 60, 19 * 60) ?? 0;
-        let offpeak     = headwayInBand(weekday, 10 * 60, 16 * 60);
-        if (offpeak == null) offpeak = headwayInBand(weekday, 19 * 60, 22 * 60) ?? 0;
-        const overnight = headwayInBand(weekday, 0, 5 * 60) ?? 0;
-        const weekend   = headwayInBand(saturday, 9 * 60, 19 * 60) ?? 0;
-
-        if (peak_am || peak_pm || offpeak || overnight || weekend) {
-          out[id] = { peak_am, peak_pm, offpeak, overnight, weekend };
-          filled++;
-        }
+        const signal = firstPositive(
+          headwayInBand(weekday,  10 * 60, 16 * 60),
+          headwayInBand(weekday,   7 * 60, 10 * 60),
+          headwayInBand(weekday,  16 * 60, 19 * 60),
+          headwayInBand(saturday,  9 * 60, 19 * 60),
+          headwayInBand(nightAll, 23 * 60,  5 * 60),
+        );
+        const band = bandForHeadway(signal);
+        if (band) { out[id] = band; filled++; }
       } catch (err) {
         // ignore individual failures
       }

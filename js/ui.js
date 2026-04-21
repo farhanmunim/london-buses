@@ -61,9 +61,10 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
     if (!c.garageCode) continue;
     (garageRoutes[c.garageCode] ??= []).push({
       routeId,
-      pvr:      c.pvr ?? null,
-      operator: c.operator ?? null,
-      type:     c.type ?? null,
+      pvr:        c.pvr ?? null,
+      operator:   c.operator ?? null,
+      type:       c.type ?? null,
+      propulsion: c.propulsion ?? null,
     });
   }
   // Sort each garage's routes alphanumerically (numeric first, then letter-prefix)

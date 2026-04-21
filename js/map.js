@@ -566,6 +566,21 @@ export function renderGarages(garages, garageRoutes = {}) {
     // also work if each route had its true PVR, but the source data often doesn't.
     const totalPvr = Number.isFinite(g.pvr) ? g.pvr : null;
 
+    // Electrified share: what fraction of the garage's PVR is run by
+    // battery-electric routes. Denominator is the sum of route-level PVRs we
+    // actually know — the garage-wide CSV total can differ, and mixing the two
+    // would produce misleading percentages.
+    let evShare = null;
+    {
+      let knownPvr = 0, electricPvr = 0;
+      for (const r of routes) {
+        if (!Number.isFinite(r.pvr)) continue;
+        knownPvr += r.pvr;
+        if (r.propulsion === 'electric') electricPvr += r.pvr;
+      }
+      if (knownPvr > 0) evShare = Math.round((electricPvr / knownPvr) * 100);
+    }
+
     const marker = L.marker([lat, lon], {
       icon: L.divIcon({
         className: 'garage-marker',
@@ -589,7 +604,8 @@ export function renderGarages(garages, garageRoutes = {}) {
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
         `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
-        `<div><dt>Total PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt>PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt>Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
         `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>` +
       chipsHtml,
@@ -611,7 +627,32 @@ export function renderGarages(garages, garageRoutes = {}) {
     });
 
     _garagesLayer.addLayer(marker);
-    _allGarages.push({ marker, garage: g, routeCount: count });
+    _allGarages.push({ marker, garage: g, routeCount: count, routeIds: new Set(routes.map(r => r.routeId)) });
+  }
+}
+
+/**
+ * Visually highlight the garage(s) that operate a given route. Passing null
+ * clears any active highlight. Used when a single route is focused via search
+ * so the user can immediately see where it's based.
+ */
+export function highlightGaragesForRoute(routeId) {
+  if (!_allGarages.length) return;
+  for (const entry of _allGarages) {
+    const active = routeId != null && entry.routeIds.has(routeId);
+    if (active) {
+      if (!entry.marker.getTooltip()) {
+        entry.marker.bindTooltip('Operating from here', {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -14],
+          className: 'garage-route-tooltip',
+        });
+      }
+      entry.marker.openTooltip();
+    } else if (entry.marker.getTooltip()) {
+      entry.marker.unbindTooltip();
+    }
   }
 }
 

@@ -51,31 +51,21 @@ jobs:
         run: |
           echo "date=$(node -e "console.log(require('./data/geometry-source.json').zipDate ?? '')")" >> $GITHUB_OUTPUT
 
-      # Prune routes-overview snapshots older than the two most recent so the
-      # repo doesn't accumulate ~1.3 MB/week of debug history indefinitely.
-      - name: Prune old route-overview snapshots
-        run: |
-          ls -1 data/routes-overview-*.geojson 2>/dev/null | sort | head -n -2 | xargs -r rm -v
-
       - name: Commit and push summary data (always)
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Always stage the aggregated/summary files that change weekly.
-          # -A so deleted snapshots (pruned by build-overview) are also staged.
           git add -A \
             data/routes-overview.geojson \
             data/route_destinations.json \
             data/route_classifications.json \
             data/build-meta.json \
-            data/manifest.json \
             data/geometry-source.json \
             data/garage-locations.json \
             data/frequencies.json \
-            data/garages.geojson \
-            data/route_summary.csv \
-            data/routes-overview-*.geojson || true
+            data/garages.geojson || true
 
           # Persist the postcodes.io geocode cache across runs to avoid
           # re-geocoding every garage weekly.

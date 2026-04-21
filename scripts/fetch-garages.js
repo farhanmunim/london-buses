@@ -3,12 +3,10 @@
  *
  * Downloads the authoritative garages CSV and converts it to a GeoJSON
  * FeatureCollection, geocoding each garage by its UK postcode via postcodes.io
- * (bulk, no API key). Uses reference/data/garages-base.geojson (or an existing
- * data/garages.geojson) as the base for geometry when a garage already has
- * known coordinates, preserving manual fixes.
- *
- * Also mirrors the RouteMapster "route hygiene" fix: numeric night routes are
- * copied into the main-network field.
+ * (bulk, no API key). Uses an existing data/garages.geojson as the base for
+ * geometry when a garage already has known coordinates, preserving manual
+ * fixes. Route-hygiene step: numeric night routes are copied into the
+ * main-network field.
  *
  * Output: data/garages.geojson
  * Run: npm run fetch-garages
@@ -22,7 +20,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const OUT_PATH = path.join(DATA_DIR, 'garages.geojson');
-const BASE_PATH_REF = path.join(ROOT, 'reference', 'data', 'garages-base.geojson');
 const BASE_PATH_EXISTING = OUT_PATH;
 const CACHE_PATH = path.join(DATA_DIR, 'source', 'geocode_cache.json');
 
@@ -143,10 +140,10 @@ async function main() {
     row['TfL night routes'] = formatRoutes([...night]);
   }
 
-  // Merge base: reference base + existing output (existing wins over reference)
-  const base = loadExisting(BASE_PATH_REF);
+  // Reuse geometry from the previously-committed output so we don't
+  // re-geocode unchanged addresses every week.
   const existing = loadExisting(BASE_PATH_EXISTING);
-  const byCode = { ...base.byCode, ...existing.byCode };
+  const byCode = { ...existing.byCode };
 
   // Geocode uncached postcodes
   const cache = loadCache();

@@ -1,13 +1,13 @@
 /**
  * fetch-data.js — Route data refresh
  *
- * Downloads the latest route geometry ZIP, converts XML to per-route GeoJSON,
- * then fetches stops and destinations from the public bus API.
+ * Downloads the latest route geometry ZIP and converts XML to per-route
+ * GeoJSON. Destinations and stops are fetched by separate pipeline steps.
  *
  * Output (written to data/):
  *   routes/<id>.geojson        – LineString/MultiLineString per direction
- *   stops.geojson              – all bus stops as GeoJSON FeatureCollection
- *   route_destinations.json    – inbound/outbound names per route
+ *   routes/index.json          – flat list of known route IDs
+ *   geometry-source.json       – upstream ZIP date (for change detection)
  *
  * Usage:
  *   npm run fetch-data

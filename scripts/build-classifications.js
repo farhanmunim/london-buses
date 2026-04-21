@@ -99,35 +99,6 @@ function deriveLengthBand(km) {
   return 'long';
 }
 
-// ── Frequency band ────────────────────────────────────────────────────────────
-
-/**
- * Derive a frequency band from the best available headway (minutes between buses).
- *
- * Primary source: TfL-derived numeric headways in frequencies.json
- *   { peak_am, peak_pm, offpeak, overnight, weekend }
- * Fallback:       scraper-derived headways from details.htm
- *   { freqWeekday, freqSunday, freqEvening }
- *
- * Preference order for the band signal:
- *   TfL offpeak → TfL peak_am → TfL peak_pm → TfL weekend → TfL overnight
- *     → scraper Mon-Sat → scraper Sunday → scraper evening
- *
- * Zero headways in TfL data mean "no service in that band" and are skipped.
- */
-function deriveFrequencyBand(tflFreq, details) {
-  const firstPositive = (...vals) => vals.find(v => typeof v === 'number' && v > 0) ?? null;
-  const h = firstPositive(
-    tflFreq?.offpeak, tflFreq?.peak_am, tflFreq?.peak_pm,
-    tflFreq?.weekend, tflFreq?.overnight,
-    details?.freqWeekday, details?.freqSunday, details?.freqEvening,
-  );
-  if (h == null) return null;
-  if (h <= 6)  return 'high';
-  if (h <= 15) return 'regular';
-  return 'low';
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 // Load service types from already-fetched destinations data
@@ -138,15 +109,14 @@ if (!fs.existsSync(destinationsPath)) {
 }
 const destinations = JSON.parse(fs.readFileSync(destinationsPath, 'utf8')).routes ?? {};
 
-// TfL-primary numeric headways (minutes). Authoritative source for frequency
-// banding; the scraper-derived headways in route_details.json are used only
-// as a fallback for routes the TfL API didn't cover.
+// Categorical frequency band per route — { "1": "high", "N86": "regular" }.
+// Produced by fetch-frequencies.js from TfL timetables with scraper fallback.
 const frequenciesPath = path.join(DATA_DIR, 'frequencies.json');
-const tflFrequencies  = fs.existsSync(frequenciesPath)
+const frequencyBands  = fs.existsSync(frequenciesPath)
   ? JSON.parse(fs.readFileSync(frequenciesPath, 'utf8'))
   : {};
-if (Object.keys(tflFrequencies).length) {
-  console.log(`Loaded TfL frequencies for ${Object.keys(tflFrequencies).length} routes`);
+if (Object.keys(frequencyBands).length) {
+  console.log(`Loaded frequency bands for ${Object.keys(frequencyBands).length} routes`);
 }
 
 // Load supplementary route details (deck type + frequency) if available
@@ -245,8 +215,16 @@ for (const file of routeFiles) {
   const serviceTypes = destinations[routeId]?.service_types ?? [];
   const type         = deriveType(routeId, serviceTypes, twentyFourSet);
   const isPrefix     = deriveIsPrefix(routeId, type);
-  const km           = routeLengthKm(geojson);
-  const lengthBand   = deriveLengthBand(km);
+  const lengthBand   = deriveLengthBand(routeLengthKm(geojson));
+
+  // For N-routes TfL doesn't list separately (e.g. N12 is just night service
+  // of line 12), fall back to the daytime-alias's band. Prefer the explicit
+  // alias from routes.htm; otherwise strip the N prefix.
+  const aliasIdForFreq = routeAliases[routeId]
+                       ?? (/^N\d/.test(routeId) ? routeId.slice(1) : null);
+  const frequencyRaw   = frequencyBands[routeId]
+                      ?? (aliasIdForFreq ? frequencyBands[aliasIdForFreq] : null)
+                      ?? null;
 
   // Fallback chain for route data:
   //   1. Scraped details for this routeId (details.htm)
@@ -264,9 +242,6 @@ for (const file of routeFiles) {
     garageName:  self?.garageName  ?? alias?.garageName  ?? null,
     garageCode:  self?.garageCode  ?? alias?.garageCode  ?? null,
     pvr:         self?.pvr         ?? alias?.pvr         ?? null,
-    freqWeekday: self?.freqWeekday ?? alias?.freqWeekday ?? null,
-    freqSunday:  self?.freqSunday  ?? alias?.freqSunday  ?? null,
-    freqEvening: self?.freqEvening ?? alias?.freqEvening ?? null,
   };
   const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
@@ -304,7 +279,9 @@ for (const file of routeFiles) {
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
   const pvr          = details.pvr;
-  const frequency    = deriveFrequencyBand(tflFrequencies[routeId], details);
+  // Frequency band is TfL-primary and doesn't fall back to last-known-good —
+  // if TfL now says a route has no published timetable that's authoritative.
+  const frequency    = frequencyRaw;
 
   // Manual overrides win over everything else (scraper + lookup). Scraper-
   // derived fields fall back to last-known-good before we give up to null, so

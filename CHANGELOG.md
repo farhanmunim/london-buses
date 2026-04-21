@@ -105,6 +105,22 @@ _2026-04-14_
 
 ---
 
+## v2.3 – Pipeline Slimming, Night-Route Frequencies & Garage UX
+
+_2026-04-21_
+
+- **Night-route frequencies now populate correctly**. TfL encodes after-midnight departures as hour ≥ 24 (e.g. `24:18` = 00:18 next day, `28:08` = 04:08). Previous code multiplied them straight into 1400+ minutes so every night journey fell outside every band; the fix wraps with `h % 24`. Combined with a richer schedule-name classifier that recognises TfL labels like "Friday Night/Saturday Morning" and "Mo-Th Nights/Tu-Fr Morning", all 120 night routes (N1, N8, N12, N86, N128, …) now resolve a frequency band. For N-routes TfL doesn't list separately the builder falls back to the daytime alias's band (e.g. N12 → line 12).
+- **Frequencies collapsed to one value per route**. `data/frequencies.json` is now a flat `{ routeId: "high" | "regular" | "low" }` map. Previously we stored five numeric headways per route (`peak_am, peak_pm, offpeak, overnight, weekend`) that nothing downstream consumed — the frontend only needs the band. Derivation moved from `build-classifications.js` into `fetch-frequencies.js`, with a weekday-offpeak → AM peak → PM peak → Saturday → overnight preference chain for picking the representative headway before binning (≤6 / 7–15 / >15 min).
+- **Data pipeline slimmed from 11 → 8 steps**. Removed `fetch-stops.js` (stops are fetched live from TfL when a route is opened), `build-route-summary.js` (CSV had no consumer), `build-pvr-aggregates.js` (operator / electrification aggregates are computed client-side in `stats.js`). Deleted the files they produced (`stops.geojson`, `bus_stations.geojson`, `route_summary.csv`, `pvr_aggregates.json`), plus `manifest.json` and the dated `routes-overview-YYYY-MM-DD.geojson` snapshots that nothing read. Shipped data on disk now ~3–4 MB.
+- **`refresh.js` orchestrator hardened**. Network-bound fetch steps now soft-fail so one flaky upstream (e.g. a transient socket close from londonbusroutes.net) doesn't abort the whole weekly run; downstream builders keep going with the previously-committed files and the last-known-good merge in `build-classifications.js`. Build steps still hard-fail — they should never crash in normal operation.
+- **Classification record cleaned of dead denormalized fields** — `lengthKm`, `lengthMiles`, numeric per-band `frequencies`, and `destinations` are all removed. The frontend consumes the categorical band directly and fetches destinations from `route_destinations.json` separately.
+- **Reference-app dependency removed**. `fetch-garages.js` no longer reads `reference/data/garages-base.geojson`; it only reuses the previously-committed `data/garages.geojson` as a geometry cache. Every data source the pipeline touches is now one of: TfL Unified API, TfL geometry S3 ZIP, londonbusroutes.net, bustimes.org, postcodes.io, Photon/Nominatim.
+- **Garage popup polish**. "Total PVR" renamed to **PVR** (the word "peak" already implies "total"). New **Electrification** row shows the share of the garage's known PVR run by battery-electric routes (`electric PVR ÷ known PVR`, whole-percent). Denominator is the sum of per-route PVRs — not the CSV garage-wide total — so numerator and denominator stay consistent.
+- **Garage highlight for focused routes**. When a single route is searched, the operating garage(s) now show a subtle permanent tooltip ("Operating from here") above the marker. Clears automatically when switching to multi-route mode or pressing Clear. Replaces an earlier pulsing-ring prototype that was too visually loud.
+- **New `data.md` reference**. Comprehensive pipeline doc — sources, per-field precedence, known traps (including the night-route timestamp encoding), CI cadence, platform limits (TfL API, Cloudflare Pages, GitHub Actions, postcodes.io, Nominatim). Single source of truth for how data flows end-to-end.
+
+---
+
 ## v2.2 – TfL-first Data Pipeline & Accuracy Overhaul
 
 _2026-04-17_

@@ -137,33 +137,8 @@ const output = {
 
 fs.writeFileSync(OUT_FILE, JSON.stringify(output), 'utf8');
 
-// ── Snapshot archive ──────────────────────────────────────────────────────────
-// Write a dated copy of the overview for rollback; keep the last 4 weeks.
-
-const DATA_DIR   = path.resolve(__dirname, '../data');
-const buildAt    = new Date().toISOString();
-const dateStamp  = buildAt.slice(0, 10); // YYYY-MM-DD
-
-// Write dated archive copy
-const archiveName = `routes-overview-${dateStamp}.geojson`;
-fs.copyFileSync(OUT_FILE, path.join(DATA_DIR, archiveName));
-
-// Update manifest.json
-const MANIFEST_FILE = path.join(DATA_DIR, 'manifest.json');
-let manifest = { latest: dateStamp, snapshots: [] };
-try { manifest = JSON.parse(fs.readFileSync(MANIFEST_FILE, 'utf8')); } catch { /* first run */ }
-manifest.latest = dateStamp;
-if (!manifest.snapshots.includes(dateStamp)) manifest.snapshots.unshift(dateStamp);
-
-// Keep at most 4 snapshots; delete older archive files
-const KEEP = 4;
-const removed = manifest.snapshots.splice(KEEP);
-for (const old of removed) {
-  const oldFile = path.join(DATA_DIR, `routes-overview-${old}.geojson`);
-  try { fs.unlinkSync(oldFile); console.log(`  Removed old snapshot: ${old}`); } catch { /* already gone */ }
-}
-fs.writeFileSync(MANIFEST_FILE, JSON.stringify(manifest, null, 2), 'utf8');
-console.log(`  Snapshot ${dateStamp} written (${manifest.snapshots.length} total)`);
+const DATA_DIR = path.resolve(__dirname, '../data');
+const buildAt  = new Date().toISOString();
 
 // ── Build metadata ────────────────────────────────────────────────────────────
 const META_FILE    = path.join(DATA_DIR, 'build-meta.json');

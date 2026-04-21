@@ -1,0 +1,853 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.3563702,
+          -0.0325355
+        ]
+      },
+      "properties": {
+        "name": "Addington Village Interchange",
+        "display_name": "Addington Village Bus Station",
+        "postcode": "CR0 9BA",
+        "stops": ["490003101A", "490003101B", "490003101C", "490003101D", "490003101E"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.5133,
+          -0.0751
+        ]
+      },
+      "properties": {
+        "name": "Aldgate bus station",
+        "display_name": "Aldgate Bus Station",
+        "postcode": "EC3N 1BD",
+        "stops": ["490003184L"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.51446,
+          0.0598
+        ]
+      },
+      "properties": {
+        "name": "Beckton bus station",
+        "display_name": "Beckton Bus Station",
+        "postcode": "E6 5PA",
+        "stops": ["490006317A", "490006317B", "490006317C", "490006317D"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.437573,
+          0.276127
+        ]
+      },
+      "properties": {
+        "name": "Bluewater bus station",
+        "display_name": "Bluewater Bus Station",
+        "postcode": "DA9 9ST",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.57583,
+          -0.223
+        ]
+      },
+      "properties": {
+        "name": "Brent Cross bus station",
+        "display_name": "Brent Cross Shopping Centre",
+        "postcode": "NW4 3FP",
+        "stops": ["490004282A","490004282B", "490004282D", "490004283L"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.49814,
+          -0.05051
+        ]
+      },
+      "properties": {
+        "name": "Canada Water bus station",
+        "display_name": "Canada Water Bus Station",
+        "postcode": "SE16 7ED",
+        "stops": ["490004733C", "490000037S", "490004733B", "490004733D"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.51423,
+          0.00855
+        ]
+      },
+      "properties": {
+        "name": "Canning Town bus station",
+        "display_name": "Canning Town Bus Station",
+        "postcode": "E16 1DQ",
+        "stops": ["490000039A", "490000039G", "490000039F", "490000039D", "490000039E", "490000039C", "490000039B"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.63353,
+          0.01006
+        ]
+      },
+      "properties": {
+        "name": "Chingford bus station",
+        "display_name": "Chingford Bus Station",
+        "postcode": "E4 6AL",
+        "stops": ["490001063C", "490001063B", "490001063D", "490001063F"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.42074,
+          -0.0769
+        ]
+      },
+      "properties": {
+        "name": "Crystal Palace bus station",
+        "display_name": "Crystal Palace Bus Station",
+        "postcode": "SE19 2AZ",
+        "stops": ["490005869A", "490005869C", "490005869D"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.37485,
+          -0.0916
+        ]
+      },
+      "properties": {
+        "name": "East Croydon bus station",
+        "display_name": "East Croydon Bus Station",
+        "postcode": "CR0 0XJ",
+        "stops": ["490001089E1", "490001089E2", "490001089E3"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.61292,
+          -0.2744
+        ]
+      },
+      "properties": {
+        "name": "Edgware bus station",
+        "display_name": "Edgware Bus Station",
+        "postcode": "HA8 7AW",
+        "stops": ["490000070F", "490015287E", "490000070D","490000070C", "490000070G"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.625416,
+          -0.058972
+        ]
+      },
+      "properties": {
+        "name": "Edmonton Green bus station",
+        "display_name": "Edmonton Green Bus Station",
+        "postcode": "N9 0TZ",
+        "stops": ["490009983F", "490009983A", "490009983G", "490009983E", "490009983B", "490009983C"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.45539,
+          0.05237
+        ]
+      },
+      "properties": {
+        "name": "Eltham bus station",
+        "display_name": "Eltham Bus Station",
+        "postcode": "SE9 1DY",
+        "stops": ["490001097S", "490001097A", "490001097D", "490001097C"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.52756,
+          -0.13246
+        ]
+      },
+      "properties": {
+        "name": "Euston bus station",
+        "display_name": "Euston Bus Station",
+        "postcode": "NW1 2EF",
+        "stops": ["490000077F", "490000077C", "490000077D", "490000077G", "490000077AP", "490000077E"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.56465,
+          -0.1056
+        ]
+      },
+      "properties": {
+        "name": "Finsbury Park interchange bus station",
+        "display_name": "Finsbury Park Interchange Bus Station",
+        "postcode": "N4 2DH",
+        "stops": ["490000083H", "490000083G", "490000083AP"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.57224,
+          -0.194
+        ]
+      },
+      "properties": {
+        "name": "Golders Green bus station",
+        "display_name": "Golders Green Bus Station",
+        "postcode": "NW11 7RN",
+        "stops": ["490000087B", "490000087GB", "490000087GI", "490000087GH", "490000087GF", "490015497GC", "490000087GJ", "490015496GW", "490007267GM"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.43213,
+          0.021
+        ]
+      },
+      "properties": {
+        "name": "Grove Park bus station",
+        "display_name": "Grove Park Bus Station",
+        "postcode": "SE12 9TT",
+        "stops": ["490007565A", "490001124B", "490015553F", "490015256D"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.49291,
+          -0.2227
+        ]
+      },
+      "properties": {
+        "name": "Hammersmith Lower bus station",
+        "display_name": "Hammersmith Lower Bus Station",
+        "postcode": "W6 9YA",
+        "stops": ["490007705K", "490007705Z2", "490007705J"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.49291,
+          -0.2227
+        ]
+      },
+      "properties": {
+        "name": "Hammersmith Upper bus station",
+        "display_name": "Hammersmith Upper Bus Station",
+        "postcode": "W6 8AB",
+        "stops": ["490007705A", "490007705G", "490007705C", "490007705D", "490007705B"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.57998,
+          -0.3374
+        ]
+      },
+      "properties": {
+        "name": "Harrow bus station",
+        "display_name": "Harrow Bus Station",
+        "postcode": "HA1 2XY",
+        "stops": ["490007845D", "490007845E", "490007845B", "490007845C", "490007845A"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.47123,
+          -0.45366
+        ]
+      },
+      "properties": {
+        "name": "Heathrow Central bus station",
+        "display_name": "Heathrow Central Bus Station",
+        "postcode": "TW6 1BP",
+        "stops": ["4900801619", "4900801618", "490008016S"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.35473,
+          51.4711
+        ]
+      },
+      "properties": {
+        "name": "Hounslow bus station",
+        "display_name": "Hounslow Bus Station",
+        "postcode": "TW3 2HD",
+        "stops": ["490008392Z1", "490008393W", "490008393W1", "490015241S"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.4124,
+          -0.29893
+        ]
+      },
+      "properties": {
+        "name": "Kingston Cromwell Road bus station",
+        "display_name": "Kingston Cromwell Road Bus Station",
+        "postcode": "KT2 6RD",
+        "stops": ["490005800A1", "4900058QA17", "490005800A2", "490005800A3"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.41028,
+          -0.29981
+        ]
+      },
+      "properties": {
+        "name": "Kingston Fairfield bus station",
+        "display_name": "Kingston Fairfield Bus Station",
+        "postcode": "KT2 6SN",
+        "stops": ["490006705B", "490006705B2"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.49015,
+          0.28357
+        ]
+      },
+      "properties": {
+        "name": "Lakeside bus station",
+        "display_name": "Lakeside Bus Station",
+        "postcode": "RM20 2ZP",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.50561,
+          -0.08687
+        ]
+      },
+      "properties": {
+        "name": "London Bridge bus station",
+        "display_name": "London Bridge Bus Station",
+        "postcode": "SE1 9SP",
+        "stops": ["490019954J", "490000139A", "490000139B", "490019954L"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.61345,
+          -0.2489
+        ]
+      },
+      "properties": {
+        "name": "Mill Hill Broadway bus station",
+        "display_name": "Mill Hill Broadway Bus Station",
+        "postcode": "NW7 2HN",
+        "stops": ["490001193D", "490001193C", "490001193B"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.40218,
+          -0.19464
+        ]
+      },
+      "properties": {
+        "name": "Morden bus station",
+        "display_name": "Morden Bus Station",
+        "postcode": "SM4 5HT",
+        "stops": ["490000151A", "490000151L", "490000151C", "490000151B", "490000151K"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.46795,
+          -0.25923
+        ]
+      },
+      "properties": {
+        "name": "Mortlake bus station",
+        "display_name": "Mortlake Bus Station",
+        "postcode": "SW14 8PN",
+        "stops": ["490006144N", "490010047N"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.61257,
+          -0.17668
+        ]
+      },
+      "properties": {
+        "name": "North Finchley bus station",
+        "display_name": "North Finchley Bus Station",
+        "postcode": "N12 9QR",
+        "stops": ["490015443S", "490015443P", "490015443N", "490015518E"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.50024,
+          0.00335
+        ]
+      },
+      "properties": {
+        "name": "North Greenwich bus station",
+        "display_name": "North Greenwich Bus Station",
+        "postcode": "SE10 0PH",
+        "stops": ["490010374A", "490010374B", "490010374C", "490010374D", "490010374E"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.37354,
+          0.08951
+        ]
+      },
+      "properties": {
+        "name": "Orpington bus station",
+        "display_name": "Orpington Bus Station",
+        "postcode": "BR6 0SX",
+        "stops": ["490001220D", "490001220E", "490001220F", "490001220G"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.47364,
+          -0.06716
+        ]
+      },
+      "properties": {
+        "name": "Peckham bus station",
+        "display_name": "Peckham Bus Station",
+        "postcode": "SE15 5SJ",
+        "stops": ["490010877W", "490010877E", "490010877H"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.50947,
+          0.03508
+        ]
+      },
+      "properties": {
+        "name": "Prince Regent bus station",
+        "display_name": "Prince Regent Bus Station",
+        "postcode": "E16 3JH",
+        "stops": ["490011204Q", "490011204S", "490011204R", "490011204T"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.2407,
+          -0.16654
+        ]
+      },
+      "properties": {
+        "name": "Redhill bus station",
+        "display_name": "Redhill Bus Station",
+        "postcode": "RH1 1NY",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.45928,
+          -0.30465
+        ]
+      },
+      "properties": {
+        "name": "Richmond bus station",
+        "display_name": "Richmond Bus Station",
+        "postcode": "TW9 1AW",
+        "stops": ["490011556W", "490011556H", "490011556J"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.51046,
+          -0.59068
+        ]
+      },
+      "properties": {
+        "name": "Slough bus station",
+        "display_name": "Slough Bus Station",
+        "postcode": "SL1 1XW",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.56496,
+          -0.35213
+        ]
+      },
+      "properties": {
+        "name": "South Harrow bus station",
+        "display_name": "South Harrow Bus Station",
+        "postcode": "HA2 0AQ",
+        "stops": ["490012306W", "490000211A", "490000211B"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.63224,
+          -0.12805
+        ]
+      },
+      "properties": {
+        "name": "Southgate bus station",
+        "display_name": "Southgate Bus Station",
+        "postcode": "N14 5BH",
+        "stops": ["490000210F", "490000210C", "490000210B", "490000210G", "490000210H"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.43256,
+          -0.50922
+        ]
+      },
+      "properties": {
+        "name": "Staines bus station",
+        "display_name": "Staines Bus Station",
+        "postcode": "TW18 4QB",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.54103,
+          -0.00186
+        ]
+      },
+      "properties": {
+        "name": "Stratford bus station",
+        "display_name": "Stratford Bus Station",
+        "postcode": "E15 1DA",
+        "stops": ["490012904D", "490012904T", "490012904N", "490012904B", "490012904C", "490012904A", "490012904Q"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.54373,
+          -0.00429
+        ]
+      },
+      "properties": {
+        "name": "Stratford City bus station",
+        "display_name": "Stratford City Bus Station",
+        "postcode": "E20 1GR",
+        "stops": ["490019793T", "490019793W", "490019793S", "490019793X"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.50415,
+          -0.11276
+        ]
+      },
+      "properties": {
+        "name": "Tenison Way bus station",
+        "display_name": "Waterloo, Tenison Way Bus Station",
+        "postcode": "SE1 7RX",
+        "stops": ["490000254J", "490000254K", "490000254H"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.58851,
+          -0.061
+        ]
+      },
+      "properties": {
+        "name": "Tottenham Hale bus station",
+        "display_name": "Tottenham Hale Bus Station",
+        "postcode": "N17 9LP",
+        "stops": ["49009917SW", "490009917Y", "490009917A", "490009917T", "490009917B", "490009917D"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.59007,
+          -0.10231
+        ]
+      },
+      "properties": {
+        "name": "Turnpike Lane bus station",
+        "display_name": "Turnpike Lane Bus Station",
+        "postcode": "N15 3EA",
+        "stops": ["490013852N", "490013852R", "490013852S", "490013852T"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.48536,
+          -0.12426
+        ]
+      },
+      "properties": {
+        "name": "Vauxhall bus station",
+        "display_name": "Vauxhall Bus Station",
+        "postcode": "SW8 1SJ",
+        "stops": ["490000247A", "490000247B", "490000247C", "490000247D", "490000247E", "490000247F", "490000247G1", "490000247H", "490000247J"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.49603,
+          -0.14395
+        ]
+      },
+      "properties": {
+        "name": "Victoria bus station",
+        "display_name": "Victoria Bus Station",
+        "postcode": "SW1V 1JR",
+        "stops": ["490014050A", "490014050B", "490014050C", "490014050D", "490000248YZ", "490002139ZZ"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.68555,
+          -0.03127
+        ]
+      },
+      "properties": {
+        "name": "Waltham Cross bus station",
+        "display_name": "Waltham Cross Bus Station",
+        "postcode": "EN8 7FH",
+        "stops": []
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.58375,
+          -0.02041
+        ]
+      },
+      "properties": {
+        "name": "Walthamstow bus station",
+        "display_name": "Walthamstow Bus Station",
+        "postcode": "E17 7JN",
+        "stops": ["490014164A", "490000249B", "490014164C", "490014164D", "490000249E", "490014164N"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.56554,
+          -0.10719
+        ]
+      },
+      "properties": {
+        "name": "Wells Terrace bus station",
+        "display_name": "Finsbury Park Wells Terrace Bus Station",
+        "postcode": "N4 2AL",
+        "stops": ["490000083B", "490000083C", "490000083A"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.37904,
+          -0.10136
+        ]
+      },
+      "properties": {
+        "name": "West Croydon bus station",
+        "display_name": "West Croydon Bus Station",
+        "postcode": "CR0 2YT",
+        "stops": ["490014420X", "490014420Y", "490014420Z", "490014420V", "490014420W", "490014420B8"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.50862,
+          -0.22376
+        ]
+      },
+      "properties": {
+        "name": "White City bus station",
+        "display_name": "White City Bus Station",
+        "postcode": "W12 7RY",
+        "stops": ["490003375WK", "490003375WL", "490003375WH", "490003375WJ", "490003375AP", "490018981ZW"]
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          51.41886,
+          -0.20337
+        ]
+      },
+      "properties": {
+        "name": "Wimbledon bus station",
+        "display_name": "Wimbledon Bus Station",
+        "postcode": "SW19 1UE",
+        "stops": ["490014731H", "490014731G", "490014731F", "490014731E"]
+      }
+    }
+  ]
+}

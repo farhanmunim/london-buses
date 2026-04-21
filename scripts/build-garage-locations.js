@@ -26,8 +26,11 @@ const IN_PATH   = path.join(DATA_DIR, 'garages.geojson');
 const OUT_PATH  = path.join(DATA_DIR, 'garage-locations.json');
 
 if (!fs.existsSync(IN_PATH)) {
-  console.error(`Error: ${IN_PATH} not found. Run fetch-garages first.`);
-  process.exit(1);
+  // Soft-handle cold starts + transient fetch-garages failures: leave the
+  // previously-committed garage-locations.json untouched so the frontend
+  // keeps working, and exit cleanly so the orchestrator continues.
+  console.warn(`  ${IN_PATH} not found — keeping existing garage-locations.json.`);
+  process.exit(0);
 }
 
 const fc = JSON.parse(fs.readFileSync(IN_PATH, 'utf8'));

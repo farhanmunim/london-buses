@@ -17,7 +17,7 @@
  *     generatedAt, source, routeCount,
  *     routes:      { [routeId]: { deck, vehicleType, propulsion, operator,
  *                                 garageName, garageCode, pvr,
- *                                 freqWeekday, freqSunday, freqEvening } },
+ *                                 garageCode, pvr } },
  *     aliases:     { "N128": "128", ... },
  *     operatorByRoute: { "128": "Stagecoach London", ... },
  *     operatorByRouteBustimes: {}  // kept as empty object for compat
@@ -199,27 +199,11 @@ function parseDetailsText(html) {
       const vehicleRaw = slice(line, COLS.vehicle);
       const garageRaw  = slice(line, COLS.garage).replace(/\*+$/, '').toUpperCase();
       const pvrRaw     = slice(line, COLS.pvr);
-      const monSat     = slice(line, COLS.monSat);
-      const sunday     = slice(line, COLS.sunday);
-      const evening    = slice(line, COLS.evening);
-
-      const parseHead = (t) => {
-        if (!t) return null;
-        const s = t.replace(/[*†‡§\u0086]/g, '').trim();
-        if (/^[-–]$/.test(s)) return null;
-        const mm = s.match(/(\d+)/);
-        if (!mm) return null;
-        const n = +mm[1];
-        return n > 90 ? null : n;
-      };
       const pvrNum = parseInt(pvrRaw, 10);
       byRoute[rid] = {
         vehicleType: vehicleRaw,
         garageCodeFromDetails: /^[A-Z0-9]{1,4}$/.test(garageRaw) ? garageRaw : null,
         pvrFromDetails: Number.isFinite(pvrNum) ? pvrNum : null,
-        freqWeekday: parseHead(monSat),
-        freqSunday:  parseHead(sunday),
-        freqEvening: parseHead(evening),
       };
     }
   }
@@ -346,9 +330,6 @@ async function main() {
       vehicleType: cleanVeh,
       propulsion:  derivePropulsion(rawVehicle),
       operator, garageName, garageCode, pvr,
-      freqWeekday: v?.freqWeekday ?? null,
-      freqSunday:  v?.freqSunday  ?? null,
-      freqEvening: v?.freqEvening ?? null,
     };
     if (operator) operatorByRoute[id] = operator;
   }

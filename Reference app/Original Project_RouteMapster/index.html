@@ -1,0 +1,2918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>RouteMapster</title>
+  <link rel="icon" type="image/png" href="assets/routemapster.png" />
+
+  <!-- Leaflet CSS (required) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap');
+
+    :root {
+      --bg: #f5f2ea;
+      --panel: #ffffff;
+      --panel-border: #e6ded2;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --accent: #0f766e;
+      --accent-soft: rgba(15, 118, 110, 0.12);
+      --route-regular: #ef4444;
+      --route-24hr: #16b5f0;
+      --route-night: #f59e0b;
+      --route-school: #3b82f6;
+      --route-prefix: #10b981;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+      --sidebar-width: 340px;
+      --sidebar-min: 300px;
+      --sidebar-max: 480px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(239, 68, 68, 0.12), transparent 48%),
+        radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.12), transparent 42%),
+        radial-gradient(circle at 80% 75%, rgba(16, 185, 129, 0.12), transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: 1fr;
+      gap: 24px;
+      padding: 24px;
+      min-height: 100vh;
+      height: 100vh;
+    }
+
+    #app.has-details,
+    #app.has-advanced-results {
+      grid-template-columns: auto 1fr 320px;
+    }
+
+    #sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      min-height: 0;
+      min-width: 0;
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-min);
+      max-width: var(--sidebar-max);
+      overflow: visible;
+      position: relative;
+    }
+
+    .sidebar-scroll {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 6px;
+      overscroll-behavior: contain;
+    }
+
+    #rightpanel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      min-width: 0;
+      overscroll-behavior: contain;
+    }
+
+    #app.has-details #rightpanel,
+    #app.has-advanced-results #rightpanel {
+      display: flex;
+    }
+
+    #app.has-advanced-results:not(.has-details) #rightpanel .info-panel:not(#advancedResultsPanel) {
+      display: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid var(--panel-border);
+      display: grid;
+      place-items: center;
+      padding: 6px;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .brand-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .brand-actions .ghost-button {
+      flex: 0 0 auto;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: rise 0.5s ease;
+    }
+
+    .section-title {
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    input[type="search"] {
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fdfbf7;
+    }
+
+    .select-field {
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      background: #fdfbf7;
+      font-family: inherit;
+      color: var(--ink);
+    }
+
+    .select-field:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    input[type="search"]:focus {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .tag-input {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: #fdfbf7;
+    }
+
+    .tag-input:focus-within {
+      outline: 2px solid var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .tag-remove {
+      border: none;
+      background: transparent;
+      color: inherit;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .tag-input input[type="search"] {
+      border: none;
+      padding: 6px 6px;
+      min-width: 140px;
+      background: transparent;
+      flex: 1 1 140px;
+    }
+
+    .tag-input input[type="search"]:focus {
+      outline: none;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    .ghost-button {
+      border: 1px dashed var(--panel-border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      background: #fffaf1;
+      color: var(--muted);
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease;
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .ghost-button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .ghost-button.compact {
+      width: auto;
+      flex: 1;
+    }
+
+    .ghost-button.tiny {
+      padding: 4px 8px;
+      font-size: 11px;
+      width: auto;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      box-shadow: none;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      background: #f8f5ee;
+      font-size: 14px;
+    }
+
+    .toggle[data-route-type] {
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .toggle.is-dragging {
+      cursor: grabbing;
+      opacity: 0.7;
+    }
+
+    .toggle.is-disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .toggle span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle input[type="checkbox"],
+    .toggle input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    input:disabled,
+    select:disabled,
+    textarea:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .status-card {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #111827;
+      color: #f8fafc;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .module {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .module[open] {
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    #sidebar .brand-mark,
+    #sidebar .status-card,
+    #sidebar .global-controls,
+    #sidebar .module {
+      box-shadow: none;
+    }
+
+    #sidebar .module[open] {
+      box-shadow: none;
+      transform: none;
+    }
+
+    .module summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      font-weight: 600;
+      background: #fbf8f1;
+    }
+
+    .module summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .module summary::after {
+      content: "+";
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      margin-left: auto;
+    }
+
+    .module[open] summary::after {
+      content: "-";
+    }
+
+    .module-title {
+      font-size: 15px;
+    }
+
+    .module-tag {
+      margin-left: auto;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--panel-border);
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #fffaf1;
+    }
+
+    .module-tag.planned {
+      color: #b45309;
+      border-color: rgba(180, 83, 9, 0.3);
+      background: rgba(251, 191, 36, 0.12);
+    }
+
+    .module-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 14px 16px 16px;
+    }
+
+    .module-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--panel-border);
+    }
+
+    .module-section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .module-disabled {
+      opacity: 0.7;
+    }
+
+    .module-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .select-field[multiple] {
+      min-height: 120px;
+      padding: 8px;
+    }
+
+    .mobile-multi {
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: #fdfbf7;
+      overflow: hidden;
+    }
+
+    .mobile-multi-summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      user-select: none;
+    }
+
+    .mobile-multi-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .mobile-multi-summary::after {
+      content: none !important;
+    }
+
+    .mobile-multi-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 220px;
+      overflow: auto;
+      padding: 8px 12px 12px;
+      border-top: 1px dashed var(--panel-border);
+      background: #fffaf1;
+    }
+
+    .mobile-multi-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .mobile-multi-item input[type="checkbox"] {
+      margin-top: 1px;
+      accent-color: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    .mobile-multi-empty {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field-row input,
+    .field-row .select-field {
+      flex: 1;
+    }
+
+    .field-row input[type="number"] {
+      min-width: 0;
+      flex: 1 1 0;
+    }
+
+    .submodule {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px dashed var(--panel-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      background: #fffaf1;
+    }
+
+    .submodule summary {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      list-style: none;
+      margin: 0;
+      padding: 2px 0;
+      background: transparent;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--ink);
+      user-select: none;
+      margin-bottom: 0;
+    }
+
+    .submodule:not([open]) summary {
+      margin-bottom: 0;
+    }
+
+    .submodule summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .submodule summary::marker {
+      content: "";
+    }
+
+    .submodule summary::after {
+      content: "+";
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      background: rgba(15, 118, 110, 0.08);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .submodule[open] summary::after {
+      content: "-";
+    }
+
+    .submodule > summary > .section-title {
+      color: #667085;
+    }
+
+    .submodule .field {
+      gap: 8px;
+    }
+
+    .submodule .field-row {
+      gap: 12px;
+    }
+
+    .submodule .field > label {
+      line-height: 1.35;
+    }
+
+    .submodule .module-note {
+      line-height: 1.4;
+    }
+
+    .submodule-tools {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: -2px;
+    }
+
+    .route-count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .route-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .route-card {
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: #fffaf1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .route-card__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .route-card__title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .route-card__meta,
+    .route-card__freq,
+    .route-card__kpi {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .analysis-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .analysis-toolbar .select-field {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .analysis-group-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .analysis-group-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--analysis-group-dot, #94a3b8);
+      flex: 0 0 auto;
+      opacity: 0.95;
+    }
+
+    .analysis-block {
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: #fffaf1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .analysis-block__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .analysis-block__title {
+      font-weight: 600;
+      font-size: 14px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .analysis-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .analysis-table th {
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      padding-bottom: 6px;
+      white-space: nowrap;
+      overflow-wrap: normal;
+    }
+
+    .analysis-table td {
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--panel-border);
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+
+    .analysis-table th,
+    .analysis-table td {
+      padding-right: 12px;
+      vertical-align: top;
+    }
+
+    .analysis-table tbody tr.is-clickable {
+      cursor: pointer;
+    }
+
+    .analysis-table tbody tr.is-clickable:hover td {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .analysis-table tbody tr.is-active td {
+      background: rgba(239, 68, 68, 0.14);
+    }
+
+    .analysis-table th:nth-child(1),
+    .analysis-table td:nth-child(1) {
+      min-width: 140px;
+      padding-right: 10px;
+      position: sticky;
+      left: 0;
+      background: #fffaf1;
+      z-index: 2;
+    }
+
+    .analysis-table th:nth-child(1) {
+      z-index: 3;
+    }
+
+    .analysis-table--ranked th:nth-child(1),
+    .analysis-table--ranked td:nth-child(1) {
+      width: 36px;
+      min-width: 36px;
+      padding-right: 8px;
+    }
+
+    .analysis-table--ranked th:nth-child(2),
+    .analysis-table--ranked td:nth-child(2) {
+      min-width: 160px;
+    }
+
+    .analysis-table--ranked-route th:nth-child(2),
+    .analysis-table--ranked-route td:nth-child(2) {
+      min-width: 64px;
+    }
+
+    .analysis-table th:last-child,
+    .analysis-table td:last-child {
+      min-width: 0;
+    }
+
+    .analysis-pill-row__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .analysis-pill-score {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .analysis-pill-details {
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px dashed var(--panel-border);
+      border-radius: 12px;
+      background: #fffaf1;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .analysis-metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px 12px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .analysis-metric {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .analysis-metric strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .analysis-route-metrics {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .analysis-route-detail-list {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .analysis-route-detail-row {
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 10px;
+      background: #fdfbf7;
+      border: 1px solid var(--panel-border);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .analysis-route-detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 12px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-route-detail-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .analysis-route-destination-list {
+      display: grid;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .analysis-route-destination-empty {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .analysis-route-metric-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 10px;
+      background: #fdfbf7;
+      border: 1px solid var(--panel-border);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .analysis-route-metric-id {
+      min-width: 90px;
+      flex: 0 0 auto;
+    }
+
+    .analysis-route-metric .analysis-metric {
+      margin: 0;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .analysis-route-metric {
+      min-width: 0;
+      flex: 1 1 140px;
+    }
+
+    .analysis-route-metric .analysis-metric span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 1024px) {
+      .analysis-route-metric-row {
+        align-items: stretch;
+      }
+      .analysis-route-metric-id {
+        flex-basis: 100%;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .analysis-route-metric-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    .analysis-summary {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .analysis-summary strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .analysis-table-shell {
+      position: relative;
+    }
+
+    .analysis-table-shell::after {
+      content: "";
+      position: absolute;
+      top: var(--analysis-wrap-top, 0px);
+      right: 0;
+      bottom: var(--analysis-wrap-bottom, 0px);
+      width: 20px;
+      pointer-events: none;
+      background: linear-gradient(90deg, rgba(255, 250, 241, 0), #fffaf1 75%);
+      opacity: 0;
+      transition: opacity 120ms ease;
+      z-index: 4;
+    }
+
+    .analysis-table-wrap {
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .analysis-table-wrap::after {
+      content: none;
+    }
+
+    .analysis-scroll-cue {
+      display: none;
+      text-align: right;
+      margin-bottom: 2px;
+      margin-right: 2px;
+      font-size: 13px;
+      line-height: 1;
+      color: var(--accent);
+      font-weight: 600;
+      opacity: 0.65;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .analysis-table-shell.has-x-overflow .analysis-scroll-cue {
+      display: block;
+    }
+
+    .analysis-table-shell.has-x-overflow::after {
+      opacity: 1;
+    }
+
+    .analysis-table-shell.is-scroll-end::after {
+      opacity: 0;
+    }
+
+    .map-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .map-legend__bar {
+      flex: 1;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2c7bb6, #abd9e9, #fee090, #fdae61, #d7191c);
+      border: 1px solid rgba(15, 118, 110, 0.2);
+    }
+
+    #advancedResultsPanel {
+      display: none;
+    }
+
+    #advancedResultsPanel.is-visible {
+      display: flex;
+    }
+
+    .preset-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .preset-card {
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 10px;
+      background: #fdfbf7;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .preset-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    .preset-card__icon {
+      font-size: 18px;
+    }
+
+    .preset-card__title {
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .preset-card__desc {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .preset-card.is-disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .coming-next {
+      margin: 0;
+      padding-left: 18px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .route-zoom-btn {
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 4px 8px;
+      background: #f8fafc;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .global-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+    }
+
+    .global-controls .section-title {
+      margin-bottom: 4px;
+    }
+
+    .clear-button {
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #b91c1c;
+      background: #fff5f5;
+    }
+
+    .clear-button:hover {
+      border-color: #b91c1c;
+      color: #991b1b;
+    }
+
+    .clear-button-soft {
+      border-color: rgba(239, 68, 68, 0.28);
+      color: #c2410c;
+      background: #fff7ed;
+    }
+
+    .clear-button-soft:hover {
+      border-color: rgba(239, 68, 68, 0.5);
+      color: #9a3412;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .swatch.regular { background: var(--route-regular); }
+    .swatch.twentyfour { background: var(--route-24hr); }
+    .swatch.night { background: var(--route-night); }
+    .swatch.school { background: var(--route-school); }
+    .swatch.prefix { background: var(--route-prefix); }
+
+    #mapArea {
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #mapContainer {
+      flex: 1;
+      min-height: 0;
+      height: 100%;
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #e8eee8;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.6s ease;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 600px;
+    }
+
+    .info-panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .info-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .info-title-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: var(--route-regular);
+      color: #fff8f3;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .info-close {
+      padding: 4px 10px;
+    }
+
+    .advanced-results-close {
+      display: inline-flex;
+    }
+
+    .info-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .info-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fbf8f1;
+      border: 1px solid var(--panel-border);
+    }
+
+    .info-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .route-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .route-pill {
+      background: var(--route-regular);
+      color: #fff;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .route-pill.route-pill--regular { background: var(--route-regular); }
+    .route-pill.route-pill--night { background: var(--route-night); }
+    .route-pill.route-pill--school { background: var(--route-school); }
+    .route-pill.route-pill--twentyfour { background: var(--route-24hr); }
+    .route-pill.route-pill--prefix { background: var(--route-prefix); }
+    .route-pill.route-pill--superloop {
+      background: #ffffff;
+      color: var(--route-regular);
+      border: 1px solid var(--route-regular);
+    }
+    .route-pill.route-pill--bakerloop {
+      background: #ffffff;
+      color: #b26300;
+      border: 1px solid #b26300;
+    }
+
+    .leaflet-div-icon.endpoint-route-pill-overlay-icon {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      width: auto !important;
+      height: auto !important;
+      margin-left: 0 !important;
+      margin-top: 0 !important;
+      overflow: visible !important;
+      pointer-events: none;
+    }
+
+    .endpoint-route-pill-overlay {
+      display: flex;
+      justify-content: center;
+      width: max-content;
+      max-width: 264px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      transform: translate(-50%, calc(-100% - 10px));
+      pointer-events: none;
+    }
+
+    .endpoint-route-pill-overlay .route-pill-group {
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .endpoint-route-pill-overlay .route-pill {
+      min-width: 40px;
+      padding: 3px 8px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.24);
+      pointer-events: auto;
+    }
+
+    .endpoint-route-pill-overflow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .route-destination-expander {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .route-destination-toggle-all {
+      border: 1px solid var(--panel-border);
+      background: #ffffff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .route-destination-toggle-all[aria-expanded="true"] {
+      background: #f1f5f9;
+    }
+
+    .route-destination-details {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+
+    .route-destination-details[hidden] {
+      display: none;
+    }
+
+    .route-destination-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .route-destination-feature-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .route-destination-route {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      background: #ffffff;
+    }
+
+    .route-destination-route__pill .route-pill-group {
+      gap: 0;
+    }
+
+    .route-destination-route__lines {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .route-destination-line {
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--ink);
+    }
+
+    .garage-route-category {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 8px;
+      margin-top: 8px;
+      border-top: 1px dashed var(--panel-border);
+    }
+
+    .garage-route-category:first-child {
+      border-top: none;
+      padding-top: 0;
+      margin-top: 0;
+    }
+
+    .info-empty {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .omni-launch {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 118, 110, 0.85);
+      background: linear-gradient(135deg, #0f766e, #22c55e);
+      color: #f8fafc;
+      font-weight: 600;
+      box-shadow: 0 16px 28px rgba(15, 23, 42, 0.2);
+      pointer-events: auto;
+      cursor: pointer;
+      z-index: 1200;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .omni-launch:hover {
+      transform: translateY(-1px);
+      border-color: rgba(15, 118, 110, 0.85);
+      box-shadow: 0 18px 32px rgba(15, 23, 42, 0.24);
+    }
+
+    .sidebar-resize-handle {
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 56px;
+      border-radius: 999px;
+      background: rgba(107, 114, 128, 0.45);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+      cursor: ew-resize;
+      touch-action: none;
+      opacity: 0.5;
+      transition: opacity 0.2s ease, background-color 0.2s ease;
+      z-index: 6;
+    }
+
+    .sidebar-resize-handle::before {
+      content: "";
+      position: absolute;
+      inset: -10px;
+    }
+
+    #sidebar:hover .sidebar-resize-handle {
+      opacity: 0.8;
+      background: rgba(107, 114, 128, 0.6);
+    }
+
+    body.is-resizing .sidebar-resize-handle {
+      opacity: 1;
+      background: rgba(15, 118, 110, 0.8);
+    }
+
+    body.is-resizing {
+      cursor: ew-resize;
+      user-select: none;
+    }
+
+    .omni-launch svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .omni-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 80px 24px;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 40;
+    }
+
+    .omni-modal.is-visible {
+      display: flex;
+    }
+
+    .omni-card {
+      width: min(980px, 95vw);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .omni-input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fbf8f1;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .omni-title {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .omni-input-row input {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 16px;
+      background: transparent;
+      font-family: inherit;
+      color: var(--ink);
+    }
+
+    .omni-hint {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 4px 6px;
+      background: #fffaf1;
+    }
+
+    .omni-status {
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--muted);
+      border-bottom: 1px dashed var(--panel-border);
+      background: #fffdf8;
+    }
+
+    .omni-results {
+      max-height: 520px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .omni-result {
+      border: none;
+      text-align: left;
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--panel-border);
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .omni-result:last-child {
+      border-bottom: none;
+    }
+
+    .omni-result:hover,
+    .omni-result.is-selected {
+      background: var(--accent-soft);
+    }
+
+    .omni-result-type {
+      min-width: 80px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding-top: 2px;
+    }
+
+    .omni-result-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .omni-result-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .omni-result-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .omni-result-freq {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .omni-result-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .omni-result .route-pill-group {
+      gap: 6px;
+    }
+
+    .omni-result .route-pill {
+      font-size: 11px;
+      padding: 2px 8px;
+    }
+
+
+    body.omni-open {
+      overflow: hidden;
+    }
+
+    .loading-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 20;
+    }
+
+    .loading-modal.is-visible {
+      display: flex;
+    }
+
+    .loading-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 28px 34px;
+      border-radius: 22px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      width: 90vw;
+      max-width: 500px;
+    }
+
+    .loading-logo {
+      width: 256px;
+      height: 256px;
+      border-radius: 20px;
+      background: #ffffff;
+      border: 1px solid var(--panel-border);
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.15);
+    }
+
+    .loading-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .loading-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 15px;
+      color: var(--muted);
+    }
+
+    .loading-text strong {
+      color: var(--ink);
+      font-size: 18px;
+    }
+
+    .about-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 30;
+      padding: 24px;
+    }
+
+    .about-modal.is-visible {
+      display: flex;
+    }
+
+    .about-card {
+      width: min(760px, 92vw);
+      max-height: min(720px, 90vh);
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .about-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .about-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .about-body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .about-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #fbf8f1;
+      border: 1px solid var(--panel-border);
+    }
+
+    .about-section h3 {
+      margin: 0;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .about-list {
+      margin: 0;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .about-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .about-links a,
+    .about-section a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .about-links a:hover,
+    .about-section a:hover {
+      text-decoration: underline;
+    }
+
+    .about-meta {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .about-meta strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .shortcuts-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .shortcut-row {
+      display: grid;
+      grid-template-columns: minmax(110px, auto) 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(230, 222, 210, 0.9);
+    }
+
+    .shortcut-keys {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .kbd-key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      padding: 3px 8px;
+      border-radius: 8px;
+      border: 1px solid #d8ccba;
+      background: #fff;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: inset 0 -1px 0 rgba(15, 23, 42, 0.06);
+    }
+
+    .shortcut-desc {
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    .leaflet-container {
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+    }
+
+    .leaflet-tooltip.garage-label {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      pointer-events: none;
+    }
+
+    .leaflet-tooltip.garage-label .garage-code {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.35);
+      display: inline-block;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      margin: 0 4px 4px 0;
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    .leaflet-popup.hover-popup .leaflet-popup-content-wrapper {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+      color: var(--ink);
+      padding: 0;
+    }
+
+    .leaflet-popup.hover-popup .leaflet-popup-content {
+      margin: 8px 10px;
+      font-size: 12px;
+      width: max-content;
+      max-width: 272px;
+      box-sizing: border-box;
+    }
+
+    .leaflet-popup.hover-popup .leaflet-popup-tip {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+    }
+
+    .leaflet-popup.hover-popup hr {
+      border: none;
+      border-top: 1px solid var(--panel-border);
+      margin: 6px 0;
+    }
+
+    .hover-popup__content {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: max-content;
+      max-width: 272px;
+    }
+
+    .hover-popup__title {
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .hover-popup__meta {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .hover-popup__routes .route-pill-group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      width: max-content;
+      max-width: 252px;
+      margin: 0 auto;
+    }
+
+    .hover-popup__routes {
+      display: flex;
+      justify-content: center;
+    }
+
+    .hover-popup__routes .route-pill {
+      min-width: 44px;
+      padding: 3px 8px;
+      text-align: center;
+    }
+
+    .analysis-pill-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .analysis-pill-row {
+      padding: 6px 0;
+      border-bottom: 1px dashed var(--panel-border);
+      cursor: pointer;
+    }
+
+    .analysis-pill-row.is-active {
+      background: rgba(16, 185, 129, 0.12);
+      border-radius: 10px;
+      padding: 6px 8px;
+      margin: 0 -8px;
+    }
+
+    .analysis-pill-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      body {
+        overflow: auto;
+      }
+
+      #app {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        height: auto;
+        min-height: 100dvh;
+        padding: 12px;
+      }
+
+      #app.has-details,
+      #app.has-advanced-results {
+        grid-template-columns: 1fr;
+      }
+
+      #mapArea,
+      #sidebar,
+      #rightpanel {
+        width: 100%;
+        min-width: 0;
+      }
+
+      #mapArea {
+        order: 1;
+        min-height: 0;
+        overflow: visible;
+      }
+
+      #sidebar {
+        order: 2;
+        overflow: visible;
+        resize: none;
+        width: auto;
+        min-width: 0;
+        max-width: none;
+      }
+
+      .sidebar-scroll {
+        gap: 12px;
+        overflow: visible;
+        padding-right: 0;
+      }
+
+      .sidebar-resize-handle {
+        display: none;
+      }
+
+      #rightpanel {
+        order: 3;
+        display: none;
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        z-index: 35;
+        max-height: min(52vh, 460px);
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      #app.has-details #rightpanel,
+      #app.has-advanced-results #rightpanel {
+        display: block;
+        pointer-events: auto;
+        position: static;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        z-index: auto;
+        max-height: none;
+        overflow: visible;
+      }
+
+      #app.has-details #sidebar,
+      #app.has-advanced-results #sidebar {
+        display: none;
+      }
+
+      #rightpanel #advancedResultsPanel {
+        display: none !important;
+      }
+
+      #app.has-advanced-results #rightpanel #advancedResultsPanel {
+        display: flex !important;
+      }
+
+      #app.has-advanced-results #rightpanel .info-panel:not(#advancedResultsPanel) {
+        display: none;
+      }
+
+      #rightpanel .info-panel {
+        margin: 0;
+        max-height: min(52vh, 460px);
+        overflow-y: auto;
+        border-radius: 16px;
+      }
+
+      #app.has-details #rightpanel .info-panel,
+      #app.has-advanced-results #rightpanel .info-panel {
+        max-height: none;
+        overflow: visible;
+      }
+
+      #mapContainer {
+        border-radius: 16px;
+        min-height: 55vh;
+        height: 55vh;
+      }
+
+      #map {
+        min-height: 55vh;
+      }
+
+      .brand-title {
+        font-size: 20px;
+      }
+
+      .brand-actions {
+        flex-wrap: wrap;
+      }
+
+      .global-controls,
+      .module,
+      .info-panel {
+        border-radius: 14px;
+      }
+
+      .module summary {
+        padding: 12px 14px;
+      }
+
+      .module-body {
+        gap: 12px;
+        padding: 12px 14px 14px;
+      }
+
+      .module-section,
+      .field {
+        min-width: 0;
+      }
+
+      .button-row {
+        flex-wrap: wrap;
+      }
+
+      .button-row .ghost-button.compact {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 140px;
+      }
+
+      .field-row {
+        flex-direction: column;
+      }
+
+      .field-row input,
+      .field-row .select-field {
+        width: 100%;
+      }
+
+      .select-field,
+      input[type="search"],
+      input[type="number"],
+      input[type="text"] {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        font-size: 16px;
+      }
+
+      .tag-input input[type="search"] {
+        min-width: 0;
+      }
+
+      .select-field[multiple] {
+        min-height: 104px;
+      }
+
+      .info-title {
+        font-size: 18px;
+      }
+
+      .omni-launch {
+        top: 12px;
+        right: 12px;
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .omni-modal {
+        align-items: flex-start;
+        justify-content: center;
+        padding: max(10px, env(safe-area-inset-top)) 8px 12px;
+      }
+
+      .omni-card {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px;
+      }
+
+      .omni-input-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 10px 12px;
+      }
+
+      .omni-title {
+        grid-column: 1 / -1;
+      }
+
+      .omni-input-row input {
+        grid-column: 1 / 2;
+        width: 100%;
+        min-width: 0;
+      }
+
+      .omni-result-type {
+        min-width: 64px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      #app {
+        gap: 10px;
+        padding: 8px;
+      }
+
+      #mapContainer {
+        min-height: 50vh;
+        height: 50vh;
+        border-radius: 14px;
+      }
+
+      #map {
+        min-height: 50vh;
+      }
+
+      .button-row .ghost-button.compact {
+        flex: 1 1 100%;
+      }
+
+      .omni-title,
+      .omni-hint {
+        display: none;
+      }
+
+      .module-title {
+        font-size: 14px;
+      }
+
+      .module-note {
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <aside id="sidebar">
+      <div class="sidebar-scroll">
+        <div class="brand">
+          <div class="brand-mark">
+            <picture>
+              <source media="(max-width: 768px)" srcset="assets/routemapster.png" type="image/png" />
+              <img
+                src="assets/routemapster.svg"
+                alt="RouteMapster logo"
+                onerror="if (this.dataset.fallbackApplied === '1') return; this.dataset.fallbackApplied='1'; this.src='assets/routemapster.png';"
+              />
+            </picture>
+          </div>
+          <div>
+            <div class="brand-title">RouteMapster</div>
+            <div class="brand-subtitle">London Bus Explorer</div>
+            <div class="brand-actions">
+              <button id="openAbout" class="ghost-button tiny" type="button">About</button>
+              <a class="ghost-button tiny" href="https://github.com/OmGaler/RouteMapster" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="selectedInfo" class="status-card">Ready</div>
+
+        <div class="global-controls">
+          <div class="section-title">Global controls</div>
+          <button id="clearAllLayers" class="ghost-button clear-button" type="button">Clear all layers</button>
+          <button id="clearAllRoutes" class="ghost-button clear-button clear-button-soft" type="button">Clear all routes</button>
+          <label class="toggle">
+            <span>Colour routes by type</span>
+            <input type="checkbox" id="colourRoutesByType" checked />
+          </label>
+          <label class="toggle">
+            <span>Show endpoint markers</span>
+            <input type="checkbox" id="showEndpointMarkers" />
+          </label>
+          <div class="module-note">When off, all route types render in red.</div>
+        </div>
+
+        <div id="controls">
+          <details class="module" data-module="routes" open>
+          <summary>
+            <span class="module-title">Bus routes</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-section" id="networkFilters">
+              <div class="section-title">Filter routes</div>
+              <div class="field">
+                <label for="routeFilterEntry">Routes search</label>
+                <div class="tag-input" id="routeFilterInput">
+                  <div class="tag-list" id="routeFilterTags"></div>
+                  <input id="routeFilterEntry" type="search" placeholder="Type a route and hit space or enter" autocomplete="off" />
+                </div>
+                <div id="routeFilterStatus" class="module-note"></div>
+                <label class="toggle">
+                  <span>Exact match only</span>
+                  <input type="checkbox" id="showExactRouteMatch" />
+                </label>
+                <button id="clearRouteFilter" class="ghost-button" type="button">Clear filter</button>
+              </div>
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Filter routes by type</div>
+              <label class="toggle">
+                <span>Show all routes</span>
+                <input type="checkbox" id="showAllRoutes" checked />
+              </label>
+              <label class="toggle" data-route-type="regular">
+                <span><span class="swatch regular"></span>Regular routes</span>
+                <input type="checkbox" id="showNetworkRegularRoutes" checked />
+              </label>
+              <label class="toggle" data-route-type="prefix">
+                <span><span class="swatch prefix"></span>Prefix routes</span>
+                <input type="checkbox" id="showNetworkPrefixRoutes" checked />
+              </label>
+              <label class="toggle" data-route-type="twentyfour">
+                <span><span class="swatch twentyfour"></span>24 hour routes</span>
+                <input type="checkbox" id="showNetwork24hrRoutes" checked />
+              </label>
+              <label class="toggle" data-route-type="night">
+                <span><span class="swatch night"></span>Night routes</span>
+                <input type="checkbox" id="showNetworkNightRoutes" checked />
+              </label>
+              <label class="toggle" data-route-type="school">
+                <span><span class="swatch school"></span>School routes</span>
+                <input type="checkbox" id="showNetworkSchoolRoutes" checked />
+              </label>
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Vehicle type</div>
+              <label class="toggle">
+                <span>Display all</span>
+                <input type="radio" id="showAllDeckers" name="deckFilter" checked />
+              </label>
+              <label class="toggle">
+                <span>Single deck only</span>
+                <input type="radio" id="showSingleDecker" name="deckFilter" />
+              </label>
+              <label class="toggle">
+                <span>Double deck only</span>
+                <input type="radio" id="showDoubleDecker" name="deckFilter" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="module" data-module="stops">
+          <summary>
+            <span class="module-title">Bus stops</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-section">
+              <div class="section-title">Visibility</div>
+              <label class="toggle">
+                <span>Show bus stops</span>
+                <input type="checkbox" id="showBusStops" />
+              </label>
+              <div class="module-note">Hover or click a bus stop to see routes.</div>
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Stop filters</div>
+              <div class="field">
+                <label for="busStopDistrictEntry">Filter by postcode district</label>
+                <div class="tag-input" id="busStopDistrictInput">
+                  <div class="tag-list" id="busStopDistrictTags"></div>
+                  <input id="busStopDistrictEntry" type="search" placeholder="e.g. N1, SW1" autocomplete="off" />
+                </div>
+              </div>
+              <div class="field">
+                <label for="busStopBoroughEntry">Filter by borough</label>
+                <div class="tag-input" id="busStopBoroughInput">
+                  <div class="tag-list" id="busStopBoroughTags"></div>
+                  <input id="busStopBoroughEntry" type="search" placeholder="e.g. Camden" autocomplete="off" list="busStopBoroughOptions" />
+                </div>
+                <datalist id="busStopBoroughOptions"></datalist>
+                <div class="module-note">Use commas to add multiple boroughs or districts.</div>
+              </div>
+              <div class="field">
+                <label for="busStopRouteCount">Filter by route count</label>
+                <input id="busStopRouteCount" class="select-field" type="number" min="1" step="1" placeholder="Any" />
+              </div>
+              <div class="button-row">
+                <button id="applyBusStopFilter" class="ghost-button compact" type="button">Apply filter</button>
+                <button id="clearBusStopFilter" class="ghost-button compact" type="button">Clear filter</button>
+                <button id="exportBusStopFilterCsv" class="ghost-button compact" type="button">Export CSV</button>
+              </div>
+              <div id="busStopFilterStatus" class="module-note">Filter inactive.</div>
+              <div id="busStopVisibilityNote" class="module-note"></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="module" data-module="stations">
+          <summary>
+            <span class="module-title">Bus stations</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-section">
+              <div class="section-title">Stations</div>
+              <label class="toggle">
+                <span>Show bus stations</span>
+                <input type="checkbox" id="showBusStations" />
+              </label>
+              <label class="toggle">
+                <span>Scale station markers by route count</span>
+                <input type="checkbox" id="scaleBusStationMarkers" />
+              </label>
+              <div class="module-note">Stations are clustered from relevant stops. Click one to see its routes.</div>
+            </div>
+
+            <div class="module-section">
+              <!-- <div class="section-title">Find a station</div> -->
+              <div class="field">
+                <label for="busStationSelect">Select bus station</label>
+                <select id="busStationSelect" class="select-field">
+                  <option value="">Choose a bus station</option>
+                </select>
+              </div>
+            <!-- </div> -->
+          </div>
+        </details>
+
+        <details class="module" data-module="garages">
+          <summary>
+            <span class="module-title">Garages</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-section">
+              <div class="section-title">Garage visibility</div>
+              <label class="toggle">
+                <span>Show garages</span>
+                <input type="checkbox" id="showGarages" />
+              </label>
+              <label class="toggle">
+                <span>Scale markers by network %</span>
+                <input type="checkbox" id="scaleGarageMarkers" checked />
+              </label>
+              <label class="toggle">
+                <span>Show garage codes</span>
+                <input type="checkbox" id="showGarageLabels" checked />
+              </label>
+            </div>
+
+            <div class="module-section">
+              <!-- <div class="section-title">Find a garage</div> -->
+              <div class="field">
+                <label for="garageSelect">Select garage</label>
+                <select id="garageSelect" class="select-field">
+                  <option value="">Choose a garage</option>
+                </select>
+              <!-- </div> -->
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Routes from selected garage</div>
+              <label class="toggle">
+                <span><span class="swatch regular"></span>Regular routes</span>
+                <input type="checkbox" id="showRegularRoutes" checked />
+              </label>
+              <label class="toggle">
+                <span><span class="swatch night"></span>Night routes</span>
+                <input type="checkbox" id="showNightRoutes" checked />
+              </label>
+              <label class="toggle">
+                <span><span class="swatch school"></span>School routes</span>
+                <input type="checkbox" id="showSchoolRoutes" checked />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="module" data-module="frequencies">
+          <summary>
+            <span class="module-title">Frequencies</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-note">Thickness reflects combined buses per hour along shared trunks.</div>
+
+            <div class="module-section">
+              <!-- <div class="section-title">Time band</div> -->
+              <div class="field">
+                <label for="frequencyBand">Select time band</label>
+                <select id="frequencyBand" class="select-field">
+                  <option value="peak_am">Peak AM</option>
+                  <option value="peak_pm">Peak PM</option>
+                  <option value="offpeak">Off-peak</option>
+                  <option value="weekend">Weekend</option>
+                  <option value="overnight">Overnight</option>
+                </select>
+              <!-- </div> -->
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Frequency overlay</div>
+              <label class="toggle">
+                <span>Show frequency trunks</span>
+                <input type="checkbox" id="showFrequencyOverlay" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="module" data-module="advanced-filters">
+          <summary>
+            <span class="module-title">Advanced route filters</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-note">Fine-grained filters for routes, allocations, and service patterns.</div>
+            <div class="submodule-tools">
+              <button id="advancedExpandAllSubsections" class="ghost-button compact" type="button">Expand all sections</button>
+              <button id="advancedCollapseAllSubsections" class="ghost-button compact" type="button">Collapse all sections</button>
+            </div>
+            <details class="submodule" open>
+              <summary><span class="section-title">Routes</span></summary>
+              <div class="field">
+                <label for="advancedRouteSearch">Route number search</label>
+                <input id="advancedRouteSearch" type="search" placeholder="e.g. 12, N205, SL7" autocomplete="off" />
+                <div class="module-note">Use spaces or commas to add multiple routes.</div>
+              </div>
+              <div class="field">
+                <label for="advancedRouteTypes">Route types</label>
+                <select id="advancedRouteTypes" class="select-field" multiple size="4"></select>
+                <button id="advancedRouteTypesSelectAll" class="ghost-button compact" type="button">Select all</button>
+              </div>
+              <div class="field">
+                <label for="advancedRoutePrefix">Route prefix</label>
+                <div class="field-row">
+                  <select id="advancedRoutePrefix" class="select-field"></select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="advancedRouteSeries">Route number series (00-99)</label>
+                <input id="advancedRouteSeries" type="number" min="0" max="99" step="1" placeholder="e.g. 40" />
+                <label class="toggle">
+                  <span>Include prefix routes</span>
+                  <input type="checkbox" id="advancedSeriesIncludePrefixes" />
+                </label>
+                <div class="module-note">Matches 40, 140, 240... plus night routes (N140). Prefix routes optional.</div>
+              </div>
+            </details>
+
+            <details class="submodule" open>
+              <summary><span class="section-title">Operators &amp; allocations</span></summary>
+              <div class="field">
+                <label for="advancedOperators">Operators</label>
+                <select id="advancedOperators" class="select-field" multiple size="5"></select>
+                <button id="advancedOperatorsSelectAll" class="ghost-button compact" type="button">Select all</button>
+              </div>
+              <div class="field">
+                <label for="advancedGarages">Garages</label>
+                <select id="advancedGarages" class="select-field" multiple size="5"></select>
+                <button id="advancedGaragesSelectAll" class="ghost-button compact" type="button">Select all</button>
+              </div>
+              <div class="field">
+                <label for="advancedVehicles">Vehicles</label>
+                <select id="advancedVehicles" class="select-field" multiple size="4"></select>
+                <button id="advancedVehiclesSelectAll" class="ghost-button compact" type="button">Select all</button>
+              </div>
+            </details>
+
+            <details class="submodule" open>
+              <summary><span class="section-title">Geography</span></summary>
+              <div class="module-note">Uses route geometry.</div>
+              <div class="field">
+                <label for="advancedBoroughs">Boroughs</label>
+                <select id="advancedBoroughs" class="select-field" multiple size="5"></select>
+                <button id="advancedBoroughsSelectAll" class="ghost-button compact" type="button">Select all</button>
+                <div id="advancedBoroughsNote" class="module-note"></div>
+              </div>
+              <div class="field">
+                <label for="advancedBoroughMode">Borough match mode</label>
+                <select id="advancedBoroughMode" class="select-field">
+                  <option value="enter">Routes that enter</option>
+                  <option value="within">Routes wholly within</option>
+                </select>
+                <div class="module-note">"Enter" matches any route with at least one stop in the selected boroughs.</div>
+              </div>
+              <div class="field">
+                <label for="advancedExtremeSelect">Spatial extremities</label>
+                <select id="advancedExtremeSelect" class="select-field">
+                  <option value="">None</option>
+                  <option value="north">Most northerly</option>
+                  <option value="south">Most southerly</option>
+                  <option value="east">Most easterly</option>
+                  <option value="west">Most westerly</option>
+                </select>
+                
+              </div>
+              <div id="advancedLengthWrap" class="field">
+                <label>Length (miles)</label>
+                <div class="field-row">
+                  <input id="advancedLengthMin" type="number" min="0" step="0.1" placeholder="Min" />
+                  <input id="advancedLengthMax" type="number" min="0" step="0.1" placeholder="Max" />
+                </div>
+                <div class="field">
+                  <label for="advancedLengthRankMode">Top routes by length</label>
+                  <div class="field-row">
+                    <select id="advancedLengthRankMode" class="select-field">
+                      <option value="">None</option>
+                      <option value="shortest">Shortest</option>
+                      <option value="longest">Longest</option>
+                    </select>
+                    <input id="advancedLengthRankCount" type="number" min="1" max="25" step="1" placeholder="Count (1-25)" />
+                  </div>
+                  <div class="module-note">Filters to the N shortest/longest routes combined with other filters.</div>
+                </div>
+              </div>
+            </details>
+
+            <details class="submodule" open>
+              <summary><span class="section-title">Frequencies</span></summary>
+              <div class="field">
+                <label for="advancedFrequencyBand">Band</label>
+                <select id="advancedFrequencyBand" class="select-field">
+                  <option value="peak_am">Peak AM</option>
+                  <option value="peak_pm">Peak PM</option>
+                  <option value="offpeak">Off-peak</option>
+                  <option value="weekend">Weekend</option>
+                  <option value="overnight">Overnight</option>
+                </select>
+                <div class="module-note">Pick one band at a time.</div>
+              </div>
+              <div class="field">
+                <label>Range (min / max)</label>
+                <div class="field-row">
+                  <input id="advancedFrequencyMin" type="number" min="0" step="0.1" placeholder="Min" />
+                  <input id="advancedFrequencyMax" type="number" min="0" step="0.1" placeholder="Max" />
+                </div>
+              </div>
+              <label class="toggle">
+                <span>Has overnight service</span>
+                <input type="checkbox" id="advancedHasOvernight" />
+              </label>
+            </details>
+
+            <div class="module-section">
+              <button id="advancedApplyFilters" class="ghost-button" type="button">Apply filters</button>
+              <button id="advancedClearFilters" class="ghost-button" type="button">Clear filters</button>
+              <div class="module-note">Filters only update when you apply.</div>
+            </div>
+
+          </div>
+        </details>
+
+        <details class="module" data-module="advanced-analyses">
+          <summary>
+            <span class="module-title">Advanced route insights</span>
+          </summary>
+          <div class="module-body">
+            <div class="module-note">Summaries of route aspects and details.</div>
+            <div class="module-section">
+              <div class="section-title">Analyse</div>
+              <div class="field">
+                <label for="analysisScope"></label>
+                <select id="analysisScope" class="select-field">
+                  <option value="filtered">Current filtered subset</option>
+                  <option value="all">All routes</option>
+                </select>
+              </div>
+              <div id="analysisScopeNote" class="module-note">Analysing filtered subset.</div>
+            </div>
+
+            <div class="module-section">
+              <div class="section-title">Insight tools</div>
+              <div class="analysis-toolbar">
+                <select id="analysisSelect" class="select-field"></select>
+                <button id="runAnalysis" class="ghost-button compact" type="button">Run analysis</button>
+                <button id="clearAnalysisHighlights" class="ghost-button compact" type="button">Clear highlights</button>
+              </div>
+              <div id="analysisOutput" class="analysis-output"></div>
+            </div>
+          </div>
+        </details>
+
+        <details class="module" data-module="stop-analyses">
+          <summary>
+            <span class="module-title">Bus stop insights</span>
+          </summary>
+          <div class="module-body">
+            <div id="stopAnalysesContainer"></div>
+          </div>
+        </details>
+
+        </div>
+      </div>
+      <div id="sidebarResizeHandle" class="sidebar-resize-handle" aria-hidden="true"></div>
+    </aside>
+
+    <main id="mapArea">
+      <div id="mapContainer">
+        <div id="map"></div>
+        <button id="openOmniSearch" class="omni-launch" type="button" aria-label="Open RouteMapster Explorer">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <line x1="16.65" y1="16.65" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line>
+          </svg>
+          <span>Search</span>
+        </button>
+      </div>
+    </main>
+
+    <aside id="rightpanel">
+      <div class="info-panel" id="advancedResultsPanel">
+        <div class="info-header">
+          <h2 class="info-title">Filtered routes</h2>
+          <button id="advancedCloseResults" class="ghost-button tiny info-close advanced-results-close" type="button" aria-label="Close filtered routes panel">x</button>
+        </div>
+        <p class="info-subtitle">Advanced filters results</p>
+        <div class="info-body">
+          <div id="advancedRouteCount" class="route-count">0 routes found</div>
+          <div class="button-row">
+            <button id="advancedShowAllOnMap" class="ghost-button compact" type="button">Show all on map</button>
+            <button id="advancedClearMap" class="ghost-button compact" type="button">Clear map highlights</button>
+          </div>
+          <div class="button-row">
+            <button id="advancedExportCsv" class="ghost-button compact" type="button">Export CSV</button>
+          </div>
+          <div id="advancedMapWarning" class="module-note"></div>
+          <div id="advancedRouteList" class="route-list"></div>
+        </div>
+      </div>
+      <div class="info-panel">
+        <div class="info-header">
+          <h2 id="infoTitle" class="info-title">Details</h2>
+          <button id="closeInfoPanel" class="ghost-button tiny info-close" type="button" aria-label="Close details">x</button>
+        </div>
+        <p id="infoSubtitle" class="info-subtitle">Click a bus stop, station, or garage to view details.</p>
+        <div id="infoBody" class="info-body">
+          <div class="info-section">
+            <div class="info-label">Status</div>
+            <div class="info-empty">No feature selected yet.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div id="omniSearchModal" class="omni-modal" aria-hidden="true">
+    <div class="omni-card" role="dialog" aria-modal="true" aria-labelledby="omniSearchTitle">
+      <div class="omni-input-row">
+        <span id="omniSearchTitle" class="omni-title">RouteMapster Explorer</span>
+        <input id="omniSearchInput" type="search" placeholder="Search routes, stops, stations, garages, operators" autocomplete="off" aria-describedby="omniSearchStatus" />
+        <span class="omni-hint">Ctrl+F</span>
+      </div>
+      <div id="omniSearchStatus" class="omni-status">Start typing to explore routes, stops, stations, garages, or operators.</div>
+      <div id="omniSearchResults" class="omni-results" role="listbox" aria-label="Search results"></div>
+    </div>
+  </div>
+
+  <div id="loadingModal" class="loading-modal" aria-hidden="true">
+    <div class="loading-card" role="status" aria-live="polite">
+      <div class="loading-logo">
+        <picture>
+          <source media="(max-width: 768px)" srcset="assets/routemapster.png" type="image/png" />
+          <img
+            src="assets/routemapster.svg"
+            alt="RouteMapster logo"
+            onerror="if (this.dataset.fallbackApplied === '1') return; this.dataset.fallbackApplied='1'; this.src='assets/routemapster.png';"
+          />
+        </picture>
+      </div>
+      <div class="loading-text">
+        <strong id="loadingModalTitle">Loading route geometry</strong>
+        <span id="loadingModalSubtitle">Please wait while layers render.</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="aboutModal" class="about-modal" aria-hidden="true">
+    <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <div class="about-header">
+        <h2 id="aboutTitle" class="about-title">About RouteMapster</h2>
+        <button id="closeAbout" class="ghost-button tiny" type="button">Close</button>
+      </div>
+      <div class="about-body">
+        <div class="about-section">
+          <h3>About</h3>
+          <div>RouteMapster is a unified London bus network explorer, built to explore coverage, operators, and service patterns quickly and intuitively.</div>
+        </div>
+
+        <div class="about-section">
+          <h3>Data sources</h3>
+          <ul class="about-list">
+            <li><a href="https://bus.data.tfl.gov.uk/" target="_blank" rel="noopener">TfL Bus Open Data - route geometries</a></li>
+            <li><a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">TfL Unified API - bus stops and timetable data</a></li>
+            <li><a href="http://www.londonbusroutes.net/garages.htm" target="_blank" rel="noopener">londonbusroutes.net - garage allocations</a></li>
+            <li><a href="https://postcodes.io" target="_blank" rel="noopener">postcodes.io - postcode data</a></li>
+            <li><a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap - map</a></li>
+          </ul>
+          <div>Powered by TfL Open Data</div>
+          <div>Contains OS data © Crown copyright and database rights 2016</div>
+          <div>Geomni UK Map data © and database rights 2019</div>
+        </div>
+
+        <div class="about-section">
+          <h3>Links</h3>
+          <div class="about-links">
+            <a href="https://github.com/OmGaler/RouteMapster" target="_blank" rel="noopener">GitHub</a>
+          </div>
+          <div>
+            <button id="openKeyboardShortcutsFromAbout" class="ghost-button tiny" type="button">Keyboard shortcuts (?)</button>
+          </div>
+        </div>
+
+        <div class="about-section">
+          <h3>Notes</h3>
+          <div>Not affiliated with TfL.</div>
+          <div>Data periodically refreshes but may be out-of-date or incorrect.</div>
+          <div>Use this as an exploration and reference tool, not as a live route planner or a guarantee of operational service.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="keyboardShortcutsModal" class="about-modal" aria-hidden="true">
+    <div class="about-card" role="dialog" aria-modal="true" aria-labelledby="keyboardShortcutsTitle">
+      <div class="about-header">
+        <h2 id="keyboardShortcutsTitle" class="about-title">Keyboard Shortcuts</h2>
+        <button id="closeKeyboardShortcuts" class="ghost-button tiny" type="button">Close</button>
+      </div>
+      <div class="about-body">
+        <div class="about-section">
+          <h3>Quick actions</h3>
+          <div class="shortcuts-list">
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">?</span></div><div class="shortcut-desc">Show keyboard shortcuts</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">Ctrl</span><span class="kbd-key">F</span></div><div class="shortcut-desc">Open Explorer</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">G</span></div><div class="shortcut-desc">Toggle garages</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">B</span></div><div class="shortcut-desc">Toggle bus stops</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">S</span></div><div class="shortcut-desc">Toggle bus stations</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">F</span></div><div class="shortcut-desc">Toggle frequency overlay</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">R</span></div><div class="shortcut-desc">Show routes / open Routes module</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">A</span></div><div class="shortcut-desc">Show all route types</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">N</span></div><div class="shortcut-desc">Show night routes only</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">P</span></div><div class="shortcut-desc">Show prefix routes only</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">0</span></div><div class="shortcut-desc">Show 24-hour routes only</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">H</span></div><div class="shortcut-desc">Show school routes only</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">X</span></div><div class="shortcut-desc">Open route filters</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">Y</span></div><div class="shortcut-desc">Open route insights</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">Z</span></div><div class="shortcut-desc">Open stop insights</div></div>
+            <div class="shortcut-row"><div class="shortcut-keys"><span class="kbd-key">C</span></div><div class="shortcut-desc">Clear layers and routes</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+  </script>
+
+  <script src="src/shared_utils.js"></script>
+  <script src="src/geo_utils.js"></script>
+  <script src="src/query_engine.js"></script>
+  <script src="src/analyses.js"></script>
+  <script src="src/advanced_filters.js"></script>
+  <script src="src/advanced_analyses.js"></script>
+  <script src="src/stop_analyses.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script src="src/app.js"></script>
+
+</body>
+</html>

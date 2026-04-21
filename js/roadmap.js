@@ -9,20 +9,9 @@
   // Each entry: { title, desc, stage, notes?, link? }
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
-    { title: 'Data enrichment pipeline fix',
-      notes: [
-        'Fix weekly data pipeline automation',
-        'Restore the route frequency datapoint',
-        'Show EV % per garage in its tooltip',
-        'Last-known-good fallback when scrapes fail',
-      ],
-      stage: 'building' },
-    { title: 'UI improvements',
-      desc:  'Small polish pass — starting with highlighting the operating garage for a selected route.',
-      stage: 'building' },
     { title: 'Route tender details',
       desc:  'Tender number, contract start / end, current bid winner and previous operator for each route.',
-      stage: 'planned' },
+      stage: 'building' },
     { title: 'TfL zone map overlay',
       desc:  'Optional overlay tinting the map by TfL fare zone (1–9) for quick geographic context.',
       stage: 'planned' },
