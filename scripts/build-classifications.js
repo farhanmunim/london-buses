@@ -205,6 +205,25 @@ if (Object.keys(routeDetails).length) {
   console.warn('  Note: route_details.json not found — operator/garage/PVR/deck/frequency will be omitted. Run fetch-route-details first.');
 }
 
+// Load the previously-committed classifications so we can preserve
+// scraper-derived fields (deck, vehicleType, propulsion, operator, garageName,
+// garageCode, pvr) when the upstream scrape of londonbusroutes.net or
+// bustimes.org has failed this run. Without this fallback a single failed
+// scrape wipes weeks of data out of the detail panel — which is exactly what
+// happened on 2026-04-20 and motivated this guard. The project's own spec
+// requires retaining the last-known-good dataset when a step produces empty
+// data.
+let lastGood = {};
+try {
+  const raw = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
+  lastGood = raw.routes ?? {};
+  if (Object.keys(lastGood).length) {
+    console.log(`Loaded last-known-good classifications for ${Object.keys(lastGood).length} routes (scraper-field fallback)`);
+  }
+} catch {
+  // First run, or file missing — nothing to preserve.
+}
+
 // Read all route GeoJSON files
 const routeFiles = fs.readdirSync(ROUTES_DIR)
   .filter(f => f.endsWith('.geojson') && f !== 'index.json')
@@ -287,19 +306,25 @@ for (const file of routeFiles) {
   const pvr          = details.pvr;
   const frequency    = deriveFrequencyBand(tflFrequencies[routeId], details);
 
-  // Manual overrides win over everything else (scraper + lookup)
+  // Manual overrides win over everything else (scraper + lookup). Scraper-
+  // derived fields fall back to last-known-good before we give up to null, so
+  // a flaky upstream scrape doesn't wipe vehicle/operator/pvr/etc. that we
+  // already knew about from a previous run.
   const override = routeOverrides[routeId] ?? {};
+  const lastRec  = lastGood[routeId] ?? {};
   classifications[routeId] = {
     type:        override.type        ?? type,
     isPrefix:    override.isPrefix    ?? isPrefix,
     lengthBand:  override.lengthBand  ?? lengthBand,
-    deck:        override.deck        ?? deck,
-    vehicleType: override.vehicleType ?? vehicleType,
-    propulsion:  override.propulsion  ?? propulsion,
-    operator:    override.operator    ?? operator,
-    garageName:  override.garageName  ?? garageName,
-    garageCode:  override.garageCode  ?? garageCode,
-    pvr:         override.pvr         ?? pvr,
+    deck:        override.deck        ?? deck        ?? lastRec.deck        ?? null,
+    vehicleType: override.vehicleType ?? vehicleType ?? lastRec.vehicleType ?? null,
+    propulsion:  override.propulsion  ?? propulsion  ?? lastRec.propulsion  ?? null,
+    operator:    override.operator    ?? operator    ?? lastRec.operator    ?? null,
+    garageName:  override.garageName  ?? garageName  ?? lastRec.garageName  ?? null,
+    garageCode:  override.garageCode  ?? garageCode  ?? lastRec.garageCode  ?? null,
+    pvr:         override.pvr         ?? pvr         ?? lastRec.pvr         ?? null,
+    // Frequency is TfL-primary — no last-good fallback needed (if TfL says the
+    // route has no published timetable that's new authoritative information).
     frequency:   override.frequency   ?? frequency,
   };
 }
