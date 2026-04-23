@@ -1,42 +1,84 @@
 /**
- * panels.js — Desktop panel collapse/expand coordination.
+ * panels.js — Sidebar tabs, right-panel tabs, and collapsible sections.
  *
- * The blueprint's AppShell.Panels module wires clicks on panel headers and
- * the right collapse tab. We layer two concerns on top:
- *   1. Call invalidateMapSize() once the CSS transition settles so Leaflet
- *      redraws correctly for the new canvas width.
- *   2. Observe each panel's .collapsed class so we can reflect state onto
- *      the reopen tab (.visible) and the header button (aria-expanded),
- *      AND wire the left reopen tab's click (blueprint only handles right).
+ * Three independent concerns live here because they're all "switch the
+ * visible region inside a panel" and share no data dependencies with the
+ * map / filter state. Each activates on import.
  */
 
 import { invalidateMapSize } from './map.js';
 
-const MAP_RESIZE_DELAY_MS = 310;
-
-// Resize the map whenever a panel toggles, once the transition completes
-for (const id of ['leftPanelHd', 'rightPanelHd', 'rightCollapseTab']) {
-  document.getElementById(id)?.addEventListener('click', () => {
-    setTimeout(invalidateMapSize, MAP_RESIZE_DELAY_MS);
+// ── Sidebar tab switcher (Filters / Garages) ─────────────────────────────────
+const sbTabs    = document.querySelectorAll('.sb-tab');
+const sbBodies  = {
+  filters: document.getElementById('sb-filters'),
+  garages: document.getElementById('sb-garages'),
+};
+function showSbTab(name) {
+  sbTabs.forEach(t => {
+    const on = t.dataset.stab === name;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
   });
-}
-
-function wirePanelTab(panelId, tabId, headerId) {
-  const panel  = document.getElementById(panelId);
-  const tab    = document.getElementById(tabId);
-  const header = document.getElementById(headerId);
-  if (!panel || !tab) return;
-  const apply = () => {
-    const collapsed = panel.classList.contains('collapsed');
-    tab.classList.toggle('visible', collapsed);
-    if (header) header.setAttribute('aria-expanded', String(!collapsed));
-  };
-  apply();
-  new MutationObserver(apply).observe(panel, { attributes: true, attributeFilter: ['class'] });
-  tab.addEventListener('click', () => {
-    panel.classList.remove('collapsed');
-    setTimeout(invalidateMapSize, MAP_RESIZE_DELAY_MS);
+  for (const [k, el] of Object.entries(sbBodies)) {
+    if (!el) continue;
+    const on = k === name;
+    el.hidden = !on;
+    el.style.display = on ? '' : 'none';
+  }
+  // The live-count strip swaps between "routes shown" and "garages shown"
+  // based on which tab is active — the number above the pills should always
+  // reflect the pills directly below it.
+  document.querySelectorAll('.sb-live-count').forEach(el => {
+    el.hidden = el.dataset.scope !== name;
   });
+  // filters.js scopes its Clear buttons to the active tab — let it re-sync.
+  document.dispatchEvent(new CustomEvent('app:sbtabchange', { detail: name }));
 }
-wirePanelTab('panelRight', 'rightCollapseTab', 'rightPanelHd');
-wirePanelTab('panelLeft',  'leftCollapseTab',  'leftPanelHd');
+sbTabs.forEach(t => t.addEventListener('click', () => showSbTab(t.dataset.stab)));
+
+// ── Right-panel tab switcher (Overview / Routes) ─────────────────────────────
+const rpTabs   = document.querySelectorAll('.rp-tab');
+const rpBodies = {
+  overview: document.getElementById('rp-overview'),
+  routes:   document.getElementById('rp-routes'),
+};
+export function showRpTab(name) {
+  rpTabs.forEach(t => {
+    const on = t.dataset.rp === name;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+  for (const [k, el] of Object.entries(rpBodies)) {
+    if (!el) continue;
+    const on = k === name;
+    el.hidden = !on;
+    el.style.display = on ? '' : 'none';
+  }
+  // Switching tabs always closes the operator drawer
+  document.getElementById('opDrawer')?.classList.remove('open');
+}
+rpTabs.forEach(t => t.addEventListener('click', () => showRpTab(t.dataset.rp)));
+
+// ── Collapsible sections (sidebar) ───────────────────────────────────────────
+// Clicking the header toggles a .shut class on the body, animating max-height.
+document.querySelectorAll('.sb-sec-hd').forEach(hd => {
+  hd.addEventListener('click', e => {
+    if (e.target.closest('.sb-sec-act')) return; // 'Select all' is its own button
+    const bd = hd.nextElementSibling;
+    const ch = hd.querySelector('.chev');
+    if (!bd) return;
+    if (!bd.classList.contains('shut')) {
+      bd.style.maxHeight = bd.scrollHeight + 'px';
+      requestAnimationFrame(() => { bd.classList.add('shut'); ch?.classList.remove('open'); });
+    } else {
+      bd.classList.remove('shut');
+      ch?.classList.add('open');
+      setTimeout(() => { bd.style.maxHeight = bd.scrollHeight + 'px'; }, 280);
+    }
+  });
+});
+
+// Give Leaflet a kick if anything else on the page resizes the map area.
+// (Kept here so future panel-resize features drop straight in.)
+export function nudgeMap() { setTimeout(invalidateMapSize, 310); }

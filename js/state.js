@@ -1,63 +1,76 @@
 /**
- * state.js — Shared application state and DOM refs
+ * state.js — Shared application state + DOM refs.
  *
- * Imported by every sub-module that needs to read or write state,
- * or interact with the sidebar DOM. Centralising both here avoids
- * threading them as function arguments across the whole app.
+ * Centralises the small set of mutable fields every module reads or writes,
+ * and caches DOM nodes used in more than one module. Modules import only the
+ * refs they actually use.
  */
 
-// ── Application state ─────────────────────────────────────────────────────────
-
 export const state = {
-  routeId:         null,
+  routeId:         null,   // currently focused single route (uppercase id) or null
   routeGeoJson:    null,
   stopsFeatures:   null,
   direction:       '1',
-  routeIndex:      [],
+  routeIndex:      [],     // all route ids
   destinations:    {},
   classifications: {},
-  selectedStop:    null, // { id, name } | null — active stop filter
+  selectedStop:    null,   // { id, name } | null — active bus-stop filter
+  selectedGarage:  null,   // { code, name, operator } | null — active garage-scope filter
 };
 
-/** Ordered set of route IDs currently shown in multi-route mode. */
-export const pillIds = new Set();
+// Topbar
+export const globalInput     = document.getElementById('globalInput');
+export const searchPills     = document.getElementById('searchPills');
+export const searchClear     = document.getElementById('searchClear');
+export const exportBtn       = document.getElementById('exportBtn');
+export const themeToggle     = document.getElementById('themeToggle');
+export const themeToggleMob  = document.getElementById('themeToggleMob');
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
+// Stop filter
+export const stopSearchInput = document.getElementById('stop-search-input');
+export const stopSearchClear = document.getElementById('stop-search-clear');
+export const stopAutocomplete = document.getElementById('stop-autocomplete-list');
+export const stopSelectedEl  = document.getElementById('stop-selected');
 
-// `sidebar`, `collapseBtn`, `expandBtn` existed in v1 for the old custom
-// sidebar layout. v2 uses the blueprint's collapsible panel primitives, so
-// the shell handles collapse/expand — these exports have been removed.
-export const searchInput       = document.getElementById('search-input');
-export const searchClear       = document.getElementById('search-clear');
-export const autocompleteList  = document.getElementById('autocomplete-list');
-export const searchPills       = document.getElementById('search-pills');
-export const stopSearchInput       = document.getElementById('stop-search-input');
-export const stopSearchClear       = document.getElementById('stop-search-clear');
-export const stopAutocompleteList  = document.getElementById('stop-autocomplete-list');
-export const stopSearchPills       = document.getElementById('stop-search-pills');
-export const defaultState      = document.getElementById('default-state');
-export const routeDetail       = document.getElementById('route-detail');
-export const filtersSection    = document.getElementById('filters-section');
-export const routeBadgeNum     = document.getElementById('route-badge-number');
-export const routeServiceBadge = document.getElementById('route-service-badge');
-export const routeStopCount    = document.getElementById('route-stop-count');
-export const dirToggleBtn      = document.getElementById('dir-toggle-btn');
-export const epPrimaryDot      = document.getElementById('ep-primary-dot');
-export const epPrimaryDir      = document.getElementById('ep-primary-dir');
-export const epPrimaryName     = document.getElementById('ep-primary-name');
-export const epSecondaryDot    = document.getElementById('ep-secondary-dot');
-export const epSecondaryDir    = document.getElementById('ep-secondary-dir');
-export const epSecondaryName   = document.getElementById('ep-secondary-name');
-export const stopsToggleBtn    = document.getElementById('stops-toggle-btn');
-export const clearRouteBtn     = document.getElementById('clear-route-btn');
-export const metaOperator      = document.getElementById('meta-operator');
-export const metaGarage        = document.getElementById('meta-garage');
-export const metaFrequency     = document.getElementById('meta-frequency');
-export const metaDeck          = document.getElementById('meta-deck');
-export const metaPropulsion    = document.getElementById('meta-propulsion');
-export const metaPvr           = document.getElementById('meta-pvr');
-export const metaVehicle       = document.getElementById('meta-vehicle');
-export const statusToast       = document.getElementById('status-toast');
-export const statusText        = document.getElementById('status-text');
-export const footerDate        = document.getElementById('footer-date');
-export const footerNextDate    = document.getElementById('footer-next-date');
+// Clear buttons — scoped separately so garage-marker selections aren't dumped
+// when the user just wants to reset the route filters.
+export const clearRouteFiltersBtn  = document.getElementById('clearRouteFilters');
+export const clearGarageFiltersBtn = document.getElementById('clearGarageFilters');
+export const resetAllBtn           = document.getElementById('resetAll');
+
+// Sidebar
+export const sbFilters       = document.getElementById('sb-filters');
+export const sbGarages       = document.getElementById('sb-garages');
+export const routeCountEl    = document.getElementById('routeCount');
+
+// Map controls
+export const toggleLinesBtn    = document.getElementById('toggleLines');
+export const toggleGaragesBtn  = document.getElementById('toggleGarages');
+export const toggleStopsBtn    = document.getElementById('toggleStops');
+
+// Right panel
+export const heroRoutes      = document.getElementById('hero-routes');
+export const opCardsEl       = document.getElementById('op-cards');
+export const routeSearchInput = document.getElementById('routeSearchInput');
+export const routePrompt     = document.getElementById('routePrompt');
+export const routeResults    = document.getElementById('routeResults');
+export const routeNoResult   = document.getElementById('routeNoResult');
+export const routeCardTpl    = document.getElementById('tpl-route-card');
+
+// Operator drawer
+export const opDrawer        = document.getElementById('opDrawer');
+export const drawerBack      = document.getElementById('drawerBack');
+export const drawerName      = document.getElementById('drawerName');
+export const drawerSub       = document.getElementById('drawerSub');
+export const drawerSwatch    = document.getElementById('drawerSwatch');
+// dRoutes/dPVR removed — the drawer now uses four generic [data-dkpi] slots
+// populated by stats.js per-mode (Operator vs Garage).
+export const dGarages        = document.getElementById('dGarages');
+export const dContracts      = document.getElementById('dContracts');
+
+// Footer
+export const footerDate      = document.getElementById('footer-date');
+export const footerNextDate  = document.getElementById('footer-next-date');
+
+// Mobile
+export const mobRoutesEl     = document.getElementById('mob-routes');

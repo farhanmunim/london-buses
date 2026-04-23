@@ -1,198 +1,132 @@
 /**
- * stop-search.js — Bus-stop filter input, autocomplete, and selection pill.
+ * stop-search.js — Bus-stop filter in the sidebar.
  *
- * When the user selects a stop the `state.selectedStop` is set and the event
- * `app:stopfilterchange` is dispatched. filters.js listens for that event and
- * re-runs the full filter pipeline (so the stop filter composes with operator,
- * route-type, frequency, etc.).
+ * On input, fetches the stops registry lazily (stops.json), filters by name
+ * substring (+ optional indicator), and shows up to 8 suggestions. Picking
+ * one sets `state.selectedStop` and re-runs the filter pipeline so only
+ * routes serving that stop remain on the map.
  *
- * Stops data is lazy-loaded from data/stops.json on first input focus to keep
- * the initial page load light (the file is ~6 MB uncompressed, ~1.3 MB gzipped).
+ * Registry lookup is cached in api.js so repeated searches are instant.
  */
 
 import { fetchStopsRegistry } from './api.js';
-import {
-  state,
-  stopSearchInput, stopSearchClear,
-  stopAutocompleteList, stopSearchPills,
-} from './state.js';
+import { state, stopSearchInput, stopSearchClear, stopAutocomplete, stopSelectedEl } from './state.js';
+import { applyFilters } from './filters.js';
 
-// Sorted array of { id, name, indicator, routeCount, key } built once after
-// stops.json loads. `key` is the lowercased name for fast substring matching.
-let _stopList = null;
-let _loadPromise = null;
+let _registry = null;
+let _acIndex  = -1;
 
-async function loadStopsOnce() {
-  if (_stopList) return _stopList;
-  if (_loadPromise) return _loadPromise;
-  _loadPromise = (async () => {
-    const registry = await fetchStopsRegistry();
-    const list = [];
-    for (const [id, s] of Object.entries(registry)) {
-      const name = s.name ?? '';
-      list.push({
-        id,
-        name,
-        indicator:  s.indicator ?? null,
-        routeCount: (s.routes ?? []).length,
-        key:        name.toLowerCase(),
-      });
-    }
-    list.sort((a, b) => a.name.localeCompare(b.name));
-    _stopList = list;
-    return list;
-  })();
-  return _loadPromise;
+async function getRegistry() {
+  if (_registry) return _registry;
+  try { _registry = await fetchStopsRegistry(); }
+  catch (err) { console.warn('stops.json unavailable:', err.message); _registry = {}; }
+  return _registry;
 }
 
-function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[c])); }
+function clearAc() {
+  if (!stopAutocomplete) return;
+  stopAutocomplete.hidden = true;
+  stopAutocomplete.innerHTML = '';
+  _acIndex = -1;
+}
 
-function renderAutocomplete(query) {
-  if (!_stopList || !query) { closeAutocomplete(); return; }
-  const q = query.toLowerCase();
+async function renderAc(query) {
+  if (!stopAutocomplete) return;
+  const q = (query ?? '').trim().toLowerCase();
+  if (!q || q.length < 2) return clearAc();
 
-  const prefix = [];
-  const other  = [];
-  for (const s of _stopList) {
-    const idx = s.key.indexOf(q);
-    if (idx === 0) prefix.push(s);
-    else if (idx > 0) other.push(s);
-    if (prefix.length >= 8) break; // early exit for prefix matches — list is sorted
+  const reg = await getRegistry();
+  const matches = [];
+  for (const [id, s] of Object.entries(reg)) {
+    const name = (s.name ?? '').toLowerCase();
+    if (name.includes(q)) {
+      matches.push({ id, name: s.name, indicator: s.indicator, routes: s.routes?.length ?? 0 });
+      if (matches.length >= 20) break;
+    }
   }
-  const matches = [...prefix, ...other].slice(0, 8);
-  if (!matches.length) { closeAutocomplete(); return; }
+  if (!matches.length) return clearAc();
 
-  const re = new RegExp(`(${escRe(query)})`, 'ig');
-  stopAutocompleteList.innerHTML = matches.map(s => {
-    const hiName = escHtml(s.name).replace(re, '<mark>$1</mark>');
-    const meta = s.indicator ? `Stop ${escHtml(s.indicator)}` : `${s.routeCount} route${s.routeCount === 1 ? '' : 's'}`;
-    return `<li role="option" aria-selected="false" data-id="${escHtml(s.id)}" tabindex="-1">
-      <span class="ac-id">${hiName}</span>
-      <span class="ac-dest">${meta}</span>
-    </li>`;
-  }).join('');
+  matches.sort((a, b) => b.routes - a.routes);
+  stopAutocomplete.innerHTML = matches.slice(0, 8).map(m => `
+    <li role="option" aria-selected="false" data-id="${escapeHtml(m.id)}" data-name="${escapeHtml(m.name)}" tabindex="-1">
+      <span class="ac-id">${escapeHtml(m.name)}${m.indicator ? ` <span style="opacity:.55">(${escapeHtml(m.indicator)})</span>` : ''}</span>
+      <span class="ac-dest">${m.routes} route${m.routes === 1 ? '' : 's'}</span>
+    </li>`).join('');
 
-  stopAutocompleteList.querySelectorAll('li').forEach(li => {
+  stopAutocomplete.querySelectorAll('li').forEach(li => {
     li.addEventListener('mousedown', e => {
       e.preventDefault();
-      selectStop(li.dataset.id);
+      selectStop(li.dataset.id, li.dataset.name);
     });
   });
-
-  stopAutocompleteList.hidden = false;
-  stopSearchInput.setAttribute('aria-expanded', 'true');
+  stopAutocomplete.hidden = false;
 }
 
-function closeAutocomplete() {
-  stopAutocompleteList.hidden = true;
-  stopAutocompleteList.innerHTML = '';
-  stopSearchInput.setAttribute('aria-expanded', 'false');
-}
-
-function selectStop(id) {
-  const entry = _stopList?.find(s => s.id === id);
-  if (!entry) return;
-  state.selectedStop = { id: entry.id, name: entry.name };
-  stopSearchInput.value = '';
-  closeAutocomplete();
-  renderPill();
-  updateClearBtn();
-  document.dispatchEvent(new CustomEvent('app:stopfilterchange'));
+function selectStop(id, name) {
+  state.selectedStop = { id, name };
+  renderSelectedPill();
+  clearAc();
+  if (stopSearchInput) stopSearchInput.value = '';
+  if (stopSearchClear) stopSearchClear.hidden = false;
+  applyFilters();
 }
 
 function clearStop() {
-  if (!state.selectedStop) return;
   state.selectedStop = null;
-  renderPill();
-  updateClearBtn();
-  document.dispatchEvent(new CustomEvent('app:stopfilterchange'));
+  renderSelectedPill();
+  if (stopSearchInput) stopSearchInput.value = '';
+  if (stopSearchClear) stopSearchClear.hidden = true;
+  clearAc();
+  applyFilters();
 }
 
-function renderPill() {
-  stopSearchPills.innerHTML = '';
+function renderSelectedPill() {
+  if (!stopSelectedEl) return;
   const sel = state.selectedStop;
-  if (!sel) { stopSearchPills.hidden = true; return; }
-
-  const pill = document.createElement('span');
-  pill.className = 'search-pill';
-  pill.dataset.id = sel.id;
-  const label = document.createElement('span');
-  label.textContent = sel.name;
-  const btn = document.createElement('button');
-  btn.className = 'search-pill-remove';
-  btn.type = 'button';
-  btn.setAttribute('aria-label', `Remove stop filter ${sel.name}`);
-  btn.innerHTML = '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-  btn.addEventListener('click', e => { e.stopPropagation(); clearStop(); });
-  pill.append(label, btn);
-  stopSearchPills.appendChild(pill);
-  stopSearchPills.hidden = false;
-}
-
-function updateClearBtn() {
-  stopSearchClear.hidden = !stopSearchInput.value && !state.selectedStop;
+  if (!sel) { stopSelectedEl.hidden = true; stopSelectedEl.innerHTML = ''; return; }
+  stopSelectedEl.hidden = false;
+  stopSelectedEl.innerHTML = `
+    <span class="sb-selected-pill-label">${escapeHtml(sel.name)}</span>
+    <button type="button" class="sb-selected-pill-x" aria-label="Clear stop filter">
+      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>`;
+  stopSelectedEl.querySelector('.sb-selected-pill-x').addEventListener('click', clearStop);
 }
 
 function moveHighlight(delta) {
-  const items = [...stopAutocompleteList.querySelectorAll('li')];
+  if (!stopAutocomplete || stopAutocomplete.hidden) return;
+  const items = [...stopAutocomplete.querySelectorAll('li')];
   if (!items.length) return;
-  const cur  = items.findIndex(li => li.getAttribute('aria-selected') === 'true');
-  const next = Math.max(0, Math.min(items.length - 1, (cur === -1 && delta > 0 ? -1 : cur) + delta));
-  items.forEach(li => li.setAttribute('aria-selected', 'false'));
-  items[next].setAttribute('aria-selected', 'true');
+  _acIndex = Math.max(0, Math.min(items.length - 1, (_acIndex === -1 && delta > 0 ? -1 : _acIndex) + delta));
+  items.forEach((li, i) => li.setAttribute('aria-selected', String(i === _acIndex)));
+  items[_acIndex]?.scrollIntoView({ block: 'nearest' });
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 // ── Event wiring ─────────────────────────────────────────────────────────────
 
-stopSearchInput.addEventListener('focus', () => {
-  // Lazy-load stops on first focus so the 6 MB file doesn't land on every page view.
-  loadStopsOnce().catch(err => console.warn('Failed to load stops:', err));
+let _debounce;
+stopSearchInput?.addEventListener('input', () => {
+  clearTimeout(_debounce);
+  _debounce = setTimeout(() => renderAc(stopSearchInput.value), 120);
 });
-
-stopSearchInput.addEventListener('input', async () => {
-  updateClearBtn();
-  const q = stopSearchInput.value.trim();
-  if (!q) { closeAutocomplete(); return; }
-  await loadStopsOnce();
-  renderAutocomplete(q);
-});
-
-stopSearchInput.addEventListener('keydown', e => {
-  if (e.key === 'ArrowDown')   { e.preventDefault(); moveHighlight(1); }
+stopSearchInput?.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown')      { e.preventDefault(); moveHighlight(1); }
   else if (e.key === 'ArrowUp')   { e.preventDefault(); moveHighlight(-1); }
-  else if (e.key === 'Enter')     {
-    const sel = stopAutocompleteList.querySelector('[aria-selected="true"]')
-              ?? stopAutocompleteList.querySelector('li');
-    if (sel) { e.preventDefault(); selectStop(sel.dataset.id); }
-  }
-  else if (e.key === 'Escape')    { closeAutocomplete(); stopSearchInput.blur(); }
+  else if (e.key === 'Enter') {
+    const sel = stopAutocomplete?.querySelector('[aria-selected="true"]');
+    if (sel) { e.preventDefault(); selectStop(sel.dataset.id, sel.dataset.name); }
+  } else if (e.key === 'Escape') { clearAc(); stopSearchInput.blur(); }
 });
-
-stopSearchClear.addEventListener('click', () => {
-  if (stopSearchInput.value) { stopSearchInput.value = ''; closeAutocomplete(); }
-  clearStop();
-  updateClearBtn();
-  stopSearchInput.focus();
-});
-
-// Close autocomplete when clicking outside the stop-search section
+stopSearchClear?.addEventListener('click', clearStop);
 document.addEventListener('click', e => {
-  if (!e.target.closest('#stop-search-section')) closeAutocomplete();
+  if (!e.target.closest('#stop-search-input, #stop-autocomplete-list')) clearAc();
 });
-
-// Clear-all from the global clear button should wipe the stop filter too
-document.addEventListener('app:filterscleared', () => {
-  stopSearchInput.value = '';
-  clearStop();
-  updateClearBtn();
-});
-
-// Keep the pill + clear button in sync if another module mutates
-// state.selectedStop and dispatches the event.
-document.addEventListener('app:stopfilterchange', () => {
-  renderPill();
-  updateClearBtn();
+// Global Clear Filters button wipes state.selectedStop; reflect that in the UI.
+document.addEventListener('app:stopcleared', () => {
+  if (stopSearchClear) stopSearchClear.hidden = true;
+  renderSelectedPill();
 });

@@ -1,34 +1,52 @@
 /**
  * ui.js — Boot orchestrator.
  *
- * Reads the small set of static data files, hydrates shared state, renders
- * the initial map overview + operator stats, and computes the "last / next
- * updated" dates shown in the desktop footer. All interactive wiring lives
- * in focused modules imported below.
+ * Side-effect imports wire each module's own event listeners. Data loading
+ * happens here so the modules stay pure: `ui.js` fetches the static JSON
+ * files, hydrates `state`, and hands the derived shapes to the renderers.
+ *
+ * Order matters:
+ *   1. Map first so the tile layer starts painting while the rest loads.
+ *   2. Small metadata files (index + destinations + classifications) —
+ *      enough to render the sidebar route count + operator cards without
+ *      waiting on the 1.3 MB overview GeoJSON.
+ *   3. Overview GeoJSON (low priority).
+ *   4. Garages (independent — unblocks route markers on the map).
  */
 
-import './search.js';        // search input, autocomplete, pill system
-import './stop-search.js';   // bus-stop filter input + autocomplete
-import './route-detail.js';  // right-panel route view, direction toggle, toasts
-import './panels.js';        // desktop panel collapse/expand + map resize
-import './toggles.js';       // topbar Show/Hide Routes & Garages toggles
-import './filters.js';       // filter chips + Clear buttons
-import './paint-mode.js';    // Colour-routes-by segmented control
-import './mobile-nav.js';    // mobile bottom nav (≤640px)
-import './export.js';        // XLSX export (3-sheet workbook)
+import './panels.js';        // sidebar tabs, right-panel tabs, section collapse
+import './filters.js';       // pill-based filter engine
+import './paint-mode.js';    // colour-routes-by toggle (both copies synced)
+import './toggles.js';       // map-area route/garage visibility controls
+import './search.js';        // topbar + routes-tab search (multi-route pills)
+import './stop-search.js';   // bus-stop filter in sidebar
+import './garage-filter.js'; // garage-selection pill in sidebar (parity with stop filter)
+import './route-detail.js';  // route-card renderer (imported for side-effect-free exports)
+import './mobile-nav.js';    // pull-up sheet + bottom nav
+import './export.js';        // XLSX export
 
 import { initMap, renderOverview, countVisibleRoutes,
          renderGarages, setGaragesVisible } from './map.js';
 import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';
-import { state, footerDate, footerNextDate } from './state.js';
-import { updateFilterStat, renderOperatorStats } from './stats.js';
+import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js';
+import { renderOperatorStats, setGarageData } from './stats.js';
+import { applyFilters } from './filters.js';
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// ── Theme ────────────────────────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('app-theme', t); } catch (_) {}
+}
+function toggleTheme() {
+  setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+}
+themeToggle?.addEventListener('click', toggleTheme);
+themeToggleMob?.addEventListener('click', toggleTheme);
 
+// ── Map ──────────────────────────────────────────────────────────────────────
 initMap();
 
-// Small-file metadata first so the sidebar (search, stats, filter counts) can
-// populate before the 1.3 MB overview GeoJSON finishes downloading.
+// Metadata preload — sidebar + operator cards can render from these alone.
 Promise.all([
   fetchRouteIndex(),
   fetchAllDestinations(),
@@ -37,26 +55,38 @@ Promise.all([
   state.routeIndex      = ids;
   state.destinations    = dests;
   state.classifications = classifications;
-  renderOperatorStats(Object.values(classifications));
+
+  // Initial hero + operator cards from the full classifications set — before
+  // any filters apply, every route is "visible".
+  const all = Object.entries(classifications).map(([id, c]) => ({
+    routeId:    id,
+    routeType:  c.type,
+    isPrefix:   c.isPrefix,
+    deck:       c.deck,
+    frequency:  c.frequency,
+    operator:   c.operator,
+    propulsion: c.propulsion,
+    lengthBand: c.lengthBand,
+    pvr:        c.pvr ?? null,
+  }));
+  renderOperatorStats(all);
   updateFooterDates();
 }).catch(err => console.warn('Metadata preload failed:', err));
 
-// Low-priority so it yields to the above on slow connections; the map tiles
-// are already painting while this streams in.
+// Overview GeoJSON (the heavy one) — fetched last so it doesn't starve the
+// lighter metadata requests above.
 fetch('./data/routes-overview.geojson', { priority: 'low' })
   .then(r => r.json())
   .then(overview => {
     renderOverview(overview);
-    updateFilterStat(countVisibleRoutes());
+    applyFilters();                         // refreshes counts + stats from the map
   })
   .catch(err => console.warn('Overview load failed:', err));
 
-// Garages load independently so they don't block the initial map paint.
-// Route-count per garage is derived from classifications once they're loaded.
+// Garages — independent of the overview; route-count per garage is joined in
+// here so garage popups can show per-route chips + total PVR.
 Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garages, classifications]) => {
   if (!garages.length) return;
-  // Group routes by garage code so the garage popup can show per-route chips
-  // and total PVR. Entry shape: { routeId, pvr, operator, type }.
   const garageRoutes = {};
   for (const [routeId, c] of Object.entries(classifications)) {
     if (!c.garageCode) continue;
@@ -68,7 +98,6 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
       propulsion: c.propulsion ?? null,
     });
   }
-  // Sort each garage's routes alphanumerically (numeric first, then letter-prefix)
   const routeSortKey = id => [/^\d/.test(id) ? 0 : 1, id.padStart(6, '0')];
   for (const list of Object.values(garageRoutes)) {
     list.sort((a, b) => {
@@ -77,26 +106,24 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
     });
   }
   renderGarages(garages, garageRoutes);
-  // Default ON; only hide if the user explicitly opted out in a prior session
   setGaragesVisible(localStorage.getItem('garages-visible') !== '0');
-  updateFilterStat(countVisibleRoutes());
+
+  // Hand the garage records to stats.js so operator cards / drawer can show
+  // real garage counts.
+  setGarageData(garages, garageRoutes);
+  applyFilters(); // refresh op cards now that garage counts are known
 });
 
-// ── Footer: last / next data refresh dates ───────────────────────────────────
-
+// ── Footer: last / next refresh ──────────────────────────────────────────────
 function updateFooterDates() {
   fetch('./data/build-meta.json').then(r => r.json()).then(meta => {
     const ts = meta?.routeOverview?.updatedAt;
     if (!ts) return;
     const fmt = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-    // Next scheduled run is the upcoming Monday 05:00 UTC (GitHub Actions cron
-    // "0 5 * * 1"). Compute forward from "now" so a late-running last build
-    // can't push the date off a Monday.
     if (footerDate)     footerDate.textContent     = fmt(new Date(ts));
     if (footerNextDate) footerNextDate.textContent = fmt(nextMondayAt(5));
   }).catch(() => { /* meta file missing is non-fatal */ });
 }
-
 function nextMondayAt(utcHour) {
   const now = new Date();
   const d   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), utcHour, 0, 0));

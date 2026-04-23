@@ -1,54 +1,80 @@
 /**
- * toggles.js — Topbar show/hide toggles for Routes + Garages.
+ * toggles.js — Map-area show/hide controls for Route lines + Garages.
  *
- * Uses a tiny helper (wirePairedToggle) so the same logical toggle can drive
- * more than one button copy (e.g. topbar + in-panel). All copies stay in
- * sync on click, reflect the same aria-pressed / .active state, flip their
- * "Show/Hide <noun>" label via data-noun, and persist to localStorage.
- *
- * The routes toggle additionally listens for map-driven visibility changes —
- * when the user searches a route, the map auto-hides the faint context
- * overlay and dispatches `map:routesvisibilitychange` so the button reflects
- * the new state without persisting it.
+ * Each button is a `.mctl` in the top-right of the map. Clicking flips the
+ * map layer visibility, persists the choice, and updates aria-pressed / `.on`
+ * for the button's own visual state. A matching event from the map (when a
+ * route is focused and the overview auto-hides) keeps the button in sync
+ * without persisting that transient state.
  */
 
-import { setRoutesVisible, setGaragesVisible, isRouteActive } from './map.js';
+import { setRoutesVisible, setGaragesVisible, setStopsPreference, isRouteActive } from './map.js';
+import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn } from './state.js';
 
-function wirePairedToggle({ ids, storageKey, defaultOn, apply, syncEvent, persistWhen }) {
-  const buttons = ids.map(id => document.getElementById(id)).filter(Boolean);
-  if (!buttons.length) return;
+function wire(btn, { storageKey, apply, syncEvent, persistWhen }) {
+  if (!btn) return;
   const stored = localStorage.getItem(storageKey);
-  const on = stored === null ? defaultOn : stored === '1';
-  const updateUI = (state) => {
-    for (const b of buttons) {
-      b.setAttribute('aria-pressed', String(state));
-      b.classList.toggle('active', state);
-      const noun  = b.dataset.noun;
-      const label = b.querySelector('.toggle-label');
-      if (noun && label) label.textContent = `${state ? 'Hide' : 'Show'} ${noun}`;
+  const on = stored === null ? true : stored === '1';
+
+  const paint = (state) => {
+    btn.classList.toggle('on', state);
+    btn.setAttribute('aria-pressed', String(state));
+  };
+  const setAll = (state, { persist = true } = {}) => {
+    apply(state);
+    paint(state);
+    if (persist && (!persistWhen || persistWhen())) {
+      try { localStorage.setItem(storageKey, state ? '1' : '0'); } catch (_) {}
     }
   };
-  const setAll = (state) => {
-    apply(state);
-    updateUI(state);
-    if (!persistWhen || persistWhen()) localStorage.setItem(storageKey, state ? '1' : '0');
-  };
+
   setAll(on);
-  for (const b of buttons) b.addEventListener('click', () => setAll(!(b.getAttribute('aria-pressed') === 'true')));
-  if (syncEvent) document.addEventListener(syncEvent, (e) => updateUI(!!e.detail));
+  btn.addEventListener('click', () => setAll(btn.getAttribute('aria-pressed') !== 'true'));
+  if (syncEvent) document.addEventListener(syncEvent, e => paint(!!e.detail));
 }
 
-wirePairedToggle({
-  ids:         ['toggle-routes-btn',  'toggle-routes-btn-side'],
-  storageKey:  'routes-visible',
-  defaultOn:   true,
-  apply:       setRoutesVisible,
-  syncEvent:   'map:routesvisibilitychange',
+wire(toggleLinesBtn, {
+  storageKey: 'routes-visible',
+  apply:      setRoutesVisible,
+  syncEvent:  'map:routesvisibilitychange',
   persistWhen: () => !isRouteActive(),
 });
-wirePairedToggle({
-  ids:        ['toggle-garages-btn', 'toggle-garages-btn-side'],
+
+wire(toggleGaragesBtn, {
   storageKey: 'garages-visible',
-  defaultOn:  true,
   apply:      setGaragesVisible,
 });
+
+// Stops toggle: visible only while a route is focused. Every fresh route
+// focus force-resets the stops preference to ON — users expect to see stops
+// appear when they click a route. A persistent "off" setting from an old
+// session was defeating that expectation.
+if (toggleStopsBtn) {
+  toggleStopsBtn.hidden = true;
+  let stopsOn = true;
+
+  const paint = (on) => {
+    toggleStopsBtn.classList.toggle('on', on);
+    toggleStopsBtn.setAttribute('aria-pressed', String(on));
+  };
+  paint(stopsOn);
+  setStopsPreference(stopsOn);
+
+  toggleStopsBtn.addEventListener('click', () => {
+    stopsOn = !stopsOn;
+    paint(stopsOn);
+    setStopsPreference(stopsOn);
+  });
+
+  document.addEventListener('app:routefocuschange', e => {
+    toggleStopsBtn.hidden = !e.detail;
+    if (e.detail) {
+      // Reset to ON whenever a route is re-focused so the user always sees
+      // stops by default — the button is their escape hatch, not a sticky
+      // cross-session preference.
+      stopsOn = true;
+      paint(stopsOn);
+      setStopsPreference(stopsOn);
+    }
+  });
+}

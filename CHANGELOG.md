@@ -4,6 +4,39 @@ All notable changes to **London Buses** are listed here.
 
 ---
 
+## v2.5 – Network Overview & Full Design Overhaul
+
+_2026-04-24_
+
+- **Complete design overhaul**: Geist / Geist Mono typography, tokenised CSS (`--font-sans`, `--font-mono`, `--fs-*`, `--sp-*`, `--r-*`, `--t-fast`) across every component and page. Section labels, input pills, badges, and KPI tiles now share one visual language.
+- **Network Overview panel** — right-rail tabs for **Overview** (4 KPI tiles: Routes / Operators / Garages / PVR, clickable by-operator table, Fleet Mix 100%-stacked bar by propulsion) and **Routes** (per-route cards with Type · PVR · Freq · Deck · Propulsion · Length + garage / vehicle / contract block).
+- **Operator drawer** — tap any operator row to see Routes operated · Garages · PVR · % of network routes, a PVR-weighted Fleet Mix, and a clickable garage list.
+- **Garage drawer** — same vocabulary (Routes operated · PVR · % of network PVR · % of network routes) plus a primary "View all routes operated here" CTA that populates the topbar with that garage's routes and renders them on the map.
+- **Garage-selection pill** in the sidebar mirrors the bus-stop filter pattern; the X clears both the pill and the committed routes.
+- **Global Clear All** — one topbar button (red accent pill) resets every filter, marker selection, stop filter, route pill and search in a single click, returning the right panel to Overview. Tab-scoped Clear filters / Clear selection sit in the sidebar live strip and only appear for their own tab.
+- **Route-lines, Garages and Stops toggles** on the map canvas — Stops toggle only appears when a single route is focused (multi-route mode draws endpoint labels, not stops, so the button would be a no-op).
+- **Route search parity** — topbar and Routes-tab inputs share one pipeline: Space / Comma / Enter commits a pill, Backspace drops the last, ↑/↓/Enter works on the autocomplete. Overflow collapses to a "+N" summary so long selections never push the placeholder out of the field.
+- **XLSX export** now includes a **Fleet Mix** block in the Network overview sheet (PVR-weighted propulsion split).
+- **Modals ported** — About and Roadmap share a common frame, width, header, support card and badge language; Roadmap stages render as pill-status badges (shipped / building / planned / idea).
+- **Changelog page** — Vercel-style article list in the new shell, sticky topbar, fixed footer, flat-white light-mode surface, DM Sans → Geist fonts, inline theme toggle.
+- **Favicon + brand mark aligned** — the red-square-with-bus SVG is identical in the browser tab, desktop topbar, changelog topbar, and mobile topbar.
+- **Mobile responsiveness pass** — consolidated media queries at 760px using modern CSS (`clamp()`, `dvh`, `env(safe-area-inset-bottom)`, logical properties). The mobile menu was simplified to a compact topbar + drag-handle sheet + 4-tab bottom nav; the redundant peek-KPI strip, in-sheet tab strip, and central search FAB were removed. The Clear-all button, scoped Clear buttons, and live count strip all relocate into the mobile shell so mobile reaches every desktop action.
+- **Version pill** now links to the changelog on every page.
+- **Operator labels unified** — "Go-Ahead London" / "Stagecoach London" / etc. display as "Go-Ahead" / "Stagecoach" everywhere (operator table, drawer header, route-card pill).
+- **Operator colour palette unified** — one canonical `OPERATOR_COLORS` map now drives map route lines, garage pins, sidebar filter-pill dots, operator-card swatches, drawer swatches, overview-table swatches and the route-card operator pill. Previously the map used brand livery colours and the rest of the UI used a separate design palette; now all eight operators render the same hue in every surface.
+- **Drawer KPIs rethought** — subtitle under the drawer name is quieter (operator-only for garage view; empty for operator view); four shared slots show Routes operated · {Garages | PVR} · PVR · % of network routes. Operator and garage views share three of four KPIs so the vocabulary is consistent as you drill Network → Operator → Garage.
+- **Direction toggle** on the route card — single-route mode only. A compact 22 × 22 icon-button next to the destination name flips outbound ⇄ inbound; the icon spins 180° one-shot on click, the `origin → destination` text updates in place, and the map re-renders in the new direction's colour.
+- **Route-card KPIs** — grid is now Type · PVR · Stops · Freq · Deck · Propulsion (Length dropped). Stops reads the pre-baked per-route count from `route_stops.json` via a new O(1) `fetchRouteStopCount` helper in `api.js`.
+- **Frequency vocabulary aligned** — filter pills and route-card "Freq" KPI both show **Low / Regular / High** instead of raw headway bands. Underlying data values (`low`/`regular`/`high`) unchanged; the raw headway ranges move into pill `title` tooltips.
+- **Route card polish** — flatter KPI tiles (no inner borders), tighter padding, route number 22 → 18px, operator pill slimmer, tender rows separated by dividers rather than blocks. Calmer "data card" rhythm.
+- **Mobile "Clear all" in the topbar** — the global reset button is relocated into `.mob-top` on mobile, so every action reachable from the desktop topbar is reachable on a phone. Scoped Clear buttons follow the same pattern inside the Filters tab.
+- **Search pill overflow** — at >3 committed route pills, the topbar search collapses the overflow into a neutral `+N` counter (routes still accessible via individual `×` buttons on the visible pills) so the search input never gets pushed out of the field.
+- **Mobile map HUD** — stacked vertically on the right edge at ≤760px so Route lines / Garages / Stops don't fight each other horizontally, and the Leaflet zoom moves to the bottom-left with safe-area padding.
+- **Bus-stop search field design matches the topbar search** — pill radius, padding, focus ring and input shrink behaviour now identical across every search field.
+- **Fixed a descendant-combinator CSS bug** in the light-mode changelog override (`[data-theme="light"] html.changelog-page` → `html.changelog-page[data-theme="light"]`). Validated with puppeteer — every surface on the changelog now computes to `#ffffff` in light mode.
+
+---
+
 ## v1.0 – Core Map & Data Foundation
 
 _2026-04-13_

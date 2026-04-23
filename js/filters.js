@@ -1,132 +1,171 @@
 /**
- * filters.js — Filter chip handling + clear buttons.
+ * filters.js — Pill-based filter handling.
  *
- * Reads the active chips out of #filters-section, feeds them into the map
- * layer (route overview + garage markers), updates the stat counts, and
- * shows/hides the three Clear buttons (route-only, garage-only, global).
+ * Reads active `.pill.on` elements from #sb-filters and #sb-garages, feeds
+ * them into the map layer (route overview + garage markers), and updates the
+ * sidebar live-count strip + right-panel hero + operator cards. Also exposes
+ * a global Clear Filters button that resets every filter pill + the bus-stop
+ * filter in one click.
  *
- * Side effects on import:
- *   • Installs delegated listener on #filters-section for chip clicks
- *   • Listens for app:filterscleared and app:searchstatechange events
- *   • Wires the two per-section Clear buttons
+ * Route filter groups (data-filter on each pill):
+ *   routetype · operator · frequency · deck · propulsion · tender
+ *
+ * Garage filter is a separate group (garageoperator). Bus-stop filter is owned
+ * by stop-search.js and lives on state.selectedStop; we pick it up here on
+ * every pass so any change flows through a single pipeline.
  */
 
-import { filterOverview, filterGarages, getVisibleRouteProps } from './map.js';
-import { state, filtersSection } from './state.js';
-import { updateFilterStat, renderOperatorStats } from './stats.js';
+import { filterOverview, filterGarages, getVisibleRouteProps, countVisibleGarages } from './map.js';
 import { fetchStopsRegistry } from './api.js';
+import { state, routeCountEl, mobRoutesEl,
+         clearRouteFiltersBtn, clearGarageFiltersBtn, resetAllBtn } from './state.js';
+import { renderOperatorStats } from './stats.js';
+import { showRpTab } from './panels.js';
 
-// Cache of the stopId → Set<routeId> lookup, populated the first time a stop
-// filter is applied. The registry is also memoised inside api.js.
-let _stopsRegistry = null;
-async function stopRouteIdsFor(stopId) {
-  if (!_stopsRegistry) _stopsRegistry = await fetchStopsRegistry();
-  const routes = _stopsRegistry[stopId]?.routes;
-  if (!routes || !routes.length) return new Set();
-  return new Set(routes.map(r => String(r).toUpperCase()));
+const ROUTE_FILTER_KEYS   = ['routetype', 'operator', 'frequency', 'deck', 'propulsion', 'tender'];
+const GARAGE_FILTER_KEYS  = ['garageoperator'];
+const ALL_FILTER_KEYS     = [...ROUTE_FILTER_KEYS, ...GARAGE_FILTER_KEYS];
+
+function activeSet(key, root = document) {
+  const pills = [...root.querySelectorAll(`.pill.on[data-filter="${key}"]`)];
+  return pills.length ? new Set(pills.map(p => p.dataset.val)) : null;
 }
 
-// Route filter keys (everything in the main filters block except garageoperator)
-const ROUTE_FILTER_KEYS = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
-
-function activeSet(key) {
-  const chips = [...filtersSection.querySelectorAll(`.chip.active[data-filter="${key}"]`)];
-  return chips.length ? new Set(chips.map(c => c.dataset.val)) : null;
-}
-function buildFilters(stopRouteIds = null) {
-  return {
-    types:           activeSet('routetype'),
-    deck:            activeSet('deck'),
-    frequency:       activeSet('frequency'),
-    operator:        activeSet('operator'),
-    propulsion:      activeSet('propulsion'),
-    garageOperator:  activeSet('garageoperator'),
-    stopRouteIds,
-  };
-}
-function anyActive(key) {
-  return !!filtersSection.querySelector(`.chip.active[data-filter="${key}"]`);
-}
-function clearChips(keys) {
-  for (const key of keys) {
-    filtersSection.querySelectorAll(`.chip.active[data-filter="${key}"]`).forEach(c => {
-      c.classList.remove('active');
-      c.setAttribute('aria-pressed', 'false');
-    });
-  }
-  applyFilters();
+async function stopRouteIds(stopId) {
+  const reg = await fetchStopsRegistry().catch(() => ({}));
+  const list = reg?.[stopId]?.routes ?? [];
+  return new Set(list.map(r => String(r).toUpperCase()));
 }
 
 export async function applyFilters() {
-  const sel = state.selectedStop;
-  const stopRouteIds = sel ? await stopRouteIdsFor(sel.id) : null;
+  const stopIds = state.selectedStop ? await stopRouteIds(state.selectedStop.id) : null;
 
-  const filters = buildFilters(stopRouteIds);
+  const filters = {
+    types:        activeSet('routetype'),
+    deck:         activeSet('deck'),
+    frequency:    activeSet('frequency'),
+    operator:     activeSet('operator'),
+    propulsion:   activeSet('propulsion'),
+    stopRouteIds: stopIds,
+  };
   const { routeCount } = filterOverview(filters);
-  filterGarages(filters.garageOperator); // independent of route filters
-  updateFilterStat(routeCount);
+  filterGarages(activeSet('garageoperator'));
+
+  updateRouteCount(routeCount);
+  syncClearBtn();
 
   const visible = [...getVisibleRouteProps().entries()].map(([id, props]) => ({
     ...props,
     pvr: state.classifications[id]?.pvr ?? null,
   }));
   renderOperatorStats(visible);
-  syncClearBtn();
 }
 
-// Show/hide Clear buttons:
-//   • Section clears — visible only when their own chips have any active
-//   • Global Clear-all — visible if any chip active OR a route is searched
+function updateRouteCount(n) {
+  const s = n.toLocaleString();
+  if (routeCountEl) routeCountEl.textContent = s;
+  if (mobRoutesEl)  mobRoutesEl.textContent  = s;
+  const rpRoutes   = document.getElementById('rp-sub-routes');
+  const heroRoutes = document.getElementById('hero-routes');
+  if (rpRoutes)   rpRoutes.textContent   = s;
+  if (heroRoutes) heroRoutes.textContent = s;
+
+  // Keep the sidebar's garage-count count in sync too — the tab the user is on
+  // determines which strip is visible, but both numbers always reflect current
+  // state so a tab switch doesn't show stale data.
+  const gCount = countVisibleGarages();
+  const gEl    = document.getElementById('garageCount');
+  if (gEl) gEl.textContent = gCount.toLocaleString();
+  // Mobile peek strip (Routes · Operators · Garages) — mirror the desktop's
+  // Network Overview KPIs at the top of the pull-up sheet.
+  const mobGaragesEl = document.getElementById('mob-garages');
+  if (mobGaragesEl) mobGaragesEl.textContent = gCount.toLocaleString();
+
+  document.dispatchEvent(new CustomEvent('app:filterchange', { detail: { routes: n, garages: gCount } }));
+}
+
+function anyRouteActive() {
+  for (const k of ROUTE_FILTER_KEYS) {
+    if (document.querySelector(`.pill.on[data-filter="${k}"]`)) return true;
+  }
+  return !!state.selectedStop;
+}
+function anyGarageActive() {
+  return !!document.querySelector(`.pill.on[data-filter="garageoperator"]`);
+}
+
+// Show each Clear button only when its own scope has anything to clear AND
+// the sidebar tab it belongs to is currently active. Route-filter pills live
+// on the Filters tab, garage-marker pills live on the Garages tab, so the
+// buttons track the live-count strip above them — never crossing tabs. The
+// topbar "Clear all" is global: any active state across the app shows it.
+function activeSbTab() {
+  return document.querySelector('.sb-tab.on')?.dataset.stab ?? 'filters';
+}
 function syncClearBtn() {
-  const global = document.getElementById('filter-clear-btn');
-  const route  = document.getElementById('clear-route-filters-btn');
-  const garage = document.getElementById('clear-garage-filters-btn');
+  const tab    = activeSbTab();
+  const route  = anyRouteActive();
+  const garage = anyGarageActive();
+  const pills  = document.querySelectorAll('#searchPills .search-pill').length > 0;
+  const search = !!(document.getElementById('globalInput')?.value || document.getElementById('routeSearchInput')?.value);
 
-  const anyRoute  = ROUTE_FILTER_KEYS.some(anyActive);
-  const anyGarage = anyActive('garageoperator');
-  const anySearch = !!state.routeId || (document.getElementById('search-input')?.value.trim() ?? '') !== '';
-  const anyPill   = !!document.querySelector('#search-pills .search-pill');
-  const anyStop   = !!state.selectedStop;
-
-  if (route)  route.hidden  = !(anyRoute || anyStop);
-  if (garage) garage.hidden = !anyGarage;
-  const anyActiveAll = anyRoute || anyGarage || anySearch || anyPill || anyStop;
-  if (global) global.hidden = !anyActiveAll;
-  const bar = document.getElementById('filter-bar');
-  if (bar) bar.hidden = !anyActiveAll;
-
-  // Count label reads 'filtered routes' / 'filtered garages' only when a
-  // filter is actually narrowing the set. At rest it's a plain 'routes' /
-  // 'garages' so the word 'filtered' never claims something that isn't true.
-  setNoun('route',  anyRoute  ? 'filtered routes'  : 'routes');
-  setNoun('garage', anyGarage ? 'filtered garages' : 'garages');
+  if (clearRouteFiltersBtn)  clearRouteFiltersBtn.hidden  = !(route  && tab === 'filters');
+  if (clearGarageFiltersBtn) clearGarageFiltersBtn.hidden = !(garage && tab === 'garages');
+  if (resetAllBtn)           resetAllBtn.hidden           = !(route || garage || pills || search);
 }
-function setNoun(scope, text) {
-  const el = document.querySelector(`.section-summary-noun[data-stat-noun="${scope}"]`);
-  if (el) el.textContent = text;
+
+function clearPillsByKeys(keys) {
+  const sel = keys.map(k => `.pill.on[data-filter="${k}"]`).join(',');
+  document.querySelectorAll(sel).forEach(p => p.classList.remove('on'));
 }
 
 // ── Event wiring ─────────────────────────────────────────────────────────────
 
-filtersSection.addEventListener('click', e => {
-  const chip = e.target.closest('.chip[data-filter]');
-  if (!chip) return;
-  chip.classList.toggle('active');
-  chip.setAttribute('aria-pressed', String(chip.classList.contains('active')));
+document.addEventListener('click', e => {
+  const pill = e.target.closest('.pill[data-filter]');
+  if (!pill) return;
+  pill.classList.toggle('on');
+  pill.classList.remove('tap');
+  void pill.offsetWidth;
+  pill.classList.add('tap');
   applyFilters();
 });
 
-document.addEventListener('app:filterscleared',    applyFilters);
-document.addEventListener('app:stopfilterchange',  applyFilters);
-document.addEventListener('app:searchstatechange', syncClearBtn);
-
-document.getElementById('clear-route-filters-btn')?.addEventListener('click', () => {
-  // The route-filters section Clear also clears the stop filter, since the
-  // stop filter narrows the same route set from the same panel.
+clearRouteFiltersBtn?.addEventListener('click', () => {
+  clearPillsByKeys(ROUTE_FILTER_KEYS);
   if (state.selectedStop) {
     state.selectedStop = null;
-    document.dispatchEvent(new CustomEvent('app:stopfilterchange'));
+    document.dispatchEvent(new CustomEvent('app:stopcleared'));
   }
-  clearChips(ROUTE_FILTER_KEYS);
+  applyFilters();
 });
-document.getElementById('clear-garage-filters-btn')?.addEventListener('click', () => clearChips(['garageoperator']));
+clearGarageFiltersBtn?.addEventListener('click', () => {
+  clearPillsByKeys(GARAGE_FILTER_KEYS);
+  applyFilters();
+});
+
+// Global reset — single button that undoes every user interaction on the page:
+// route filters, garage-marker filters, stop filter, and the multi-route pill
+// selection. We lean on app:resetall so search.js can react without a direct
+// import loop.
+resetAllBtn?.addEventListener('click', () => {
+  clearPillsByKeys(ALL_FILTER_KEYS);
+  if (state.selectedStop) {
+    state.selectedStop = null;
+    document.dispatchEvent(new CustomEvent('app:stopcleared'));
+  }
+  document.dispatchEvent(new CustomEvent('app:resetall'));
+  applyFilters();
+  // A full reset should return the user to the default view — the Routes tab
+  // is a context (a route was searched), so it doesn't make sense to linger
+  // there once that context is gone.
+  showRpTab('overview');
+});
+
+// Allow other modules (stop-search) to trigger a re-run without importing us.
+document.addEventListener('app:filterschanged', applyFilters);
+// search.js emits this whenever the pill set or any input value changes — we
+// only need to refresh the Clear-all visibility, not re-filter the map.
+document.addEventListener('app:selectionchanged', syncClearBtn);
+// Tab switch in the sidebar: re-scope which Clear button is allowed to show.
+document.addEventListener('app:sbtabchange',      syncClearBtn);

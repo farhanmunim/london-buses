@@ -19,19 +19,26 @@ const TYPE_COLORS = {
   school:     '#15803d', // green-700  — forest green, distinct from parks
 };
 
-// Operator brand colours (shared with the garage markers). Duplicated near
-// the top so featureColor can reach them without forward-reference gymnastics.
+// Canonical operator palette — single source of truth used by route lines,
+// garage markers, overview table, operator cards, drawer swatches, route-card
+// operator pill and sidebar filter pill dots. Matches the colours declared
+// inline in the sidebar filter pills in index.html. If this ever needs to
+// become a shared module, export from here rather than duplicating.
 const OPERATOR_COLORS = {
-  'Arriva':            '#00A9CE',
-  'First':             '#E6007E',
-  'Go-Ahead':          '#CE1126',
-  'Metroline':         '#00205B',
-  'Stagecoach':        '#003876',
-  'Stagecoach London': '#003876',
-  'Transport UK':      '#005EB8',
-  'RATP':              '#00A859',
-  'RATP Dev':          '#00A859',
-  'Uno':               '#FDB913',
+  'Arriva':            '#2563eb',
+  'Arriva London':     '#2563eb',
+  'First':             '#7c3aed',
+  'First London':      '#7c3aed',
+  'Go-Ahead':          '#e8192c',
+  'Go-Ahead London':   '#e8192c',
+  'Metroline':         '#0891b2',
+  'Stagecoach':        '#1b3d72',
+  'Stagecoach London': '#1b3d72',
+  'Transport UK':      '#db2777',
+  'RATP':              '#16a34a',
+  'RATP Dev':          '#16a34a',
+  'Uno':               '#d97706',
+  'Uno Buses':         '#d97706',
 };
 const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
 
@@ -320,10 +327,11 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
         }).join('')}</div>`
       : '';
 
+    // NaPTAN id deliberately omitted from the bus-stop popup — the identifier
+    // is only useful to integrators and clutters the consumer view.
     marker.bindPopup(
       `<span class="map-popup__name">${displayName}</span>` +
-      `${towards ? `<span class="map-popup__id" style="color:var(--t2)">${towards}</span><br>` : ''}` +
-      `<span class="map-popup__id">${id}</span>` +
+      `${towards ? `<span class="map-popup__id" style="color:var(--t2)">${towards}</span>` : ''}` +
       routeChips,
       { closeButton: true, maxWidth: 260 }
     );
@@ -502,20 +510,20 @@ export function getPaintMode() { return _paintMode; }
 
 // ── Garages layer ─────────────────────────────────────────────────────────────
 
-// Operator → short display code + marker colour. Unknown operators fall back
-// to the first 2 chars of the name and a neutral slate colour.
-// Brand colours drawn from each operator's livery / corporate identity.
+// Operator → short display code + marker colour. Colours sourced from the
+// canonical OPERATOR_COLORS palette above so the garage pin reads the same
+// hue as the route line, the filter pill dot, and the operator card swatch.
 const OPERATOR_META = {
-  'Arriva':            { short: 'AR', color: '#00A9CE' }, // Arriva turquoise
-  'First':             { short: 'FR', color: '#E6007E' }, // First Group pink
-  'Go-Ahead':          { short: 'GO', color: '#CE1126' }, // Go-Ahead / London General red
-  'Metroline':         { short: 'ML', color: '#00205B' }, // Metroline dark blue
-  'Stagecoach':        { short: 'SC', color: '#003876' }, // Stagecoach navy
-  'Stagecoach London': { short: 'SC', color: '#003876' },
-  'Transport UK':      { short: 'TU', color: '#005EB8' }, // Transport UK blue
-  'RATP':              { short: 'RP', color: '#00A859' }, // RATP Dev green
-  'RATP Dev':          { short: 'RP', color: '#00A859' },
-  'Uno':               { short: 'UN', color: '#FDB913' }, // Uno Bus amber
+  'Arriva':            { short: 'AR', color: OPERATOR_COLORS['Arriva']            },
+  'First':             { short: 'FR', color: OPERATOR_COLORS['First']             },
+  'Go-Ahead':          { short: 'GO', color: OPERATOR_COLORS['Go-Ahead']          },
+  'Metroline':         { short: 'ML', color: OPERATOR_COLORS['Metroline']         },
+  'Stagecoach':        { short: 'SC', color: OPERATOR_COLORS['Stagecoach']        },
+  'Stagecoach London': { short: 'SC', color: OPERATOR_COLORS['Stagecoach London'] },
+  'Transport UK':      { short: 'TU', color: OPERATOR_COLORS['Transport UK']      },
+  'RATP':              { short: 'RP', color: OPERATOR_COLORS['RATP']              },
+  'RATP Dev':          { short: 'RP', color: OPERATOR_COLORS['RATP Dev']          },
+  'Uno':               { short: 'UN', color: OPERATOR_COLORS['Uno']               },
 };
 function operatorMeta(name) {
   if (!name) return { short: '??', color: '#475569' };
@@ -596,7 +604,8 @@ export function renderGarages(garages, garageRoutes = {}) {
     });
 
     const chipsHtml = routes.length
-      ? `<div class="map-id-popup__chips map-popup__route-chips">${routes.map(r => {
+      ? `<span class="map-popup__routes-hd">Routes operated</span>
+         <div class="map-id-popup__chips map-popup__route-chips">${routes.map(r => {
           const col = OPERATOR_COLORS[r.operator] ?? OPERATOR_FALLBACK_COLOR;
           return `<span class="map-id-popup__chip" data-route="${r.routeId}" style="--chip-col:${col}">${r.routeId}</span>`;
         }).join('')}</div>`

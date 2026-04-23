@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="changelog-page">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/app.css" />
     <script>
       (function () {
@@ -32,36 +32,36 @@
   <body>
     <a class="skip-link" href="#changelog-main">Skip to changelog</a>
 
-    <!-- TOPBAR -->
+    <!-- TOPBAR — matches the main app shell: brand on the left, theme toggle
+         and primary action on the right (Export ↔ Back to map). -->
     <header class="topbar" role="banner">
-      <a href="index.html" class="topbar-logo">
-        <div class="logo-mark">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-            <circle cx="8" cy="8" r="6" />
-            <line x1="8" y1="2" x2="8" y2="14" />
-            <line x1="2" y1="8" x2="14" y2="8" />
+      <a href="index.html" class="tb-brand" aria-label="London Buses home">
+        <div class="tb-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="18" height="18" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="7.5" y="7.5" width="17" height="15" rx="2.2"/>
+            <line x1="7.5" y1="14.5" x2="24.5" y2="14.5"/>
+            <line x1="11" y1="22.5" x2="11" y2="24"/>
+            <line x1="21" y1="22.5" x2="21" y2="24"/>
+            <circle cx="11" cy="19" r="1.2" fill="#fff"/>
+            <circle cx="21" cy="19" r="1.2" fill="#fff"/>
           </svg>
         </div>
-        <span>London Buses</span>
+        <span class="tb-name">London Buses</span>
       </a>
-      <a href="changelog.html" class="version-pill" title="View changelog">v2.4</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.5</a>
 
-      <button class="btn btn-ghost btn-icon btn-sm theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
-        <svg class="icon icon-sm theme-icon-light" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-        </svg>
-        <svg class="icon icon-sm theme-icon-dark" viewBox="0 0 24 24">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-        </svg>
-      </button>
+      <div style="flex:1"></div>
 
-      <div class="topbar-spacer"></div>
-
-      <a href="index.html" class="btn btn-outline btn-sm">
-        <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6" /></svg>
-        Back to map
-      </a>
+      <div class="tb-actions">
+        <button type="button" class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <svg class="i-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <svg class="i-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+        <a href="index.html" class="tb-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+          Back to map
+        </a>
+      </div>
     </header>
 
     <main class="changelog-main" id="changelog-main">
@@ -74,6 +74,38 @@
               Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 05:00 UTC.
             </p>
           </header>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.5 — Network Overview & full design overhaul
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.5</span> Apr 24, 2026</div>
+            <a href="#v2_5" class="cl-entry-title">A new Network Overview, unified operator & garage drawers, and a full design refresh</a>
+            <p class="cl-body-text">
+              Full <strong>design overhaul</strong> across every surface: Geist / Geist Mono typography, tokenised CSS for fonts, type scale, spacing, radii and shadows, harmonised section labels, and a matching badge language from filter pills → route-card contract badges → roadmap stages.
+            </p>
+            <p class="cl-body-text">
+              The right-hand panel is now a proper <strong>Network Overview</strong>. Four KPI cards (Routes, Operators, Garages, PVR) sit above a per-operator breakdown with Routes %, PVR % and EV % — tap any row and the drawer slides in with routes, PVR, a PVR-weighted <strong>Fleet Mix</strong> stacked bar and the operator's garages. Each garage opens its own drawer with the same shape plus a <em>View all routes operated here</em> CTA that loads those routes onto the map and stacks route cards in the Routes tab.
+            </p>
+            <p class="cl-body-text">
+              New in the map toolbar: <strong>Route lines</strong>, <strong>Garages</strong>, and a context-aware <strong>Stops</strong> toggle that only appears while a route is focused. Garage markers were redrawn to the original rounded-square chip design; stop popups dropped the raw NaPTAN id; route search now works identically in the topbar and the Routes tab (space / comma / enter commits a pill, Backspace drops the last one, ↑/↓/Enter on the autocomplete list).
+            </p>
+            <p class="cl-body-text">
+              Selection is <strong>unified</strong> across the app. A single topbar <em>Clear all</em> wipes every active filter, marker selection, stop filter and route pill in one click and returns to the Overview tab. A "Selected garage" pill in the sidebar mirrors the bus-stop pattern so route context is always visible. About and Roadmap modals now share a frame, width, header treatment and support-CTA, and the Changelog page runs in the same shell with a sticky topbar, fixed footer, and flat-white light-mode surface.
+            </p>
+            <p class="cl-body-text">
+              XLSX export picked up a Fleet Mix block in the Network overview sheet so the spreadsheet matches what you see on screen — PVR-weighted propulsion split for the currently visible routes.
+            </p>
+            <p class="cl-body-text">
+              Post-launch polish: a <strong>direction toggle</strong> on the route card (single-route mode, icon button next to the destination that spins 180° and flips origin → destination while the map re-renders in the new direction's colour); route-card KPIs switched from Length to <strong>Stops</strong> and now read <em>Type · PVR · Stops · Freq · Deck · Propulsion</em>; frequency labels are <strong>Low / Regular / High</strong> everywhere instead of raw headway bands; operator colours unified across the map, garage pins, filter pills, operator cards, drawer swatches, overview table and route-card pills; the operator drawer picked up a <em>Garages</em> KPI tile and both drawers share <em>% of network routes</em>; search-pill overflow collapses to <strong>+N</strong> so the input never gets crowded; and the mobile map HUD stacks vertically so Route lines / Garages / Stops don't fight for horizontal space on a phone.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
 
           <!-- ═══════════════════════════════════════════════════════════════
                v2.4 — Stops baked in & bus-stop filter
@@ -375,8 +407,20 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/app.js" defer></script>
     <script src="js/about.js" defer></script>
     <script src="js/roadmap.js" defer></script>
+    <!-- Inline theme toggle — keeps the changelog page self-contained while
+         persisting to the same `app-theme` key the main app reads. -->
+    <script>
+      (function(){
+        var btn=document.getElementById('themeToggle');
+        if(!btn)return;
+        btn.addEventListener('click',function(){
+          var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+          document.documentElement.setAttribute('data-theme',next);
+          try{localStorage.setItem('app-theme',next);}catch(_){}
+        });
+      })();
+    </script>
   </body>
 </html>

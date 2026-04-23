@@ -45,3 +45,9 @@ data/source/
 *.tmp
 *.bak
 *~
+
+# Local test harness — one-off puppeteer / CSS scratchpads used during dev.
+# Never ship; always regenerable.
+_test_*.mjs
+_tmp_*
+package-lock.json.bak

@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>London Buses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════ */
+:root {
+  --bg:        #0c0e13;
+  --surf:      rgba(14,16,22,0.86);
+  --surf-s:    #141820;
+  --surf2:     #1b1f2c;
+  --surf3:     #20253a;
+  --bd:        rgba(255,255,255,0.07);
+  --bd2:       rgba(255,255,255,0.13);
+  --tx:        #eef0f8;
+  --tx2:       #b8bcce;
+  --mu:        #6e7492;
+  --acc:       #e8344a;
+  --acc-bg:    rgba(232,52,74,0.13);
+  --acc-bd:    rgba(232,52,74,0.32);
+  --green:     #22c55e; --gbg: rgba(34,197,94,0.12);
+  --amber:     #f59e0b; --abg: rgba(245,158,11,0.12);
+  --blue:      #60a5fa; --bbg: rgba(96,165,250,0.12);
+  --pill-bg:   rgba(255,255,255,0.05);
+  --pill-bd:   rgba(255,255,255,0.09);
+  --pill-hv:   rgba(255,255,255,0.10);
+  --pill-a-bg: rgba(232,52,74,0.14);
+  --pill-a-bd: rgba(232,52,74,0.34);
+  --pill-a-tx: #f87185;
+  --map-bg: radial-gradient(ellipse 60% 55% at 35% 45%,rgba(59,130,246,.10) 0%,transparent 60%),
+            radial-gradient(ellipse 50% 55% at 72% 58%,rgba(232,52,74,.07) 0%,transparent 58%),
+            #0c0e13;
+  --map-op: 0.23;
+  --sc-th:  #1e2438;
+  --sh:     0 2px 16px rgba(0,0,0,.5);
+  --sh-lg:  0 8px 40px rgba(0,0,0,.6);
+  --bdr: rgba(245,158,11,.18); --bdt: #fbbf24;   /* 12-month → amber */
+  --bds: rgba(96,165,250,.15); --bdst:#93c5fd;   /* active  → blue   */
+  --bdg: rgba(34,197,94,.14);  --bdgt:#4ade80;   /* ok      → green  */
+  --bde: rgba(232,52,74,.16);  --bdet:#f87185;   /* expired → red    */
+  --footer-h: 32px;
+  --header-h: 50px;
+}
+[data-theme="light"] {
+  --bg:        #f2f0eb;
+  --surf:      rgba(255,255,255,0.92);
+  --surf-s:    #ffffff;
+  --surf2:     #f8f7f4;
+  --surf3:     #edeae3;
+  --bd:        rgba(0,0,0,0.07);
+  --bd2:       rgba(0,0,0,0.13);
+  --tx:        #111111;
+  --tx2:       #454240;
+  --mu:        #888380;
+  --acc:       #e0201a;
+  --acc-bg:    rgba(224,32,26,0.07);
+  --acc-bd:    rgba(224,32,26,0.26);
+  --green:     #16a34a; --gbg: rgba(22,163,74,0.09);
+  --amber:     #d97706; --abg: rgba(217,119,6,0.09);
+  --blue:      #2563eb; --bbg: rgba(37,99,235,0.08);
+  --pill-bg:   rgba(0,0,0,0.04);
+  --pill-bd:   rgba(0,0,0,0.09);
+  --pill-hv:   rgba(0,0,0,0.07);
+  --pill-a-bg: rgba(224,32,26,0.08);
+  --pill-a-bd: rgba(224,32,26,0.28);
+  --pill-a-tx: #bf1616;
+  --map-bg: radial-gradient(ellipse 70% 60% at 50% 50%,#ddd9cf 0%,transparent 68%),#e6e2d8;
+  --map-op: 0.52;
+  --sc-th:  #dbd7cf;
+  --sh:     0 2px 16px rgba(0,0,0,.09);
+  --sh-lg:  0 8px 40px rgba(0,0,0,.13);
+  --bdr: rgba(217,119,6,.12);  --bdt: #b45309;
+  --bds: rgba(37,99,235,.10);  --bdst:#1d4ed8;
+  --bdg: rgba(22,163,74,.10);  --bdgt:#15803d;
+  --bde: rgba(224,32,26,.10);  --bdet:#b91c1c;
+}
+
+/* ══════════════════════════════════════════════
+   RESET
+══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100dvh;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+input,button{font-family:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer}
+
+/* ══════════════════════════════════════════════
+   MAP LAYERS
+══════════════════════════════════════════════ */
+.map-bg{position:fixed;inset:0;z-index:0;background:var(--map-bg);transition:background .4s}
+.map-lines{position:fixed;inset:0;z-index:1;overflow:hidden;opacity:var(--map-op);transition:opacity .4s;pointer-events:none}
+.map-lines svg{width:100%;height:100%}
+
+/* ══════════════════════════════════════════════
+   SHELL
+══════════════════════════════════════════════ */
+.shell{
+  position:relative;z-index:10;
+  display:grid;
+  grid-template-rows:var(--header-h) 1fr var(--footer-h);
+  grid-template-columns:296px 1fr 308px;
+  height:100dvh;
+}
+
+/* ══════════════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════════════ */
+.topbar{
+  grid-column:1/-1;grid-row:1;
+  display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:var(--surf);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bd);box-shadow:var(--sh);z-index:40;
+  transition:background .3s,border-color .3s;
+}
+.tb-brand{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-right:4px}
+.tb-icon{width:28px;height:28px;background:var(--acc);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.tb-name{font-size:15px;font-weight:600;letter-spacing:-.3px}
+.tb-ver{font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);background:var(--surf3);padding:2px 7px;border-radius:20px}
+.tb-sep{width:1px;height:18px;background:var(--bd2);flex-shrink:0}
+
+/* 12-month tender alert */
+.tb-alert{
+  display:flex;align-items:center;gap:7px;
+  background:var(--bdr);border:1px solid rgba(245,158,11,.28);
+  border-radius:20px;padding:5px 13px;
+  font-size:11.5px;font-weight:600;color:var(--bdt);
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:background .15s;
+}
+.tb-alert:hover{filter:brightness(1.1)}
+.alert-pip{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* Global search */
+.tb-search{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surf2);border:1px solid var(--bd);
+  border-radius:20px;padding:6px 15px;
+  flex:1;max-width:320px;margin-left:auto;
+  transition:border-color .2s,box-shadow .2s;
+  cursor:text;
+}
+.tb-search:focus-within{border-color:var(--acc-bd);box-shadow:0 0 0 3px var(--acc-bg);background:var(--surf-s)}
+.tb-search svg{color:var(--mu);flex-shrink:0}
+.tb-search input{border:none;outline:none;background:none;font-size:13px;color:var(--tx);width:100%}
+.tb-search input::placeholder{color:var(--mu)}
+
+.tb-actions{display:flex;align-items:center;gap:6px}
+.tb-btn{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--tx2);padding:6px 12px;border-radius:8px;background:var(--surf2);border:1px solid var(--bd);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tb-btn:hover{background:var(--surf3);border-color:var(--bd2)}
+.tb-btn.pri{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 2px 10px rgba(232,52,74,.28)}
+.tb-btn.pri:hover{filter:brightness(1.08)}
+.theme-btn{width:32px;height:32px;border-radius:8px;background:var(--surf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mu);transition:all .15s}
+.theme-btn:hover{color:var(--tx);background:var(--surf3)}
+.i-sun{display:block}.i-moon{display:none}
+[data-theme="light"] .i-sun{display:none}
+[data-theme="light"] .i-moon{display:block}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+.sidebar{
+  grid-row:2;grid-column:1;
+  display:flex;flex-direction:column;
+  background:var(--surf);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-right:1px solid var(--bd);overflow:hidden;transition:background .3s,border-color .3s;
+}
+.sb-tabs{display:flex;gap:3px;padding:10px 14px 0;border-bottom:1px solid var(--bd);flex-shrink:0}
+.sb-tab{font-size:12px;font-weight:500;color:var(--mu);padding:6px 12px;border-radius:8px 8px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.sb-tab.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg)}
+
+/* Live count strip */
+.sb-live{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;border-bottom:1px solid var(--bd);
+  background:var(--surf2);flex-shrink:0;
+}
+.sb-live-n{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--tx)}
+.sb-live-l{font-size:11px;color:var(--mu)}
+.sb-live-dot{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--mu)}
+.live-pip{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0;animation:blink 2.2s ease infinite}
+
+.sb-body{flex:1;overflow-y:auto;padding:10px 14px 20px;scrollbar-width:thin;scrollbar-color:var(--sc-th) transparent}
+.sb-body::-webkit-scrollbar{width:3px}
+.sb-body::-webkit-scrollbar-thumb{background:var(--sc-th);border-radius:2px}
+
+/* Collapsible section */
+.sb-sec{border-bottom:1px solid var(--bd);padding:10px 0}
+.sb-sec:first-child{padding-top:4px}
+.sb-sec:last-child{border-bottom:none}
+.sb-sec-hd{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding-bottom:8px;user-select:none}
+.sb-sec-lbl{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu)}
+.sb-sec-r{display:flex;align-items:center;gap:8px}
+.sb-sec-act{font-size:10.5px;font-weight:600;color:var(--acc);text-transform:none;letter-spacing:0}
+.chev{color:var(--mu);transition:transform .22s;flex-shrink:0}
+.chev.open{transform:rotate(180deg)}
+.sb-sec-bd{overflow:hidden;transition:max-height .28s cubic-bezier(.22,1,.36,1),opacity .22s}
+.sb-sec-bd.shut{max-height:0!important;opacity:0;pointer-events:none}
+
+/* Colour seg */
+.colour-seg{display:flex;background:var(--surf2);border:1px solid var(--bd);border-radius:10px;padding:3px;gap:2px;margin-bottom:2px}
+.c-btn{flex:1;text-align:center;padding:6px 0;font-size:12px;font-weight:500;color:var(--mu);border-radius:8px;cursor:pointer;transition:all .18s}
+.c-btn.on{background:var(--surf3);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+
+/* Pills */
+.pill-grp{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;border:1px solid var(--pill-bd);background:var(--pill-bg);color:var(--mu);cursor:pointer;transition:background .15s,color .15s,border-color .15s,transform .1s;white-space:nowrap;user-select:none;display:flex;align-items:center;gap:5px}
+.pill:hover{background:var(--pill-hv);color:var(--tx);border-color:var(--bd2)}
+.pill.on{background:var(--pill-a-bg);border-color:var(--pill-a-bd);color:var(--pill-a-tx)}
+.pill.tap{animation:pulse .22s ease}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(.92)}100%{transform:scale(1)}}
+.op-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* Stop search */
+.sb-input{display:flex;align-items:center;gap:8px;background:var(--surf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;transition:border-color .2s}
+.sb-input:focus-within{border-color:var(--acc-bd)}
+.sb-input svg{color:var(--mu);flex-shrink:0}
+.sb-input input{border:none;outline:none;background:none;font-size:13px;color:var(--tx);width:100%}
+.sb-input input::placeholder{color:var(--mu)}
+
+/* ══════════════════════════════════════════════
+   MAP
+══════════════════════════════════════════════ */
+.map-area{grid-row:2;grid-column:2;position:relative;overflow:hidden}
+
+/* Colour-by floating toggle */
+.map-col-bar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:20}
+.map-col-toggle{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surf);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--bd2);border-radius:20px;
+  padding:5px 5px 5px 14px;box-shadow:var(--sh);
+}
+.map-col-label{font-size:11px;font-weight:600;color:var(--mu);white-space:nowrap;letter-spacing:.2px}
+.map-col-seg{display:flex;background:var(--surf2);border-radius:14px;padding:3px;gap:2px}
+.map-col-opt{
+  font-size:11.5px;font-weight:500;color:var(--mu);
+  padding:5px 13px;border-radius:12px;cursor:pointer;
+  transition:all .18s;white-space:nowrap;
+}
+.map-col-opt:hover{color:var(--tx)}
+.map-col-opt.on{background:var(--surf-s);color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.2)}
+
+/* Map controls top-right */
+.map-ctl{position:absolute;top:12px;right:12px;display:flex;gap:6px;z-index:20}
+.mctl{display:flex;align-items:center;gap:6px;background:var(--surf);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd2);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--tx2);box-shadow:var(--sh);cursor:pointer;transition:all .18s;white-space:nowrap}
+.mctl:hover{background:var(--surf2);color:var(--tx)}
+.mctl.on{background:var(--surf2);color:var(--tx)}
+.mctl.pri{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(232,52,74,.3)}
+.mctl.pri:hover{filter:brightness(1.08)}
+
+/* Zoom */
+.zoom-ctl{position:absolute;bottom:16px;right:12px;z-index:20;background:var(--surf);backdrop-filter:blur(14px);border:1px solid var(--bd2);border-radius:10px;overflow:hidden;box-shadow:var(--sh)}
+.z-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:var(--mu);transition:background .15s,color .15s;user-select:none}
+.z-btn:hover{background:var(--surf2);color:var(--tx)}
+.z-btn+.z-btn{border-top:1px solid var(--bd)}
+
+/* ══════════════════════════════════════════════
+   RIGHT PANEL — redesigned
+══════════════════════════════════════════════ */
+.rp{
+  grid-row:2;grid-column:3;
+  display:flex;flex-direction:column;
+  background:var(--surf);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-left:1px solid var(--bd);overflow:hidden;transition:background .3s,border-color .3s;
+  position:relative; /* drawer anchor */
+}
+
+/* Panel header */
+.rp-head{
+  padding:20px 20px 0;flex-shrink:0;
+}
+.rp-title{font-size:13px;font-weight:600;letter-spacing:-.2px;color:var(--tx)}
+.rp-sub{font-size:11px;color:var(--mu);margin-top:2px}
+
+/* Tab strip */
+.rp-tabs{display:flex;gap:2px;padding:14px 20px 0;border-bottom:1px solid var(--bd);flex-shrink:0}
+.rp-tab{font-size:11.5px;font-weight:500;color:var(--mu);padding:5px 10px;border-radius:7px 7px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+.rp-tab.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg)}
+
+/* Scroll body */
+.rp-body{flex:1;overflow-y:auto;padding:20px 20px 16px;scrollbar-width:thin;scrollbar-color:var(--sc-th) transparent}
+.rp-body::-webkit-scrollbar{width:3px}
+.rp-body::-webkit-scrollbar-thumb{background:var(--sc-th);border-radius:2px}
+
+/* ── HERO STATS ── */
+.hero-stats{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.hero-stat{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:14px;
+  padding:14px 16px;
+}
+.hero-stat-left{}
+.hero-stat-n{
+  font-family:'Space Mono',monospace;
+  font-size:26px;font-weight:700;color:var(--tx);line-height:1;letter-spacing:-.5px;
+}
+.hero-stat-l{font-size:11px;color:var(--mu);margin-top:4px}
+.hero-stat-d{
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;
+  margin-top:6px;
+}
+.d-up{background:var(--gbg);color:var(--green)}
+.d-dn{background:var(--bde);color:var(--bdet)}
+.d-n {background:var(--abg);color:var(--amber)}
+.hero-stat-right{text-align:right;flex-shrink:0}
+.hero-mini-bars{display:flex;flex-direction:column;gap:5px;width:80px}
+.hmb-row{display:flex;align-items:center;gap:5px}
+.hmb-track{flex:1;height:3px;background:var(--surf3);border-radius:2px;overflow:hidden}
+.hmb-fill{height:100%;border-radius:2px}
+.hmb-pct{font-family:'Space Mono',monospace;font-size:9px;color:var(--mu);width:22px;text-align:right}
+
+/* ── CALLOUT ── */
+.callout{
+  display:flex;align-items:flex-start;gap:11px;
+  background:var(--bdr);border:1px solid rgba(245,158,11,.22);
+  border-radius:14px;padding:14px 16px;margin-bottom:24px;
+}
+.callout-icon{font-size:20px;flex-shrink:0;line-height:1;margin-top:1px}
+.callout-title{font-size:13px;font-weight:700;color:var(--bdt);margin-bottom:4px}
+.callout-body{font-size:11.5px;color:var(--tx2);line-height:1.6}
+.callout-body strong{color:var(--bdt)}
+
+/* ── SECTION LABEL ── */
+.slbl{
+  font-size:9px;font-weight:700;letter-spacing:1.1px;
+  text-transform:uppercase;color:var(--mu);
+  margin:0 0 12px;
+}
+
+/* ── OPERATOR CARDS ── */
+.op-cards{display:flex;flex-direction:column;gap:8px}
+.op-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:12px;
+  padding:12px 14px;cursor:pointer;
+  transition:border-color .18s,background .15s,box-shadow .18s;
+}
+.op-card:hover{border-color:var(--bd2);background:var(--surf3);box-shadow:var(--sh)}
+.op-card-swatch{width:4px;border-radius:3px;align-self:stretch;flex-shrink:0;min-height:32px}
+.op-card-main{flex:1;min-width:0}
+.op-card-name{font-size:12.5px;font-weight:600;color:var(--tx)}
+.op-card-sub{font-size:10.5px;color:var(--mu);margin-top:2px}
+.op-card-stats{display:flex;gap:10px;flex-shrink:0;align-items:center}
+.op-stat{text-align:center}
+.op-stat-n{
+  font-family:'Space Mono',monospace;
+  font-size:13px;font-weight:700;color:var(--tx);line-height:1;display:block;
+}
+.op-stat-l{font-size:9px;color:var(--mu);margin-top:2px}
+.op-card-arrow{color:var(--mu);flex-shrink:0;opacity:.5;transition:opacity .15s,transform .15s}
+.op-card:hover .op-card-arrow{opacity:1;transform:translateX(2px)}
+
+/* Badge */
+.bdg{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;display:inline-block;white-space:nowrap}
+.b-amber{background:var(--bdr);color:var(--bdt)}
+.b-blue {background:var(--bds);color:var(--bdst)}
+.b-green{background:var(--bdg);color:var(--bdgt)}
+.b-red  {background:var(--bde);color:var(--bdet)}
+
+/* Bar rows */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-lbl{font-size:11.5px;color:var(--tx2);width:84px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:5px;background:var(--surf3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.bar-pct{font-family:'Space Mono',monospace;font-size:11px;color:var(--mu);width:28px;text-align:right;flex-shrink:0}
+
+/* Route card */
+.route-card{background:var(--surf2);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:10px;transition:border-color .18s,box-shadow .18s;cursor:pointer}
+.route-card:hover{border-color:var(--bd2);box-shadow:var(--sh)}
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.rc-num{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);line-height:1}
+.rc-name{font-size:11.5px;color:var(--mu);margin-top:4px}
+.rc-op{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;color:#fff;white-space:nowrap;flex-shrink:0}
+.rc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.rc-kpi{background:var(--surf-s);border:1px solid var(--bd);border-radius:9px;padding:9px 10px}
+.rc-kpi-l{font-size:8.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:4px}
+.rc-kpi-v{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--tx)}
+.rc-tender{background:var(--surf-s);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:7px}
+.rc-tr{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.rc-tr-l{color:var(--mu)}
+.rc-tr-v{font-weight:600;color:var(--tx);display:flex;align-items:center;gap:6px}
+
+/* Route search prompt */
+.route-search-prompt{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;text-align:center;color:var(--mu);
+}
+.route-search-prompt svg{margin-bottom:14px;opacity:.3}
+.route-search-prompt p{font-size:13px;line-height:1.7}
+
+/* ── DETAIL DRAWER ── */
+.drawer{
+  position:absolute;inset:0;z-index:30;
+  display:flex;flex-direction:column;
+  background:var(--surf);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.22,1,.36,1);
+  overflow:hidden;
+}
+.drawer.open{transform:translateX(0)}
+
+.drawer-head{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 20px;border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+.drawer-back{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--surf2);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--mu);flex-shrink:0;
+  transition:all .15s;
+}
+.drawer-back:hover{background:var(--surf3);color:var(--tx)}
+.drawer-head-swatch{width:4px;border-radius:3px;align-self:stretch;flex-shrink:0}
+.drawer-head-name{font-size:14px;font-weight:600;color:var(--tx)}
+.drawer-head-sub{font-size:11px;color:var(--mu);margin-top:2px}
+
+.drawer-body{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--sc-th) transparent}
+.drawer-body::-webkit-scrollbar{width:3px}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--sc-th);border-radius:2px}
+
+/* Drawer KPI pair */
+.drawer-kpi-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.dkpi{background:var(--surf2);border:1px solid var(--bd);border-radius:12px;padding:14px}
+.dkpi-n{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--tx);line-height:1}
+.dkpi-l{font-size:10px;color:var(--mu);margin-top:5px}
+.dkpi-d{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:7px}
+
+/* Drawer section */
+.dsec{margin-bottom:20px}
+.dsec-lbl{font-size:9px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+
+/* Garage list */
+.garage-list{display:flex;flex-direction:column;gap:6px}
+.garage-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:10px;
+  padding:10px 12px;font-size:12px;
+}
+.garage-name{font-weight:500;color:var(--tx)}
+.garage-count{font-family:'Space Mono',monospace;font-size:11px;color:var(--mu)}
+
+/* ══════════════════════════════════════════════
+   FOOTER (single, fixed)
+══════════════════════════════════════════════ */
+.footer{
+  grid-column:1/-1;grid-row:3;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+  background:var(--surf);border-top:1px solid var(--bd);
+  font-size:10.5px;color:var(--mu);
+  transition:background .3s,border-color .3s;
+  z-index:30;
+}
+.footer-left{display:flex;align-items:center;gap:8px}
+.footer-live{display:flex;align-items:center;gap:5px}
+.footer-links{display:flex;gap:14px}
+.footer-link{color:var(--mu);cursor:pointer;transition:color .15s}
+.footer-link:hover{color:var(--tx)}
+
+/* ══════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════ */
+.mob-top,.mob-sheet,.mob-nav{display:none}
+
+@media(max-width:900px){
+  .rp{display:none}
+  .shell{grid-template-columns:280px 1fr}
+}
+@media(max-width:620px){
+  .shell{display:block;height:100dvh}
+  .topbar,.sidebar,.rp,.footer{display:none}
+  .map-area{position:fixed;top:52px;bottom:60px;left:0;right:0;z-index:0}
+
+  .mob-top{
+    display:flex;position:fixed;top:0;left:0;right:0;z-index:50;
+    align-items:center;gap:9px;padding:0 14px;height:52px;
+    background:var(--surf);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--bd);
+  }
+  .mob-icon{width:28px;height:28px;background:var(--acc);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+  .mob-title{font-size:14.5px;font-weight:600;letter-spacing:-.3px}
+  .mob-alert{display:flex;align-items:center;gap:5px;background:var(--bdr);border:1px solid rgba(245,158,11,.26);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--bdt);margin-left:auto;flex-shrink:0;cursor:pointer}
+  .theme-btn{flex-shrink:0}
+
+  /* Sheet */
+  .mob-sheet{
+    display:block;position:fixed;bottom:60px;left:0;right:0;z-index:40;
+    background:var(--surf);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--bd);border-radius:20px 20px 0 0;
+    transform:translateY(calc(100% - 114px));
+    transition:transform .36s cubic-bezier(.22,1,.36,1);
+  }
+  .mob-sheet.up{transform:translateY(0)}
+  .mob-pull{padding:10px 0 0;text-align:center;cursor:pointer}
+  .mob-handle{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto}
+
+  /* Peek — 3 KPIs */
+  .mob-peek{display:flex;align-items:stretch;padding:10px 16px 14px;border-bottom:1px solid var(--bd)}
+  .mob-kpi{flex:1;text-align:center;padding:0 6px}
+  .mob-kpi+.mob-kpi{border-left:1px solid var(--bd)}
+  .mob-kpi-n{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--tx);line-height:1}
+  .mob-kpi-n.amber{color:var(--bdt)}
+  .mob-kpi-l{font-size:10px;color:var(--mu);margin-top:3px}
+
+  /* Sheet tabs */
+  .mob-stabs{display:flex;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--bd)}
+  .mob-stab{font-size:12px;font-weight:500;color:var(--mu);padding:6px 10px;border-radius:7px 7px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s}
+  .mob-stab.on{color:var(--acc);border-bottom-color:var(--acc);background:var(--acc-bg)}
+  .mob-sbody{max-height:60dvh;overflow-y:auto;padding:12px 16px 16px;scrollbar-width:none}
+  .mob-sbody::-webkit-scrollbar{display:none}
+
+  /* Bottom nav */
+  .mob-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:50;
+    background:var(--surf);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--bd);padding:8px 0 max(10px,env(safe-area-inset-bottom));
+  }
+  .mob-nav-items{display:flex;width:100%;justify-content:space-around;align-items:flex-end}
+  .mob-ni{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--mu);cursor:pointer;transition:color .15s}
+  .mob-ni.on{color:var(--acc)}
+  .mob-ni svg{width:20px;height:20px}
+  .mob-fab{width:46px;height:46px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(232,52,74,.42);margin-top:-14px;cursor:pointer;transition:transform .15s}
+  .mob-fab:active{transform:scale(.93)}
+}
+</style>
+</head>
+<body>
+
+<!-- Map -->
+<div class="map-bg"></div>
+<div class="map-lines">
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+    <path d="M60 460 Q240 355 480 418 Q700 474 940 378 Q1120 306 1380 348" stroke="#e8192c" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M80 590 Q310 508 550 568 Q770 622 1010 532 Q1200 454 1380 496" stroke="#e8192c" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M120 240 Q350 308 570 265 Q800 222 1040 294" stroke="#e8192c" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M60 330 Q250 264 458 312 Q676 363 900 290 Q1100 224 1380 268" stroke="#1b3d72" stroke-width="3" stroke-linecap="round"/>
+    <path d="M60 700 Q330 636 610 686 Q880 732 1150 652 Q1300 606 1380 632" stroke="#1b3d72" stroke-width="2" stroke-linecap="round"/>
+    <path d="M690 55 Q668 225 648 406 Q628 588 610 770" stroke="#0891b2" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M868 65 Q845 248 818 448 Q792 646 768 858" stroke="#0891b2" stroke-width="1.6" stroke-linecap="round"/>
+    <path d="M60 532 Q285 450 510 508 Q746 568 966 480 Q1166 400 1380 444" stroke="#2563eb" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M190 118 Q432 208 668 158 Q904 110 1128 202 Q1286 270 1380 244" stroke="#2563eb" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M60 638 Q162 582 248 614 Q372 652 454 598 Q556 544 632 576" stroke="#db2777" stroke-width="1.9" stroke-linecap="round"/>
+    <path d="M1112 60 Q1086 252 1056 452 Q1026 652 1002 852" stroke="#7c3aed" stroke-width="1.7" stroke-linecap="round"/>
+    <path d="M216 55 Q398 282 510 468 Q600 632 658 900" stroke="#e8192c" stroke-width="1.1" stroke-linecap="round" opacity=".45"/>
+    <path d="M410 48 Q500 294 522 504 Q542 704 554 900" stroke="#0891b2" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+    <g font-family="'Space Mono',monospace" font-size="8" font-weight="700" fill="white" text-anchor="middle" dominant-baseline="central">
+      <rect x="454" y="404" width="28" height="17" rx="4" fill="#e8192c"/><text x="468" y="413">GO</text>
+      <rect x="718" y="366" width="28" height="17" rx="4" fill="#e8192c"/><text x="732" y="375">GO</text>
+      <rect x="926" y="366" width="28" height="17" rx="4" fill="#e8192c"/><text x="940" y="375">GO</text>
+      <rect x="302" y="546" width="28" height="17" rx="4" fill="#e8192c"/><text x="316" y="555">GO</text>
+      <rect x="448" y="300" width="26" height="17" rx="4" fill="#1b3d72"/><text x="461" y="309">SC</text>
+      <rect x="848" y="278" width="26" height="17" rx="4" fill="#1b3d72"/><text x="861" y="287">SC</text>
+      <rect x="636" y="158" width="28" height="17" rx="4" fill="#0891b2"/><text x="650" y="167">ML</text>
+      <rect x="808" y="230" width="28" height="17" rx="4" fill="#0891b2"/><text x="822" y="239">ML</text>
+      <rect x="490" y="492" width="26" height="17" rx="4" fill="#2563eb"/><text x="503" y="501">AR</text>
+      <rect x="790" y="450" width="26" height="17" rx="4" fill="#2563eb"/><text x="803" y="459">AR</text>
+      <rect x="230" y="600" width="25" height="17" rx="4" fill="#db2777"/><text x="242" y="609">FR</text>
+      <rect x="516" y="562" width="26" height="17" rx="4" fill="#7c3aed"/><text x="529" y="571">TU</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ════════════════════════════════════════
+     DESKTOP
+════════════════════════════════════════ -->
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="tb-brand">
+      <div class="tb-icon">🚌</div>
+      <span class="tb-name">London Buses</span>
+      <span class="tb-ver">v2.4</span>
+    </div>
+    <div class="tb-alert" id="alertBtn">
+      <div class="alert-pip"></div>
+      47 tenders in next 12 months
+    </div>
+
+    <div class="tb-search" id="globalSearch">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="globalInput" placeholder="Search a route, e.g. 25 or N73…" autocomplete="off">
+    </div>
+
+    <div class="tb-actions">
+      <div class="theme-btn" id="themeToggle">
+        <svg class="i-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="i-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
+      <div class="tb-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-tabs">
+      <div class="sb-tab on" data-stab="filters">Filters</div>
+      <div class="sb-tab" data-stab="garages">Garages</div>
+    </div>
+    <div class="sb-live">
+      <div><span class="sb-live-n" id="routeCount">747</span><span class="sb-live-l"> routes shown</span></div>
+      <div class="sb-live-dot"><div class="live-pip"></div>Live</div>
+    </div>
+
+    <!-- Filters body -->
+    <div class="sb-body" id="sb-filters">
+
+      <div class="sb-sec" style="border-top:none">
+        <div class="sb-sec-hd" data-sec="colour">
+          <span class="sb-sec-lbl">Colour Routes By</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:60px">
+          <div class="colour-seg">
+            <div class="c-btn on">Operator</div>
+            <div class="c-btn">Route type</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="op">
+          <span class="sb-sec-lbl">Operator</span>
+          <div class="sb-sec-r">
+            <span class="sb-sec-act" id="selAll">Select all</span>
+            <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div class="sb-sec-bd" style="max-height:130px">
+          <div class="pill-grp">
+            <div class="pill on" data-op><span class="op-dot" style="background:#e8192c"></span>Go-Ahead</div>
+            <div class="pill on" data-op><span class="op-dot" style="background:#1b3d72"></span>Stagecoach</div>
+            <div class="pill on" data-op><span class="op-dot" style="background:#0891b2"></span>Metroline</div>
+            <div class="pill on" data-op><span class="op-dot" style="background:#2563eb"></span>Arriva</div>
+            <div class="pill on" data-op><span class="op-dot" style="background:#7c3aed"></span>First</div>
+            <div class="pill on" data-op><span class="op-dot" style="background:#db2777"></span>Transport UK</div>
+            <div class="pill" data-op><span class="op-dot" style="background:#d97706"></span>Uno</div>
+            <div class="pill" data-op><span class="op-dot" style="background:#6b7280"></span>Unknown</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="type">
+          <span class="sb-sec-lbl">Route Type</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:70px">
+          <div class="pill-grp">
+            <div class="pill on">Regular</div>
+            <div class="pill">Night</div>
+            <div class="pill">24 Hour</div>
+            <div class="pill">School</div>
+            <div class="pill">Prefix</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="prop">
+          <span class="sb-sec-lbl">Propulsion</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:70px">
+          <div class="pill-grp">
+            <div class="pill">Diesel</div>
+            <div class="pill on">Electric ⚡</div>
+            <div class="pill">Hybrid</div>
+            <div class="pill">Hydrogen</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="freq">
+          <span class="sb-sec-lbl">Frequency</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:60px">
+          <div class="pill-grp">
+            <div class="pill">≤6 min</div>
+            <div class="pill on">7–15 min</div>
+            <div class="pill">&gt;15 min</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="deck">
+          <span class="sb-sec-lbl">Deck Type</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:60px">
+          <div class="pill-grp">
+            <div class="pill">Single deck</div>
+            <div class="pill on">Double deck</div>
+            <div class="pill">Unknown</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="tender">
+          <span class="sb-sec-lbl">Contract Expires In</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:60px">
+          <div class="pill-grp">
+            <div class="pill">3 months</div>
+            <div class="pill on">6 months</div>
+            <div class="pill">12 months</div>
+            <div class="pill">24 months</div>
+            <div class="pill">Any</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sb-sec">
+        <div class="sb-sec-hd" data-sec="stop">
+          <span class="sb-sec-lbl">Bus Stop</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:60px">
+          <div class="sb-input">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input placeholder="Search a stop…">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Garages body -->
+    <div class="sb-body" id="sb-garages" style="display:none">
+      <div class="sb-sec" style="border-top:none">
+        <div class="sb-sec-hd">
+          <span class="sb-sec-lbl">Show Garage Markers</span>
+          <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="sb-sec-bd" style="max-height:130px">
+          <div class="pill-grp">
+            <div class="pill on"><span class="op-dot" style="background:#2563eb"></span>Arriva</div>
+            <div class="pill on"><span class="op-dot" style="background:#7c3aed"></span>First</div>
+            <div class="pill on"><span class="op-dot" style="background:#e8192c"></span>Go-Ahead</div>
+            <div class="pill on"><span class="op-dot" style="background:#0891b2"></span>Metroline</div>
+            <div class="pill on"><span class="op-dot" style="background:#1b3d72"></span>Stagecoach</div>
+            <div class="pill"><span class="op-dot" style="background:#db2777"></span>Transport UK</div>
+            <div class="pill"><span class="op-dot" style="background:#d97706"></span>Uno</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAP -->
+  <main class="map-area">
+    <div class="map-col-bar">
+      <div class="map-col-toggle">
+        <span class="map-col-label">Colour by</span>
+        <div class="map-col-seg">
+          <div class="map-col-opt on" data-col="op">Operator</div>
+          <div class="map-col-opt" data-col="type">Route type</div>
+        </div>
+      </div>
+    </div>
+    <div class="map-ctl">
+      <button class="mctl" id="toggleLines">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Route lines
+      </button>
+      <button class="mctl" id="toggleGarages">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/></svg>
+        Garages
+      </button>
+    </div>
+    <div class="zoom-ctl">
+      <div class="z-btn">+</div>
+      <div class="z-btn">−</div>
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="rp">
+    <div class="rp-head">
+      <div class="rp-title">Network Overview</div>
+      <div class="rp-sub">London · 747 routes · 8 operators</div>
+    </div>
+    <div class="rp-tabs">
+      <div class="rp-tab on" data-rp="overview">Overview</div>
+      <div class="rp-tab" data-rp="routes">Routes</div>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="rp-body" id="rp-overview">
+
+      <!-- Hero stats -->
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-left">
+            <div class="hero-stat-n">747</div>
+            <div class="hero-stat-l">Routes across London</div>
+            <div class="hero-stat-d d-n">↔ stable</div>
+          </div>
+          <div class="hero-mini-bars">
+            <div class="hmb-row"><div class="hmb-track"><div class="hmb-fill" style="width:100%;background:#e8192c"></div></div><span class="hmb-pct">28%</span></div>
+            <div class="hmb-row"><div class="hmb-track"><div class="hmb-fill" style="width:61%;background:#1b3d72"></div></div><span class="hmb-pct">17%</span></div>
+            <div class="hmb-row"><div class="hmb-track"><div class="hmb-fill" style="width:61%;background:#0891b2"></div></div><span class="hmb-pct">17%</span></div>
+            <div class="hmb-row"><div class="hmb-track"><div class="hmb-fill" style="width:46%;background:#2563eb"></div></div><span class="hmb-pct">13%</span></div>
+            <div class="hmb-row"><div class="hmb-track"><div class="hmb-fill" style="width:43%;background:#7c3aed"></div></div><span class="hmb-pct">12%</span></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="hero-stat" style="flex-direction:column;align-items:flex-start">
+            <div class="hero-stat-n">6,842</div>
+            <div class="hero-stat-l">Peak vehicles</div>
+            <div class="hero-stat-d d-dn">↓ 1.2% QoQ</div>
+          </div>
+          <div class="hero-stat" style="flex-direction:column;align-items:flex-start">
+            <div class="hero-stat-n">24%</div>
+            <div class="hero-stat-l">EV adoption</div>
+            <div class="hero-stat-d d-up">↑ 6pp YoY</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contract callout -->
+      <div class="callout">
+        <div class="callout-icon">📅</div>
+        <div>
+          <div class="callout-title">47 contracts expiring in 12 months</div>
+          <div class="callout-body">Including <strong>14 within 3 months</strong>. Combined value: <strong>£284m/yr</strong>. Search a route in the Routes tab for full contract details.</div>
+        </div>
+      </div>
+
+      <!-- Operator cards -->
+      <div class="slbl">Operators — tap to explore</div>
+      <div class="op-cards">
+        <div class="op-card" data-op-card="go">
+          <div class="op-card-swatch" style="background:#e8192c"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">Go-Ahead London</div>
+            <div class="op-card-sub">209 routes · 18 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">87%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">33%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="op-card" data-op-card="sc">
+          <div class="op-card-swatch" style="background:#1b3d72"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">Stagecoach London</div>
+            <div class="op-card-sub">127 routes · 12 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">85%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">18%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="op-card" data-op-card="ml">
+          <div class="op-card-swatch" style="background:#0891b2"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">Metroline</div>
+            <div class="op-card-sub">127 routes · 11 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">83%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">18%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="op-card" data-op-card="ar">
+          <div class="op-card-swatch" style="background:#2563eb"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">Arriva London</div>
+            <div class="op-card-sub">97 routes · 14 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">82%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">25%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="op-card" data-op-card="fi">
+          <div class="op-card-swatch" style="background:#7c3aed"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">First London</div>
+            <div class="op-card-sub">90 routes · 8 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">78%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">28%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="op-card" data-op-card="tu">
+          <div class="op-card-swatch" style="background:#db2777"></div>
+          <div class="op-card-main">
+            <div class="op-card-name">Transport UK</div>
+            <div class="op-card-sub">82 routes · 9 garages</div>
+          </div>
+          <div class="op-card-stats">
+            <div class="op-stat"><span class="op-stat-n">86%</span><div class="op-stat-l">On-time</div></div>
+            <div class="op-stat"><span class="op-stat-n">22%</span><div class="op-stat-l">EV</div></div>
+          </div>
+          <svg class="op-card-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ROUTES TAB -->
+    <div class="rp-body" id="rp-routes" style="display:none">
+      <div class="sb-input" style="margin-bottom:20px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="routeSearchInput" placeholder="Type a route number, e.g. 25…" autocomplete="off">
+      </div>
+      <div class="route-search-prompt" id="routePrompt">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <p>Search for a route above or use the global search bar.<br><br>Try <strong>25</strong>, <strong>38</strong> or <strong>149</strong>.</p>
+      </div>
+      <div id="routeResults" style="display:none">
+        <div class="route-card" data-route="25">
+          <div class="rc-top"><div><div class="rc-num">25</div><div class="rc-name">Oxford Circus → Ilford</div></div><div class="rc-op" style="background:#e8192c">Go-Ahead</div></div>
+          <div class="rc-kpis">
+            <div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">42</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">5 min</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">88%</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Fleet</div><div class="rc-kpi-v">DD EV</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Length</div><div class="rc-kpi-v">12.4mi</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Pax/day</div><div class="rc-kpi-v">82k</div></div>
+          </div>
+          <div class="rc-tender">
+            <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Upton Park</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract expires</span><span class="rc-tr-v">Jun 2026 <span class="bdg b-amber">Soon</span></span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract value</span><span class="rc-tr-v">£18.4m / yr</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Incumbent</span><span class="rc-tr-v">Go-Ahead London</span></div>
+          </div>
+        </div>
+        <div class="route-card" data-route="38" style="display:none">
+          <div class="rc-top"><div><div class="rc-num">38</div><div class="rc-name">Victoria → Clapton Pond</div></div><div class="rc-op" style="background:#2563eb">Arriva</div></div>
+          <div class="rc-kpis">
+            <div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">36</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">7 min</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">81%</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Fleet</div><div class="rc-kpi-v">DD Diesel</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Length</div><div class="rc-kpi-v">9.8mi</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Pax/day</div><div class="rc-kpi-v">61k</div></div>
+          </div>
+          <div class="rc-tender">
+            <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Ash Grove</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract expires</span><span class="rc-tr-v">Mar 2027 <span class="bdg b-blue">Upcoming</span></span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract value</span><span class="rc-tr-v">£14.1m / yr</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Incumbent</span><span class="rc-tr-v">Arriva London</span></div>
+          </div>
+        </div>
+        <div class="route-card" data-route="149" style="display:none">
+          <div class="rc-top"><div><div class="rc-num">149</div><div class="rc-name">Edmonton → London Bridge</div></div><div class="rc-op" style="background:#1b3d72">Stagecoach</div></div>
+          <div class="rc-kpis">
+            <div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">28</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">10 min</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">85%</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Fleet</div><div class="rc-kpi-v">DD Hybrid</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Length</div><div class="rc-kpi-v">14.2mi</div></div>
+            <div class="rc-kpi"><div class="rc-kpi-l">Pax/day</div><div class="rc-kpi-v">44k</div></div>
+          </div>
+          <div class="rc-tender">
+            <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Stamford Hill</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract expires</span><span class="rc-tr-v">Sep 2025 <span class="bdg b-red">Expired</span></span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Contract value</span><span class="rc-tr-v">£11.7m / yr</span></div>
+            <div class="rc-tr"><span class="rc-tr-l">Incumbent</span><span class="rc-tr-v">Stagecoach London</span></div>
+          </div>
+        </div>
+        <div id="routeNoResult" style="display:none">
+          <div class="route-search-prompt"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;opacity:.3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>No route found.<br>Try <strong>25</strong>, <strong>38</strong> or <strong>149</strong>.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OPERATOR DETAIL DRAWER ── -->
+    <div class="drawer" id="opDrawer">
+      <div class="drawer-head">
+        <div class="drawer-back" id="drawerBack">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </div>
+        <div class="drawer-head-swatch" id="drawerSwatch"></div>
+        <div>
+          <div class="drawer-head-name" id="drawerName"></div>
+          <div class="drawer-head-sub" id="drawerSub"></div>
+        </div>
+      </div>
+      <div class="drawer-body">
+        <div class="drawer-kpi-pair">
+          <div class="dkpi"><div class="dkpi-n" id="dRoutes">—</div><div class="dkpi-l">Routes operated</div></div>
+          <div class="dkpi"><div class="dkpi-n" id="dPVR">—</div><div class="dkpi-l">Peak vehicles</div></div>
+          <div class="dkpi">
+            <div class="dkpi-n" id="dOntime">—</div>
+            <div class="dkpi-l">On-time performance</div>
+            <div class="dkpi-d" id="dOntimeD"></div>
+          </div>
+          <div class="dkpi">
+            <div class="dkpi-n" id="dEV">—</div>
+            <div class="dkpi-l">EV fleet share</div>
+            <div class="dkpi-d d-up" id="dEVD"></div>
+          </div>
+        </div>
+        <div class="dsec">
+          <div class="dsec-lbl">Fleet breakdown</div>
+          <div id="dFleetBars"></div>
+        </div>
+        <div class="dsec">
+          <div class="dsec-lbl">Garages</div>
+          <div class="garage-list" id="dGarages"></div>
+        </div>
+        <div class="dsec">
+          <div class="dsec-lbl">Upcoming contracts</div>
+          <div id="dContracts" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- FOOTER — single, shared -->
+  <footer class="footer">
+    <div class="footer-left">
+      <div class="footer-live"><div class="live-pip"></div><span>Updated 21/04/2026 · Next 27/04/2026</span></div>
+      <span style="color:var(--bd2)">·</span>
+      <span>Not affiliated with TfL · Data may be inaccurate · Built by <strong style="color:var(--tx2)">Farhan</strong></span>
+    </div>
+    <div class="footer-links">
+      <span class="footer-link">About</span>
+      <span class="footer-link">Roadmap</span>
+      <span class="footer-link">Changelog</span>
+    </div>
+  </footer>
+
+</div>
+
+<!-- ════════════════════════════════════════
+     MOBILE
+════════════════════════════════════════ -->
+<div class="mob-top">
+  <div class="mob-icon">🚌</div>
+  <span class="mob-title">London Buses</span>
+  <div class="mob-alert" id="mobAlert"><div class="alert-pip"></div>47 in 12 mo</div>
+  <div class="theme-btn" id="themeToggleMob" style="margin-left:8px;flex-shrink:0">
+    <svg class="i-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="i-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </div>
+</div>
+
+<div class="mob-sheet" id="mobSheet">
+  <div class="mob-pull" id="mobPull"><div class="mob-handle"></div></div>
+  <div class="mob-peek">
+    <div class="mob-kpi"><div class="mob-kpi-n">747</div><div class="mob-kpi-l">Routes</div></div>
+    <div class="mob-kpi"><div class="mob-kpi-n amber">47</div><div class="mob-kpi-l">Tenders 12 mo</div></div>
+    <div class="mob-kpi"><div class="mob-kpi-n">24%</div><div class="mob-kpi-l">EV share</div></div>
+  </div>
+  <div class="mob-stabs">
+    <div class="mob-stab on" data-ms="filters">Filters</div>
+    <div class="mob-stab" data-ms="overview">Overview</div>
+    <div class="mob-stab" data-ms="routes">Routes</div>
+  </div>
+
+  <div class="mob-sbody" id="ms-filters">
+    <div style="margin-bottom:14px"><div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Operator</div>
+      <div class="pill-grp">
+        <div class="pill on"><span class="op-dot" style="background:#e8192c"></span>Go-Ahead</div>
+        <div class="pill on"><span class="op-dot" style="background:#1b3d72"></span>Stagecoach</div>
+        <div class="pill on"><span class="op-dot" style="background:#0891b2"></span>Metroline</div>
+        <div class="pill on"><span class="op-dot" style="background:#2563eb"></span>Arriva</div>
+        <div class="pill on"><span class="op-dot" style="background:#7c3aed"></span>First</div>
+        <div class="pill"><span class="op-dot" style="background:#db2777"></span>Transport UK</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px"><div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Route Type</div>
+      <div class="pill-grp"><div class="pill on">Regular</div><div class="pill">Night</div><div class="pill">24 Hour</div><div class="pill">School</div></div>
+    </div>
+    <div style="margin-bottom:14px"><div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Contract Expires In</div>
+      <div class="pill-grp"><div class="pill">3 months</div><div class="pill on">6 months</div><div class="pill">12 months</div><div class="pill">24 months</div><div class="pill">Any</div></div>
+    </div>
+    <div style="margin-bottom:4px"><div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Propulsion</div>
+      <div class="pill-grp"><div class="pill">Diesel</div><div class="pill on">Electric ⚡</div><div class="pill">Hybrid</div></div>
+    </div>
+  </div>
+
+  <div class="mob-sbody" id="ms-overview" style="display:none">
+    <div class="callout" style="margin-bottom:12px"><div class="callout-icon">📅</div><div><div class="callout-title">47 contracts expiring in next 12 months</div><div class="callout-body">Including <strong>14 within 3 months</strong> and <strong>33 within 3–12 months</strong>.</div></div></div>
+    <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mu);margin-bottom:8px">Operator Share</div>
+    <div class="bar-row"><span class="bar-lbl">Go-Ahead</span><div class="bar-track"><div class="bar-fill" style="width:28%;background:#e8192c"></div></div><span class="bar-pct">28%</span></div>
+    <div class="bar-row"><span class="bar-lbl">Stagecoach</span><div class="bar-track"><div class="bar-fill" style="width:17%;background:#1b3d72"></div></div><span class="bar-pct">17%</span></div>
+    <div class="bar-row"><span class="bar-lbl">Metroline</span><div class="bar-track"><div class="bar-fill" style="width:17%;background:#0891b2"></div></div><span class="bar-pct">17%</span></div>
+    <div class="bar-row"><span class="bar-lbl">Arriva</span><div class="bar-track"><div class="bar-fill" style="width:13%;background:#2563eb"></div></div><span class="bar-pct">13%</span></div>
+    <div class="bar-row"><span class="bar-lbl">First</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:#7c3aed"></div></div><span class="bar-pct">12%</span></div>
+    <div class="bar-row"><span class="bar-lbl">Transport UK</span><div class="bar-track"><div class="bar-fill" style="width:11%;background:#db2777"></div></div><span class="bar-pct">11%</span></div>
+  </div>
+
+  <div class="mob-sbody" id="ms-routes" style="display:none">
+    <div class="sb-input" style="margin-bottom:14px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Type route number, e.g. 25…" id="mobRouteInput" autocomplete="off"></div>
+    <div class="route-search-prompt" id="mobRoutePrompt"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:10px;opacity:.3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><p>Try <strong>25</strong>, <strong>38</strong> or <strong>149</strong></p></div>
+    <div id="mobRouteResult" style="display:none">
+      <div class="route-card" id="mob-rc-25" data-route="25" style="display:none">
+        <div class="rc-top"><div><div class="rc-num">25</div><div class="rc-name">Oxford Circus → Ilford</div></div><div class="rc-op" style="background:#e8192c">Go-Ahead</div></div>
+        <div class="rc-kpis"><div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">42</div></div><div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">5 min</div></div><div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">88%</div></div></div>
+        <div class="rc-tender"><div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Upton Park</span></div><div class="rc-tr"><span class="rc-tr-l">Expires</span><span class="rc-tr-v">Jun 2026 <span class="bdg b-amber">Soon</span></span></div><div class="rc-tr"><span class="rc-tr-l">Value</span><span class="rc-tr-v">£18.4m/yr</span></div></div>
+      </div>
+      <div class="route-card" id="mob-rc-38" data-route="38" style="display:none">
+        <div class="rc-top"><div><div class="rc-num">38</div><div class="rc-name">Victoria → Clapton</div></div><div class="rc-op" style="background:#2563eb">Arriva</div></div>
+        <div class="rc-kpis"><div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">36</div></div><div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">7 min</div></div><div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">81%</div></div></div>
+        <div class="rc-tender"><div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Ash Grove</span></div><div class="rc-tr"><span class="rc-tr-l">Expires</span><span class="rc-tr-v">Mar 2027 <span class="bdg b-blue">Upcoming</span></span></div><div class="rc-tr"><span class="rc-tr-l">Value</span><span class="rc-tr-v">£14.1m/yr</span></div></div>
+      </div>
+      <div class="route-card" id="mob-rc-149" data-route="149" style="display:none">
+        <div class="rc-top"><div><div class="rc-num">149</div><div class="rc-name">Edmonton → London Bridge</div></div><div class="rc-op" style="background:#1b3d72">Stagecoach</div></div>
+        <div class="rc-kpis"><div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v">28</div></div><div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v">10 min</div></div><div class="rc-kpi"><div class="rc-kpi-l">On-time</div><div class="rc-kpi-v">85%</div></div></div>
+        <div class="rc-tender"><div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v">Stamford Hill</span></div><div class="rc-tr"><span class="rc-tr-l">Expires</span><span class="rc-tr-v">Sep 2025 <span class="bdg b-red">Expired</span></span></div><div class="rc-tr"><span class="rc-tr-l">Value</span><span class="rc-tr-v">£11.7m/yr</span></div></div>
+      </div>
+      <div id="mobNoResult" style="display:none"><div class="route-search-prompt"><p>No route found. Try <strong>25</strong>, <strong>38</strong> or <strong>149</strong>.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<nav class="mob-nav">
+  <div class="mob-nav-items">
+    <div class="mob-ni on" data-mn="map">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Map
+    </div>
+    <div class="mob-ni" data-mn="filter">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      Filters
+    </div>
+    <div class="mob-fab" id="mobFab">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <div class="mob-ni" data-mn="insights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="18" y="3" width="4" height="18" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="2" y="13" width="4" height="8" rx="1"/></svg>
+      Overview
+    </div>
+    <div class="mob-ni" data-mn="routes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      Routes
+    </div>
+  </div>
+</nav>
+
+<script>
+/* ── THEME ── */
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('lb-theme',t)}catch(e){}}
+(function(){let s;try{s=localStorage.getItem('lb-theme')}catch(e){}if(!s)s=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';setTheme(s)})();
+function toggleTheme(){setTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark')}
+document.getElementById('themeToggle').addEventListener('click',toggleTheme);
+const mobT=document.getElementById('themeToggleMob');if(mobT)mobT.addEventListener('click',toggleTheme);
+
+/* ── ALERT → routes tab ── */
+document.getElementById('alertBtn').addEventListener('click',()=>{
+  document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.rp-body').forEach(p=>p.style.display='none');
+  document.querySelector('[data-rp="routes"]').classList.add('on');
+  document.getElementById('rp-routes').style.display='';
+});
+
+/* ── SIDEBAR TABS ── */
+document.querySelectorAll('.sb-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.sb-tab').forEach(t=>t.classList.remove('on'));tab.classList.add('on');
+    document.getElementById('sb-filters').style.display=tab.dataset.stab==='filters'?'':'none';
+    document.getElementById('sb-garages').style.display=tab.dataset.stab==='garages'?'':'none';
+  });
+});
+
+/* ── COLLAPSIBLE SECTIONS ── */
+document.querySelectorAll('.sb-sec-hd').forEach(hd=>{
+  hd.addEventListener('click',e=>{
+    if(e.target.closest('.sb-sec-act'))return;
+    const bd=hd.nextElementSibling,ch=hd.querySelector('.chev');
+    const open=!bd.classList.contains('shut');
+    if(open){bd.style.maxHeight=bd.scrollHeight+'px';requestAnimationFrame(()=>{bd.classList.add('shut');ch.classList.remove('open')})}
+    else{bd.classList.remove('shut');ch.classList.add('open');setTimeout(()=>{bd.style.maxHeight=bd.scrollHeight+'px'},280)}
+  });
+});
+
+/* ── RIGHT PANEL TABS ── */
+document.querySelectorAll('.rp-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('on'));tab.classList.add('on');
+    document.querySelectorAll('.rp-body').forEach(p=>p.style.display='none');
+    document.getElementById('rp-'+tab.dataset.rp).style.display='';
+    // Close drawer when switching tabs
+    document.getElementById('opDrawer').classList.remove('open');
+  });
+});
+
+/* ── OPERATOR DRAWER ── */
+const opData={
+  go:{name:'Go-Ahead London',sub:'209 routes · 18 garages',color:'#e8192c',routes:'209',pvr:'1,914',ontime:'87%',ontimeClass:'d-up',ev:'33%',evNote:'↑ 8pp YoY',
+    fleet:[{l:'Double deck EV',w:33,c:'#22c55e'},{l:'Double deck diesel',w:52,c:'#6b7280'},{l:'Single deck',w:15,c:'#94a3b8'}],
+    garages:['Camberwell · 38 buses','Merton · 32 buses','Putney · 45 buses','Upton Park · 42 buses','Sutton · 28 buses'],
+    contracts:[{r:'25',d:'Oxford Circus → Ilford',exp:'Jun 2026',cls:'b-amber',lbl:'Soon'},{r:'N89',d:'Erith → Lewisham',exp:'Aug 2026',cls:'b-amber',lbl:'Soon'},{r:'176',d:'Penge → Tottenham Court Rd',exp:'Feb 2027',cls:'b-blue',lbl:'Upcoming'}]},
+  sc:{name:'Stagecoach London',sub:'127 routes · 12 garages',color:'#1b3d72',routes:'127',pvr:'1,095',ontime:'85%',ontimeClass:'d-up',ev:'18%',evNote:'↑ 4pp YoY',
+    fleet:[{l:'Double deck diesel',w:60,c:'#6b7280'},{l:'Double deck hybrid',w:22,c:'#f59e0b'},{l:'Double deck EV',w:18,c:'#22c55e'}],
+    garages:['Barking · 55 buses','Catford · 48 buses','Plumstead · 62 buses','Romford · 44 buses'],
+    contracts:[{r:'149',d:'Edmonton → London Bridge',exp:'Sep 2025',cls:'b-red',lbl:'Expired'},{r:'473',d:'Stratford → Gallows Corner',exp:'Mar 2027',cls:'b-blue',lbl:'Upcoming'}]},
+  ml:{name:'Metroline',sub:'127 routes · 11 garages',color:'#0891b2',routes:'127',pvr:'1,163',ontime:'83%',ontimeClass:'d-n',ev:'18%',evNote:'↑ 3pp YoY',
+    fleet:[{l:'Double deck diesel',w:62,c:'#6b7280'},{l:'Double deck EV',w:18,c:'#22c55e'},{l:'Single deck',w:20,c:'#94a3b8'}],
+    garages:['Cricklewood · 68 buses','Edgware · 52 buses','Harrow Weald · 44 buses','Potters Bar · 38 buses'],
+    contracts:[{r:'13',d:'London Bridge → Aldwych',exp:'Oct 2026',cls:'b-blue',lbl:'Upcoming'},{r:'83',d:'Ealing → Golders Green',exp:'Jan 2027',cls:'b-blue',lbl:'Upcoming'}]},
+  ar:{name:'Arriva London',sub:'97 routes · 14 garages',color:'#2563eb',routes:'97',pvr:'1,163',ontime:'82%',ontimeClass:'d-n',ev:'25%',evNote:'↑ 5pp YoY',
+    fleet:[{l:'Double deck diesel',w:55,c:'#6b7280'},{l:'Double deck EV',w:25,c:'#22c55e'},{l:'Single deck',w:20,c:'#94a3b8'}],
+    garages:['Ash Grove · 72 buses','Brixton · 48 buses','Norwood · 55 buses','Tottenham · 66 buses','Stamford Hill · 42 buses'],
+    contracts:[{r:'38',d:'Victoria → Clapton Pond',exp:'Mar 2027',cls:'b-blue',lbl:'Upcoming'},{r:'253',d:'Euston → Hackney',exp:'Aug 2026',cls:'b-amber',lbl:'Soon'}]},
+  fi:{name:'First London',sub:'90 routes · 8 garages',color:'#7c3aed',routes:'90',pvr:'821',ontime:'78%',ontimeClass:'d-dn',ev:'28%',evNote:'↑ 7pp YoY',
+    fleet:[{l:'Double deck EV',w:28,c:'#22c55e'},{l:'Double deck diesel',w:52,c:'#6b7280'},{l:'Single deck',w:20,c:'#94a3b8'}],
+    garages:['Alperton · 58 buses','Westbourne Park · 66 buses','Atlas Road · 44 buses'],
+    contracts:[{r:'N73',d:'Victoria → Walthamstow',exp:'Jul 2026',cls:'b-amber',lbl:'Soon'},{r:'C10',d:'Canada Water → Victoria',exp:'Apr 2027',cls:'b-blue',lbl:'Upcoming'}]},
+  tu:{name:'Transport UK',sub:'82 routes · 9 garages',color:'#db2777',routes:'82',pvr:'753',ontime:'86%',ontimeClass:'d-up',ev:'22%',evNote:'↑ 5pp YoY',
+    fleet:[{l:'Double deck diesel',w:58,c:'#6b7280'},{l:'Double deck EV',w:22,c:'#22c55e'},{l:'Single deck',w:20,c:'#94a3b8'}],
+    garages:['Northumberland Park · 55 buses','Enfield · 48 buses','Edmonton · 62 buses'],
+    contracts:[{r:'29',d:'Trafalgar Sq → Wood Green',exp:'Sep 2026',cls:'b-amber',lbl:'Soon'},{r:'141',d:'Palmers Green → London Br',exp:'Jun 2027',cls:'b-blue',lbl:'Upcoming'}]},
+};
+
+function openDrawer(id){
+  const d=opData[id]; if(!d) return;
+  const drawer=document.getElementById('opDrawer');
+  // Populate
+  document.getElementById('drawerName').textContent=d.name;
+  document.getElementById('drawerSub').textContent=d.sub;
+  document.getElementById('drawerSwatch').style.cssText=`background:${d.color};width:4px;border-radius:3px;align-self:stretch;flex-shrink:0`;
+  document.getElementById('dRoutes').textContent=d.routes;
+  document.getElementById('dPVR').textContent=d.pvr;
+  document.getElementById('dOntime').textContent=d.ontime;
+  const od=document.getElementById('dOntimeD');
+  od.className='dkpi-d '+d.ontimeClass;
+  od.textContent=d.ontimeClass==='d-up'?'↑ Strong':'↑ Improving';
+  document.getElementById('dEV').textContent=d.ev;
+  document.getElementById('dEVD').textContent=d.evNote;
+  // Fleet bars
+  const fb=document.getElementById('dFleetBars');
+  fb.innerHTML=d.fleet.map(f=>`<div class="bar-row"><span class="bar-lbl">${f.l}</span><div class="bar-track"><div class="bar-fill" style="width:${f.w}%;background:${f.c}"></div></div><span class="bar-pct">${f.w}%</span></div>`).join('');
+  // Garages
+  document.getElementById('dGarages').innerHTML=d.garages.map(g=>{
+    const[name,count]=g.split(' · ');
+    return `<div class="garage-item"><span class="garage-name">${name}</span><span class="garage-count">${count}</span></div>`;
+  }).join('');
+  // Contracts
+  document.getElementById('dContracts').innerHTML=d.contracts.map(c=>`
+    <div class="rc-tender" style="cursor:default">
+      <div class="rc-tr"><span class="rc-tr-l"><strong style="font-family:'Space Mono',monospace">${c.r}</strong> &nbsp;${c.d}</span><span class="bdg ${c.cls}">${c.lbl}</span></div>
+      <div class="rc-tr"><span class="rc-tr-l">Expires</span><span class="rc-tr-v">${c.exp}</span></div>
+    </div>`).join('');
+  drawer.classList.add('open');
+}
+
+document.querySelectorAll('.op-card').forEach(card=>{
+  card.addEventListener('click',()=>openDrawer(card.dataset.opCard));
+});
+document.getElementById('drawerBack').addEventListener('click',()=>{
+  document.getElementById('opDrawer').classList.remove('open');
+});
+
+/* ── COLOUR BY (map + sidebar sync) ── */
+document.querySelectorAll('.map-col-opt').forEach((p,i,a)=>{p.addEventListener('click',()=>{a.forEach(x=>x.classList.remove('on'));p.classList.add('on')})});
+document.querySelectorAll('.c-btn').forEach((b,i,a)=>{b.addEventListener('click',()=>{a.forEach(x=>x.classList.remove('on'));b.classList.add('on')})});
+
+/* ── MAP CONTROLS ── */
+document.getElementById('toggleLines').addEventListener('click',function(){this.classList.toggle('on')});
+document.getElementById('toggleGarages').addEventListener('click',function(){this.classList.toggle('on')});
+
+/* ── PILLS ── */
+function attachPills(root){
+  root.querySelectorAll('.pill').forEach(p=>{
+    p.addEventListener('click',()=>{
+      p.classList.toggle('on');
+      p.classList.remove('tap');void p.offsetWidth;p.classList.add('tap');
+      updateCount();
+    });
+  });
+}
+attachPills(document);
+function updateCount(){
+  const active=document.querySelectorAll('#sb-filters [data-op].on').length;
+  const est=Math.round(747*(active/8));
+  const el=document.getElementById('routeCount');if(el)el.textContent=est||'—';
+}
+document.getElementById('selAll').addEventListener('click',e=>{
+  e.stopPropagation();
+  const pills=document.querySelectorAll('#sb-filters [data-op]');
+  const allOn=[...pills].every(p=>p.classList.contains('on'));
+  pills.forEach(p=>p.classList.toggle('on',!allOn));updateCount();
+});
+
+/* ── ROUTE SEARCH (desktop) ── */
+const routeData={
+  '25':{el:'[data-route="25"]'},'38':{el:'[data-route="38"]'},'149':{el:'[data-route="149"]'}
+};
+function searchRoute(q){
+  const panel=document.getElementById('rp-routes');
+  const prompt=document.getElementById('routePrompt');
+  const results=document.getElementById('routeResults');
+  const noRes=document.getElementById('routeNoResult');
+
+  // Switch right panel to Routes tab
+  document.querySelectorAll('.rp-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.rp-body').forEach(p=>p.style.display='none');
+  document.querySelector('[data-rp="routes"]').classList.add('on');
+  panel.style.display='';
+
+  if(!q){prompt.style.display='flex';results.style.display='none';return}
+  prompt.style.display='none';results.style.display='';
+  // Hide all cards + no-result
+  document.querySelectorAll('#routeResults .route-card').forEach(c=>c.style.display='none');
+  noRes.style.display='none';
+
+  const match=Object.keys(routeData).find(k=>k===q.trim().toUpperCase()||k===q.trim());
+  if(match){document.querySelector('#routeResults [data-route="'+match+'"]').style.display=''}
+  else{noRes.style.display=''}
+}
+
+// Local route search input
+document.getElementById('routeSearchInput').addEventListener('input',function(){searchRoute(this.value)});
+
+// Global search bar
+document.getElementById('globalInput').addEventListener('input',function(){
+  if(this.value.trim()) searchRoute(this.value);
+});
+
+/* ── MOBILE SHEET ── */
+let sheetUp=false;
+function toggleSheet(force){sheetUp=force!==undefined?force:!sheetUp;document.getElementById('mobSheet').classList.toggle('up',sheetUp)}
+document.getElementById('mobPull').addEventListener('click',()=>toggleSheet());
+document.getElementById('mobFab').addEventListener('click',()=>toggleSheet(true));
+
+/* ── MOBILE SHEET TABS ── */
+const mobBodyIds={filters:'ms-filters',overview:'ms-overview',routes:'ms-routes'};
+function switchMobTab(tab){
+  document.querySelectorAll('.mob-stab').forEach(t=>t.classList.remove('on'));
+  document.querySelector('[data-ms="'+tab+'"]').classList.add('on');
+  Object.values(mobBodyIds).forEach(id=>{document.getElementById(id).style.display='none'});
+  document.getElementById(mobBodyIds[tab]).style.display='';
+  toggleSheet(true);
+}
+document.querySelectorAll('.mob-stab').forEach(t=>t.addEventListener('click',()=>switchMobTab(t.dataset.ms)));
+
+/* ── MOBILE ROUTE SEARCH ── */
+document.getElementById('mobRouteInput').addEventListener('input',function(){
+  const q=this.value.trim();
+  const prompt=document.getElementById('mobRoutePrompt');
+  const result=document.getElementById('mobRouteResult');
+  if(!q){prompt.style.display='flex';result.style.display='none';return}
+  prompt.style.display='none';result.style.display='';
+  ['25','38','149'].forEach(r=>{document.getElementById('mob-rc-'+r).style.display='none'});
+  document.getElementById('mobNoResult').style.display='none';
+  const match=['25','38','149'].find(r=>r===q);
+  if(match)document.getElementById('mob-rc-'+match).style.display='';
+  else document.getElementById('mobNoResult').style.display='';
+});
+
+/* ── MOBILE NAV ── */
+document.querySelectorAll('.mob-ni').forEach((el,i,a)=>{
+  el.addEventListener('click',()=>{
+    a.forEach(x=>x.classList.remove('on'));el.classList.add('on');
+    const mn=el.dataset.mn;
+    if(mn==='map'){toggleSheet(false)}
+    else if(mn==='filter'){switchMobTab('filters')}
+    else if(mn==='insights'){switchMobTab('overview')}
+    else if(mn==='routes'){switchMobTab('routes')}
+  });
+});
+document.getElementById('mobAlert').addEventListener('click',()=>switchMobTab('routes'));
+</script>
+</body>
+</html>

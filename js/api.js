@@ -114,6 +114,18 @@ export async function fetchStopsRegistry() {
 }
 
 /**
+ * Returns just the stop count for a route — cheap O(1) lookup once the
+ * route_stops bundle is cached, so route cards can display "N stops"
+ * without materialising the full stops GeoJSON array.
+ * @param {string} routeId
+ * @returns {Promise<number>}
+ */
+export async function fetchRouteStopCount(routeId) {
+  const { routeStops } = await loadStopsBundle();
+  return (routeStops[routeId.toUpperCase()] ?? []).length;
+}
+
+/**
  * Loads the stored stops registry + per-route stop lists once and caches them.
  * @returns {Promise<{ stops: Record<string, object>, routeStops: Record<string, object[]> }>}
  */

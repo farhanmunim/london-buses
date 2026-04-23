@@ -1,34 +1,31 @@
 /**
  * paint-mode.js — "Colour routes by" segmented control.
  *
- * Two options: `type` (default) and `operator`. State is persisted to
- * localStorage as `paint-mode` so the user's preference survives reloads.
+ * Two copies of the control live in the DOM (sidebar section + floating map
+ * bar). Any click on a `[data-paint]` element switches the map's paint mode
+ * and keeps both copies in visual sync. Persists to localStorage.
  */
 
 import { setPaintMode } from './map.js';
 
-const STORAGE_KEY = 'paint-mode';
-const container = document.querySelector('.paint-mode__buttons');
-if (container) {
-  // Default is 'operator' unless the user has explicitly stored 'type'.
-  const stored = localStorage.getItem(STORAGE_KEY);
-  const initial = stored === 'type' ? 'type' : 'operator';
+const KEY = 'paint-mode';
+const stored  = localStorage.getItem(KEY);
+const initial = stored === 'type' ? 'type' : 'operator';
 
-  function apply(mode) {
-    setPaintMode(mode);
-    localStorage.setItem(STORAGE_KEY, mode);
-    container.querySelectorAll('.paint-mode__btn').forEach(b => {
-      const isActive = b.dataset.mode === mode;
-      b.classList.toggle('is-active', isActive);
-      b.setAttribute('aria-pressed', String(isActive));
-    });
-  }
-
-  apply(initial);
-
-  container.addEventListener('click', e => {
-    const btn = e.target.closest('.paint-mode__btn');
-    if (!btn) return;
-    apply(btn.dataset.mode);
+function apply(mode) {
+  setPaintMode(mode);
+  try { localStorage.setItem(KEY, mode); } catch (_) {}
+  document.querySelectorAll('[data-paint]').forEach(b => {
+    const on = b.dataset.paint === mode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
   });
 }
+
+apply(initial);
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-paint]');
+  if (!btn) return;
+  apply(btn.dataset.paint);
+});

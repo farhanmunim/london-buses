@@ -1,254 +1,388 @@
 /**
- * search.js — Search input, autocomplete, and multi-route pill system
+ * search.js — Route search (topbar global + Routes-tab + mobile).
+ *
+ * Supports:
+ *   • Single-route mode  — type or click a suggestion → map zooms, card renders.
+ *   • Multi-route mode   — Space / Comma / Enter commits the typed text into a
+ *                          pill. Multiple pills show side-by-side inside the
+ *                          topbar search field; map renders all routes at once.
+ *   • Clear              — global `#searchClear` (topbar X) + Backspace on an
+ *                          empty input removes the last pill. Clearing the last
+ *                          pill drops back to the "no selection" state.
+ *   • Autocomplete       — prefix + substring matches from the route index,
+ *                          capped at 8, shown below the topbar input with
+ *                          ArrowUp/ArrowDown/Enter/Escape support.
+ *   • Garage → routes    — `app:selectroutes` custom event dispatched by the
+ *                          operator drawer replaces the current selection with
+ *                          the garage's route list, switching to the Routes tab.
  */
 
 import {
   fetchRouteGeoJson, fetchStopsForRoute,
   fetchRouteDestinations, fetchRouteClassification,
+  fetchRouteStopCount,
 } from './api.js';
-
-import { renderRoute, renderMultiRoute, clearRoute, resetMapView } from './map.js';
-import { showRouteDetail, showDefaultState, showStatus, hideStatus } from './route-detail.js';
-import { highlightGaragesForRoute } from './map.js';
-
 import {
-  state, pillIds,
-  searchInput, searchClear, autocompleteList, searchPills,
+  renderRoute, renderMultiRoute, clearRoute, resetMapView, highlightGaragesForRoute,
+} from './map.js';
+import { renderRouteCards, showNoResult, showRoutePrompt } from './route-detail.js';
+import { showRpTab } from './panels.js';
+import {
+  state, globalInput, routeSearchInput,
+  searchPills, searchClear,
 } from './state.js';
 
-// ── Search ────────────────────────────────────────────────────────────────────
+/** Ordered set of route IDs in multi-route mode. */
+const pillIds = new Set();
+let _acIndex = -1; // autocomplete highlight index
 
-export async function doSearch(rawId) {
-  const id = rawId.trim().toUpperCase();
-  if (!id) return;
-  if (id === state.routeId) { closeAutocomplete(); return; }
+const autocompleteList   = document.getElementById('globalAutocomplete');
+const routeAutocomplete  = document.getElementById('routeAutocomplete');
+const clearRouteSearch   = document.getElementById('clearRouteSearch');
 
-  closeAutocomplete();
-  showStatus('Loading route…', 'loading');
+// ── Public helpers ───────────────────────────────────────────────────────────
+
+export function clearAll() {
+  pillIds.clear();
+  state.routeId = null;
+  state.routeGeoJson = null;
+  state.stopsFeatures = null;
+  state.direction = '1';
   clearRoute();
-  showDefaultState();
+  highlightGaragesForRoute(null);
+  resetMapView();
+  renderPills();
+  setInputValue('');
+  closeAutocomplete();
+  showRoutePrompt();
+  syncClearBtn();
+}
 
+/** Replace the current selection with the given route ids. */
+export function selectRoutes(ids) {
+  pillIds.clear();
+  for (const id of ids) pillIds.add(String(id).toUpperCase());
+  renderPills();
+  applySelection();
+}
+
+// ── Internal: selection pipeline ─────────────────────────────────────────────
+
+async function applySelection() {
+  const ids = [...pillIds];
+  syncClearBtn();
+
+  if (ids.length === 0) {
+    clearRoute();
+    highlightGaragesForRoute(null);
+    resetMapView();
+    state.routeId = null;
+    showRoutePrompt();
+    document.dispatchEvent(new CustomEvent('app:routefocuschange', { detail: false }));
+    return;
+  }
+
+  showRpTab('routes');
+  // Stops are only rendered in single-route mode (multi-route draws endpoint
+  // labels, not per-stop circles). Only advertise route-focus as true when
+  // there's exactly one route selected — keeps the Stops toggle from
+  // appearing for multi-route view where it would be a no-op.
+  document.dispatchEvent(new CustomEvent('app:routefocuschange', { detail: ids.length === 1 }));
+
+  if (ids.length === 1) {
+    await renderSingle(ids[0]);
+  } else {
+    // Multi-route: draw every pill on the map, show stacked cards in the panel
+    state.routeId = null;
+    clearRoute();
+    renderMultiRoute(ids);
+    highlightGaragesForRoute(null);
+    await renderMultiCards(ids);
+  }
+}
+
+async function renderSingle(id) {
+  // Short-circuit obvious 404s only when we have an index to check against.
+  if (state.routeIndex.length && !state.routeIndex.includes(id)) {
+    showNoResult(); state.routeId = null; return;
+  }
   try {
-    // Stops come from the live TfL API and can fail independently of the
-    // static route data. Fetch them alongside the rest but don't let a stops
-    // failure block rendering the route itself.
-    const stopsPromise = fetchStopsForRoute(id).catch(err => {
-      console.warn(`Stops unavailable for ${id}:`, err.message);
-      return null; // sentinel — "failed" rather than "genuinely empty"
-    });
-
-    const [geojson, stopsResult, destinations, classification] = await Promise.all([
+    const stopsPromise = fetchStopsForRoute(id).catch(() => null);
+    const [geojson, stops, destinations, classification] = await Promise.all([
       fetchRouteGeoJson(id),
       stopsPromise,
       fetchRouteDestinations(id),
       fetchRouteClassification(id),
     ]);
-
-    const stops = stopsResult ?? [];
     state.routeId       = id;
     state.routeGeoJson  = geojson;
-    state.stopsFeatures = stops;
+    state.stopsFeatures = stops ?? [];
     state.direction     = '1';
-
-    renderRoute(geojson, stops, '1');
-    showRouteDetail(id, geojson, stops, destinations, classification);
+    renderRoute(geojson, stops ?? [], '1');
     highlightGaragesForRoute(id);
-    if (stopsResult === null) showStatus('Stops unavailable — route shown without stops', 'error');
-    else hideStatus();
+    const stopCount = Array.isArray(stops) ? stops.length : 0;
+    const entry = { id, classification, destinations, stopCount };
+    renderRouteCards([entry], { direction: '1' });
+    // Cache the active single-route entry so the direction toggle can
+    // re-render the card without re-fetching.
+    state._singleRouteEntry = entry;
   } catch (err) {
-    const is404 = err.message.includes('404') || err.message.includes('HTTP 4');
-    showStatus(is404 ? `Route "${id}" not found` : 'Something went wrong', 'error');
-    console.error(err);
-    state.routeId = null;
+    console.warn(`Route ${id} lookup failed:`, err.message);
+    showNoResult(); state.routeId = null;
   }
 }
 
-// ── Pill (multi-route) system ──────────────────────────────────────────────────
+async function renderMultiCards(ids) {
+  // Pull destinations + classifications + stop count in parallel. All three
+  // lookups hit already-cached data after the first call, so the Promise.all
+  // resolves instantly on subsequent opens.
+  const pairs = await Promise.all(ids.map(async id => {
+    const [classification, destinations, stopCount] = await Promise.all([
+      fetchRouteClassification(id).catch(() => null),
+      fetchRouteDestinations(id).catch(() => null),
+      fetchRouteStopCount(id).catch(() => 0),
+    ]);
+    return { id, classification, destinations, stopCount };
+  }));
+  renderRouteCards(pairs);
+}
 
-export function commitPill(id) {
-  if (!id || pillIds.has(id)) { searchInput.value = ''; updateSearchClear(); return; }
+// ── Input handling ───────────────────────────────────────────────────────────
 
-  // Switching from single-route → multi-route: fold current route into first pill
-  if (state.routeId && !pillIds.size) {
-    pillIds.add(state.routeId);
-    state.routeId       = null;
-    state.routeGeoJson  = null;
-    state.stopsFeatures = null;
-  }
-
+function commitPill(raw) {
+  const id = (raw ?? '').trim().toUpperCase();
+  if (!id) return;
+  if (pillIds.has(id)) return;
   pillIds.add(id);
-  searchInput.value = '';
-  searchInput.placeholder = 'Add another route…';
-  updateSearchClear();
-  renderPillsDOM();
-  applyMultiRoute();
+  setInputValue('');
+  renderPills();
+  applySelection();
 }
 
-export function removePill(id) {
-  pillIds.delete(id);
-  renderPillsDOM();
-  if (pillIds.size === 0) exitMultiRoute();
-  else applyMultiRoute();
+function removeLastPill() {
+  const arr = [...pillIds];
+  if (!arr.length) return;
+  pillIds.delete(arr[arr.length - 1]);
+  renderPills();
+  applySelection();
 }
 
-export function clearAll() {
-  pillIds.clear();
-  renderPillsDOM();
-  clearRoute();
-  highlightGaragesForRoute(null);
-  resetMapView();
-  state.routeId       = null;
-  state.routeGeoJson  = null;
-  state.stopsFeatures = null;
-  state.direction     = '1';
-  searchInput.value = '';
-  searchInput.placeholder = 'Search a route or click the map…';
-  closeAutocomplete();
-  updateSearchClear();
-  showDefaultState();
+function removePill(id) {
+  if (!pillIds.delete(id)) return;
+  renderPills();
+  applySelection();
 }
 
-export function updateSearchClear() {
-  searchClear.hidden = !searchInput.value && pillIds.size === 0;
-  document.dispatchEvent(new CustomEvent('app:searchstatechange'));
-}
+// Max pills shown inline before overflow is collapsed into "+N". The topbar
+// search is a fixed-width pill strip; beyond 3 pills the placeholder starts
+// crowding the last chip, so we cap visible chips and summarise the rest.
+const MAX_VISIBLE_PILLS = 3;
 
-function renderPillsDOM() {
+function renderPills() {
+  if (!searchPills) return;
   searchPills.innerHTML = '';
 
-  for (const id of pillIds) {
-    const pill  = document.createElement('span');
-    pill.className  = 'search-pill';
-    pill.dataset.id = id;
+  // Placeholder: nothing when pills are active — the presence of chips tells
+  // the user they're in multi-route mode. When empty, show the full prompt.
+  if (globalInput)      globalInput.placeholder      = pillIds.size > 0 ? '' : 'Search a route, e.g. 25 or N73…';
+  if (routeSearchInput) routeSearchInput.placeholder = pillIds.size > 0 ? '' : 'Type a route, e.g. 25 or N73…';
 
-    const label = document.createElement('span');
-    label.textContent = id;
+  if (pillIds.size === 0) { searchPills.hidden = true; return; }
+  searchPills.hidden = false;
 
-    const btn = document.createElement('button');
-    btn.className = 'search-pill-remove';
-    btn.type = 'button';
-    btn.setAttribute('aria-label', `Remove route ${id}`);
-    btn.innerHTML = '<svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-    btn.addEventListener('click', e => { e.stopPropagation(); removePill(id); });
+  const ids      = [...pillIds];
+  const visible  = ids.slice(0, MAX_VISIBLE_PILLS);
+  const overflow = ids.length - visible.length;
 
-    pill.append(label, btn);
+  for (const id of visible) {
+    const pill = document.createElement('span');
+    pill.className = 'search-pill';
+    pill.innerHTML = `<span>${escapeHtml(id)}</span>
+      <button type="button" class="search-pill-x" aria-label="Remove ${escapeHtml(id)}">
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>`;
+    pill.querySelector('.search-pill-x').addEventListener('click', e => {
+      e.stopPropagation();
+      removePill(id);
+    });
     searchPills.appendChild(pill);
   }
 
-  searchPills.hidden = pillIds.size === 0;
+  if (overflow > 0) {
+    const more = document.createElement('span');
+    more.className = 'search-pill search-pill-more';
+    more.title = ids.slice(MAX_VISIBLE_PILLS).join(', ');
+    more.textContent = `+${overflow}`;
+    searchPills.appendChild(more);
+  }
 }
 
-function applyMultiRoute() {
-  clearRoute();
-  highlightGaragesForRoute(null);
-  showDefaultState();
-  renderMultiRoute([...pillIds]);
+function setInputValue(v) {
+  if (globalInput && globalInput.value !== v) globalInput.value = v;
+  if (routeSearchInput && routeSearchInput.value !== v) routeSearchInput.value = v;
 }
 
-function exitMultiRoute() {
-  clearRoute();
-  searchInput.placeholder = 'Search a route or click the map…';
-  updateSearchClear();
-  showDefaultState();
+function syncClearBtn() {
+  const active = pillIds.size > 0 || !!(globalInput?.value) || !!(routeSearchInput?.value);
+  if (searchClear)      searchClear.hidden      = !active;
+  if (clearRouteSearch) clearRouteSearch.hidden = !active;
+  // Fan-out so filters.js can refresh its global Clear-all button visibility.
+  document.dispatchEvent(new CustomEvent('app:selectionchanged'));
 }
 
-// ── Autocomplete ──────────────────────────────────────────────────────────────
+// ── Autocomplete ─────────────────────────────────────────────────────────────
+// Shared render/close/highlight helpers — the global (topbar) and routes-tab
+// lists use the same keyboard pipeline so the two inputs feel identical.
 
-export function renderAutocomplete(query) {
-  if (!query || !state.routeIndex.length) { closeAutocomplete(); return; }
-  const q = query.toUpperCase();
+function renderAutocomplete(list, query) {
+  if (!list) return;
+  const q = (query ?? '').trim().toUpperCase();
+  if (!q || !state.routeIndex.length) { closeAutocomplete(list); return; }
+
   const prefix = state.routeIndex.filter(id => id.startsWith(q));
   const other  = state.routeIndex.filter(id => !id.startsWith(q) && id.includes(q));
   const matches = [...prefix, ...other].slice(0, 8);
+  if (!matches.length) { closeAutocomplete(list); return; }
 
-  if (!matches.length) { closeAutocomplete(); return; }
-
-  autocompleteList.innerHTML = matches.map(id => {
-    const hiId = id.replace(new RegExp(`(${escRe(q)})`, 'i'), '<mark>$1</mark>');
+  list.innerHTML = matches.map(id => {
+    const hi   = id.replace(new RegExp(`(${escRe(q)})`, 'i'), '<mark>$1</mark>');
     const dest = state.destinations[id];
     const hint = dest?.outbound?.destination ?? dest?.inbound?.destination ?? '';
     return `<li role="option" aria-selected="false" data-value="${id}" tabindex="-1">
-      <span class="ac-id">${hiId}</span>
-      ${hint ? `<span class="ac-dest">${hint}</span>` : ''}
+      <span class="ac-id">${hi}</span>
+      ${hint ? `<span class="ac-dest">${escapeHtml(hint)}</span>` : ''}
     </li>`;
   }).join('');
-
-  autocompleteList.querySelectorAll('li').forEach(li => {
+  list.querySelectorAll('li').forEach(li => {
     li.addEventListener('mousedown', e => {
       e.preventDefault();
-      closeAutocomplete();
-      if (pillIds.size > 0) {
-        commitPill(li.dataset.value);
-      } else {
-        searchInput.value = li.dataset.value;
-        updateSearchClear();
-        doSearch(li.dataset.value);
-      }
+      commitPill(li.dataset.value);
+      closeAllAutocomplete();
     });
   });
-
-  autocompleteList.hidden = false;
-  searchInput.setAttribute('aria-expanded', 'true');
+  _acIndex = -1;
+  list.hidden = false;
 }
-
-export function closeAutocomplete() {
-  autocompleteList.hidden = true;
-  autocompleteList.innerHTML = '';
-  searchInput.setAttribute('aria-expanded', 'false');
+function closeAutocomplete(list) {
+  if (!list) return;
+  list.hidden = true;
+  list.innerHTML = '';
+  _acIndex = -1;
 }
-
-function moveHighlight(delta) {
-  const items = [...autocompleteList.querySelectorAll('li')];
+function closeAllAutocomplete() {
+  closeAutocomplete(autocompleteList);
+  closeAutocomplete(routeAutocomplete);
+}
+function moveHighlight(list, delta) {
+  if (!list || list.hidden) return;
+  const items = [...list.querySelectorAll('li')];
   if (!items.length) return;
-  const cur  = items.findIndex(li => li.getAttribute('aria-selected') === 'true');
-  const next = Math.max(0, Math.min(items.length - 1, (cur === -1 && delta > 0 ? -1 : cur) + delta));
-  items.forEach(li => li.setAttribute('aria-selected', 'false'));
-  items[next].setAttribute('aria-selected', 'true');
+  _acIndex = Math.max(0, Math.min(items.length - 1, (_acIndex === -1 && delta > 0 ? -1 : _acIndex) + delta));
+  items.forEach((li, i) => li.setAttribute('aria-selected', String(i === _acIndex)));
+  items[_acIndex]?.scrollIntoView({ block: 'nearest' });
 }
 
-function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escRe(s)     { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function escapeHtml(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-// ── Event listeners ───────────────────────────────────────────────────────────
+// ── Event wiring ─────────────────────────────────────────────────────────────
 
-searchInput.addEventListener('input', () => {
-  updateSearchClear();
-  renderAutocomplete(searchInput.value.trim());
+/**
+ * Wire an input to the shared pill pipeline. Same contract as the topbar
+ * search: Space / Comma / Enter commits a pill (optionally from the AC list),
+ * Backspace on empty removes the last pill, ArrowUp/Down navigates the AC,
+ * Escape closes it.
+ */
+function wireInput(input, list) {
+  if (!input) return;
+  input.addEventListener('input', () => {
+    setInputValue(input.value);
+    renderAutocomplete(list, input.value);
+    syncClearBtn();
+  });
+  input.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === ',') {
+      const v = input.value.trim();
+      if (v) { e.preventDefault(); commitPill(v); closeAllAutocomplete(); }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const sel = list?.querySelector('[aria-selected="true"]');
+      const v = sel ? sel.dataset.value : input.value.trim();
+      if (v) commitPill(v);
+      closeAllAutocomplete();
+    } else if (e.key === 'Backspace' && !input.value) {
+      removeLastPill();
+    } else if (e.key === 'ArrowDown') { e.preventDefault(); moveHighlight(list, 1); }
+    else   if (e.key === 'ArrowUp')   { e.preventDefault(); moveHighlight(list, -1); }
+    else   if (e.key === 'Escape')    { closeAllAutocomplete(); input.blur(); }
+  });
+}
+
+wireInput(globalInput,      autocompleteList);
+// On mobile the real #routeSearchInput is relocated into the pull-up sheet,
+// so wiring it once covers both the desktop Routes-tab input and the mobile
+// one — no separate mobile element needed.
+wireInput(routeSearchInput, routeAutocomplete);
+
+// Both Clear buttons call into the same reset.
+searchClear?.addEventListener('click', () => {
+  clearAll();
+  globalInput?.focus();
+});
+clearRouteSearch?.addEventListener('click', () => {
+  clearAll();
+  routeSearchInput?.focus();
 });
 
-searchInput.addEventListener('keydown', e => {
-  if (e.key === ' ' || e.key === ',') {
-    const v = searchInput.value.trim().toUpperCase();
-    if (v) { e.preventDefault(); closeAutocomplete(); commitPill(v); }
-
-  } else if (e.key === 'Enter') {
-    const sel = autocompleteList.querySelector('[aria-selected="true"]');
-    const id  = (sel ? sel.dataset.value : searchInput.value).trim().toUpperCase();
-    closeAutocomplete();
-    if (pillIds.size > 0) { if (id) commitPill(id); }
-    else doSearch(id);
-
-  } else if (e.key === 'Backspace' && !searchInput.value && pillIds.size > 0) {
-    removePill([...pillIds].at(-1));
-
-  } else if (e.key === 'ArrowDown') { e.preventDefault(); moveHighlight(1); }
-  else if (e.key === 'ArrowUp')     { e.preventDefault(); moveHighlight(-1); }
-  else if (e.key === 'Escape')      { closeAutocomplete(); searchInput.blur(); }
-});
-
-searchClear.addEventListener('click', () => {
-  if (pillIds.size > 0 || state.routeId) clearAll();
-  else { searchInput.value = ''; closeAutocomplete(); updateSearchClear(); }
-  searchInput.focus();
-});
-
-// Close autocomplete when clicking outside the search section
-document.addEventListener('click', e => {
-  if (!e.target.closest('#search-section')) closeAutocomplete();
-});
-
-// Route chip click from the map identify popup
+// Map popup chip → commit as pill (preserves any existing pills)
 document.addEventListener('map:routeclick', e => {
-  const id = e.detail;
-  if (pillIds.size > 0) commitPill(id);
-  else { searchInput.value = id; updateSearchClear(); doSearch(id); }
+  const id = String(e.detail ?? '').toUpperCase();
+  if (id) commitPill(id);
+});
+
+// Close autocomplete on outside click (covers both lists).
+document.addEventListener('click', e => {
+  if (!e.target.closest('#globalSearch, #globalAutocomplete')) closeAutocomplete(autocompleteList);
+  if (!e.target.closest('#routeSearchInput, #routeAutocomplete')) closeAutocomplete(routeAutocomplete);
+});
+
+// Global reset button in the topbar wipes every selection.
+document.addEventListener('app:resetall', () => { clearAll(); });
+
+// Direction toggle inside a focused route card — flip outbound ⇄ inbound.
+// We update the name text *in place* (instead of re-rendering the card) so
+// the button keeps its DOM identity and the spin animation plays cleanly.
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-rc-dir]');
+  if (!btn || btn.hidden) return;
+  if (!state.routeGeoJson || !state._singleRouteEntry) return;
+  const entry = state._singleRouteEntry;
+  const out = entry.destinations?.outbound?.destination;
+  const inb = entry.destinations?.inbound?.destination;
+  if (!out || !inb) return;
+
+  // One-shot spin animation — remove + re-add so rapid clicks re-trigger.
+  btn.classList.remove('is-spinning');
+  void btn.offsetWidth;
+  btn.classList.add('is-spinning');
+
+  const next = state.direction === '1' ? '2' : '1';
+  state.direction = next;
+  renderRoute(state.routeGeoJson, state.stopsFeatures ?? [], next);
+
+  // Patch the rc-name text in place.
+  const card   = btn.closest('.route-card');
+  const nameEl = card?.querySelector('[data-rc-name]');
+  if (nameEl) {
+    const origin = next === '1' ? inb : out;
+    const dest   = next === '1' ? out : inb;
+    nameEl.textContent = `${origin} → ${dest}`;
+  }
+});
+
+// Garage-click in the operator drawer → replace selection with that garage's routes
+document.addEventListener('app:selectroutes', e => {
+  const ids = Array.isArray(e.detail) ? e.detail : (e.detail?.ids ?? []);
+  if (!ids.length) return;
+  selectRoutes(ids);
 });
