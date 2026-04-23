@@ -60,6 +60,8 @@ jobs:
           git add -A \
             data/routes-overview.geojson \
             data/route_destinations.json \
+            data/route_stops.json \
+            data/stops.json \
             data/route_classifications.json \
             data/build-meta.json \
             data/geometry-source.json \

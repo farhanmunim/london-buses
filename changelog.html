@@ -44,7 +44,7 @@
         </div>
         <span>London Buses</span>
       </a>
-      <a href="changelog.html" class="version-pill" title="View changelog">v2.2</a>
+      <a href="changelog.html" class="version-pill" title="View changelog">v2.4</a>
 
       <button class="btn btn-ghost btn-icon btn-sm theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
         <svg class="icon icon-sm theme-icon-light" viewBox="0 0 24 24">
@@ -74,6 +74,29 @@
               Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 05:00 UTC.
             </p>
           </header>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.4 — Stops baked in & bus-stop filter
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.4</span> Apr 23, 2026</div>
+            <a href="#v2_4" class="cl-entry-title">Bus-stop filter and a stops-first refresh</a>
+            <p class="cl-body-text">
+              New in the filters panel: a <strong>Bus stop</strong> search, right below Propulsion. Pick a stop and the visible route set narrows to only the routes serving it — composed with every other filter (operator, route type, frequency, deck, propulsion) as AND. So "Go-Ahead electric routes passing through Camden Town" is one click away.
+            </p>
+            <p class="cl-body-text">
+              Under the hood, <strong>stops are now pre-baked weekly</strong> instead of fetched live from TfL. A new pipeline step produces <code>data/stops.json</code> (every London bus stop, with a reverse <em>stop → routes</em> index) and <code>data/route_stops.json</code> (per-route ordered stop lists with the "Towards …" label). Opening a route is instant, and the app behaves the same whether TfL is reachable or not.
+            </p>
+            <p class="cl-body-text">
+              Also: CI Actions bumped to v5 (Node 24) to clear the Node 20 deprecation warning, and the refresh pipeline grew from 8 to 9 steps to fit the new stops fetch.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
 
           <!-- ═══════════════════════════════════════════════════════════════
                v2.2 — TfL-first data pipeline & accuracy overhaul

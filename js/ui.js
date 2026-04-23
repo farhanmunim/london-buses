@@ -8,6 +8,7 @@
  */
 
 import './search.js';        // search input, autocomplete, pill system
+import './stop-search.js';   // bus-stop filter input + autocomplete
 import './route-detail.js';  // right-panel route view, direction toggle, toasts
 import './panels.js';        // desktop panel collapse/expand + map resize
 import './toggles.js';       // topbar Show/Hide Routes & Garages toggles

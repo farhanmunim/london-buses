@@ -140,3 +140,14 @@ _2026-04-17_
 - **Hardened `.gitignore`**: Broader env/secret patterns (`*.env`, `.env.*`, `*.pem`, `*.key`, `secrets.json`, `credentials.json`), editor dirs (`.vscode/`, `.idea/`), Claude `settings.json`, OS cruft.
 
 ---
+
+## v2.4 – Stops Baked In & Bus-Stop Filter
+
+_2026-04-23_
+
+- **Stops are now pre-baked weekly, not fetched live from TfL**. New pipeline step `fetch-route-stops.js` calls `/Line/<id>/StopPoints` for every route and produces two files: `data/stops.json` (30 677 unique stops keyed by naptan ID, with `name`, `indicator`, `lat`, `lon`, and a `routes` reverse index) and `data/route_stops.json` (per-route ordered stop lists with the `towards` label for each stop). The frontend's `fetchStopsForRoute()` now joins these two files instead of hitting `api.tfl.gov.uk` — zero runtime TfL calls for stop data, so opening a route is instant and the app works the same whether TfL is up or not.
+- **New bus-stop filter**. A "Bus stop" search in the filters panel (below Propulsion) filters the visible route set to only routes serving the selected stop. Composes with every other filter (operator, route type, frequency, deck, propulsion) as AND — e.g. "Go-Ahead electric routes passing through Camden Town". Autocomplete is prefix-first then substring, top 8 matches. `stops.json` is lazy-loaded on first focus of the input so it doesn't land on every page view.
+- **Pipeline: 8 → 9 steps**. Stops slot in between route destinations and garages. Soft-fail like the other fetch steps.
+- **GitHub Actions bumped to v5**. `actions/checkout@v5` and `actions/setup-node@v5` clear the Node 20 deprecation warning; both run on Node 24.
+
+---

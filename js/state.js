@@ -16,6 +16,7 @@ export const state = {
   routeIndex:      [],
   destinations:    {},
   classifications: {},
+  selectedStop:    null, // { id, name } | null — active stop filter
 };
 
 /** Ordered set of route IDs currently shown in multi-route mode. */
@@ -30,6 +31,10 @@ export const searchInput       = document.getElementById('search-input');
 export const searchClear       = document.getElementById('search-clear');
 export const autocompleteList  = document.getElementById('autocomplete-list');
 export const searchPills       = document.getElementById('search-pills');
+export const stopSearchInput       = document.getElementById('stop-search-input');
+export const stopSearchClear       = document.getElementById('stop-search-clear');
+export const stopAutocompleteList  = document.getElementById('stop-autocomplete-list');
+export const stopSearchPills       = document.getElementById('stop-search-pills');
 export const defaultState      = document.getElementById('default-state');
 export const routeDetail       = document.getElementById('route-detail');
 export const filtersSection    = document.getElementById('filters-section');

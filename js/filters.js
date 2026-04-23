@@ -14,6 +14,17 @@
 import { filterOverview, filterGarages, getVisibleRouteProps } from './map.js';
 import { state, filtersSection } from './state.js';
 import { updateFilterStat, renderOperatorStats } from './stats.js';
+import { fetchStopsRegistry } from './api.js';
+
+// Cache of the stopId → Set<routeId> lookup, populated the first time a stop
+// filter is applied. The registry is also memoised inside api.js.
+let _stopsRegistry = null;
+async function stopRouteIdsFor(stopId) {
+  if (!_stopsRegistry) _stopsRegistry = await fetchStopsRegistry();
+  const routes = _stopsRegistry[stopId]?.routes;
+  if (!routes || !routes.length) return new Set();
+  return new Set(routes.map(r => String(r).toUpperCase()));
+}
 
 // Route filter keys (everything in the main filters block except garageoperator)
 const ROUTE_FILTER_KEYS = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
@@ -22,7 +33,7 @@ function activeSet(key) {
   const chips = [...filtersSection.querySelectorAll(`.chip.active[data-filter="${key}"]`)];
   return chips.length ? new Set(chips.map(c => c.dataset.val)) : null;
 }
-function buildFilters() {
+function buildFilters(stopRouteIds = null) {
   return {
     types:           activeSet('routetype'),
     deck:            activeSet('deck'),
@@ -30,6 +41,7 @@ function buildFilters() {
     operator:        activeSet('operator'),
     propulsion:      activeSet('propulsion'),
     garageOperator:  activeSet('garageoperator'),
+    stopRouteIds,
   };
 }
 function anyActive(key) {
@@ -45,8 +57,11 @@ function clearChips(keys) {
   applyFilters();
 }
 
-export function applyFilters() {
-  const filters = buildFilters();
+export async function applyFilters() {
+  const sel = state.selectedStop;
+  const stopRouteIds = sel ? await stopRouteIdsFor(sel.id) : null;
+
+  const filters = buildFilters(stopRouteIds);
   const { routeCount } = filterOverview(filters);
   filterGarages(filters.garageOperator); // independent of route filters
   updateFilterStat(routeCount);
@@ -71,10 +86,11 @@ function syncClearBtn() {
   const anyGarage = anyActive('garageoperator');
   const anySearch = !!state.routeId || (document.getElementById('search-input')?.value.trim() ?? '') !== '';
   const anyPill   = !!document.querySelector('#search-pills .search-pill');
+  const anyStop   = !!state.selectedStop;
 
-  if (route)  route.hidden  = !anyRoute;
+  if (route)  route.hidden  = !(anyRoute || anyStop);
   if (garage) garage.hidden = !anyGarage;
-  const anyActiveAll = anyRoute || anyGarage || anySearch || anyPill;
+  const anyActiveAll = anyRoute || anyGarage || anySearch || anyPill || anyStop;
   if (global) global.hidden = !anyActiveAll;
   const bar = document.getElementById('filter-bar');
   if (bar) bar.hidden = !anyActiveAll;
@@ -101,7 +117,16 @@ filtersSection.addEventListener('click', e => {
 });
 
 document.addEventListener('app:filterscleared',    applyFilters);
+document.addEventListener('app:stopfilterchange',  applyFilters);
 document.addEventListener('app:searchstatechange', syncClearBtn);
 
-document.getElementById('clear-route-filters-btn')?.addEventListener('click', () => clearChips(ROUTE_FILTER_KEYS));
+document.getElementById('clear-route-filters-btn')?.addEventListener('click', () => {
+  // The route-filters section Clear also clears the stop filter, since the
+  // stop filter narrows the same route set from the same panel.
+  if (state.selectedStop) {
+    state.selectedStop = null;
+    document.dispatchEvent(new CustomEvent('app:stopfilterchange'));
+  }
+  clearChips(ROUTE_FILTER_KEYS);
+});
 document.getElementById('clear-garage-filters-btn')?.addEventListener('click', () => clearChips(['garageoperator']));

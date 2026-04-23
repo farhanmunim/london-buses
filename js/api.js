@@ -2,12 +2,12 @@
  * api.js – Data access layer
  *
  * Loads static GeoJSON/JSON files from the /data directory.
- * Stop data is fetched live from the TfL API (authoritative source, no key needed).
+ * Stops come from the pre-baked weekly refresh (data/stops.json +
+ * data/route_stops.json), not a live TfL call.
  * All responses are cached in memory for the session.
  */
 
 const BASE    = './data';
-const TFL_API = 'https://api.tfl.gov.uk';
 
 // In-memory cache
 const _cache = new Map();
@@ -104,34 +104,61 @@ export async function fetchGarageLocations() {
 }
 
 /**
- * Fetches stops for a route live from the TfL API. Throws on network error —
- * callers decide whether to show a fallback or surface the failure to the user.
+ * Returns the canonical stops registry: stopId → { name, indicator, lat, lon, routes[] }.
+ * Lazy-loaded on first call, then cached for the session.
+ * @returns {Promise<Record<string, { name: string, indicator: string|null, lat: number, lon: number, routes: string[] }>>}
+ */
+export async function fetchStopsRegistry() {
+  const payload = await loadJson(`${BASE}/stops.json`);
+  return payload?.stops ?? {};
+}
+
+/**
+ * Loads the stored stops registry + per-route stop lists once and caches them.
+ * @returns {Promise<{ stops: Record<string, object>, routeStops: Record<string, object[]> }>}
+ */
+async function loadStopsBundle() {
+  const [stopsPayload, routeStopsPayload] = await Promise.all([
+    loadJson(`${BASE}/stops.json`),
+    loadJson(`${BASE}/route_stops.json`),
+  ]);
+  return {
+    stops:      stopsPayload?.stops ?? {},
+    routeStops: routeStopsPayload?.routes ?? {},
+  };
+}
+
+/**
+ * Returns the stops for a route as GeoJSON Point features, read from the
+ * weekly-refreshed static data files. Preserves the shape returned by the
+ * previous live-TfL implementation so downstream callers don't change.
  * @param {string} routeId
  * @returns {Promise<object[]>} Array of GeoJSON-style feature objects
  */
 export async function fetchStopsForRoute(routeId) {
   const id       = routeId.toUpperCase();
-  const cacheKey = `tfl:stops:${id}`;
+  const cacheKey = `stops:${id}`;
   if (_cache.has(cacheKey)) return _cache.get(cacheKey);
 
-  const res = await fetch(`${TFL_API}/Line/${encodeURIComponent(id)}/StopPoints`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  const stops = Array.isArray(data) ? data : (data.value ?? []);
+  const { stops, routeStops } = await loadStopsBundle();
+  const entries = routeStops[id] ?? [];
 
-  const features = stops
-    .filter(s => s.lat && s.lon)
-    .map(s => ({
+  const features = [];
+  for (const entry of entries) {
+    const stop = stops[entry.id];
+    if (!stop) continue;
+    features.push({
       type: 'Feature',
-      geometry: { type: 'Point', coordinates: [s.lon, s.lat] },
+      geometry: { type: 'Point', coordinates: [stop.lon, stop.lat] },
       properties: {
-        id:        s.naptanId ?? '',
-        name:      s.commonName ?? 'Stop',
-        indicator: s.indicator ?? null,
-        towards:   s.additionalProperties?.find(p => p.key === 'Towards')?.value ?? null,
-        routes:    (s.lines ?? []).map(l => l.id.toUpperCase()).sort().join(','),
+        id:        entry.id,
+        name:      stop.name ?? 'Stop',
+        indicator: stop.indicator ?? null,
+        towards:   entry.towards ?? null,
+        routes:    (stop.routes ?? []).map(r => r.toUpperCase()).sort().join(','),
       },
-    }));
+    });
+  }
 
   _cache.set(cacheKey, features);
   return features;

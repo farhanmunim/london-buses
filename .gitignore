@@ -41,9 +41,6 @@ reference/
 # postcodes.io results across runs.
 data/source/
 
-# Large unconsumed dataset — regenerated weekly, not used by frontend
-data/stops.geojson
-
 # Temp files
 *.tmp
 *.bak

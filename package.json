@@ -7,6 +7,7 @@
     "refresh": "node scripts/refresh.js",
     "fetch-data": "node scripts/fetch-data.js",
     "fetch-route-destinations": "node scripts/fetch-route-destinations.js",
+    "fetch-route-stops": "node scripts/fetch-route-stops.js",
     "fetch-garages": "node scripts/fetch-garages.js",
     "fetch-frequencies": "node scripts/fetch-frequencies.js",
     "fetch-route-details": "node scripts/fetch-route-details.js",

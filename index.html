@@ -68,7 +68,7 @@
         </div>
         <span>London Buses</span>
       </a>
-      <a href="changelog.html" class="version-pill" title="View changelog">v2.2</a>
+      <a href="changelog.html" class="version-pill" title="View changelog">v2.4</a>
 
       <button class="btn btn-ghost btn-icon btn-sm theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
         <svg class="icon icon-sm theme-icon-light" viewBox="0 0 24 24">
@@ -198,6 +198,24 @@
                 <button class="chip chip-outline" data-filter="propulsion" data-val="hydrogen" aria-pressed="false">Hydrogen</button>
                 <button class="chip chip-outline filter-chip--unknown" data-filter="propulsion" data-val="__unknown__" aria-pressed="false">Unknown</button>
               </div>
+            </div>
+
+            <div class="filter-group" id="stop-search-section">
+              <span class="filter-group-label" id="fg-stop">Bus stop</span>
+              <div id="stop-search-field" role="search" aria-labelledby="fg-stop">
+                <svg class="search-icon icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="10" r="3" />
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 0 0-8-8z" />
+                </svg>
+                <input id="stop-search-input" type="text" placeholder="Search a stop…" autocomplete="off" spellcheck="false" aria-label="Filter routes by bus stop" aria-autocomplete="list" aria-controls="stop-autocomplete-list" aria-expanded="false" />
+                <button id="stop-search-clear" aria-label="Clear stop filter" hidden>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                    <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+              <ul id="stop-autocomplete-list" role="listbox" aria-label="Stop suggestions" hidden></ul>
+              <div id="stop-search-pills" aria-label="Selected stop" hidden></div>
             </div>
 
             <div class="section-summary">

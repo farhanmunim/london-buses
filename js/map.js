@@ -67,11 +67,12 @@ function operatorColorForRoute(routeId) {
 
 // Active filter state — null means "all pass"
 let _filters = {
-  types:      null,
-  deck:       null,
-  frequency:  null,
-  operator:   null,
-  propulsion: null,
+  types:        null,
+  deck:         null,
+  frequency:    null,
+  operator:     null,
+  propulsion:   null,
+  stopRouteIds: null, // Set<routeId> of routes serving the selected stop, or null
 };
 
 let _map             = null;
@@ -121,6 +122,7 @@ function featurePassesFilter(props) {
   if (!matchesFilterSet(_filters.frequency,  props.frequency))  return false;
   if (!matchesFilterSet(_filters.operator,   props.operator))   return false;
   if (!matchesFilterSet(_filters.propulsion, props.propulsion)) return false;
+  if (_filters.stopRouteIds && !_filters.stopRouteIds.has(props.routeId)) return false;
   return true;
 }
 

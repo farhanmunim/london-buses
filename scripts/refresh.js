@@ -4,12 +4,13 @@
  * Pipeline order:
  *   1. fetch-data.js                — geometry ZIP → per-route GeoJSON
  *   2. fetch-route-destinations.js  — TfL API → data/route_destinations.json
- *   3. fetch-garages.js             — londonbusroutes.net CSV + postcodes.io → data/garages.geojson
- *   4. fetch-frequencies.js         — TfL timetables → data/frequencies.json
- *   5. fetch-route-details.js       — garages + details.htm → data/source/route_details.json
- *   6. build-classifications.js     — data/route_classifications.json (master per-route record)
- *   7. build-overview.js            — simplified network overview layer
- *   8. build-garage-locations.js    — geocode garages → data/garage-locations.json (frontend)
+ *   3. fetch-route-stops.js         — TfL API → data/route_stops.json + data/stops.json
+ *   4. fetch-garages.js             — londonbusroutes.net CSV + postcodes.io → data/garages.geojson
+ *   5. fetch-frequencies.js         — TfL timetables → data/frequencies.json
+ *   6. fetch-route-details.js       — garages + details.htm → data/source/route_details.json
+ *   7. build-classifications.js     — data/route_classifications.json (master per-route record)
+ *   8. build-overview.js            — simplified network overview layer
+ *   9. build-garage-locations.js    — geocode garages → data/garage-locations.json (frontend)
  */
 
 import { execFileSync } from 'child_process';
@@ -19,14 +20,15 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const STEPS = [
-  { label: 'Step 1/8 — Route geometry',                     script: 'fetch-data.js' },
-  { label: 'Step 2/8 — Route destinations (TfL API)',       script: 'fetch-route-destinations.js' },
-  { label: 'Step 3/8 — Garages CSV + geocode',              script: 'fetch-garages.js' },
-  { label: 'Step 4/8 — Frequencies from timetables',        script: 'fetch-frequencies.js' },
-  { label: 'Step 5/8 — Route details (vehicle/op/garage)',  script: 'fetch-route-details.js' },
-  { label: 'Step 6/8 — Build classifications',              script: 'build-classifications.js' },
-  { label: 'Step 7/8 — Build overview + snapshot',          script: 'build-overview.js' },
-  { label: 'Step 8/8 — Garage locations (frontend JSON)',   script: 'build-garage-locations.js' },
+  { label: 'Step 1/9 — Route geometry',                     script: 'fetch-data.js' },
+  { label: 'Step 2/9 — Route destinations (TfL API)',       script: 'fetch-route-destinations.js' },
+  { label: 'Step 3/9 — Route stops (TfL API)',              script: 'fetch-route-stops.js' },
+  { label: 'Step 4/9 — Garages CSV + geocode',              script: 'fetch-garages.js' },
+  { label: 'Step 5/9 — Frequencies from timetables',        script: 'fetch-frequencies.js' },
+  { label: 'Step 6/9 — Route details (vehicle/op/garage)',  script: 'fetch-route-details.js' },
+  { label: 'Step 7/9 — Build classifications',              script: 'build-classifications.js' },
+  { label: 'Step 8/9 — Build overview + snapshot',          script: 'build-overview.js' },
+  { label: 'Step 9/9 — Garage locations (frontend JSON)',   script: 'build-garage-locations.js' },
 ];
 
 // Fetch steps are allowed to fail without aborting the whole pipeline — the
@@ -36,6 +38,7 @@ const STEPS = [
 const SOFT_FAIL = new Set([
   'fetch-data.js',
   'fetch-route-destinations.js',
+  'fetch-route-stops.js',
   'fetch-garages.js',
   'fetch-frequencies.js',
   'fetch-route-details.js',

@@ -4,7 +4,7 @@ Definitive reference for every datapoint in this project: where it comes from, h
 it is cleaned, how blanks get filled, and what to watch out for.
 
 **Cadence:** weekly, Mondays 05:00 UTC, via GitHub Actions (`.github/workflows/refresh-data.yml`).
-**Orchestrator:** `scripts/refresh.js` — runs the 8 pipeline steps in sequence; network-bound fetch steps soft-fail so one flaky source doesn't abort the week. Pure build steps hard-fail.
+**Orchestrator:** `scripts/refresh.js` — runs the 9 pipeline steps in sequence; network-bound fetch steps soft-fail so one flaky source doesn't abort the week. Pure build steps hard-fail.
 **Philosophy:** TfL API first. Scrape only to fill blanks. Always keep last-known-good
 when a source fails, so a flaky upstream never wipes curated data.
 
@@ -49,10 +49,12 @@ Every field below is denormalized into this file so the frontend only needs **on
 - **`data/garage-locations.json`** — geocoded garage map markers. Consumed by the frontend.
 - **`data/routes-overview.geojson`** — aggressively simplified full-network map layer. Consumed by the frontend.
 - **`data/routes/<id>.geojson`** — per-route full-fidelity geometry. Consumed by the frontend when a single route is selected.
+- **`data/stops.json`** — canonical stop registry. Shape: `{ stops: { "<naptanId>": { name, indicator, lat, lon, routes: ["1","24",…] } } }`. ~30 k unique stops; ~6 MB on disk, ~1.3 MB gzipped over the wire. Consumed by the frontend: (a) to resolve per-route stops when a route is selected, and (b) to power the bus-stop filter (stopId → routes reverse index is pre-denormalized so the filter is O(1) per feature).
+- **`data/route_stops.json`** — per-route ordered stop list: `{ routes: { "1": [{ id, towards }, …] } }`. The `towards` label is the TfL stop-flag hint ("Towards Hampstead") and is per route+stop, not per stop alone. Consumed by the frontend when rendering stops for a selected route.
 - **`data/build-meta.json`** — generation timestamps shown in the footer.
 - **`data/geometry-source.json`** — upstream ZIP date, read by CI to skip re-committing unchanged per-route files.
 
-Client-side aggregates (e.g. operator-level PVR share, electrification) are computed live in `js/stats.js` from `route_classifications.json` — no separate aggregate file on disk. Stop locations are fetched live from TfL when a single route is opened, so no stops file is produced or shipped.
+Client-side aggregates (e.g. operator-level PVR share, electrification) are computed live in `js/stats.js` from `route_classifications.json` — no separate aggregate file on disk. Stops are **pre-baked weekly** into `stops.json` + `route_stops.json`; the frontend no longer calls the TfL API at runtime for stop data.
 
 ---
 
@@ -62,12 +64,13 @@ Client-side aggregates (e.g. operator-level PVR share, electrification) are comp
 |---|---|---|---|---|
 | 1 | `fetch-data.js` | TfL geometry ZIP | `data/routes/<id>.geojson`, `geometry-source.json` | Soft fail. |
 | 2 | `fetch-route-destinations.js` | TfL API → routes.htm | `route_destinations.json` | Soft fail; per-route fallback. |
-| 3 | `fetch-garages.js` | garages.csv + postcodes.io | `garages.geojson`, `geocode_cache.json` | Soft fail; geocode cache reused. |
-| 4 | `fetch-frequencies.js` | TfL timetables → times/<id>.htm | `frequencies.json` | Soft fail; per-route fallback; zero ≠ high. |
-| 5 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` | Soft fail; each source independently optional. |
-| 6 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. |
-| 7 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 6. |
-| 8 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
+| 3 | `fetch-route-stops.js` | TfL `/Line/<id>/StopPoints` | `stops.json`, `route_stops.json` | Soft fail; last-known-good kept on failure. |
+| 4 | `fetch-garages.js` | garages.csv + postcodes.io | `garages.geojson`, `geocode_cache.json` | Soft fail; geocode cache reused. |
+| 5 | `fetch-frequencies.js` | TfL timetables → times/<id>.htm | `frequencies.json` | Soft fail; per-route fallback; zero ≠ high. |
+| 6 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` | Soft fail; each source independently optional. |
+| 7 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. |
+| 8 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 7. |
+| 9 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
 
 ### Field-precedence (in `build-classifications.js`)
 
@@ -103,7 +106,7 @@ route-overrides.json   (manual curation; always wins)
 
 | Dimension | Limit | Headroom today |
 |---|---|---|
-| **Cloudflare Pages** (free) | 500 builds/mo, unlimited bandwidth, 25 MiB per file, 20 000 files per deploy | We are static only — no deploy-time build. Largest deployed file is `routes-overview.geojson` at ~1.2 MB. Comfortably within. |
+| **Cloudflare Pages** (free) | 500 builds/mo, unlimited bandwidth, 25 MiB per file, 20 000 files per deploy | We are static only — no deploy-time build. Largest deployed files are `stops.json` and `route_stops.json` at ~6 MB each (lazy-loaded on stop-search focus; ~1.3 MB each gzipped). Comfortably within. |
 | **GitHub free plan** | 2 000 Actions minutes/mo (private repos; unlimited for public) | Weekly refresh uses ~6 min → ~25 min/mo. |
 | **GitHub Actions job** | 6 h per job; 30-min timeout configured here | Plenty. |
 | **Repo size** | No hard limit, but >1 GB warns; single file >100 MB blocked | Committed data ~3–4 MB. |
