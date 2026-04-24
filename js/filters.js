@@ -22,7 +22,7 @@ import { state, routeCountEl, mobRoutesEl,
 import { renderOperatorStats } from './stats.js';
 import { showRpTab } from './panels.js';
 
-const ROUTE_FILTER_KEYS   = ['routetype', 'operator', 'frequency', 'deck', 'propulsion', 'tender'];
+const ROUTE_FILTER_KEYS   = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
 const GARAGE_FILTER_KEYS  = ['garageoperator'];
 const ALL_FILTER_KEYS     = [...ROUTE_FILTER_KEYS, ...GARAGE_FILTER_KEYS];
 
