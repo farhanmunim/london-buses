@@ -23,6 +23,10 @@ See [AGENTS.md](AGENTS.md) for the full architecture, data pipeline, and reposit
 - [Transport for London Unified API](https://api.tfl.gov.uk/) — route geometry, destinations, stops
 - [londonbusroutes.net](https://londonbusroutes.net/) — operator, vehicle type, PVR, and frequency data
 
+## Upcoming
+
+- **DVLA Vehicle Enquiry Service propulsion lookup** _(API access requested)_ — Cross-reference [TfL iBus open data](https://ibus.data.tfl.gov.uk/) (registration → operator) with [DVLA VES](https://developer-portal.driver-vehicle-licensing.api.gov.uk/) (registration → fuel type) and TfL live arrivals (vehicleId → route) to derive route propulsion from official records, replacing the current vehicle-string regex heuristic.
+
 ## Tech
 
 Vanilla JavaScript (ES modules), [Leaflet](https://leafletjs.com/), CartoDB Voyager tiles, Cloudflare Pages, GitHub Actions.

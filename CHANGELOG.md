@@ -4,6 +4,24 @@ All notable changes to **London Buses** are listed here.
 
 ---
 
+## Upcoming
+
+- **DVLA Vehicle Enquiry Service (VES) propulsion lookup** _(API access requested)_ — Replace the `details.htm` fleet-prefix heuristic with authoritative fuel-type data from DVLA VES. Pipeline: cross-reference [TfL iBus open data](https://ibus.data.tfl.gov.uk/) (`Vehicle.xml` → registration + operator + bonnet number) against DVLA VES (`registrationNumber → fuelType`) to build a per-vehicle propulsion table, then aggregate per route via TfL live arrivals (`vehicleId` per route). Eliminates the regex parsing of LBR vehicle strings and naturally handles mixed fleets / fleet transitions.
+
+---
+
+## v2.6 – Frequency rules, propulsion fix, headway tier-3 fallback
+
+_2026-04-28_
+
+- **Frequency band collapsed to binary**: `high` = 5+ buses/hour (≤12 min headway), `low` = fewer than 5/hour. The old three-band scheme (high ≤6 / regular 7–15 / low >15 min) is gone everywhere — `bandForHeadway` in `fetch-frequencies.js`, `FREQ_MAP` in the route card, the schema docs in `data.md` / `agent.md`, the filter pills in `index.html`, and all three data files (`frequencies.json`, `route_classifications.json`, `routes-overview.geojson`).
+- **SL7 manually pinned to high frequency** in `data/route-overrides.json`. Its scraped Mon-Sat headway is 15 min so without the override the new rule would put it in `low`.
+- **Propulsion fix for the BZL fleet code**. Stagecoach London / Metroline encode their MCV eVoSeti EV double-deckers and single-deckers as `BZL` in the `details.htm` vehicle column (e.g. `BZL (dd) 10.9m/MCV 2D`). The body string alone (`MCV`) has no EV marker and `cleanVehicleType` strips the `BZL` prefix, so `derivePropulsion` was defaulting to `diesel`. Added `\bBZL\b` to the EV regex; corrects 11 routes — D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487 — to `electric`.
+- **Pipeline now reads the headway columns from `details.htm` automatically**. New `representativeHeadway()` in `fetch-route-details.js` parses Mon-Sat / Sunday / evening cells (handling night-route layout where headways sit before the date, and skipping school routes whose headway columns hold endpoint names instead of numbers). The value lands in `data/source/route_details.json` as `headwayMin` per route. `build-classifications.js` then uses it as a **tier-3 fallback** for `frequency` when both TfL `/Line/<id>/Timetable` (tier 1) and `times/<id>.htm` (tier 2) yield null. Same ≤12 cutoff as `bandForHeadway` so the binning rule is identical across all three tiers — the manual rebin done in this release reproduces automatically on every weekly refresh.
+- **Filter pill tooltips reworded** to the new thresholds ("5 or more buses per hour" / "fewer than 5 buses per hour"); the redundant "Regular" filter pill removed.
+
+---
+
 ## v2.5 – Network Overview & Full Design Overhaul
 
 _2026-04-24_

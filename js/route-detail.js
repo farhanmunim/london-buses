@@ -12,7 +12,7 @@ import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.
 // Frequency label matches the filter pill vocabulary — High / Regular / Low
 // rather than raw headway bands so "Freq" reads the same way everywhere the
 // user sees it (filter pill, route card KPI).
-const FREQ_MAP  = { high: 'High', regular: 'Regular', low: 'Low' };
+const FREQ_MAP  = { high: 'High', low: 'Low' };
 const DECK_MAP  = { double: 'Double', single: 'Single' };
 const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid', diesel: 'Diesel' };
 const TYPE_MAP  = { regular: 'Regular', night: 'Night', twentyfour: '24 Hour', school: 'School', prefix: 'Prefix' };

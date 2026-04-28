@@ -5,13 +5,13 @@
  * representative headway (minutes between buses) for whichever service window
  * is most meaningful for that route. Daytime routes use the weekday off-peak
  * window; night-only routes use overnight; mixed service routes fall through
- * in that order. The headway is then binned into three categorical bands:
+ * in that order. The headway is then binned into two categorical bands:
  *
- *   high     ≤ 6 min
- *   regular  7–15 min
- *   low      > 15 min
+ *   high     ≤ 12 min  (5+ buses/hour — matches "5 or more buses an hour")
+ *   low      > 12 min  (matches "4 or fewer buses an hour"; covers the 13–14 min
+ *                       gap too, since those routes don't meet the 5+/hr bar)
  *
- * Output: data/frequencies.json — flat map { "1": "high", "N86": "regular" }.
+ * Output: data/frequencies.json — flat map { "1": "high", "N86": "low" }.
  * null means "no published timetable" (distinct from any band).
  *
  * Run: npm run fetch-frequencies
@@ -63,9 +63,7 @@ function round1(v) { return Math.round(v * 10) / 10; }
 // timetable" and returns null so the frontend can render an explicit unknown.
 function bandForHeadway(h) {
   if (h == null || h <= 0) return null;
-  if (h <= 6)  return 'high';
-  if (h <= 15) return 'regular';
-  return 'low';
+  return h <= 12 ? 'high' : 'low';   // 5+ buses/hour vs fewer
 }
 
 // Pick the first positive headway from a preference chain. 0 means "TfL says

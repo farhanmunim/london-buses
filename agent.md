@@ -483,7 +483,7 @@ Route type:
 
 Frequency band (weekday headway, falls back to Sunday/Evening):
 
-- `high` ≤6 min, `regular` 7–15 min, `low` >15 min
+- `high` ≤12 min headway (5+ buses/hour); `low` >12 min headway (fewer than 5 buses/hour)
 
 Length band (Haversine, direction 1 only):
 

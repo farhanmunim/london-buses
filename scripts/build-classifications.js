@@ -109,7 +109,7 @@ if (!fs.existsSync(destinationsPath)) {
 }
 const destinations = JSON.parse(fs.readFileSync(destinationsPath, 'utf8')).routes ?? {};
 
-// Categorical frequency band per route — { "1": "high", "N86": "regular" }.
+// Categorical frequency band per route — { "1": "high", "N86": "low" }.
 // Produced by fetch-frequencies.js from TfL timetables with scraper fallback.
 const frequenciesPath = path.join(DATA_DIR, 'frequencies.json');
 const frequencyBands  = fs.existsSync(frequenciesPath)
@@ -242,6 +242,7 @@ for (const file of routeFiles) {
     garageName:  self?.garageName  ?? alias?.garageName  ?? null,
     garageCode:  self?.garageCode  ?? alias?.garageCode  ?? null,
     pvr:         self?.pvr         ?? alias?.pvr         ?? null,
+    headwayMin:  self?.headwayMin  ?? alias?.headwayMin  ?? null,
   };
   const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
@@ -279,9 +280,20 @@ for (const file of routeFiles) {
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
   const pvr          = details.pvr;
-  // Frequency band is TfL-primary and doesn't fall back to last-known-good —
-  // if TfL now says a route has no published timetable that's authoritative.
-  const frequency    = frequencyRaw;
+  // Frequency band: TfL-primary, with a tertiary fallback on the headway
+  // column scraped straight from details.htm. The pipeline tier order is:
+  //   1. fetch-frequencies.js → TfL /Line/<id>/Timetable (primary)
+  //   2. fetch-frequencies.js → londonbusroutes.net/times/<id>.htm (secondary)
+  //   3. headwayMin from details.htm parsed by fetch-route-details.js (here)
+  // Tier 3 catches routes where TfL's timetable endpoint is sparse or down but
+  // details.htm still publishes a Mon-Sat headway. Same ≤12 cutoff as
+  // bandForHeadway in fetch-frequencies.js so the binning rule is identical
+  // across all three tiers. No last-known-good fallback — if every tier says
+  // null, the route is genuinely unscheduled.
+  const frequency    = frequencyRaw
+                    ?? (typeof details.headwayMin === 'number' && details.headwayMin > 0
+                          ? (details.headwayMin <= 12 ? 'high' : 'low')
+                          : null);
 
   // Manual overrides win over everything else (scraper + lookup). Scraper-
   // derived fields fall back to last-known-good before we give up to null, so

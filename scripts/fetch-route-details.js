@@ -16,8 +16,7 @@
  *   {
  *     generatedAt, source, routeCount,
  *     routes:      { [routeId]: { deck, vehicleType, propulsion, operator,
- *                                 garageName, garageCode, pvr,
- *                                 garageCode, pvr } },
+ *                                 garageName, garageCode, pvr, headwayMin } },
  *     aliases:     { "N128": "128", ... },
  *     operatorByRoute: { "128": "Stagecoach London", ... },
  *     operatorByRouteBustimes: {}  // kept as empty object for compat
@@ -178,6 +177,43 @@ function parseDetailsText(html) {
     return line.slice(a, b).trim();
   }
 
+  // Parse one headway cell. Examples:
+  //   "12"   → 12          (single number)
+  //   "8-9"  → 8.5         (range, take mean)
+  //   "12*"  → 12          (footnote markers stripped)
+  //   ""     → null        (empty)
+  //   "WCroydon" → null    (school routes put endpoint names here, not numbers)
+  function parseHeadwayCell(s) {
+    if (!s) return null;
+    const c = String(s).replace(/[*†‡§·]+/g, '').trim();
+    if (!c) return null;
+    let m;
+    if ((m = /^(\d+)\s*-\s*(\d+)$/.exec(c))) return (parseInt(m[1], 10) + parseInt(m[2], 10)) / 2;
+    if ((m = /^(\d+)$/.exec(c))) return parseInt(m[1], 10);
+    return null;
+  }
+
+  // Representative weekday headway for a row. Daytime routes carry it directly
+  // in the Mon-Sat / Sunday / evening fixed-width columns. Night routes leave
+  // those columns empty and put the night headways just before the date — fall
+  // back to tokenising the segment after the length-range column. School /
+  // limited-service routes encode endpoint names in the headway columns; we
+  // detect alpha chars there and return null so they don't get a spurious band.
+  function representativeHeadway(line) {
+    const headwayWindow = line.length > 57 ? line.slice(57, 80) : '';
+    if (/[A-Za-z]/.test(headwayWindow)) return null;
+    const monSat  = parseHeadwayCell(slice(line, COLS.monSat));
+    const sunday  = parseHeadwayCell(slice(line, COLS.sunday));
+    const evening = parseHeadwayCell(slice(line, COLS.evening));
+    for (const v of [monSat, sunday, evening]) if (v != null && v > 0) return v;
+    const dateMatch = /\b\d{2}\/\d{2}\/\d{2}\b/.exec(line);
+    if (!dateMatch || line.length < 39) return null;
+    const segment = line.slice(39, dateMatch.index);
+    const tokens = [...segment.matchAll(/(?<![A-Za-z])(\d+(?:-\d+)?)\*?(?![A-Za-z])/g)];
+    const vals = tokens.map(t => parseHeadwayCell(t[1])).filter(v => v != null);
+    return vals.length > 4 ? vals[4] : null;
+  }
+
   const byRoute = {};
 
   for (const block of preBlocks) {
@@ -204,6 +240,7 @@ function parseDetailsText(html) {
         vehicleType: vehicleRaw,
         garageCodeFromDetails: /^[A-Z0-9]{1,4}$/.test(garageRaw) ? garageRaw : null,
         pvrFromDetails: Number.isFinite(pvrNum) ? pvrNum : null,
+        headwayMinFromDetails: representativeHeadway(line),
       };
     }
   }
@@ -228,7 +265,7 @@ function derivePropulsion(s) {
   if (!s) return null;
   const t = s.toUpperCase();
   if (/FCEV|FUEL CELL|HYDROGEN/.test(t)) return 'hydrogen';
-  if (/\bEV\b|EV |\bE\d{1,2}[A-Z]?EV\b|[A-Z0-9]EV\b|ELECTROLINER|STREETAIR|ELECTRIC|ECITARO|\bZEB\b|\bBYD\b/.test(t)) return 'electric';
+  if (/\bEV\b|EV |\bE\d{1,2}[A-Z]?EV\b|[A-Z0-9]EV\b|ELECTROLINER|STREETAIR|ELECTRIC|ECITARO|\bZEB\b|\bBYD\b|\bBZL\b/.test(t)) return 'electric';
   if (/YUTONG\s+E\d/.test(t)) return 'electric';
   if (/NEW BUS FOR LONDON|NB4L|ENVIRO400H|E40H|B5LH|B5TH|\bHEV\b|HYBRID/.test(t)) return 'hybrid';
   return 'diesel';
@@ -330,6 +367,10 @@ async function main() {
       vehicleType: cleanVeh,
       propulsion:  derivePropulsion(rawVehicle),
       operator, garageName, garageCode, pvr,
+      // Representative weekday headway (minutes) read straight from the
+      // details.htm row. Used by build-classifications.js as a fallback
+      // signal when TfL's published timetable yields no band.
+      headwayMin:  v?.headwayMinFromDetails ?? null,
     };
     if (operator) operatorByRoute[id] = operator;
   }

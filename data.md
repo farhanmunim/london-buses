@@ -39,11 +39,11 @@ Every field below is denormalized into this file so the frontend only needs **on
 | `operator` | string | Scraper (garages.csv) | routes.htm 3rd col → bustimes.org → last-known-good | Normalise to parent brand ("Abellio" → "Transport UK" where applicable). |
 | `garageName` / `garageCode` | string | Scraper (garages.csv route-column parse) | Alias → last-known-good | Some routes run from multiple garages; today we store the primary only — see "known gaps". |
 | `pvr` | integer | Scraper (details.htm) | Alias → last-known-good | Peak Vehicle Requirement. Sum of PVRs across all routes ≈ total fleet demand. |
-| `frequency` | `high` \| `regular` \| `low` \| null | Computed in `fetch-frequencies.js` and stored flat in `frequencies.json` | — | Thresholds: ≤6 / 7–15 / >15 min between buses, measured over the weekday off-peak window (falling back through AM peak → PM peak → Saturday → overnight). The frontend only needs the band, so numeric headways are discarded once the band is derived. |
+| `frequency` | `high` \| `low` \| null | TfL `/Line/<id>/Timetable` → `frequencies.json` | `times/<id>.htm` grid → `details.htm` Mon-Sat headway column → null | Binary band: `high` = ≤12 min between buses (5+/hr), `low` = >12 min (fewer than 5/hr). TfL is primary; if its timetable is sparse, the per-route HTML grid is parsed; if that also fails, `headwayMin` from the `details.htm` row is binned with the same ≤12 cutoff. School/limited-service routes (which encode endpoint names in the headway columns of `details.htm` instead of numeric headways) stay null rather than getting a spurious band. |
 
 ### Companion files
 
-- **`data/frequencies.json`** — flat `{ routeId: "high" \| "regular" \| "low" }` map. TfL `/Line/<id>/Timetable/<firstStop>` primary; `times/<id>.htm` `<pre>` grids fallback. Consumed only by `build-classifications.js`.
+- **`data/frequencies.json`** — flat `{ routeId: "high" \| "low" }` map. TfL `/Line/<id>/Timetable/<firstStop>` primary; `times/<id>.htm` `<pre>` grids fallback. Consumed only by `build-classifications.js`, which also reads `headwayMin` from `data/source/route_details.json` as a tertiary fallback when both tiers above yield null.
 - **`data/route_destinations.json`** — `{ outbound, inbound, service_types }` per route. TfL `/Line/<id>/Route` primary; routes.htm dashed "Origin - … - Destination" fallback. Route 969 has no API entry — hard-coded. Consumed by the frontend detail panel and by `build-classifications.js` (for `type` derivation).
 - **`data/garages.geojson`** — garage geometry + operator + route allocation. Pipeline intermediate; feeds `fetch-route-details.js` and `build-garage-locations.js`.
 - **`data/garage-locations.json`** — geocoded garage map markers. Consumed by the frontend.
@@ -67,8 +67,8 @@ Client-side aggregates (e.g. operator-level PVR share, electrification) are comp
 | 3 | `fetch-route-stops.js` | TfL `/Line/<id>/StopPoints` | `stops.json`, `route_stops.json` | Soft fail; last-known-good kept on failure. |
 | 4 | `fetch-garages.js` | garages.csv + postcodes.io | `garages.geojson`, `geocode_cache.json` | Soft fail; geocode cache reused. |
 | 5 | `fetch-frequencies.js` | TfL timetables → times/<id>.htm | `frequencies.json` | Soft fail; per-route fallback; zero ≠ high. |
-| 6 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` | Soft fail; each source independently optional. |
-| 7 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. |
+| 6 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` (incl. `headwayMin` per route from the Mon-Sat / Sunday / evening columns) | Soft fail; each source independently optional. |
+| 7 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. Frequency uses the 3-tier chain (TfL → times-page → details.htm `headwayMin`) before giving up to null. |
 | 8 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 7. |
 | 9 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
 

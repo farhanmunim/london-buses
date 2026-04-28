@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.5</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.6</a>
 
       <div style="flex:1"></div>
 
@@ -76,28 +76,42 @@
           </header>
 
           <!-- ═══════════════════════════════════════════════════════════════
-               v2.5 — Network Overview & full design overhaul
+               v2.6 — Frequency rules, propulsion fix, headway tier-3 fallback
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.6</span> Apr 28, 2026</div>
+            <a href="#v2_6" class="cl-entry-title">Binary frequency rule, BZL→EV fix, and an automated tier-3 headway fallback</a>
+            <p class="cl-body-text">
+              <strong>Frequency is now a binary classification.</strong> A route is <em>High</em> if it operates 5 or more buses per hour (≤12 min headway), and <em>Low</em> otherwise. The old three-band scheme (Low / Regular / High at ≤6 / 7–15 / >15 min) is gone — across the bin function, the route-card KPI, the filter pills, the schema docs, and every data file. SL7 is manually pinned to High via <code>route-overrides.json</code> since its scraped 15-min headway would otherwise sort it Low.
+            </p>
+            <p class="cl-body-text">
+              <strong>Propulsion correction for 11 routes.</strong> Stagecoach London and Metroline encode their MCV eVoSeti EV buses with the fleet code <code>BZL</code> in <code>details.htm</code> (e.g. <code>BZL (dd) 10.9m/MCV 2D</code>). The body string alone has no EV marker and the prefix is stripped during cleanup, so the regex was defaulting to diesel. Adding <code>\bBZL\b</code> to the EV pattern correctly classifies <strong>D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487</strong> as Electric.
+            </p>
+            <p class="cl-body-text">
+              <strong>The pipeline now reads the headway columns straight from <code>details.htm</code>.</strong> A new <code>representativeHeadway()</code> in <code>fetch-route-details.js</code> parses the Mon-Sat / Sunday / evening cells (handling night-route layout where headways sit just before the date, and skipping school routes whose columns hold endpoint names instead of numbers). The value flows through <code>route_details.json</code> as <code>headwayMin</code> per route. <code>build-classifications.js</code> uses it as a <strong>tier-3 frequency fallback</strong> when TfL <code>/Line/&lt;id&gt;/Timetable</code> (tier 1) and <code>times/&lt;id&gt;.htm</code> (tier 2) both yield null — same ≤12 cutoff so the rule is identical across every tier. Every weekly refresh now reproduces the manual rebin automatically.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.5 — Network Overview & operator / garage drawers
                ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.5</span> Apr 24, 2026</div>
-            <a href="#v2_5" class="cl-entry-title">A new Network Overview, unified operator & garage drawers, and a full design refresh</a>
-            <p class="cl-body-text">
-              Full <strong>design overhaul</strong> across every surface: Geist / Geist Mono typography, tokenised CSS for fonts, type scale, spacing, radii and shadows, harmonised section labels, and a matching badge language from filter pills → route-card contract badges → roadmap stages.
-            </p>
+            <a href="#v2_5" class="cl-entry-title">A new Network Overview with operator and garage drawers</a>
             <p class="cl-body-text">
               The right-hand panel is now a proper <strong>Network Overview</strong>. Four KPI cards (Routes, Operators, Garages, PVR) sit above a per-operator breakdown with Routes %, PVR % and EV % — tap any row and the drawer slides in with routes, PVR, a PVR-weighted <strong>Fleet Mix</strong> stacked bar and the operator's garages. Each garage opens its own drawer with the same shape plus a <em>View all routes operated here</em> CTA that loads those routes onto the map and stacks route cards in the Routes tab.
             </p>
             <p class="cl-body-text">
-              New in the map toolbar: <strong>Route lines</strong>, <strong>Garages</strong>, and a context-aware <strong>Stops</strong> toggle that only appears while a route is focused. Garage markers were redrawn to the original rounded-square chip design; stop popups dropped the raw NaPTAN id; route search now works identically in the topbar and the Routes tab (space / comma / enter commits a pill, Backspace drops the last one, ↑/↓/Enter on the autocomplete list).
+              <strong>XLSX export</strong> picked up a Fleet Mix block in the Network overview sheet — PVR-weighted propulsion split for the currently visible routes, matching what's on screen.
             </p>
             <p class="cl-body-text">
-              Selection is <strong>unified</strong> across the app. A single topbar <em>Clear all</em> wipes every active filter, marker selection, stop filter and route pill in one click and returns to the Overview tab. A "Selected garage" pill in the sidebar mirrors the bus-stop pattern so route context is always visible. About and Roadmap modals now share a frame, width, header treatment and support-CTA, and the Changelog page runs in the same shell with a sticky topbar, fixed footer, and flat-white light-mode surface.
-            </p>
-            <p class="cl-body-text">
-              XLSX export picked up a Fleet Mix block in the Network overview sheet so the spreadsheet matches what you see on screen — PVR-weighted propulsion split for the currently visible routes.
-            </p>
-            <p class="cl-body-text">
-              Post-launch polish: a <strong>direction toggle</strong> on the route card (single-route mode, icon button next to the destination that spins 180° and flips origin → destination while the map re-renders in the new direction's colour); route-card KPIs switched from Length to <strong>Stops</strong> and now read <em>Type · PVR · Stops · Freq · Deck · Propulsion</em>; frequency labels are <strong>Low / Regular / High</strong> everywhere instead of raw headway bands; operator colours unified across the map, garage pins, filter pills, operator cards, drawer swatches, overview table and route-card pills; the operator drawer picked up a <em>Garages</em> KPI tile and both drawers share <em>% of network routes</em>; search-pill overflow collapses to <strong>+N</strong> so the input never gets crowded; and the mobile map HUD stacks vertically so Route lines / Garages / Stops don't fight for horizontal space on a phone.
+              On the route card: a <strong>direction toggle</strong> in single-route mode flips outbound ⇄ inbound in place while the map re-renders in the new direction's colour. KPIs switched from Length to <strong>Stops</strong>, reading the pre-baked per-route count from <code>route_stops.json</code>.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
@@ -137,13 +151,10 @@
             <div class="cl-date"><span class="cl-version">v2.2</span> Apr 17, 2026</div>
             <a href="#v2_2" class="cl-entry-title">Accurate data: TfL-first pipeline with scrape fallbacks</a>
             <p class="cl-body-text">
-              Every route's operator, garage, vehicle type, PVR, deck, propulsion and destinations are now <strong>verified against the TfL Unified API</strong>, correcting a number of routes that were previously mis-assigned.
+              Every route's operator, garage, vehicle type, PVR, deck, propulsion and destinations are now <strong>verified against the TfL Unified API</strong>, correcting routes that had been mis-assigned (e.g. route 1 had been tagged as a tram). The pipeline puts TfL first and uses <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a> and <a href="https://bustimes.org" target="_blank" rel="noopener">bustimes.org</a> only as fallbacks — TfL values are never overwritten by scraped ones.
             </p>
             <p class="cl-body-text">
-              The data pipeline was rewritten to put TfL first and use <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a> and <a href="https://bustimes.org" target="_blank" rel="noopener">bustimes.org</a> <em>only</em> as fallbacks for the handful of routes TfL omits. TfL values are never overwritten by scraped ones.
-            </p>
-            <p class="cl-body-text">
-              New under the hood: numeric <strong>frequencies</strong> per peak band, a <strong>garages</strong> geodataset (postcodes.io geocoded), <strong>all London bus stops</strong>, named bus/coach stations, and a flat <strong>route_summary.csv</strong>.
+              New under the hood: numeric <strong>frequencies</strong> per peak band, a <strong>garages</strong> geodataset (postcodes.io geocoded), <strong>all London bus stops</strong>, and named bus / coach stations.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
@@ -154,60 +165,22 @@
           </article>
 
           <!-- ═══════════════════════════════════════════════════════════════
-               v2.0 — Full redesign, garages, and independent filters
+               v2.0 — Operator garages, split filters, multi-sheet export
                ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.0</span> Apr 15, 2026</div>
-            <a href="#v2_0" class="cl-entry-title">A completely new UI, operator garages, and multi-sheet export</a>
-            <div class="cl-hero">
-              <div class="hero-mock">
-                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
-                <div class="hm-body">
-                  <div class="hm-side">
-                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 60%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 75%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 50%"></span></div>
-                  </div>
-                  <div class="hm-main">
-                    <div class="hm-title"></div>
-                    <div class="hm-cards">
-                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                    </div>
-                    <div class="hm-table">
-                      <div class="hm-row sel"></div>
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <a href="#v2_0" class="cl-entry-title">Operator garages on the map and multi-sheet export</a>
             <p class="cl-body-text">
-              London Buses has been rebuilt from the ground up. The app now runs on a proper dashboard shell with a dedicated <strong>filters panel</strong> on the left, a <strong>route detail inspector</strong> on the right, both collapsible, plus a refreshed light/dark theme.
+              <strong>Operator garages on the map.</strong> Every London bus garage is now plotted at its real address, colour-coded by operator's brand livery. Hover for address, operator, and how many routes run from there.
             </p>
             <p class="cl-body-text">
-              New this release: <strong>operator garages on the map</strong>. Every London bus garage is now plotted at its real address, colour-coded by the operator's brand livery (Arriva turquoise, Stagecoach navy, Go-Ahead red, and so on). Hover for address, operator, and how many routes run from there.
+              <strong>Filters split by concern.</strong> Route type / frequency / deck / propulsion / operator drive the route lines. A separate <em>Garage operator</em> filter drives the garage markers independently — so one operator's route network can be overlaid on a competitor's garage footprint.
             </p>
             <p class="cl-body-text">
-              Filters are now <strong>split by concern</strong>. Route type / frequency / deck / propulsion / operator drive the route lines. A separate <em>Garage operator</em> filter drives the garage markers independently — so you can see one operator's route network overlaid with a competitor's garage footprint.
-            </p>
-            <p class="cl-body-text">
-              <strong>Palette switcher</strong>. The new <em>Colour routes by</em> control at the top of the filters panel flips every route line between the categorical palette (type) and the operator's brand livery (Arriva turquoise, Stagecoach navy, Go-Ahead red, …) — useful for comparing network shape vs operator share on the same map.
-            </p>
-            <p class="cl-body-text">
-              <strong>Context-aware layer toggles</strong> in the topbar let you show / hide routes and garages globally. With a route focused, the <em>Show routes</em> toggle controls only the faint context underlay — so you can switch between "route only" and "route in context" without losing the selection.
-            </p>
-            <p class="cl-body-text">
-              <strong>Smarter data pipeline</strong>. Night-route data (N128, N29, N9, …) that was previously blank now inherits from the daytime sibling when <code>routes.htm</code> confirms a 24-hour service. Unknown-operator routes dropped from 71 to 37 in a single refresh.
+              <strong>Smarter data pipeline.</strong> Night-route data (N128, N29, N9, …) that was previously blank now inherits from the daytime sibling when <code>routes.htm</code> confirms a 24-hour service. Unknown-operator routes dropped from 71 to 37 in a single refresh.
             </p>
             <p class="cl-body-text">
               <strong>Export</strong> now produces a single <code>.xlsx</code> workbook with three sheets — Routes, Garages, and a Network overview — each honouring the currently applied filters.
-            </p>
-            <p class="cl-body-text">
-              Elsewhere: a new <button type="button" data-roadmap-open class="cl-inline-link">Roadmap</button> dialog, per-section Clear buttons inside each filter group, fluid type + a11y pass (landmarks, focus trap on modals, keyboard-operable panel headers, focus-visible rings), and a rebuilt mobile nav with off-canvas drawers sized 92vw so the filter chips actually breathe on a phone.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
