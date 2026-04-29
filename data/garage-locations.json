@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T07:47:36.563Z",
+  "generatedAt": "2026-04-29T22:17:39.956Z",
   "count": 76,
   "garages": {
     "A": {
@@ -45,7 +45,7 @@
       "address": "Commerce Road, Brentford, Middlesex, TW8 8LZ",
       "lat": 51.483833,
       "lon": -0.314707,
-      "pvr": 99
+      "pvr": 101
     },
     "AL": {
       "code": "AL",
@@ -171,7 +171,7 @@
       "address": "Dawley Road, Hayes UB3 1EF",
       "lat": 51.513793,
       "lon": -0.436579,
-      "pvr": 46
+      "pvr": 47
     },
     "DS": {
       "code": "DS",
@@ -432,7 +432,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 220
+      "pvr": 228
     },
     "RA": {
       "code": "RA",
@@ -468,7 +468,7 @@
       "address": "Wells Road, London, W12 8DA",
       "lat": 51.501934,
       "lon": -0.226176,
-      "pvr": 97
+      "pvr": 95
     },
     "SF": {
       "code": "SF",
@@ -504,7 +504,7 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AQ",
       "lat": 51.426275,
       "lon": -0.035919,
-      "pvr": 47
+      "pvr": 58
     },
     "SO": {
       "code": "SO",
@@ -558,7 +558,7 @@
       "address": "The Old Tram Depot, Stanley Road, Twickenham, Middlesex, TW2 5NP",
       "lat": 51.437063,
       "lon": -0.347578,
-      "pvr": 129
+      "pvr": 127
     },
     "TH": {
       "code": "TH",
