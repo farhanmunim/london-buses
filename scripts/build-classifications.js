@@ -9,6 +9,14 @@
  *   data/routes/<id>.geojson        — geometry for length calculation
  *   data/frequencies.json           — TfL-primary numeric headways per route
  *   data/source/route_details.json  — scraper-sourced vehicle / operator / PVR / headways (fallback)
+ *   data/source/vehicle-fleet.json  — per-registration DVLA make / fuelType / age (fleet aggregator)
+ *   data/source/route-vehicles.json — per-route observed registrations from TfL arrivals
+ *
+ * Fleet-derived fields (per route):
+ *   make             — DVLA-reported manufacturer (mode across observed regs)
+ *   propulsion       — DVLA fuelType, mapped — overrides LBR-string heuristic
+ *   vehicleAgeYears  — mean age computed from monthOfFirstRegistration
+ *   fleetSize        — count of unique observed registrations matched against fleet
  *
  * Output:
  *   data/route_classifications.json — routeId → { type, isPrefix, lengthBand }
@@ -175,6 +183,73 @@ if (Object.keys(routeDetails).length) {
   console.warn('  Note: route_details.json not found — operator/garage/PVR/deck/frequency will be omitted. Run fetch-route-details first.');
 }
 
+// ── Fleet aggregator ────────────────────────────────────────────────────────
+// Joins data/source/vehicle-fleet.json (registration → DVLA make / fuelType /
+// monthOfFirstRegistration) with data/source/route-vehicles.json (per-route
+// list of registrations observed in TfL arrivals) and computes per-route
+// aggregates: dominant make, dominant propulsion, mean fleet age in years,
+// and observed fleet size. Only DVLA entries with status 200 contribute.
+const fleetPath = path.join(DATA_DIR, 'source', 'vehicle-fleet.json');
+const fleet = fs.existsSync(fleetPath)
+  ? (JSON.parse(fs.readFileSync(fleetPath, 'utf8')).vehicles ?? {})
+  : {};
+const routeVehiclesPath = path.join(DATA_DIR, 'source', 'route-vehicles.json');
+const routeVehiclesFile = fs.existsSync(routeVehiclesPath)
+  ? JSON.parse(fs.readFileSync(routeVehiclesPath, 'utf8'))
+  : { routes: {} };
+const routeVehicles = routeVehiclesFile.routes ?? {};
+
+if (Object.keys(fleet).length) {
+  console.log(`Loaded vehicle fleet for ${Object.keys(fleet).length} registrations (DVLA cache)`);
+}
+if (Object.keys(routeVehicles).length) {
+  console.log(`Loaded route-vehicle observations for ${Object.keys(routeVehicles).length} routes`);
+}
+
+function modeOf(counts) {
+  let best = null, bestN = 0;
+  for (const [k, n] of Object.entries(counts)) if (n > bestN) { best = k; bestN = n; }
+  return best;
+}
+
+function aggregateRouteFleet(routeId) {
+  const obs = routeVehicles[routeId] ?? routeVehicles[routeId?.toUpperCase()] ?? [];
+  if (!obs.length) return null;
+
+  const makes = {}, props = {};
+  let ageSum = 0, ageN = 0, matched = 0;
+  const nowMs = Date.now();
+
+  for (const entry of obs) {
+    const reg = (typeof entry === 'string' ? entry : entry?.reg)?.toUpperCase();
+    if (!reg) continue;
+    const f = fleet[reg];
+    if (!f || f.dvlaStatus !== 200) continue;
+    matched++;
+
+    if (f.make)     makes[f.make]     = (makes[f.make]     ?? 0) + 1;
+    if (f.fuelType) props[f.fuelType] = (props[f.fuelType] ?? 0) + 1;
+
+    // Age from first-registration month — closer to in-service than build year.
+    if (typeof f.monthOfFirstRegistration === 'string') {
+      const m = /^(\d{4})-(\d{2})$/.exec(f.monthOfFirstRegistration);
+      if (m) {
+        const regDate = Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1);
+        const yrs = (nowMs - regDate) / (365.25 * 86_400_000);
+        if (yrs >= 0 && yrs < 40) { ageSum += yrs; ageN++; }
+      }
+    }
+  }
+
+  if (!matched) return null;
+  return {
+    make:            modeOf(makes),
+    propulsion:      modeOf(props),
+    vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
+    fleetSize:       matched,
+  };
+}
+
 // Load the previously-committed classifications so we can preserve
 // scraper-derived fields (deck, vehicleType, propulsion, operator, garageName,
 // garageCode, pvr) when the upstream scrape of londonbusroutes.net or
@@ -274,8 +349,11 @@ for (const file of routeFiles) {
     return null;
   }
   const fallback    = vehicleLookupBestMatch(vehicleType);
+  const fleetAgg    = aggregateRouteFleet(routeId);
   const deck        = details.deck       ?? fallback?.deck       ?? null;
-  const propulsion  = details.propulsion ?? fallback?.propulsion ?? null;
+  // DVLA-derived propulsion wins over the LBR-string heuristic when we have it
+  // — DVLA is authoritative for fuel type, the LBR regex is a best-effort guess.
+  const propulsion  = fleetAgg?.propulsion ?? details.propulsion ?? fallback?.propulsion ?? null;
   const operator     = details.operator;
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
@@ -315,6 +393,13 @@ for (const file of routeFiles) {
     // Frequency is TfL-primary — no last-good fallback needed (if TfL says the
     // route has no published timetable that's new authoritative information).
     frequency:   override.frequency   ?? frequency,
+    // Fleet aggregates from DVLA (joined via TfL arrivals registrations). All
+    // four fall back to last-known-good when this run produced no observations
+    // (e.g. TfL arrivals returned empty) so a flaky upstream doesn't wipe the
+    // fields between runs.
+    make:            override.make            ?? fleetAgg?.make            ?? lastRec.make            ?? null,
+    vehicleAgeYears: override.vehicleAgeYears ?? fleetAgg?.vehicleAgeYears ?? lastRec.vehicleAgeYears ?? null,
+    fleetSize:       override.fleetSize       ?? fleetAgg?.fleetSize       ?? lastRec.fleetSize       ?? null,
   };
 }
 

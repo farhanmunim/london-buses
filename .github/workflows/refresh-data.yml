@@ -1,10 +1,12 @@
 name: Weekly Data Refresh
 
-# Runs every Monday at 05:00 UTC (05:00 GMT in winter, 06:00 BST in summer)
-# Can also be triggered manually from the GitHub Actions tab
+# Runs every Monday at 09:00 UTC (09:00 GMT in winter, 10:00 BST in summer).
+# Timed deliberately for peak running so TfL `/Line/<id>/Arrivals` returns a
+# representative sample of the active fleet (used by fetch-route-vehicles.js).
+# Can also be triggered manually from the GitHub Actions tab.
 on:
   schedule:
-    - cron: "0 5 * * 1"
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -13,7 +15,9 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 45-min ceiling. Cold-start week may use up to 20 min on the iBus → DVLA
+    # fleet build (~6000 lookups @ 5 RPS); steady-state weekly runs are ~10 min.
+    timeout-minutes: 45
 
     steps:
       - name: Checkout repository
@@ -28,7 +32,11 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci
+        # `npm install` (not `npm ci`) so adding a dep in package.json doesn't
+        # require a perfectly-synced package-lock.json. Build is mostly cache-
+        # served and takes ~10 s either way; the `setup-node` `cache: npm` step
+        # warms node_modules across runs.
+        run: npm install --no-audit --no-fund
 
       # Record the geometry ZIP date before refresh so we can detect if it changed
       - name: Read previous geometry ZIP date
@@ -42,7 +50,10 @@ jobs:
 
       - name: Run full data refresh
         env:
-          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+          BUS_API_KEY:               ${{ secrets.BUS_API_KEY }}
+          DVLA_API_KEY:              ${{ secrets.DVLA_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run refresh
 
       # Read the new geometry ZIP date
@@ -72,6 +83,23 @@ jobs:
           # Persist the postcodes.io geocode cache across runs to avoid
           # re-geocoding every garage weekly.
           git add -f data/source/geocode_cache.json || true
+
+          # Persist the DVLA vehicle-fleet cache + per-route observed
+          # registrations across runs. The fleet cache is sticky (90-day TTL
+          # per registration) so without persistence we'd hammer DVLA with
+          # ~9000 calls every Monday. The route-vehicles cache accumulates
+          # observations week-over-week so coverage of each route's fleet
+          # grows steadily.
+          git add -f data/source/vehicle-fleet.json  || true
+          git add -f data/source/route-vehicles.json || true
+
+          # Persist parsed route performance (EWT/OTP) across runs. The PDF
+          # only updates every ~4 weeks; persisting means we can always
+          # answer "what was the latest reading?" between PDF refreshes.
+          # Raw text dump is also persisted to make parser iteration easy
+          # without re-fetching from TfL.
+          git add -f data/source/route-performance.json     || true
+          git add -f data/source/route-performance-raw.txt  || true
 
           # Only stage individual route files if the geometry ZIP changed
           if [ "${{ steps.prev_zip.outputs.date }}" != "${{ steps.new_zip.outputs.date }}" ]; then

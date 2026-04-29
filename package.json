@@ -11,16 +11,22 @@
     "fetch-garages": "node scripts/fetch-garages.js",
     "fetch-frequencies": "node scripts/fetch-frequencies.js",
     "fetch-route-details": "node scripts/fetch-route-details.js",
+    "fetch-vehicle-fleet": "node scripts/fetch-vehicle-fleet.js",
+    "fetch-route-vehicles": "node scripts/fetch-route-vehicles.js",
+    "fetch-route-performance": "node scripts/fetch-route-performance.js",
     "build-classifications": "node scripts/build-classifications.js",
     "build-overview": "node scripts/build-overview.js",
     "build-garage-locations": "node scripts/build-garage-locations.js",
-    "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js"
+    "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js",
+    "push-to-supabase": "node scripts/push-to-supabase.js"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "adm-zip": "^0.5.16",
-    "fast-xml-parser": "^4.5.3"
+    "fast-xml-parser": "^4.5.3",
+    "pdf-parse": "^1.1.1"
   }
 }

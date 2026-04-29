@@ -14,12 +14,15 @@ when a source fails, so a flaky upstream never wipes curated data.
 
 | Source | Auth | Role | Notes / Limits |
 |---|---|---|---|
-| **TfL Unified API** (`api.tfl.gov.uk`) | `app_key` + `app_id` via `BUS_API_KEY` env var | **Primary** for route IDs, service types, timetables, stops, destinations | Free tier, 500 req/min. Our scripts self-throttle to ~350 req/min. Key held in GH Actions secret + local `.env`; **never** reaches the browser. |
+| **TfL Unified API** (`api.tfl.gov.uk`) | `app_key` + `app_id` via `BUS_API_KEY` env var | **Primary** for route IDs, service types, timetables, stops, destinations, live arrivals (vehicleId per route) | Free tier, 500 req/min. Our scripts self-throttle to ~350 req/min. Key held in GH Actions secret + local `.env`; **never** reaches the browser. |
 | **TfL geometry ZIP** (public S3) | None | Per-route geometry (inbound/outbound LineStrings) | No auth, no rate-limit published; `Route_Geometry_*.zip` updated roughly weekly. |
-| **londonbusroutes.net** | None | Fallback for: operator, garage, PVR, vehicle type, destinations, 24-hour aliasing | HTTP (not HTTPS). HTML is fragile — we parse with regex, not fixed-width columns (previous bug). Scrape with a 200ms courtesy delay. |
+| **TfL iBus open data** (`ibus.data.tfl.gov.uk`, public S3) | None | Per-vehicle registration + operator + bonnet number for the entire London bus fleet (`Vehicle_<date>.xml`) | Updated every two weeks. We pick the latest `Base_Version_YYYYMMDD/` folder by lexical date. |
+| **DVLA Vehicle Enquiry Service (VES)** (`driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1`) | `x-api-key` via `DVLA_API_KEY` env var | Per-registration `make`, `fuelType`, `yearOfManufacture`, `monthOfFirstRegistration` — feeds the per-route fleet aggregator | Free tier ~15 RPS / 500k req/day. We self-throttle to 5 RPS. Sticky 90-day cache (`data/source/vehicle-fleet.json`, force-committed) means weekly runs only touch ~2–5% of the fleet. Key held in GH Actions secret + local `.env`; **never** reaches the browser. |
+| **londonbusroutes.net** | None | Fallback for: operator, garage, PVR, vehicle type, destinations, 24-hour aliasing, headway tier-3 | HTTP (not HTTPS). HTML is fragile — we parse with regex, not fixed-width columns (previous bug). Scrape with a 200ms courtesy delay. |
 | **londonbustimes.com / bustimes.org** | None | Secondary operator cross-reference | Independent of londonbusroutes.net — survives their downtime. |
 | **postcodes.io** | None | Bulk postcode → lat/lon for garages | Free, generous limits. Cached in `data/source/geocode_cache.json`, persisted between runs. |
 | **Photon → Nominatim (OSM)** | None | Fallback geocode for garage addresses without a clean postcode | Photon primary (OSM-backed, tolerates sustained use). Nominatim is strict — respect its 1 req/s and 60s back-off on 429. |
+| **Supabase Postgres** (free tier) | `service_role` key via `SUPABASE_SERVICE_ROLE_KEY` env var | **Write target** for historical state and analytics. Append-only weekly snapshot of every route, plus master vehicle table and per-snapshot fleet observations. The static-JSON read path that powers the public map is unaffected — Supabase is not on the page-load critical path. | Free tier: 500 MB DB, 5 GB egress / mo, 7-day inactivity pause (immaterial — the weekly cron keeps it active). RLS on every table; anon role gets read on `route_snapshots` only, vehicles + observations are service-role-only. Service-role key held in GH Actions secret + local `.env`; **never** reaches the browser. |
 
 ---
 
@@ -35,7 +38,10 @@ Every field below is denormalized into this file so the frontend only needs **on
 | `lengthBand` | `short` \| `medium` \| `long` | Haversine sum of direction=1 geometry, binned | — | <8 / 8–20 / >20 km. Numeric km/miles aren't stored — the frontend only needs the band. |
 | `deck` | `double` \| `single` \| null | Scraper (details.htm) + manual `vehicle-lookup.json` | Daytime alias sibling for N-routes | Watch for fleet prefix stripping: "B5LH/Gemini 3 2D*" → "B5LH/Gemini 3". |
 | `vehicleType` | string | Scraper (details.htm, regex-parsed) | Alias | Mojibake — fall back from UTF-8 to Latin-1 (`2D­` → `2D`). |
-| `propulsion` | `hybrid` \| `electric` \| `hydrogen` \| `diesel` \| null | `vehicle-lookup.json` keyed by vehicleType | Alias | Lookup maintained manually via `npm run update-vehicle-lookup`; new vehicle types appear with `null` until curated. |
+| `propulsion` | `hybrid` \| `electric` \| `hydrogen` \| `diesel` \| null | **DVLA fleet aggregator** (mode of `fuelType` across observed regs) | `vehicle-lookup.json` → LBR-string heuristic → last-known-good | DVLA wins because it's the authoritative fuel-type register. The LBR-string heuristic stays as fallback for routes the arrivals snapshot didn't cover (e.g. routes with no buses running at the snapshot moment). |
+| `make` | string \| null | DVLA fleet aggregator (mode of `make` across observed regs) | Last-known-good | DVLA's manufacturer (e.g. `VOLVO`, `ALEXANDER DENNIS`). Body builder isn't separately stored — `vehicleType` carries the chassis+body string from LBR. |
+| `vehicleAgeYears` | number \| null | DVLA fleet aggregator (mean of `today − monthOfFirstRegistration`) | Last-known-good | First-registration month is closer to in-service than build year (yearOfManufacture). Rounded to 0.1 yr. |
+| `fleetSize` | integer \| null | DVLA fleet aggregator (count of unique observed regs matching the cache) | Last-known-good | Snapshot count, not the contracted PVR. Grows over weeks as `route-vehicles.json` accumulates more arrivals samples. |
 | `operator` | string | Scraper (garages.csv) | routes.htm 3rd col → bustimes.org → last-known-good | Normalise to parent brand ("Abellio" → "Transport UK" where applicable). |
 | `garageName` / `garageCode` | string | Scraper (garages.csv route-column parse) | Alias → last-known-good | Some routes run from multiple garages; today we store the primary only — see "known gaps". |
 | `pvr` | integer | Scraper (details.htm) | Alias → last-known-good | Peak Vehicle Requirement. Sum of PVRs across all routes ≈ total fleet demand. |
@@ -51,6 +57,8 @@ Every field below is denormalized into this file so the frontend only needs **on
 - **`data/routes/<id>.geojson`** — per-route full-fidelity geometry. Consumed by the frontend when a single route is selected.
 - **`data/stops.json`** — canonical stop registry. Shape: `{ stops: { "<naptanId>": { name, indicator, lat, lon, routes: ["1","24",…] } } }`. ~30 k unique stops; ~6 MB on disk, ~1.3 MB gzipped over the wire. Consumed by the frontend: (a) to resolve per-route stops when a route is selected, and (b) to power the bus-stop filter (stopId → routes reverse index is pre-denormalized so the filter is O(1) per feature).
 - **`data/route_stops.json`** — per-route ordered stop list: `{ routes: { "1": [{ id, towards }, …] } }`. The `towards` label is the TfL stop-flag hint ("Towards Hampstead") and is per route+stop, not per stop alone. Consumed by the frontend when rendering stops for a selected route.
+- **`data/source/vehicle-fleet.json`** — registration → `{ make, fuelType, yearOfManufacture, monthOfFirstRegistration, operator, bonnetNo, lastCheckedAt, dvlaStatus }`. Pipeline intermediate; consumed by `build-classifications.js`. Force-committed (90-day TTL) so weekly runs don't re-query DVLA from scratch.
+- **`data/source/route-vehicles.json`** — `{ routes: { [routeId]: [{ reg, lastSeenAt }, …] } }`. Per-route registrations observed in TfL arrivals over the trailing 56 days. Force-committed; coverage grows week-over-week.
 - **`data/build-meta.json`** — generation timestamps shown in the footer.
 - **`data/geometry-source.json`** — upstream ZIP date, read by CI to skip re-committing unchanged per-route files.
 
@@ -68,21 +76,67 @@ Client-side aggregates (e.g. operator-level PVR share, electrification) are comp
 | 4 | `fetch-garages.js` | garages.csv + postcodes.io | `garages.geojson`, `geocode_cache.json` | Soft fail; geocode cache reused. |
 | 5 | `fetch-frequencies.js` | TfL timetables → times/<id>.htm | `frequencies.json` | Soft fail; per-route fallback; zero ≠ high. |
 | 6 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` (incl. `headwayMin` per route from the Mon-Sat / Sunday / evening columns) | Soft fail; each source independently optional. |
-| 7 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. Frequency uses the 3-tier chain (TfL → times-page → details.htm `headwayMin`) before giving up to null. |
-| 8 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 7. |
-| 9 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
+| 7 | `fetch-vehicle-fleet.js` | iBus `Vehicle_<date>.xml` + DVLA VES per registration | `source/vehicle-fleet.json` (sticky 90-day cache, force-committed) | Soft fail. Per-run cap of 6000 lookups; periodic cache flush every 250 lookups; SIGTERM handler flushes on CI timeout. Cold-start week may take ~20 min; steady-state ~2 min. |
+| 8 | `fetch-route-vehicles.js` | TfL `/Line/<id>/Arrivals` (Monday peak snapshot) | `source/route-vehicles.json` (registrations per route, accumulated week-over-week with 56-day TTL) | Soft fail. Each Monday snapshot only sees buses currently running; the rolling-TTL accumulator builds full per-route fleet coverage over a few weeks. |
+| 9 | `fetch-route-performance.js` | `bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf` (TfL QSI report) | `source/route-performance.json` (per-route EWT/OTP for the latest 4-week period); also dumps `route-performance-raw.txt` for parser debugging | Soft fail. PDF parsing is brittle so the script logs raw extracted text alongside parsed records — if the parser ever silently produces zero routes, the raw dump tells us what changed. |
+| 10 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. Frequency uses the 3-tier chain (TfL → times-page → details.htm `headwayMin`); propulsion uses DVLA fleet aggregator → LBR heuristic → vehicle-lookup → null. |
+| 11 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 10. |
+| 12 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
+| 13 | `push-to-supabase.js` | `route_classifications.json` + `source/vehicle-fleet.json` + `source/route-vehicles.json` + `garages.geojson` + `source/route-performance.json` | Supabase tables `vehicles` (upsert), `route_snapshots`, `route_vehicle_observations`, `garage_snapshots`, `route_performance` | Soft fail. Skipped silently if `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are unset. |
 
 ### Field-precedence (in `build-classifications.js`)
 
 ```
 route-overrides.json   (manual curation; always wins)
-  └── scraper this run
-        └── daytime alias sibling (for N-routes)
-              └── independent secondary (bustimes.org for operator)
-                    └── vehicle-lookup.json (for deck/propulsion)
-                          └── last-known-good route_classifications.json
-                                └── null
+  └── DVLA fleet aggregator (for propulsion / make / vehicleAgeYears / fleetSize)
+        └── scraper this run
+              └── daytime alias sibling (for N-routes)
+                    └── independent secondary (bustimes.org for operator)
+                          └── vehicle-lookup.json (for deck/propulsion)
+                                └── last-known-good route_classifications.json
+                                      └── null
 ```
+
+For `frequency`: `route-overrides.json` → TfL timetable → `times/<id>.htm` grid → `details.htm` `headwayMin` → null.
+
+---
+
+## Historical store (Supabase)
+
+The weekly pipeline mirrors current state into a Supabase Postgres database
+so we can build trend charts, run aggregations, and compare past vs present.
+**The public map never reads from Supabase** — it's a write-only sink at the
+end of the pipeline. The schema migrations live in [`db/migrations/`](db/migrations/);
+paste each in order into the Supabase SQL Editor once.
+
+### Dual-timestamp convention
+
+Every row in every Supabase table carries **two** independent timestamps so we can
+always answer "when did we collect this?" and "when is this data accurate as of?"
+separately:
+
+| Concept | Column name (preferred) | What it means |
+|---|---|---|
+| Extraction time | `extracted_at` (or `last_checked_at`/`updated_at` on `vehicles`) | When our pipeline collected the row. |
+| Period covered | `data_as_of`, `snapshot_date`, `observed_at`, or `period_start`/`period_end` | When the data is *accurate as of*. |
+
+Why two: the pipeline can re-run any time, but the data describes a specific
+moment. They diverge most for `route_performance` — we run weekly but the
+underlying TfL PDF only updates every ~4 weeks, so `extracted_at` advances
+weekly while `period_end` only moves forward each new period.
+
+| Table | Purpose | Write pattern |
+|---|---|---|
+| `public.vehicles` | DVLA-derived master fleet (`registration → make`, `fuel_type`, `year_of_manufacture`, `month_of_first_registration`, `bonnet_no`, `operator`). | Upsert by `registration` every weekly run. |
+| `public.route_snapshots` | One row per (route, week) capturing every per-route classification field, plus `stop_count` from `route_stops.json`. PK `(route_id, snapshot_date)`. | Upsert per (route_id, snapshot_date) — re-running the same week replaces; fresh weeks append. |
+| `public.route_vehicle_observations` | Append-only log: route → registration → observed_at. Built from each Monday's TfL arrivals snapshot so we can ask "which buses ran the 25 in March 2026?" historically. | Insert this run's fresh observations only (filtered by `lastSeenAt === generatedAt` to avoid pushing rows already in the DB). |
+| `public.garage_snapshots` | One row per (garage, week). Carries name, operator, address, postcode, lat/lon plus per-week aggregates: `total_pvr` and `route_count` summed from `route_snapshots` of the same week, plus the route arrays (main / night / school) from `garages.geojson`. PK `(garage_code, snapshot_date)`. | Upsert per (garage_code, snapshot_date). |
+| `public.route_performance` | Per-route reliability — EWT (Excess Wait Time) for high-frequency routes, OTP (On-Time Performance) for low-frequency. Sourced from `bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf` (TfL's QSI report). Carries `period_start`/`period_end` (the 4-week period the data describes) and `extracted_at` (when we parsed). PK `(route_id, period_label)`. | Upsert per (route_id, period_label) — TfL publishes a new PDF every ~4 weeks so the same row gets refreshed weekly until a new period appears, then a new row is inserted. |
+
+**RLS:** anon role reads `route_snapshots` only. Vehicles and observations are
+service-role-only — the public site has no path to a registration plate. The
+analytics page (when it ships) uses aggregating views or RPC, never raw SELECT
+on the locked tables.
 
 ---
 
@@ -111,11 +165,11 @@ route-overrides.json   (manual curation; always wins)
 | **GitHub Actions job** | 6 h per job; 30-min timeout configured here | Plenty. |
 | **Repo size** | No hard limit, but >1 GB warns; single file >100 MB blocked | Committed data ~3–4 MB. |
 | **TfL API** | 500 req/min with key | Self-throttled to ~350. |
+| **DVLA VES** (free tier) | ~15 req/s, 500k req/day | Self-throttled to 5 RPS. Sticky 90-day cache means weekly runs touch ~2–5% of the fleet (~200–500 calls), well under any limit. |
 | **postcodes.io** | ~10 req/s bulk; no published hard cap | Cache hit rate ~100% on stable weeks. |
 | **Nominatim** | 1 req/s, ≥1s between requests, UA required, 60s back-off on 429 | Photon is primary so we almost never hit Nominatim. |
 
-**Secret storage:** `BUS_API_KEY` lives in GitHub Actions secrets and in a local `.env`
-(gitignored). It is used **build-time only**; the frontend fetches static JSON/GeoJSON.
+**Secret storage:** `BUS_API_KEY` and `DVLA_API_KEY` live in GitHub Actions secrets and in a local `.env` (gitignored). They are used **build-time only**; the frontend fetches static JSON/GeoJSON. Vehicle registrations are kept server-side in `data/source/route-vehicles.json` and are **never** exported to the browser; only the per-route aggregates (`make`, `propulsion`, `vehicleAgeYears`, `fleetSize`) are surfaced.
 
 ---
 
