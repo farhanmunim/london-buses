@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-04-29T22:08:25Z",
+  "generated_at_utc": "2026-04-29T23:25:56Z",
   "route_count": 677,
   "routes": {
     "1": {
@@ -1219,13 +1219,16 @@
       }
     },
     "87": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Aldwych",
-        "qualifier": "Aldwych / Drury Lane",
+        "qualifier": "",
         "full": "Aldwych"
+      },
+      "inbound": {
+        "destination": "Wandsworth",
+        "qualifier": "",
+        "full": "Wandsworth"
       }
     },
     "88": {
@@ -3353,16 +3356,18 @@
       }
     },
     "236": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Finsbury Park",
-        "qualifier": "",
-        "full": "Finsbury Park"
-      },
-      "inbound": {
         "destination": "Hackney Wick",
         "qualifier": "",
         "full": "Hackney Wick"
+      },
+      "inbound": {
+        "destination": "Finsbury Park Station",
+        "qualifier": "Finsbury Park Interchange",
+        "full": "Finsbury Park Station, Finsbury Park Interchange"
       }
     },
     "237": {
@@ -5391,18 +5396,16 @@
       }
     },
     "389": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Barnet, Western Way",
-        "qualifier": "Western Way",
-        "full": "Barnet, Western Way"
+        "destination": "Barnet",
+        "qualifier": "",
+        "full": "Barnet"
       },
       "inbound": {
-        "destination": "Barnet, The Spires",
-        "qualifier": "The Spires",
-        "full": "Barnet, The Spires"
+        "destination": "Western Way",
+        "qualifier": "",
+        "full": "Western Way"
       }
     },
     "390": {
@@ -5588,16 +5591,18 @@
       }
     },
     "410": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Crystal Palace",
-        "qualifier": "",
-        "full": "Crystal Palace"
+        "destination": "Wallington",
+        "qualifier": "Shotfield",
+        "full": "Wallington, Shotfield"
       },
       "inbound": {
-        "destination": "Wallington",
-        "qualifier": "",
-        "full": "Wallington"
+        "destination": "Crystal Palace",
+        "qualifier": "Crystal Palace Parade",
+        "full": "Crystal Palace"
       }
     },
     "411": {
@@ -7472,29 +7477,33 @@
       }
     },
     "B13": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Bexleyheath",
-        "qualifier": "",
-        "full": "Bexleyheath"
+        "destination": "New Eltham",
+        "qualifier": "New Eltham Station / Southwood Road",
+        "full": "New Eltham"
       },
       "inbound": {
-        "destination": "New Eltham",
-        "qualifier": "",
-        "full": "New Eltham"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Bexleyheath Library",
+        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
       }
     },
     "B14": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Bexleyheath",
+        "destination": "Orpington Station",
         "qualifier": "",
-        "full": "Bexleyheath"
+        "full": "Orpington Station"
       },
       "inbound": {
-        "destination": "Orpington",
-        "qualifier": "",
-        "full": "Orpington"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Bexleyheath Library",
+        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
       }
     },
     "B15": {
