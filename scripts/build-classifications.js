@@ -364,9 +364,37 @@ for (const file of routeFiles) {
   const fallback    = vehicleLookupBestMatch(vehicleType);
   const fleetAgg    = aggregateRouteFleet(routeId);
   const deck        = details.deck       ?? fallback?.deck       ?? null;
-  // DVLA-derived propulsion wins over the LBR-string heuristic when we have it
-  // — DVLA is authoritative for fuel type, the LBR regex is a best-effort guess.
-  const propulsion  = fleetAgg?.propulsion ?? details.propulsion ?? fallback?.propulsion ?? null;
+
+  // ── Propulsion precedence ───────────────────────────────────────────────
+  // Naive "DVLA always wins" was wrong: with fleetSize 1–3 (typical right
+  // now), one off-fleet observation flips a route's verdict. Worse, DVLA's
+  // fuelType for hybrid chassis is inconsistent — Volvo B5LH buses come back
+  // as `HEAVY OIL` (= our 'diesel') as often as `HYBRID ELECTRIC`. The
+  // bustimes.org cross-check (audit-vehicle-data.js) found 64 routes where
+  // we said diesel but the LBR vehicle string explicitly carried B5LH /
+  // E40H / NB4L / similar — unambiguous hybrid markers.
+  //
+  // New rule:
+  //   • details.propulsion ∈ {hybrid, electric, hydrogen} → trust LBR.
+  //     These verdicts come from explicit fleet codes (B5LH, BYD, BZL,
+  //     Streetdeck Electroliner, FCEV, etc.) which are 100% specific.
+  //   • details.propulsion = 'diesel' (LBR's default when no marker) →
+  //     trust DVLA when we have ≥5 observations agreeing — that's enough
+  //     evidence to override LBR's silence (e.g. a route that just went
+  //     electric mid-week).
+  //   • Otherwise → fall through to LBR / vehicle-lookup / last-known-good.
+  const HIGH_CONF_OBS = 5;
+  const lbrProp  = details.propulsion;
+  const dvlaProp = fleetAgg?.propulsion;
+  const dvlaObs  = fleetAgg?.fleetSize ?? 0;
+  let propulsion;
+  if (lbrProp && lbrProp !== 'diesel') {
+    propulsion = lbrProp;
+  } else if (dvlaProp && dvlaObs >= HIGH_CONF_OBS) {
+    propulsion = dvlaProp;
+  } else {
+    propulsion = lbrProp ?? fallback?.propulsion ?? null;
+  }
   const operator     = details.operator;
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;

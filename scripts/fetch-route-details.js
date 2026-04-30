@@ -275,7 +275,11 @@ function cleanVehicleType(raw) {
   if (!raw) return null;
   let s = raw.trim();
   s = s.replace(/[*†‡§\u0086]+$/g, '').trim();         // trailing footnote markers
-  s = s.replace(/^[A-Z0-9]{3,5}\s+(?=\d|\(|[A-Z])/, ''); // strip fleet prefix (E20D, B5LH...) when followed by size/body
+  // PRESERVE chassis / fleet prefix — it's often the most informative part of
+  // the string ("BYD" = electric, "B5LH" = Volvo hybrid). The previous version
+  // stripped these prefixes which collapsed e.g. "B5LH 10.5m/EvoSeti 2D" down
+  // to just "EvoSeti", dropping the chassis info and making vehicleType look
+  // diesel even when DVLA correctly classified the route as hybrid.
   s = s.replace(/\s*\d+\.?\d*m\//i, '/').trim();        // collapse "10.5m/" into "/"
   s = s.replace(/^\/+/, '').trim();
   s = s.replace(/\s*[123]D[?*†‡§\u0086]?\s*$/, '').trim(); // strip trailing deck tag
