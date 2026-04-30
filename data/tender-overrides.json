@@ -16,6 +16,19 @@
     },
     "_example_partial": {
       "notes": "Cost-per-mile recalculated after TfL clarified mileage in 2024-Q2 contract addendum."
+    },
+
+    "_2010_note": "btID 2010 (Route 265) — TfL's published table is mis-aligned by one row: highest-bid value duplicated into cost-per-mile, true cost (4.75) ended up in reason-not-lowest. Override below corrects it.",
+    "2010": {
+      "highest_bid": null,
+      "cost_per_mile": 4.75,
+      "reason_not_lowest": "N/A",
+      "notes": "Awarded on new electrics. (cost_per_mile + highest_bid manually corrected from TfL's misaligned published row — see https://tfl.gov.uk/forms/13796.aspx?btID=2010)"
+    },
+
+    "_309_note": "btID 309 (Route 290) — TfL's cost-per-mile cell shows 3015 with no decimal, almost certainly a typo for 3.015 or similar. Leaving as-is until verified against another source.",
+    "309": {
+      "notes": "Cost-per-mile of 3015 in TfL's published data is almost certainly a typo (real cost-per-mile values are typically £3-£15)."
     }
   }
 }
