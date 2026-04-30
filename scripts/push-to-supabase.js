@@ -11,6 +11,7 @@
  *   data/garages.geojson             → public.garage_snapshots       (upsert per (garage_code, snapshot_date))
  *     + summed PVR / route count derived from route_classifications
  *   data/source/route-performance.json → public.route_performance    (upsert per (route_id, period_label))
+ *   data/source/tenders.json         → public.tenders                (upsert per tfl_tender_id, append-only)
  *
  * The static-JSON read path that powers the public map is unaffected — Supabase
  * is a *write* destination only, used to build the historical record that
@@ -315,6 +316,62 @@ async function pushObservations() {
   await insertInBatches('route_vehicle_observations', rows);
 }
 
+// ── 6. tenders ──────────────────────────────────────────────────────────────
+// Historical tender award records. Append-only by (tfl_tender_id) — once a
+// row is in the cache it never changes (TfL doesn't retroactively edit
+// award results). Re-running this is a no-op for existing rows; only newly-
+// scraped btIDs appear in the upsert.
+//
+// Manual overrides from data/tender-overrides.json are merged on top of the
+// scraped values immediately before upsert, so a single line in that file
+// can correct a typo, backfill a TfL "N/A", or annotate a tender with notes
+// without re-scraping. Same idiom as data/route-overrides.json. Keys
+// starting with `_` are ignored (used for inline documentation / examples).
+async function pushTenders() {
+  const file = readJsonOrNull(path.join(DATA_DIR, 'source', 'tenders.json'));
+  if (!file?.tenders) {
+    console.log('  tenders: no source file — skipping');
+    return;
+  }
+
+  const overridesFile = readJsonOrNull(path.join(DATA_DIR, 'tender-overrides.json'));
+  const overrides = {};
+  for (const [k, v] of Object.entries(overridesFile?.tenders ?? {})) {
+    if (k.startsWith('_')) continue;
+    overrides[k] = v;
+  }
+  if (Object.keys(overrides).length) {
+    console.log(`  tenders: loaded ${Object.keys(overrides).length} manual override(s)`);
+  }
+
+  const rows = Object.entries(file.tenders).map(([btId, t]) => {
+    const ov = overrides[btId] ?? {};
+    return {
+      tfl_tender_id:        parseInt(btId, 10),
+      route_id:             ov.route_id             ?? t.route_id             ?? '',
+      award_announced_date: ov.award_announced_date ?? t.award_announced_date ?? null,
+      awarded_operator:     ov.awarded_operator     ?? t.awarded_operator     ?? null,
+      number_of_tenderers:  Number.isFinite(ov.number_of_tenderers) ? ov.number_of_tenderers
+                          : (Number.isFinite(t.number_of_tenderers) ? t.number_of_tenderers : null),
+      accepted_bid:         Number.isFinite(ov.accepted_bid) ? ov.accepted_bid
+                          : (Number.isFinite(t.accepted_bid) ? t.accepted_bid : null),
+      lowest_bid:           Number.isFinite(ov.lowest_bid)   ? ov.lowest_bid
+                          : (Number.isFinite(t.lowest_bid)   ? t.lowest_bid   : null),
+      highest_bid:          Number.isFinite(ov.highest_bid)  ? ov.highest_bid
+                          : (Number.isFinite(t.highest_bid)  ? t.highest_bid  : null),
+      cost_per_mile:        Number.isFinite(ov.cost_per_mile) ? ov.cost_per_mile
+                          : (Number.isFinite(t.cost_per_mile) ? t.cost_per_mile : null),
+      reason_not_lowest:    ov.reason_not_lowest    ?? t.reason_not_lowest    ?? null,
+      joint_bids:           ov.joint_bids           ?? t.joint_bids           ?? null,
+      notes:                ov.notes                ?? t.notes                ?? null,
+      source_url:           t.source_url ?? null,
+      data_as_of:           ov.award_announced_date ?? t.award_announced_date ?? null,
+      extracted_at:         t.scraped_at ?? new Date().toISOString(),
+    };
+  });
+  await upsertInBatches('tenders', rows, 'tfl_tender_id');
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 async function main() {
   console.log(`Pushing to Supabase at ${SUPABASE_URL}`);
@@ -323,6 +380,7 @@ async function main() {
   await pushObservations();
   await pushGarageSnapshots();
   await pushRoutePerformance();
+  await pushTenders();
   console.log('Done.');
 }
 

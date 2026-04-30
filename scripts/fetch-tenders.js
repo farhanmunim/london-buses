@@ -1,0 +1,262 @@
+﻿/**
+ * fetch-tenders.js -- TfL bus tender award results.
+ *
+ * Source:
+ *   https://tfl.gov.uk/forms/13923.aspx       -- discovery page; the route
+ *                                                dropdown lists every awarded
+ *                                                tender as <option value="ID">.
+ *   https://tfl.gov.uk/forms/13796.aspx?btID= -- per-tender result page.
+ *
+ * Each btID maps to one historical award event. ~2500 in total, going back to
+ * the early 2000s. Awards are immutable -- once a row is in the cache we never
+ * re-fetch it, so steady-state weekly runs only pull the handful of new btIDs
+ * TfL added since last run.
+ *
+ * Output: data/source/tenders.json (force-committed across runs)
+ *   {
+ *     generatedAt, totalKnownIds, newThisRun,
+ *     tenders: { [btID]: { route_id, award_announced_date, awarded_operator,
+ *                          number_of_tenderers, accepted_bid, lowest_bid,
+ *                          highest_bid, cost_per_mile, reason_not_lowest,
+ *                          joint_bids, notes, source_url, scraped_at } }
+ *   }
+ *
+ * Encoding note: every label-matching lookup uses prefix/substring regex
+ * instead of literal column names so the script is robust to encoding drift
+ * (Windows-1252 vs UTF-8) when an editor re-saves the file. Avoid embedding
+ * non-ASCII characters in this file directly.
+ *
+ * Run: npm run fetch-tenders
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT      = path.resolve(__dirname, '..');
+const OUT_PATH  = path.join(ROOT, 'data', 'source', 'tenders.json');
+
+const DISCOVERY_URL = 'https://tfl.gov.uk/forms/13923.aspx';
+const RESULT_URL    = (id) => `https://tfl.gov.uk/forms/13796.aspx?btID=${id}`;
+const USER_AGENT    = 'london-buses-map/2.6 (tenders; +https://london-buses.farhan.app)';
+const TIMEOUT_MS    = 30_000;
+const CONC          = 4;
+const REQS_PER_MIN  = 200;            // ~3.3 RPS -- polite rate against TfL
+const FLUSH_EVERY   = 100;            // periodic cache flush so a CI timeout doesn't lose progress
+const MAX_PER_RUN   = 4000;           // hard cap; cold-start week takes one extended run
+
+async function fetchText(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': USER_AGENT } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Discovery: pull every option value from the route dropdown
+async function discoverTenderIds() {
+  const html = await fetchText(DISCOVERY_URL);
+  const ids = [];
+  const seen = new Set();
+  // Only options inside the route-id dropdown (not the tranche/date dropdowns)
+  const dropdownStart = html.indexOf('id="BusTenderSearch_ddl_btID"');
+  if (dropdownStart === -1) throw new Error('Route dropdown not found on discovery page');
+  const dropdownEnd = html.indexOf('</select>', dropdownStart);
+  const block = html.slice(dropdownStart, dropdownEnd);
+  for (const m of block.matchAll(/<option\s+value="(\d+)"[^>]*>([^<]+)<\/option>/g)) {
+    const id = parseInt(m[1], 10);
+    const label = m[2].trim().replace(/^Route\s+/i, '');     // "Route 1/N1" -> "1/N1"
+    if (!seen.has(id)) { seen.add(id); ids.push({ id, label }); }
+  }
+  return ids;
+}
+
+// Per-tender parser
+function stripTags(s) {
+  return String(s ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&pound;|Â£/g, 'GBP_')   // normalise pound sign to a token we never literally search
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+const NUM_WORDS = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+
+function parseTenderersCount(s) {
+  if (!s) return null;
+  const t = String(s).trim().toLowerCase();
+  if (NUM_WORDS[t] != null) return NUM_WORDS[t];
+  const n = parseInt(t, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parseMoney(s) {
+  if (!s) return null;
+  // Strip pound-token, commas, whitespace; reject if non-numeric
+  // (e.g. "Please see joint bid below", "N/A").
+  const cleaned = String(s).replace(/GBP_|,|\s/g, '');
+  if (!/^-?\d+(?:\.\d+)?$/.test(cleaned)) return null;
+  return parseFloat(cleaned);
+}
+
+function parseAwardDate(s) {
+  // "01 July 2009" -> "2009-07-01"
+  if (!s) return null;
+  const m = /^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/.exec(String(s).trim());
+  if (!m) return null;
+  const months = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 };
+  const mo = months[m[2].slice(0, 3).toLowerCase()];
+  if (!mo) return null;
+  const day = String(m[1]).padStart(2, '0');
+  const month = String(mo).padStart(2, '0');
+  return `${m[3]}-${month}-${day}`;
+}
+
+// Look up a label by case-insensitive prefix so encoding mojibake on the
+// pound sign or stray whitespace doesn't break matching.
+function rowByPrefix(rows, prefix) {
+  const target = prefix.toLowerCase();
+  for (const k of Object.keys(rows)) {
+    if (k.toLowerCase().startsWith(target)) return rows[k];
+  }
+  return null;
+}
+
+function parseTenderHtml(html, btId) {
+  // Header line: "Route X/N1 - award announced <span ...>DATE</span>"
+  const headerRe = /<strong>\s*Route\s+([^<]+?)\s*-\s*award announced\s*<span[^>]*>([^<]+)<\/span>\s*<\/strong>/i;
+  const headerM = headerRe.exec(html);
+  const routeId = headerM ? headerM[1].trim() : null;
+  const awardDate = headerM ? parseAwardDate(headerM[2].trim()) : null;
+
+  // The detail table - class="tenderResults"
+  const tableM = /<table\s+class="tenderResults"[^>]*>([\s\S]*?)<\/table>/i.exec(html);
+  if (!tableM) return null;
+
+  const rows = {};
+  const rowRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rm;
+  while ((rm = rowRe.exec(tableM[1])) !== null) {
+    const cells = [...rm[1].matchAll(/<(t[hd])[^>]*>([\s\S]*?)<\/\1>/gi)];
+    if (cells.length < 2) continue;
+    const label = stripTags(cells[0][2]);
+    const value = stripTags(cells[1][2]);
+    if (label) rows[label] = value;
+  }
+
+  return {
+    route_id:               routeId,
+    award_announced_date:   awardDate,
+    awarded_operator:       rowByPrefix(rows, 'Successful Tenderer'),
+    number_of_tenderers:    parseTenderersCount(rowByPrefix(rows, 'Number of Tenderers')),
+    accepted_bid:           parseMoney(rowByPrefix(rows, 'Accepted Bid')),
+    lowest_bid:             parseMoney(rowByPrefix(rows, 'Lowest Individual Compliant Bid')),
+    highest_bid:            parseMoney(rowByPrefix(rows, 'Highest Individual Compliant Bid')),
+    cost_per_mile:          parseMoney(rowByPrefix(rows, 'Cost per live mile')),
+    reason_not_lowest:      rowByPrefix(rows, 'Reason for not awarding'),
+    joint_bids:             rowByPrefix(rows, 'Joint Bids'),
+    notes:                  rowByPrefix(rows, 'Notes'),
+    source_url:             RESULT_URL(btId),
+    scraped_at:             new Date().toISOString(),
+  };
+}
+
+// Cache I/O
+function loadCache() {
+  if (!fs.existsSync(OUT_PATH)) return { tenders: {} };
+  try {
+    const j = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
+    return { tenders: j.tenders ?? {} };
+  } catch (err) {
+    console.warn(`Cache unreadable (${err.message}) -- starting fresh`);
+    return { tenders: {} };
+  }
+}
+function flushCache(cache, totalKnown, newThisRun) {
+  const output = {
+    generatedAt:   new Date().toISOString(),
+    totalKnownIds: totalKnown,
+    newThisRun,
+    tenderCount:   Object.keys(cache.tenders).length,
+    tenders:       cache.tenders,
+  };
+  const tmp = OUT_PATH + '.tmp';
+  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
+  fs.writeFileSync(tmp, JSON.stringify(output), 'utf8');
+  fs.renameSync(tmp, OUT_PATH);
+}
+
+// Main
+async function main() {
+  console.log(`Discovering tender IDs from ${DISCOVERY_URL} ...`);
+  const allIds = await discoverTenderIds();
+  console.log(`  ${allIds.length} tender IDs in dropdown`);
+
+  const cache = loadCache();
+  const known = new Set(Object.keys(cache.tenders).map(s => parseInt(s, 10)));
+  const toFetch = allIds.filter(({ id }) => !known.has(id)).slice(0, MAX_PER_RUN);
+  console.log(`Cache holds ${known.size} tenders; ${toFetch.length} new this run (cap ${MAX_PER_RUN})`);
+
+  if (!toFetch.length) {
+    console.log('Cache fully warm -- nothing to fetch.');
+    flushCache(cache, allIds.length, 0);
+    return;
+  }
+
+  let fetched = 0, errored = 0;
+
+  // SIGTERM handler: flush before exit so a CI timeout never loses progress.
+  const onSignal = () => { try { flushCache(cache, allIds.length, fetched); } catch {} process.exit(130); };
+  process.once('SIGINT',  onSignal);
+  process.once('SIGTERM', onSignal);
+
+  const minIntervalMs = Math.ceil(60_000 / REQS_PER_MIN);
+  let nextSlot = Date.now();
+  let idx = 0;
+
+  async function worker() {
+    while (true) {
+      const i = idx++;
+      if (i >= toFetch.length) break;
+      const { id, label } = toFetch[i];
+
+      const wait = nextSlot - Date.now();
+      nextSlot = Math.max(Date.now(), nextSlot) + minIntervalMs;
+      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+
+      try {
+        const html = await fetchText(RESULT_URL(id));
+        const parsed = parseTenderHtml(html, id);
+        if (parsed) {
+          // Prefer the dropdown label as canonical route_id when the result
+          // body's header is missing or shaped weirdly.
+          parsed.route_id = parsed.route_id ?? label;
+          cache.tenders[id] = parsed;
+          fetched++;
+        } else {
+          errored++;
+        }
+      } catch (err) {
+        errored++;
+      }
+
+      if ((fetched + errored) % FLUSH_EVERY === 0) {
+        flushCache(cache, allIds.length, fetched);
+        console.log(`  ${fetched + errored}/${toFetch.length}  ok=${fetched} err=${errored}  (cache flushed)`);
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: CONC }, worker));
+
+  flushCache(cache, allIds.length, fetched);
+  console.log(`Done: ok=${fetched}  err=${errored}  total cached=${Object.keys(cache.tenders).length}`);
+}
+
+main().catch(err => { console.error('Fatal:', err); process.exit(1); });

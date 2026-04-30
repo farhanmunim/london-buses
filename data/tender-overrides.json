@@ -1,0 +1,21 @@
+{
+  "description": "Manual per-tender overrides keyed by TfL btID (the numeric ID from the tender result URL: tfl.gov.uk/forms/13796.aspx?btID=<id>). Any field set here wins over scraped data when push-to-supabase.js writes to the `tenders` table. Use this to correct typos, add notes TfL hasn't published, backfill missing values where TfL listed N/A, or mark a tender as superseded. Entries whose key starts with an underscore (e.g. `_example`) are ignored — use them for documentation. Re-run `npm run push-to-supabase` to apply.",
+  "tenders": {
+    "_example_full": {
+      "route_id": "1/N1",
+      "award_announced_date": "2009-07-01",
+      "awarded_operator": "London General",
+      "number_of_tenderers": 2,
+      "accepted_bid": 4248584,
+      "lowest_bid": 4100000,
+      "highest_bid": 4500000,
+      "cost_per_mile": 6.14,
+      "reason_not_lowest": "...",
+      "joint_bids": "...",
+      "notes": "Manually-corrected note explaining a discrepancy."
+    },
+    "_example_partial": {
+      "notes": "Cost-per-mile recalculated after TfL clarified mileage in 2024-Q2 contract addendum."
+    }
+  }
+}

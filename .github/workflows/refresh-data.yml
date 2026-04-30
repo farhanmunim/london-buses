@@ -101,6 +101,11 @@ jobs:
           git add -f data/source/route-performance.json     || true
           git add -f data/source/route-performance-raw.txt  || true
 
+          # Persist the historical tender award cache. ~2500 rows; immutable
+          # once written so steady-state weekly runs only add the handful of
+          # new btIDs TfL has published since last week.
+          git add -f data/source/tenders.json               || true
+
           # Only stage individual route files if the geometry ZIP changed
           if [ "${{ steps.prev_zip.outputs.date }}" != "${{ steps.new_zip.outputs.date }}" ]; then
             echo "Geometry ZIP changed (${{ steps.prev_zip.outputs.date }} → ${{ steps.new_zip.outputs.date }}) — staging route files"
