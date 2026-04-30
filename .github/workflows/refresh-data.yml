@@ -106,6 +106,13 @@ jobs:
           # new btIDs TfL has published since last week.
           git add -f data/source/tenders.json               || true
 
+          # Persist the upcoming-tender programme parse. Small (~100 KB); TfL
+          # republishes the programme PDFs ~monthly during the planning year
+          # so re-parsing weekly is fine. Idempotent on (programme_year,
+          # tranche, route_id) so re-pushing has no effect when nothing
+          # changed upstream.
+          git add -f data/source/tender-programme.json      || true
+
           # Only stage individual route files if the geometry ZIP changed
           if [ "${{ steps.prev_zip.outputs.date }}" != "${{ steps.new_zip.outputs.date }}" ]; then
             echo "Geometry ZIP changed (${{ steps.prev_zip.outputs.date }} → ${{ steps.new_zip.outputs.date }}) — staging route files"

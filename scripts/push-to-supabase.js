@@ -12,6 +12,7 @@
  *     + summed PVR / route count derived from route_classifications
  *   data/source/route-performance.json → public.route_performance    (upsert per (route_id, period_label))
  *   data/source/tenders.json         → public.tenders                (upsert per tfl_tender_id, append-only)
+ *   data/source/tender-programme.json → public.tender_programme      (upsert per (programme_year, tranche, route_id))
  *
  * The static-JSON read path that powers the public map is unaffected — Supabase
  * is a *write* destination only, used to build the historical record that
@@ -316,6 +317,68 @@ async function pushObservations() {
   await insertInBatches('route_vehicle_observations', rows);
 }
 
+// ── Tender derived-field helpers ────────────────────────────────────────────
+// Derived columns (added in 0007). All computed from fields we already have;
+// stored on the row so analytics queries don't have to reapply the regex.
+// Each can be overridden per-row via data/tender-overrides.json.
+function deriveTenderPropulsion(notes, jointBids) {
+  const pool = `${notes ?? ''} ${jointBids ?? ''}`.toLowerCase();
+  if (!pool.trim()) return null;
+  // Plural forms ("electrics", "hybrids", "diesels") are common in TfL's
+  // notes ("Awarded on existing diesels", "Awarded on new electrics").
+  // Hydrogen check first — most specific.
+  if (/\b(?:fuel\s*cells?|fcev|hydrogen)\b/.test(pool))                     return 'hydrogen';
+  if (/\b(?:battery\s*hybrids?|hybrid\s*electrics?|hybrids?)\b/.test(pool)) return 'hybrid';
+  if (/\b(?:zero\s*emission|battery\s*electrics?|electrics?|evs?|zedd|zesd)\b/.test(pool))
+                                                                            return 'electric';
+  if (/\b(?:diesels?|euro\s*\d)\b/.test(pool) && !/electric|hybrid/.test(pool)) return 'diesel';
+  return null;
+}
+function deriveJointBid(notes, jointBids) {
+  if (jointBids && jointBids.trim().length > 5 && !/^N\/?A$/i.test(jointBids.trim())) return true;
+  if (notes && /\b(?:joint\s*bid|jb)\b/i.test(notes)) return true;
+  return false;
+}
+function deriveVehiclesBasis(notes) {
+  if (!notes) return null;
+  const t = notes.toLowerCase();
+  if (/\bexisting\b/.test(t)) return 'existing';
+  // 'awarded on new electrics' / 'new bus' / 'new vehicles' / 'new euro VI hybrids'
+  if (/\bnew\s+(?:bus|vehicle|fleet|electric|hybrid|euro|hydrogen|streetdeck|euro vi|battery)/i.test(t)) return 'new';
+  if (/\b(?:awarded|award)\s+on\s+new\b/.test(t)) return 'new';
+  return null;
+}
+function deriveProgrammePropulsion(vehicleType) {
+  if (!vehicleType) return null;
+  const t = vehicleType.toUpperCase();
+  if (/ZE(?:DD|SD)|\bZE\b|ZERO/i.test(t))         return 'electric';
+  if (/\bH(?:DD|SD)\b|HYBRID/i.test(t))           return 'hybrid';
+  if (/\bFC|HYDROGEN/i.test(t))                   return 'hydrogen';
+  return null;
+}
+
+// Build a route_id -> current operator map from route_classifications.json
+// for use as `previous_operator` on the upcoming-tender programme rows.
+function loadCurrentOperators() {
+  const cls = readJsonOrNull(path.join(DATA_DIR, 'route_classifications.json'));
+  const map = {};
+  for (const [routeId, r] of Object.entries(cls?.routes ?? {})) {
+    if (r?.operator) map[routeId.toUpperCase()] = r.operator;
+  }
+  return map;
+}
+// Look up by exact route id, or for joint routes like '69/N69' try each part.
+function operatorForRoute(map, routeId) {
+  if (!routeId) return null;
+  const exact = map[routeId.toUpperCase()];
+  if (exact) return exact;
+  for (const part of routeId.split('/')) {
+    const v = map[part.toUpperCase()];
+    if (v) return v;
+  }
+  return null;
+}
+
 // ── 6. tenders ──────────────────────────────────────────────────────────────
 // Historical tender award records. Append-only by (tfl_tender_id) — once a
 // row is in the cache it never changes (TfL doesn't retroactively edit
@@ -344,8 +407,18 @@ async function pushTenders() {
     console.log(`  tenders: loaded ${Object.keys(overrides).length} manual override(s)`);
   }
 
+  // First pass: build canonical rows with overrides applied AND derived flags
+  // (propulsion_type, is_joint_bid, vehicles_basis). previous_operator needs
+  // a second pass because it's window-style: the prior tender for the same route.
   const rows = Object.entries(file.tenders).map(([btId, t]) => {
-    const ov = overrides[btId] ?? {};
+    const ov           = overrides[btId] ?? {};
+    const notes        = ov.notes      ?? t.notes      ?? null;
+    const jointBids    = ov.joint_bids ?? t.joint_bids ?? null;
+    const propulsion   = ov.propulsion_type ?? deriveTenderPropulsion(notes, jointBids);
+    const isJoint      = (typeof ov.is_joint_bid === 'boolean')
+                           ? ov.is_joint_bid
+                           : deriveJointBid(notes, jointBids);
+    const basis        = ov.vehicles_basis ?? deriveVehiclesBasis(notes);
     return {
       tfl_tender_id:        parseInt(btId, 10),
       route_id:             ov.route_id             ?? t.route_id             ?? '',
@@ -362,14 +435,84 @@ async function pushTenders() {
       cost_per_mile:        Number.isFinite(ov.cost_per_mile) ? ov.cost_per_mile
                           : (Number.isFinite(t.cost_per_mile) ? t.cost_per_mile : null),
       reason_not_lowest:    ov.reason_not_lowest    ?? t.reason_not_lowest    ?? null,
-      joint_bids:           ov.joint_bids           ?? t.joint_bids           ?? null,
-      notes:                ov.notes                ?? t.notes                ?? null,
+      joint_bids:           jointBids,
+      notes:                notes,
+      // Derived columns (added in 0007)
+      propulsion_type:      propulsion,
+      is_joint_bid:         isJoint,
+      vehicles_basis:       basis,
+      previous_operator:    ov.previous_operator    ?? null,   // populated in 2nd pass
       source_url:           t.source_url ?? null,
       data_as_of:           ov.award_announced_date ?? t.award_announced_date ?? null,
       extracted_at:         t.scraped_at ?? new Date().toISOString(),
     };
   });
+
+  // Second pass: previous_operator. Sort within each route by award date,
+  // then walk in order so each row inherits the prior row's awarded_operator.
+  // Skips rows that already have an override (set in pass 1).
+  const byRoute = {};
+  for (const r of rows) {
+    if (!byRoute[r.route_id]) byRoute[r.route_id] = [];
+    byRoute[r.route_id].push(r);
+  }
+  for (const list of Object.values(byRoute)) {
+    list.sort((a, b) => String(a.award_announced_date ?? '').localeCompare(String(b.award_announced_date ?? '')));
+    let prev = null;
+    for (const r of list) {
+      if (r.previous_operator == null) r.previous_operator = prev;
+      prev = r.awarded_operator ?? prev;
+    }
+  }
+
   await upsertInBatches('tenders', rows, 'tfl_tender_id');
+}
+
+// ── 7. tender_programme ─────────────────────────────────────────────────────
+// Forward-looking tender schedule from the annual LBSL programme PDFs.
+// Idempotent on (programme_year, tranche, route_id) — re-running with a
+// freshly-published PDF updates affected rows in place.
+async function pushTenderProgramme() {
+  const file = readJsonOrNull(path.join(DATA_DIR, 'source', 'tender-programme.json'));
+  if (!file?.years) {
+    console.log('  tender_programme: no source file — skipping');
+    return;
+  }
+  // Look up the operator currently running each route so we can populate
+  // `previous_operator` on every programme row -- once the upcoming tender
+  // awards, today's operator becomes the previous one.
+  const currentOps = loadCurrentOperators();
+
+  const rows = [];
+  for (const year of file.years) {
+    for (const e of (year.entries ?? [])) {
+      rows.push({
+        programme_year:        e.programme_year,
+        tranche:               e.tranche ?? null,
+        route_id:              e.route_id,
+        tender_issue_date:     e.tender_issue_date ?? null,
+        tender_return_date:    e.tender_return_date ?? null,
+        award_estimated:       e.award_estimated ?? null,
+        contract_start_date:   e.contract_start_date ?? null,
+        route_description:     e.route_description ?? null,
+        vehicle_type:          e.vehicle_type ?? null,
+        two_year_extension:    !!e.two_year_extension,
+        // Derived columns (added in 0007)
+        propulsion_type:       deriveProgrammePropulsion(e.vehicle_type),
+        previous_operator:     operatorForRoute(currentOps, e.route_id),
+        source_url:            e.source_url ?? null,
+        pdf_modified_at:       e.pdf_modified_at ?? null,
+        data_as_of:            e.data_as_of ?? null,
+      });
+    }
+  }
+  // Skip rows missing tranche — Postgres rejects null in a UNIQUE composite
+  // when other slots collide, and we'd rather drop the noise than fail the batch.
+  const filtered = rows.filter(r => r.tranche);
+  if (filtered.length < rows.length) {
+    console.log(`  tender_programme: dropped ${rows.length - filtered.length} rows without a tranche`);
+  }
+  await upsertInBatches('tender_programme', filtered, 'programme_year,tranche,route_id');
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -381,6 +524,7 @@ async function main() {
   await pushGarageSnapshots();
   await pushRoutePerformance();
   await pushTenders();
+  await pushTenderProgramme();
   console.log('Done.');
 }
 

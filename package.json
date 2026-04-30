@@ -15,6 +15,7 @@
     "fetch-route-vehicles": "node scripts/fetch-route-vehicles.js",
     "fetch-route-performance": "node scripts/fetch-route-performance.js",
     "fetch-tenders": "node scripts/fetch-tenders.js",
+    "fetch-tender-programme": "node scripts/fetch-tender-programme.js",
     "build-classifications": "node scripts/build-classifications.js",
     "build-overview": "node scripts/build-overview.js",
     "build-garage-locations": "node scripts/build-garage-locations.js",
