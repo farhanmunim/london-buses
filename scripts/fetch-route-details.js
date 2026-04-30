@@ -28,6 +28,7 @@
 import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { loadEnv } from './_lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -282,15 +283,7 @@ function cleanVehicleType(raw) {
 }
 
 // ── 3. Service types from TfL (for aliases of 24-hour routes) ────────────────
-try {
-  const envPath = path.join(ROOT, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-    }
-  }
-} catch {}
+loadEnv();
 const API_KEY = process.env.BUS_API_KEY ?? '';
 
 // Aliases (night→day) come from routes.htm — preserve old behaviour.

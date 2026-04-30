@@ -6,7 +6,6 @@
  * map / filter state. Each activates on import.
  */
 
-import { invalidateMapSize } from './map.js';
 
 // ── Sidebar tab switcher (Filters / Garages) ─────────────────────────────────
 const sbTabs    = document.querySelectorAll('.sb-tab');
@@ -78,7 +77,3 @@ document.querySelectorAll('.sb-sec-hd').forEach(hd => {
     }
   });
 });
-
-// Give Leaflet a kick if anything else on the page resizes the map area.
-// (Kept here so future panel-resize features drop straight in.)
-export function nudgeMap() { setTimeout(invalidateMapSize, 310); }

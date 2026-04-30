@@ -39,8 +39,6 @@ export const clearGarageFiltersBtn = document.getElementById('clearGarageFilters
 export const resetAllBtn           = document.getElementById('resetAll');
 
 // Sidebar
-export const sbFilters       = document.getElementById('sb-filters');
-export const sbGarages       = document.getElementById('sb-garages');
 export const routeCountEl    = document.getElementById('routeCount');
 
 // Map controls
@@ -50,7 +48,6 @@ export const toggleStopsBtn    = document.getElementById('toggleStops');
 
 // Right panel
 export const heroRoutes      = document.getElementById('hero-routes');
-export const opCardsEl       = document.getElementById('op-cards');
 export const routeSearchInput = document.getElementById('routeSearchInput');
 export const routePrompt     = document.getElementById('routePrompt');
 export const routeResults    = document.getElementById('routeResults');

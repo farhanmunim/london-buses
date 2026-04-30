@@ -34,6 +34,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
+import { loadEnv } from './_lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -50,16 +51,7 @@ const IBUS_BASE      = 'https://s3-eu-west-1.amazonaws.com/ibus.data.tfl.gov.uk'
 const DVLA_URL       = 'https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles';
 const USER_AGENT     = 'london-buses-map/2.6 (vehicle-fleet)';
 
-// ── .env loader (matches other scripts) ─────────────────────────────────────
-try {
-  const envPath = path.join(ROOT, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-    }
-  }
-} catch {}
+loadEnv();
 const DVLA_API_KEY = process.env.DVLA_API_KEY ?? '';
 if (!DVLA_API_KEY) {
   console.error('Error: DVLA_API_KEY not set. Add to .env (local) or GitHub Actions secrets (CI).');

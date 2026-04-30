@@ -19,6 +19,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { loadEnv } from './_lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -26,17 +27,7 @@ const DATA_DIR = path.join(ROOT, 'data');
 const OUT_PATH = path.join(DATA_DIR, 'route_destinations.json');
 const BASE_URL = 'https://api.tfl.gov.uk';
 
-// ── .env loader ──────────────────────────────────────────────────────────────
-try {
-  const envPath = path.join(ROOT, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-    }
-  }
-} catch { /* optional */ }
-
+loadEnv();
 const API_KEY = process.env.BUS_API_KEY ?? '';
 if (!API_KEY) console.warn('Warning: BUS_API_KEY not set — requests may be rate-limited');
 

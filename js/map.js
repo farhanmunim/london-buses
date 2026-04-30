@@ -440,16 +440,6 @@ export function fitToRoute() {
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
-/** Count distinct routes visible in the current overview filter */
-export function countVisibleRoutes() {
-  if (!_overviewGeoJson) return 0;
-  const seen = new Set();
-  for (const f of _overviewGeoJson.features) {
-    if (featurePassesFilter(f.properties)) seen.add(f.properties.routeId);
-  }
-  return seen.size;
-}
-
 /**
  * Returns a Map of routeId → properties for all routes currently passing the filter.
  */
@@ -483,10 +473,6 @@ export function resetMapView() {
   _map?.flyTo(LONDON, ZOOM, { duration: 0.6 });
 }
 
-export function invalidateMapSize() {
-  _map?.invalidateSize({ animate: false });
-}
-
 /**
  * Switch between colouring route lines by type or by operator.
  * Re-applies style to the overview layer and any active single/multi route.
@@ -506,7 +492,6 @@ export function setPaintMode(mode) {
   }
   return _paintMode;
 }
-export function getPaintMode() { return _paintMode; }
 
 // ── Garages layer ─────────────────────────────────────────────────────────────
 
@@ -789,6 +774,3 @@ export function setStopsPreference(visible) {
   if (_stopsLayer) setStopsVisible(_stopsPref);
   return _stopsPref;
 }
-export function getStopsPreference() { return _stopsPref; }
-
-export { TYPE_COLORS };

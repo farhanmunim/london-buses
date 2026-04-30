@@ -27,23 +27,14 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
+import { loadEnv } from './_lib/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
 const DATA_DIR  = path.join(ROOT, 'data');
 const BATCH     = 500;        // Supabase recommends ≤1000 rows per upsert; 500 is safely under
 
-// ── .env loader ─────────────────────────────────────────────────────────────
-try {
-  const envPath = path.join(ROOT, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-    }
-  }
-} catch {}
-
+loadEnv();
 const SUPABASE_URL              = process.env.SUPABASE_URL ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 

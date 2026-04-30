@@ -12,7 +12,8 @@
  * Usage:
  *   npm run fetch-data
  *
- * Requires Node 18+. Set BUS_API_KEY in a .env file (see .env.example).
+ * Requires Node 18+. No API keys needed — geometry is fetched from a public
+ * TfL S3 bucket.
  */
 
 import fs from 'fs';
@@ -37,37 +38,14 @@ const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const ROUTES_DIR = path.join(DATA_DIR, 'routes');
 
-const BUS_API  = 'https://api.tfl.gov.uk';
-const S3_BASE  = 'https://s3-eu-west-1.amazonaws.com/bus.data.tfl.gov.uk';
+const S3_BASE   = 'https://s3-eu-west-1.amazonaws.com/bus.data.tfl.gov.uk';
 const S3_PUBLIC = 'https://bus.data.tfl.gov.uk';
-
-// API key — set BUS_API_KEY in .env (local) or GitHub Actions secrets (CI)
-const API_KEY = process.env.BUS_API_KEY ?? '';
-if (!API_KEY) console.warn('Warning: BUS_API_KEY not set — API calls may be rate-limited');
 
 const ROUTE_XML_RE = /Route_Geometry_([A-Za-z0-9]+)_(\d{8})\.xml$/i;
 const SIMPLIFY_TOLERANCE = 0.00005; // Douglas-Peucker tolerance in degrees
 const COORD_PRECISION = 6;
 
 // --- Utilities ---------------------------------------------------------------
-
-function apiUrl(endpoint) {
-  const sep = endpoint.includes('?') ? '&' : '?';
-  return `${BUS_API}${endpoint}${API_KEY ? `${sep}app_key=${API_KEY}` : ''}`;
-}
-
-async function fetchJson(url, retries = 3) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, attempt * 2000));
-    }
-  }
-}
 
 async function fetchBuffer(url) {
   const res = await fetch(url);
@@ -78,34 +56,6 @@ async function fetchBuffer(url) {
 
 function writeJson(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data), 'utf8');
-}
-
-/**
- * Run `fn` over `items` with bounded concurrency and optional rate limiting.
- * @param {number} ratePerMin  Max requests per minute (0 = unlimited)
- */
-async function batchRun(items, fn, concurrency = 5, ratePerMin = 0) {
-  const minIntervalMs = ratePerMin > 0 ? Math.ceil(60_000 / ratePerMin) : 0;
-  let idx = 0;
-  let nextSlot = Date.now(); // earliest time the next request may start
-
-  async function worker() {
-    while (true) {
-      const i = idx++;
-      if (i >= items.length) break;
-
-      if (minIntervalMs > 0) {
-        const now = Date.now();
-        const wait = nextSlot - now;
-        // Advance the shared slot atomically (JS is single-threaded between awaits)
-        nextSlot = Math.max(now, nextSlot) + minIntervalMs;
-        if (wait > 0) await new Promise(r => setTimeout(r, wait));
-      }
-
-      await fn(items[i], i);
-    }
-  }
-  await Promise.all(Array.from({ length: concurrency }, worker));
 }
 
 // --- Geometry: Douglas-Peucker simplification --------------------------------

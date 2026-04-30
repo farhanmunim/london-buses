@@ -25,8 +25,7 @@ import './route-detail.js';  // route-card renderer (imported for side-effect-fr
 import './mobile-nav.js';    // pull-up sheet + bottom nav
 import './export.js';        // XLSX export
 
-import { initMap, renderOverview, countVisibleRoutes,
-         renderGarages, setGaragesVisible } from './map.js';
+import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js';
 import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';
 import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js';
 import { renderOperatorStats, setGarageData } from './stats.js';
