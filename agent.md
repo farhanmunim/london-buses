@@ -323,43 +323,51 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── about.js                     # About modal — injects HTML, traps focus, works on every page
 │   └── roadmap.js                   # Roadmap modal — same pattern; items defined as a plain array
 ├── scripts/
-│   ├── refresh.js                   # Orchestrator: runs all 10 build steps in sequence
+│   ├── refresh.js                   # Orchestrator: runs all 13 pipeline steps in sequence
 │   ├── fetch-data.js                # Step 1 — geometry ZIP → per-route GeoJSON (TfL S3)
 │   ├── fetch-route-destinations.js  # Step 2 — TfL /Line API → destinations {destination,qualifier,full} + scrape fallback
-│   ├── fetch-stops.js               # Step 3 — TfL StopPoint API → stops.geojson + bus_stations.geojson
+│   ├── fetch-route-stops.js         # Step 3 — TfL StopPoint API → stops.json + route_stops.json
 │   ├── fetch-garages.js             # Step 4 — londonbusroutes CSV + postcodes.io → garages.geojson (cached)
-│   ├── fetch-frequencies.js         # Step 5 — TfL timetables → frequencies.json (+ bustimes.org fallback)
-│   ├── fetch-route-details.js       # Step 6 — join garages CSV + details.htm → vehicle/operator/PVR/deck
-│   ├── build-classifications.js     # Step 7 — merge into final per-route record
-│   ├── build-overview.js            # Step 8 — simplified overview GeoJSON + snapshot archive
-│   ├── build-garage-locations.js    # Step 9 — legacy garage-locations.json for frontend (Photon-geocoded)
-│   ├── build-route-summary.js       # Step 10 — route_summary.csv (all fields flattened for spreadsheet use)
-│   └── update-vehicle-lookup.js     # Maintenance — adds new vehicle types to lookup
+│   ├── fetch-frequencies.js         # Step 5 — TfL timetables → frequencies.json (+ times-page fallback)
+│   ├── fetch-route-details.js       # Step 6 — join garages CSV + details.htm → vehicle/operator/PVR/deck/headway
+│   ├── fetch-vehicle-fleet.js       # Step 7 — iBus Vehicle.xml + DVLA VES → per-registration cache (sticky)
+│   ├── fetch-route-vehicles.js      # Step 8 — TfL /Line/<id>/Arrivals → per-route observed registrations
+│   ├── fetch-route-performance.js   # Step 9 — TfL QSI PDF (pdfjs-dist) → per-route EWT (high-freq) / OTP (low-freq)
+│   ├── build-classifications.js     # Step 10 — merge all sources into per-route record (route_classifications.json)
+│   ├── build-overview.js            # Step 11 — simplified overview GeoJSON for the map layer
+│   ├── build-garage-locations.js    # Step 12 — legacy garage-locations.json for frontend (Photon-geocoded)
+│   ├── push-to-supabase.js          # Step 13 — mirror current state into Supabase historical store
+│   └── update-vehicle-lookup.js     # Maintenance — adds new vehicle types to manual lookup
+├── db/
+│   └── migrations/                  # Supabase schema migrations (paste into SQL Editor)
+│       ├── 0001_init.sql            # vehicles, route_snapshots, route_vehicle_observations + RLS
+│       ├── 0002_stops_and_garages.sql  # stop_count + garage_snapshots
+│       └── 0003_timestamps_and_route_performance.sql  # rename inserted_at → extracted_at; route_performance
 ├── data/
 │   ├── routes/                      # Per-route GeoJSON files (one per route ID)
 │   │   └── index.json               # List of all route IDs
 │   ├── routes-overview.geojson      # Simplified full-network overview layer
-│   ├── routes-overview-YYYY-MM-DD.geojson  # Weekly snapshot archive (last 4 kept)
 │   ├── route_destinations.json      # Inbound/outbound {destination, qualifier, full} per route (TfL API)
-│   ├── route_classifications.json   # Final per-route record (joined from all sources)
-│   ├── frequencies.json             # Numeric headways per route {peak_am,peak_pm,offpeak,overnight,weekend}
-│   ├── garages.geojson              # Garage code → geometry + properties (CSV-sourced, postcodes.io geocoded)
+│   ├── route_classifications.json   # Master per-route record (joined from all sources, incl. DVLA fleet aggregates)
+│   ├── frequencies.json             # Binary headway band per route ('high' | 'low' | null)
+│   ├── stops.json                   # All London bus stops keyed by NaPTAN, with reverse stop→routes index
+│   ├── route_stops.json             # Per-route ordered stop list with `towards` labels
+│   ├── garages.geojson              # Garage geometry + properties (CSV-sourced, postcodes.io geocoded)
 │   ├── garage-locations.json        # Legacy garage lookup consumed by frontend (Photon-geocoded)
-│   ├── stops.geojson                # (gitignored, 4.7MB) All London bus stops — not consumed by frontend yet
-│   ├── bus_stations.geojson         # Named bus/coach stations (NaptanBusCoachStation, ~50 features)
-│   ├── route_summary.csv            # Flat CSV of every field per route — for spreadsheet / BI use
-│   ├── vehicle-lookup.json          # Manual vehicle type → (deck, propulsion) lookup
+│   ├── vehicle-lookup.json          # Manual vehicle-type → (deck, propulsion) lookup (fallback)
 │   ├── route-overrides.json         # Manual per-route field overrides (highest priority)
 │   ├── build-meta.json              # Timestamps for footer display
 │   ├── geometry-source.json         # ZIP date for CI change detection
-│   ├── manifest.json                # Snapshot history
-│   └── source/                      # (gitignored *except* geocode_cache.json) intermediate data
-│       ├── route_details.json       # Scraper + garage-CSV join (intermediate for Step 7)
-│       └── geocode_cache.json       # postcodes.io cache — force-committed so weekly runs skip re-geocoding
+│   └── source/                      # (gitignored except force-added caches below)
+│       ├── route_details.json       # details.htm + garages join (intermediate for build-classifications)
+│       ├── vehicle-fleet.json       # DVLA cache, force-committed (90-day TTL per registration)
+│       ├── route-vehicles.json      # Per-route observation log, force-committed (56-day rolling window)
+│       ├── route-performance.json   # Latest QSI parse, force-committed
+│       ├── route-performance-raw.txt # Raw PDF text dump, force-committed (parser debugging)
+│       └── geocode_cache.json       # postcodes.io cache, force-committed
 ├── .github/workflows/
-│   └── refresh-data.yml             # Weekly data refresh (Monday 05:00 UTC) + manual dispatch
-├── Reference/                       # (gitignored) dev-only artefacts — puppeteer verify scripts, refactor plan
-├── .env                             # Local only — BUS_API_KEY=... (never committed)
+│   └── refresh-data.yml             # Weekly data refresh (Monday 09:00 UTC, 45-min ceiling) + manual dispatch
+├── .env                             # Local only — BUS_API_KEY, DVLA_API_KEY, SUPABASE_* (never committed)
 ├── AGENTS.md                        # This file
 ├── CHANGELOG.md                     # Release history (markdown; the user-facing page is changelog.html)
 └── package.json
@@ -375,7 +383,10 @@ Quick reference for every data point the app uses — what it is, where it comes
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Route geometry (detailed) | Full-resolution polyline for each route (per direction)                                                                    | TfL S3 bucket — `Route_Geometry_YYYYMMDD.zip` (XML per route)                                                                                       | Build-time download + XML parse + Douglas-Peucker simplify (0.00005°)                     | `data/routes/<ID>.geojson` (one file per route) + `data/routes/index.json`                        | Weekly CI, **only if ZIP date changed** (tracked via `geometry-source.json`) | No key required for S3 listing; single ZIP download per run                                         |
 | Route destinations        | Inbound/outbound `{ destination, qualifier, full }` per route                                                              | **Primary:** TfL API `/Line/Mode/bus` + `/Line/<id>/Route` + `/StopPoint/Route` **Fallback:** londonbusroutes.net `routes.htm` for routes TfL omits | Build-time fetch + dashed-description parse (fallback) + hardcoded override for route 969 | `data/route_destinations.json` (keyed by uppercase ID)                                            | Weekly CI                                                                    | TfL key required; 500 req/min, scripts throttle to 350 req/min                                      |
-| Frequencies (numeric)     | Mean headway (minutes) per route per band: `peak_am`, `peak_pm`, `offpeak`, `overnight`, `weekend`                         | **Primary:** TfL `/Line/<id>/Timetable/<firstStop>` **Fallback:** londonbusroutes.net `times/<id>.htm` pre-grids                                    | Build-time fetch + HHMM grid parse (fallback only for TfL-gap routes)                     | `data/frequencies.json`                                                                           | Weekly CI                                                                    | TfL throttle; 200 ms delay on scrape fallback                                                       |
+| Frequency band            | Binary `'high'` (≤12 min headway, 5+ buses/hr) \| `'low'` (>12 min) \| `null`                                              | **Primary:** TfL `/Line/<id>/Timetable/<firstStop>` **Fallback 1:** `times/<id>.htm` pre-grids **Fallback 2:** `details.htm` Mon-Sat headway column | Build-time fetch + binning by `bandForHeadway(h ≤ 12 ? high : low)`                       | `data/frequencies.json` (flat `{ id: band }`)                                                     | Weekly CI                                                                    | TfL throttle; 200 ms delay on scrape fallbacks                                                      |
+| Vehicle fleet (DVLA)      | Per-registration `make`, `fuel_type`, `year_of_manufacture`, `month_of_first_registration`, plus operator + bonnet code    | iBus `Vehicle_<date>.xml` (S3) + DVLA Vehicle Enquiry Service                                                                                       | Build-time, sticky 90-day cache; per-run cap of 6 000 lookups, periodic flush every 250   | `data/source/vehicle-fleet.json` (force-committed) + Supabase `public.vehicles`                   | Weekly CI                                                                    | DVLA free tier ~15 RPS / 500k req/day; we self-throttle to 5 RPS                                    |
+| Route → vehicle log       | Per-route observed registrations (`route_id, reg, observed_at`)                                                            | TfL `/Line/<id>/Arrivals` Monday peak snapshot                                                                                                      | Build-time fetch; rolling 56-day TTL accumulator                                          | `data/source/route-vehicles.json` (force-committed) + Supabase `public.route_vehicle_observations` | Weekly CI                                                                    | Each Monday's snapshot only sees buses currently running; coverage builds over 4–8 weeks            |
+| Route reliability (EWT/OTP) | Per-route Excess Wait Time (high-freq) or On-Time Performance (low-freq)                                                | `bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf` (parsed with `pdfjs-dist` using x/y position clustering)                                   | Build-time download + per-page parse (sticky table shape across continuation pages)       | `data/source/route-performance.json` + Supabase `public.route_performance`                        | Quarterly upstream; we re-fetch weekly and upsert idempotently               | Source updates every ~4 weeks (TfL 13-period year); raw text dump committed for parser debugging    |
 | Stops + bus stations      | Every London bus stop + named bus/coach stations (~50)                                                                     | TfL `/StopPoint/Mode/bus` (paginated) + `/StopPoint/Type/NaptanBusCoachStation`                                                                     | Build-time fetch                                                                          | `data/stops.geojson` (gitignored) + `data/bus_stations.geojson` (committed)                       | Weekly CI                                                                    | TfL throttle                                                                                        |
 | Route classifications     | Per-route merged record: type, isPrefix, lengthBand, operator, deck, propulsion, PVR, headways, frequencyBand, vehicleType | Merged at build time from scraper + overrides + lookup + geometry                                                                                   | Build step 3 combines all inputs with precedence rules                                    | `data/route_classifications.json` (single file)                                                   | Weekly CI                                                                    | Pure build step — no external calls                                                                 |
 | Route details (raw)       | Per-route vehicle type, garage code, PVR, headways                                                                         | **Primary:** londonbusroutes.net `garages.csv` (authoritative operator/garage/PVR) **Secondary:** `details.htm` for vehicle type                    | Build-time HTTP fetch + regex parse (no fixed-width slicing — that was the previous bug)  | `data/source/route_details.json` (gitignored — intermediate for Step 7)                           | Weekly CI                                                                    | **HTTP only, no HTTPS**; no auth; public data; UTF-8 with cp1252 fallback for mojibake fix          |
@@ -396,9 +407,13 @@ Quick reference for every data point the app uses — what it is, where it comes
 
 ## Data Pipeline
 
-Runs weekly via GitHub Actions (`npm run refresh`). Ten steps, each depending on the previous where noted.
+Runs weekly via GitHub Actions (`npm run refresh`, Mondays 09:00 UTC, 45-min ceiling).
+**Thirteen steps**; each depends on the previous where noted. **Canonical reference: [`data.md`](data.md)** — the table there lists every step's inputs / outputs / failure behaviour and stays in sync. The per-step descriptions below are kept for the older steps (1–6) and the build steps (10–12); the newer fleet + performance + Supabase steps (7, 8, 9, 13) are documented inline in the script files and in `data.md`.
 
-**Guiding principle: TfL API first — scrape only to fill gaps.** londonbusroutes.net and bustimes.org fallbacks run _only_ for routes the TfL API did not return. TfL-sourced values are never overwritten by scraped ones. This was a 2026-04 rework after the previous scraper-first pipeline produced systematically wrong data (route 1 tagged as a Bombardier CR4000 tram, etc.).
+**Guiding principles:**
+- **TfL API first — scrape only to fill gaps.** londonbusroutes.net and bustimes.org fallbacks run _only_ for routes the TfL API did not return. TfL-sourced values are never overwritten by scraped ones.
+- **DVLA is authoritative for propulsion / make / fleet age.** A new `fetch-vehicle-fleet.js` step joins iBus's per-vehicle registration list with DVLA's Vehicle Enquiry Service to build a master fleet table. Per-route metrics are then aggregated from observed registrations (sampled weekly via TfL `/Line/<id>/Arrivals`). Falls back to the LBR-string heuristic for routes the arrivals snapshot didn't cover.
+- **Dual-timestamp on every row.** Each table in the historical store carries an `extracted_at` (when our pipeline ran) and a period column (`snapshot_date` / `observed_at` / `period_start..period_end`). They diverge most for `route_performance` — the pipeline runs weekly but TfL's source PDF only updates every ~4 weeks.
 
 ### Step 1 — `scripts/fetch-data.js` — Geometry
 
