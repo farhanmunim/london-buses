@@ -1,10 +1,16 @@
 /**
  * route-detail.js — Render one or many route cards into the Routes tab.
  *
- * Clones `#tpl-route-card` per entry and populates the fields we have
- * (operator, PVR, frequency, deck + propulsion as the 'Fleet' cell, length
- * band, garage name). Fields we don't have yet (on-time, PAX/day, contract
- * expiry / value) keep the literal "XXX" the template ships.
+ * Clones `#tpl-route-card` per entry and populates the per-route record from
+ * `route_classifications.json`. Fields we now display from the historical
+ * pipeline:
+ *   - operator, PVR, deck, propulsion (LBR + DVLA)
+ *   - make + vehicle (DVLA + LBR)
+ *   - avg fleet age + fleet size (DVLA cross-referenced with TfL arrivals)
+ *   - reliability — EWT for high-freq, OTP for low-freq (TfL QSI PDF)
+ *
+ * Tender placeholders (Previous operator, Contract expires, Contract value)
+ * keep the literal "XXX" until Phase 2 lands.
  */
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
@@ -134,12 +140,42 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const gc = classification?.garageCode;
   set('[data-rc-garage]', gn && gc ? `${gn} (${gc})` : (gn ?? gc ?? 'XXX'));
 
-  // Vehicle name (e.g. "BYD B12RLE/Alexander Dennis Enviro400 EV"). When
-  // missing leave 'XXX' so the placeholder is visible rather than an em-dash
-  // which could read as "no vehicle".
-  set('[data-rc-vehicle]', classification?.vehicleType ?? 'XXX');
+  // Vehicle make — DVLA returns the manufacturer in upper-case ("VOLVO").
+  // Title-case it so it reads naturally ("Volvo").
+  const make = classification?.make;
+  set('[data-rc-vehicle-make]', make ? toTitleCase(make) : 'XXX');
 
-  // Previous operator isn't in the dataset yet — keep as XXX until the
-  // tender / contract feed lands.
+  // Vehicle model — chassis+body string from LBR ("B5LH/Gemini 3", "Enviro400 MMC").
+  // The underlying field is still called `vehicleType` for compatibility with
+  // the Supabase schema; the UI calls it "Vehicle model".
+  set('[data-rc-vehicle-model]', classification?.vehicleType ?? 'XXX');
+
+  // Avg fleet age in years — mean of (today − monthOfFirstRegistration) across
+  // observed regs. One decimal, matches DVLA's resolution.
+  const age = classification?.vehicleAgeYears;
+  set('[data-rc-age]', Number.isFinite(age) ? `${age.toFixed(1)} years` : 'XXX');
+
+  // Reliability — exactly one of (EWT, OTP) is populated per route depending
+  // on serviceClass. Label swaps with the metric so the user always sees the
+  // right vocabulary ("EWT 1.6 min" for high-freq, "On time 80%" for low-freq).
+  const perfL = node.querySelector('[data-rc-perf-l]');
+  const sc    = classification?.serviceClass;
+  const ewt   = classification?.ewtMinutes;
+  const otp   = classification?.onTimePercent;
+  if (sc === 'high-frequency' && Number.isFinite(ewt)) {
+    if (perfL) perfL.textContent = 'Excess wait time';
+    set('[data-rc-perf]', `${ewt.toFixed(1)} min`);
+  } else if (sc === 'low-frequency' && Number.isFinite(otp)) {
+    if (perfL) perfL.textContent = 'On-time performance';
+    set('[data-rc-perf]', `${otp.toFixed(0)}%`);
+  } else {
+    if (perfL) perfL.textContent = 'Reliability';
+    set('[data-rc-perf]', 'XXX');
+  }
+
   return node;
+}
+
+function toTitleCase(s) {
+  return String(s).toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
 }

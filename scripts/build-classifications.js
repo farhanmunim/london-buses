@@ -206,6 +206,19 @@ if (Object.keys(routeVehicles).length) {
   console.log(`Loaded route-vehicle observations for ${Object.keys(routeVehicles).length} routes`);
 }
 
+// Per-route reliability metrics from the QSI PDF (high-frequency routes get
+// EWT, low-frequency get OTP). Surfaced on the route card as a "Reliability"
+// row. Falls through silently if the file is missing.
+const routePerfPath = path.join(DATA_DIR, 'source', 'route-performance.json');
+const routePerfFile = fs.existsSync(routePerfPath)
+  ? JSON.parse(fs.readFileSync(routePerfPath, 'utf8'))
+  : { routes: {} };
+const routePerf = routePerfFile.routes ?? {};
+const routePerfPeriod = routePerfFile.periodLabel ?? null;
+if (Object.keys(routePerf).length) {
+  console.log(`Loaded route performance for ${Object.keys(routePerf).length} routes (${routePerfPeriod ?? 'unknown period'})`);
+}
+
 function modeOf(counts) {
   let best = null, bestN = 0;
   for (const [k, n] of Object.entries(counts)) if (n > bestN) { best = k; bestN = n; }
@@ -377,6 +390,11 @@ for (const file of routeFiles) {
   // derived fields fall back to last-known-good before we give up to null, so
   // a flaky upstream scrape doesn't wipe vehicle/operator/pvr/etc. that we
   // already knew about from a previous run.
+  // Per-route reliability metric from TfL's QSI PDF. Last-known-good fallback
+  // because the PDF only updates every ~4 weeks — between releases the value
+  // is the same as last run, so preserving the previous reading is correct.
+  const perf = routePerf[routeId] ?? null;
+
   const override = routeOverrides[routeId] ?? {};
   const lastRec  = lastGood[routeId] ?? {};
   classifications[routeId] = {
@@ -400,6 +418,13 @@ for (const file of routeFiles) {
     make:            override.make            ?? fleetAgg?.make            ?? lastRec.make            ?? null,
     vehicleAgeYears: override.vehicleAgeYears ?? fleetAgg?.vehicleAgeYears ?? lastRec.vehicleAgeYears ?? null,
     fleetSize:       override.fleetSize       ?? fleetAgg?.fleetSize       ?? lastRec.fleetSize       ?? null,
+    // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
+    // populated depending on serviceClass. perfPeriod tells the UI which TfL
+    // reporting period the figure covers.
+    serviceClass:    perf?.service_class   ?? lastRec.serviceClass    ?? null,
+    ewtMinutes:      perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null,
+    onTimePercent:   perf?.on_time_percent ?? lastRec.onTimePercent   ?? null,
+    perfPeriod:      (perf ? routePerfPeriod : null) ?? lastRec.perfPeriod ?? null,
   };
 }
 
