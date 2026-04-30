@@ -27,6 +27,6 @@
     "@supabase/supabase-js": "^2.45.0",
     "adm-zip": "^0.5.16",
     "fast-xml-parser": "^4.5.3",
-    "pdf-parse": "^1.1.1"
+    "pdfjs-dist": "^4.7.76"
   }
 }

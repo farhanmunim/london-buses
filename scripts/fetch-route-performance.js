@@ -1,44 +1,47 @@
 /**
- * fetch-route-performance.js — Per-route EWT / OTP metrics from TfL's QSI PDF
+ * fetch-route-performance.js — Per-route EWT / OTP from TfL's QSI PDF
  *
  * Source: http://bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf
- * (the only public per-route bus reliability dataset). Updates every ~4 weeks
- * — TfL operates a 13-period year, so a new PDF appears 12-13× per year.
+ * (the only public per-route bus reliability dataset). Updates ~every 4 weeks
+ * (TfL operates a 13-period year, so 12-13 PDFs per year).
  *
- * Two metric families are reported, depending on a route's service class:
+ * High-frequency routes (≤12 min headway) get EWT-style metrics:
+ *   - SWT  Scheduled Waiting Time
+ *   - AWT  Actual Waiting Time
+ *   - EWT  Excess Waiting Time (= AWT − SWT)
+ *   - %    Mileage Operated
  *
- *   High-frequency routes (service every ≤12 min) report:
- *     - SWT  Scheduled Waiting Time
- *     - AWT  Actual Waiting Time
- *     - EWT  Excess Waiting Time (= AWT − SWT). Lower is better.
- *
- *   Low-frequency routes (timetabled, less frequent) report:
- *     - On-Time Performance / On-Time Departure %  (higher is better)
- *     - % early / % late / % non-arrival
- *
- * Both report `% scheduled mileage operated`.
+ * Low-frequency routes (timetabled) get OTP-style metrics:
+ *   - % On-Time / Early / Late / Non-Arrival
+ *   - %   Mileage Operated
  *
  * Output: data/source/route-performance.json
  *   {
  *     generatedAt, sourceUrl, pdfModifiedAt, periodLabel,
  *     periodStart, periodEnd,
- *     routes: { [routeId]: { service_class, ewt_minutes, swt_minutes, …, on_time_percent, … } }
+ *     routes: { [routeId]: { service_class, ewt_minutes, …, on_time_percent, … } }
  *   }
  *
- * Also writes data/source/route-performance-raw.txt with the unparsed PDF text
- * (newline-joined, ~150 KB) so the parser can be tweaked without re-fetching.
+ * Also writes route-performance-raw.txt (positional dump) for parser debugging.
+ *
+ * Why pdfjs-dist (not pdf-parse): TfL's PDF was exported from Excel and uses
+ * tightly-packed columns. pdf-parse extracts text in column-then-row order,
+ * splitting headers like "Scheduled / Waiting / Time / (mins)" into separate
+ * lines and scrambling rows. pdfjs-dist gives us the (x, y) of every text
+ * fragment so we can cluster items into actual rows by y-coordinate.
  *
  * Run: npm run fetch-route-performance
  */
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-// pdf-parse pulls in pdfjs internally; ESM import is awkward so we go through CJS.
-const pdfParse = require('pdf-parse');
+// pdfjs-dist 4.x ships ESM by default but the legacy CJS build is friendlier
+// to call from a Node script with synchronous require.
+const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
 
 const __dirname    = path.dirname(fileURLToPath(import.meta.url));
 const ROOT         = path.resolve(__dirname, '..');
@@ -66,17 +69,15 @@ async function fetchPdfBuffer() {
   }
 }
 
-// ── Period parsing ──────────────────────────────────────────────────────────
-// PDF cover/header reads "Route Results for London Bus Services Quarter 04 24/25"
-// or similar. Map the financial-year quarter to UTC dates (TfL FY runs
-// 1 April → 31 March).
+// ── Period parsing (header text) ────────────────────────────────────────────
+// Cover and table headers print "Quarter 03 25/26" style — map FY quarter to
+// UTC dates (TfL FY runs 1 April → 31 March).
 function parsePeriod(text) {
   const m = /Quarter\s+0?(\d)\s+(\d{2})\/(\d{2})/i.exec(text);
   if (!m) return { label: null, start: null, end: null };
   const q = parseInt(m[1], 10);
   const fyStart = 2000 + parseInt(m[2], 10);
   const fyEnd   = 2000 + parseInt(m[3], 10);
-  // Q1 = Apr-Jun, Q2 = Jul-Sep, Q3 = Oct-Dec, Q4 = Jan-Mar (next calendar year)
   const ranges = {
     1: [`${fyStart}-04-01`, `${fyStart}-06-30`],
     2: [`${fyStart}-07-01`, `${fyStart}-09-30`],
@@ -87,92 +88,137 @@ function parsePeriod(text) {
   return r ? { label: `Q${q} ${m[2]}/${m[3]}`, start: r[0], end: r[1] } : { label: null, start: null, end: null };
 }
 
-// ── Row parsing ─────────────────────────────────────────────────────────────
-// Excel-exported PDFs render each table row as a single text line of cells
-// joined by whitespace. A row starts with a route ID matching a TfL bus-route
-// pattern (digits, optional letter prefix, optional letter suffix). Column
-// values follow as numbers — possibly negative, with decimals.
-//
-// We don't try to derive column meaning by position alone — too brittle. We
-// detect *which* table we're in by scanning recent header text, then map the
-// numeric values into the right column slots accordingly.
+// ── Position-aware row extraction ───────────────────────────────────────────
+// Walk every page, pull every text item with its (x, y) transform, group items
+// by y-coordinate (rounded to nearest unit) into rows, then sort each row's
+// items by x to recover column order. The result is a 2-D array of "cells"
+// per page — actual table rows that we can match against the route-id pattern.
+async function extractTextRows(buffer) {
+  // pdfjs-dist needs a worker URL even in Node. require.resolve returns a
+  // platform-native absolute path (`C:\…\pdf.worker.mjs` on Windows), which
+  // the ESM loader rejects ("Only URLs with a scheme in: file, data, and
+  // node are supported"). pathToFileURL gives us the correct `file://` form
+  // that works on Windows, macOS and Linux.
+  const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true, disableFontFace: true }).promise;
 
-const ROUTE_RE   = /^([A-Z]{0,3}\d{1,4}[A-Z]?)\b/;
-const NUMERIC_RE = /-?\d+(?:\.\d+)?/g;
+  const pages = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    const content = await page.getTextContent();
 
-function classifyHeader(line) {
-  const t = line.toUpperCase();
-  // High-frequency tables mention SWT or "excess waiting" or EWT.
-  if (/EXCESS\s*WAIT|SWT|AWT|EWT/.test(t)) return 'high-frequency';
-  // Low-frequency tables mention "on time", "non-arrival", or OTP / OTD.
-  if (/ON\s*TIME|NON.?ARRIV|OTP|OTD|DEPARTING|DEPARTED/.test(t)) return 'low-frequency';
+    // Bucket text items by their y-coordinate (rounded to integer pixels).
+    // Excel-exported PDFs place every cell at consistent y per row, so this
+    // groups co-baseline fragments together cleanly.
+    const byY = new Map();
+    for (const item of content.items) {
+      const str = (item.str ?? '').trim();
+      if (!str) continue;
+      const x = item.transform[4];
+      const y = Math.round(item.transform[5]);
+      if (!byY.has(y)) byY.set(y, []);
+      byY.get(y).push({ x, str });
+    }
+
+    // Sort y descending (PDF coords have y0 at the bottom) so rows come out
+    // in visual top-to-bottom order. Then sort each row left-to-right.
+    const sortedYs = [...byY.keys()].sort((a, b) => b - a);
+    const rows = sortedYs.map(y => {
+      const cells = byY.get(y).sort((a, b) => a.x - b.x).map(c => c.str);
+      return cells;
+    });
+    pages.push(rows);
+  }
+  return pages;
+}
+
+// ── Table-shape detection ───────────────────────────────────────────────────
+// A page can carry one of two table types — high-frequency or low-frequency —
+// detected by the column-header line. We look at the first ~10 rows of each
+// page for a header signature.
+function detectTableShape(rows) {
+  const headerWindow = rows.slice(0, 12).flat().join(' ').toUpperCase();
+  if (/EXCESS\s*WAIT|EWT|SWT/.test(headerWindow))                          return 'high-frequency';
+  if (/ON\s*TIME|NON.?ARRIV|DEPART|EARLY|LATE/.test(headerWindow) &&
+      !/EWT|SWT|EXCESS/.test(headerWindow))                                return 'low-frequency';
   return null;
 }
 
-// Coerce a numeric string to a percent / minutes value, or null if obviously
-// junk (e.g. very large numbers that can't be a percentage or wait time).
-function num(s, { max = 1000 } = {}) {
+// Parse a single number cell: strip footnote markers, percent signs, etc.
+function parseNumber(s, { max = 1000 } = {}) {
   if (s == null) return null;
-  const n = Number(s);
-  if (!Number.isFinite(n)) return null;
-  if (n < 0 || n > max)    return null;
+  const t = String(s).replace(/[%*†‡§\s,]/g, '');
+  if (t === '' || t === '-' || t === 'N/A' || t === 'n/a') return null;
+  const n = Number(t);
+  if (!Number.isFinite(n) || n < 0 || n > max) return null;
   return Math.round(n * 100) / 100;
 }
 
-function parseTextToRoutes(text) {
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  const routes = {};
-  let serviceClass = null;
+// Route-id cell match. Real bus routes match this; "Q3", "Total", "QSI" etc.
+// must NOT — so we explicitly require a digit somewhere and cap letter count.
+const ROUTE_RE = /^(N?[A-Z]{0,2}\d{1,3}[A-Z]?)$/;
 
-  for (const line of lines) {
-    // Update service class on every header-like line so a single PDF that
-    // contains both tables (high-freq first, then low-freq) maps each row
-    // to the right metrics.
-    const cls = classifyHeader(line);
-    if (cls) serviceClass = cls;
+function looksLikeRouteId(s) {
+  if (!s) return false;
+  const t = s.trim().toUpperCase();
+  // Reject obvious non-routes
+  if (/^(Q\d|TOTAL|ALL|AVERAGE|MEAN|GROUP|HIGH|LOW)$/.test(t)) return false;
+  return ROUTE_RE.test(t);
+}
 
-    const m = ROUTE_RE.exec(line);
-    if (!m) continue;
-    const routeId = m[1].toUpperCase();
-    // Skip lines that LOOK like they start with a route id but are actually
-    // section headings ("All routes:", "Total:") or contain alpha noise after.
-    const tail = line.slice(m[0].length).trim();
-    const numbers = (tail.match(NUMERIC_RE) ?? []).map(Number);
-    if (numbers.length < 2) continue;   // need at least two metric values
+// Walk a page's rows in visual order and emit per-route records, mapping the
+// raw cell values into the right metric slots based on the page's table shape.
+function parsePage(rows, shape, out) {
+  if (!shape) return;
 
-    // First-occurrence wins so re-parses don't overwrite a richer row with a
-    // sparser one elsewhere in the document.
-    if (routes[routeId]) continue;
+  for (const cells of rows) {
+    if (cells.length < 3) continue;
 
-    if (serviceClass === 'high-frequency') {
-      // Typical column order in the PDF: SWT, AWT, EWT, % scheduled mileage.
-      // We accept whatever shape comes out and map by position; if the
-      // upstream layout shifts, raw text is preserved alongside.
-      const [swt, awt, ewt, ...rest] = numbers;
-      routes[routeId] = {
-        service_class:        'high-frequency',
-        swt_minutes:          num(swt,  { max: 60 }),
-        awt_minutes:          num(awt,  { max: 60 }),
-        ewt_minutes:          num(ewt,  { max: 60 }),
-        scheduled_mileage_operated_percent: num(rest[rest.length - 1], { max: 100 }),
+    // First cell that matches a route-id pattern marks the start of a data row.
+    // Some PDFs prefix rows with leading whitespace cells; tolerate that.
+    let idx = cells.findIndex(looksLikeRouteId);
+    if (idx === -1) continue;
+    const routeId = cells[idx].trim().toUpperCase();
+    if (out[routeId]) continue;          // first occurrence wins
+
+    // Numeric cells are everything after the route id that parses as a number.
+    const numbers = cells.slice(idx + 1).map(c => parseNumber(c, { max: 200 }));
+    const validNumbers = numbers.filter(v => v != null);
+    if (validNumbers.length < 2) continue;
+
+    if (shape === 'high-frequency') {
+      // High-frequency route columns in the current TfL PDF, in order:
+      //   route | SWT | EWT | EWT(prev-year) | AWT | AWT:SWT ratio
+      //         | %wait<10 | %10-20 | %20-30 | %>30 | LongGaps
+      // Note: AWT = SWT + EWT, ratio = AWT/SWT — used as a sanity check.
+      // No `% scheduled mileage` in this table, so we leave that column null.
+      const [swt, ewt, /* ewtPrev */, awt] = numbers;
+      out[routeId] = {
+        service_class:       'high-frequency',
+        swt_minutes:         (swt != null && swt <= 60) ? swt : null,
+        awt_minutes:         (awt != null && awt <= 60) ? awt : null,
+        ewt_minutes:         (ewt != null && ewt <= 30) ? ewt : null,
+        scheduled_mileage_operated_percent: null,
       };
-    } else if (serviceClass === 'low-frequency') {
-      // Typical order: % on-time, % early, % late, % non-arrival, % scheduled mileage.
-      const [onTime, early, late, nonArr, ...rest] = numbers;
-      routes[routeId] = {
-        service_class:        'low-frequency',
-        on_time_percent:      num(onTime, { max: 100 }),
-        early_percent:        num(early,  { max: 100 }),
-        late_percent:         num(late,   { max: 100 }),
-        non_arrival_percent:  num(nonArr, { max: 100 }),
-        scheduled_mileage_operated_percent: num(rest[rest.length - 1], { max: 100 }),
+    } else if (shape === 'low-frequency') {
+      // Low-frequency route columns:
+      //   route | %on-time | %on-time(prev-year) | %early | %late | %non-arrival
+      // Last-year column is sometimes "n/a"; parseNumber drops it to null,
+      // and my row-cells slice still keeps positional indexing (the n/a
+      // becomes a null in the array, not a removed slot).
+      // No `% scheduled mileage` here either.
+      const [onTime, /* onTimePrev */, early, late, nonArr] = numbers;
+      out[routeId] = {
+        service_class:       'low-frequency',
+        on_time_percent:     (onTime != null && onTime <= 100) ? onTime : null,
+        early_percent:       (early  != null && early  <= 100) ? early  : null,
+        late_percent:        (late   != null && late   <= 100) ? late   : null,
+        non_arrival_percent: (nonArr != null && nonArr <= 100) ? nonArr : null,
+        scheduled_mileage_operated_percent: null,
       };
     }
-    // serviceClass null means we couldn't tell which table we're in — skip.
-    // The raw text dump lets us debug those.
   }
-
-  return routes;
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -181,23 +227,38 @@ async function main() {
   const { buffer, lastModified } = await fetchPdfBuffer();
   console.log(`  ${(buffer.length / 1024).toFixed(0)} KB, last-modified ${lastModified ?? 'unknown'}`);
 
-  const parsed = await pdfParse(buffer);
-  const text = parsed.text ?? '';
-  console.log(`  Extracted ${text.length} chars across ${parsed.numpages ?? '?'} pages`);
+  console.log('Extracting text positions with pdfjs-dist ...');
+  const pages = await extractTextRows(buffer);
+  console.log(`  ${pages.length} pages, ${pages.reduce((n, p) => n + p.length, 0)} rows total`);
 
-  // Always write the raw text dump so the parser can be iterated on later
-  // without re-downloading.
+  // Persist raw rows for debugging — one row per line, cells tab-separated, page break markers between.
+  const rawDump = pages.map((rows, i) =>
+    `\n── Page ${i + 1} ──\n` + rows.map(r => r.join('\t')).join('\n')
+  ).join('\n');
   fs.mkdirSync(path.dirname(RAW_PATH), { recursive: true });
-  fs.writeFileSync(RAW_PATH, text, 'utf8');
+  fs.writeFileSync(RAW_PATH, rawDump, 'utf8');
 
-  const period = parsePeriod(text);
+  // Period from the first page's text
+  const period = parsePeriod(pages.flat().flat().join(' '));
   if (period.label) {
     console.log(`  Period: ${period.label} (${period.start} → ${period.end})`);
   } else {
-    console.warn('  Could not detect period label from PDF cover — period_* fields will be null');
+    console.warn('  Could not detect period label — period_* fields will be null');
   }
 
-  const routes = parseTextToRoutes(text);
+  // Walk page by page. The PDF has only TWO header rows total — one at the
+  // top of the high-frequency table (page 4) and one at the top of the
+  // low-frequency table (page 12). Continuation pages carry no header. So we
+  // make the table shape sticky: a header switches the active shape, and
+  // every subsequent page parses with that shape until a new header appears.
+  const routes = {};
+  let currentShape = null;
+  for (let i = 0; i < pages.length; i++) {
+    const detected = detectTableShape(pages[i]);
+    if (detected) currentShape = detected;
+    if (currentShape) parsePage(pages[i], currentShape, routes);
+  }
+
   const highFreq = Object.values(routes).filter(r => r.service_class === 'high-frequency').length;
   const lowFreq  = Object.values(routes).filter(r => r.service_class === 'low-frequency').length;
   console.log(`Parsed ${Object.keys(routes).length} routes — high-freq=${highFreq}, low-freq=${lowFreq}`);
