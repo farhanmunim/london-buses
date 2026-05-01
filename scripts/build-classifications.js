@@ -323,12 +323,32 @@ if (Object.keys(programmeByRoute).length) {
   console.log(`Loaded tender programme for ${Object.keys(programmeByRoute).length} routes`);
 }
 
-function derivePreviousOperator(history, current) {
-  if (!history?.length) return null;
-  for (const t of history.slice(1)) {
-    if (t.awarded_operator && t.awarded_operator !== current) return t.awarded_operator;
+// Find the genuine predecessor — the most recent earlier award whose operator
+// differs from the current incumbent. Returns the operator name, the award
+// date, and the actual served contract term (years from that award to the
+// next subsequent award on file). Returning the full tuple lets the route
+// card show Awarded-on / Length for the previous contract that mirror the
+// current-contract block.
+function derivePreviousTenderInfo(history, current) {
+  if (!history?.length) return { operator: null, awardDate: null, termYears: null };
+  for (let i = 1; i < history.length; i++) {
+    const t = history[i];
+    if (!t.awarded_operator || t.awarded_operator === current) continue;
+    // Term actually served by this award = gap to the next-later award on
+    // file. history is sorted desc, so the next-later award sits at i-1.
+    const next = history[i - 1];
+    let termYears = null;
+    if (t.award_announced_date && next?.award_announced_date) {
+      const a = Date.parse(t.award_announced_date);
+      const b = Date.parse(next.award_announced_date);
+      if (Number.isFinite(a) && Number.isFinite(b) && b > a) {
+        const yrs = (b - a) / (365.25 * 86_400_000);
+        if (yrs >= 3 && yrs <= 12) termYears = Math.round(yrs);
+      }
+    }
+    return { operator: t.awarded_operator, awardDate: t.award_announced_date ?? null, termYears };
   }
-  return null;
+  return { operator: null, awardDate: null, termYears: null };
 }
 
 // Derive awarded-vehicle propulsion from a tender's freeform notes. Same
@@ -652,7 +672,8 @@ for (const file of routeFiles) {
                      ?? (/^N\d/.test(routeId) ? tendersByRoute[routeId.slice(1)] : null)
                      ?? null;
   const lastTender    = tenderHistory?.[0] ?? null;
-  const previousOp    = derivePreviousOperator(tenderHistory, lastTender?.awarded_operator);
+  const prevTender    = derivePreviousTenderInfo(tenderHistory, lastTender?.awarded_operator);
+  const previousOp    = prevTender.operator;
   const programmeEntries = programmeByRoute[routeId]
     ?? (/^N\d/.test(routeId) ? programmeByRoute[routeId.slice(1)] : null);
   const nextProgramme = pickNextProgramme(programmeEntries);
@@ -704,7 +725,9 @@ for (const file of routeFiles) {
     // failed fetch doesn't wipe the card). When the source loaded but a
     // particular route has no entries, null IS the truthful answer and must
     // win — otherwise stale values from prior runs persist forever.
-    previousOperator: override.previousOperator ?? (tendersLoaded   ? previousOp                            : (lastRec.previousOperator ?? null)),
+    previousOperator:         override.previousOperator         ?? (tendersLoaded ? previousOp                          : (lastRec.previousOperator         ?? null)),
+    previousAwardDate:        override.previousAwardDate        ?? (tendersLoaded ? prevTender.awardDate                : (lastRec.previousAwardDate        ?? null)),
+    previousContractTermYears:override.previousContractTermYears ?? (tendersLoaded ? prevTender.termYears                : (lastRec.previousContractTermYears?? null)),
     lastAwardDate:    override.lastAwardDate    ?? (tendersLoaded   ? (lastTender?.award_announced_date ?? null) : (lastRec.lastAwardDate    ?? null)),
     lastCostPerMile:  override.lastCostPerMile  ?? (tendersLoaded   ? (lastTender?.cost_per_mile        ?? null) : (lastRec.lastCostPerMile  ?? null)),
     // Award count lets the UI tell apart "no previous operator because the

@@ -54,6 +54,8 @@ const TIPS = {
   'mil-mps':       'Contractual minimum mileage operated, from TfL per-route QSI report',
   // Tender · Previous contract rows
   previous:        'Operator before the current incumbent, derived from TfL tender history',
+  'prev-award':    'Award date of the previous contract, from TfL tender results',
+  'prev-term':     'Length of the previous contract, measured between its award and the next award on file',
   'prev-veh':      'Vehicle specification required by the previous contract, parsed from TfL tender notes',
 };
 
@@ -318,13 +320,12 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   toggleRow(node, 'term', termValid);
   if (termValid) set('[data-rc-term]', `${term} years`);
 
-  // Times tendered — number of times this route has been put out to tender
-  // historically (in our data going back to 2003). Stability signal: 1 =
-  // incumbent-dominated / new route, 5+ = competitive corridor with regular
-  // operator churn. Render as a bare integer so the row reads "5" rather
-  // than "5 awards" (which sounds like a count of prizes won).
+  // Awards on file — number of recorded tender awards for this route since
+  // ~2003 (the start of TfL's published tender results). Stability signal:
+  // 1 = new / incumbent-dominated, 5+ = competitive corridor with regular
+  // operator churn. Bare integer — the label carries the meaning.
   const awardCnt = classification?.tenderAwardCount;
-  set('[data-rc-award-count]', awardCnt ? `${awardCnt}${awardCnt === 1 ? ' time' : ' times'}` : 'XXX');
+  set('[data-rc-award-count]', awardCnt ? String(awardCnt) : 'XXX');
 
   // Bids received — competitiveness of the most recent tender.
   const bids = classification?.numberOfTenderers;
@@ -376,6 +377,19 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
       prevEl.textContent = 'XXX';
     }
   }
+
+  // Previous contract — Awarded on / Length, mirroring the current-contract
+  // block. Both rows hide when the previous-operator row resolves to "no
+  // change" or "first award" (no genuine predecessor → no separate contract
+  // to date or measure).
+  const prevAwardDate = classification?.previousAwardDate;
+  toggleRow(node, 'prev-award', !!prevOp && !!prevAwardDate);
+  if (prevOp && prevAwardDate) set('[data-rc-prev-award]', formatHumanDate(prevAwardDate));
+
+  const prevTerm = classification?.previousContractTermYears;
+  const prevTermValid = !!prevOp && Number.isFinite(prevTerm) && prevTerm > 0;
+  toggleRow(node, 'prev-term', prevTermValid);
+  if (prevTermValid) set('[data-rc-prev-term]', `${prevTerm} years`);
 
   // Cost per mile — most recent tender's £/mile (normalised so comparisons
   // across routes of different lengths actually mean something). Two decimals
