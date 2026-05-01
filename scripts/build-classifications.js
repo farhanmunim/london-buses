@@ -295,6 +295,29 @@ function pickNextProgramme(list) {
     .sort((a, b) => a.contract_start_date.localeCompare(b.contract_start_date));
   return future[0] ?? null;
 }
+
+// Pick the contract_start_date that corresponds to the CURRENT contract
+// (the one most recently awarded). The tender form 13796.aspx itself has
+// no contract_start column, but the LBSL tender programme PDFs publish
+// `contract_start_date` for ~400 routes (2017+). Match by joining: the
+// current contract's start is the programme entry whose start is the
+// earliest one strictly after `lastAwardDate` (TfL announces the award
+// then the new contract begins ~6-12 months later). Capped at 2 years
+// past the award so we don't accidentally pick up a much later tender.
+function pickCurrentContractStart(list, lastAwardIso) {
+  if (!list?.length || !lastAwardIso) return null;
+  const lastAwardMs = Date.parse(lastAwardIso);
+  if (!Number.isFinite(lastAwardMs)) return null;
+  const twoYearsLaterMs = lastAwardMs + (2 * 365.25 * 86_400_000);
+  const candidates = list
+    .filter(e => {
+      if (!e.contract_start_date) return false;
+      const t = Date.parse(e.contract_start_date);
+      return Number.isFinite(t) && t > lastAwardMs && t <= twoYearsLaterMs;
+    })
+    .sort((a, b) => a.contract_start_date.localeCompare(b.contract_start_date));
+  return candidates[0]?.contract_start_date ?? null;
+}
 if (Object.keys(programmeByRoute).length) {
   console.log(`Loaded tender programme for ${Object.keys(programmeByRoute).length} routes`);
 }
@@ -624,10 +647,10 @@ for (const file of routeFiles) {
                      ?? null;
   const lastTender    = tenderHistory?.[0] ?? null;
   const previousOp    = derivePreviousOperator(tenderHistory, lastTender?.awarded_operator);
-  const nextProgramme = pickNextProgramme(
-    programmeByRoute[routeId]
-      ?? (/^N\d/.test(routeId) ? programmeByRoute[routeId.slice(1)] : null)
-  );
+  const programmeEntries = programmeByRoute[routeId]
+    ?? (/^N\d/.test(routeId) ? programmeByRoute[routeId.slice(1)] : null);
+  const nextProgramme = pickNextProgramme(programmeEntries);
+  const currentContractStart = pickCurrentContractStart(programmeEntries, lastTender?.award_announced_date);
 
   const override = routeOverrides[routeId] ?? {};
   const lastRec  = lastGood[routeId] ?? {};
@@ -690,6 +713,11 @@ for (const file of routeFiles) {
     // to the lastAwardDate→nextTenderStart gap (a reasonable approximation
     // since real bus contracts run 5y+optional-2y, capped 3-10 to filter out
     // anomalies).
+    // Contract start date — when the current contract began service. Joined
+    // from the tender programme (TfL's 13796 tender form has no
+    // contract_start column; the programme PDFs publish it for ~400 routes
+    // 2017+). NULL for routes whose current contract started pre-2017.
+    contractStartDate: override.contractStartDate ?? (programmeLoaded ? currentContractStart : (lastRec.contractStartDate ?? null)),
     contractTermYears: override.contractTermYears ?? (
       // Tier 1: explicit term in tender notes (rare, authoritative).
       (tendersLoaded ? deriveContractTermFromNotes(lastTender?.notes) : null) ??

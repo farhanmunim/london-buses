@@ -193,6 +193,7 @@ async function pushRouteSnapshots() {
     // multi-table JOIN at query time.
     previous_operator:        r.previousOperator ?? null,
     last_award_date:          r.lastAwardDate ?? null,
+    contract_start_date:      r.contractStartDate ?? null,
     last_cost_per_mile:       Number.isFinite(r.lastCostPerMile)  ? r.lastCostPerMile : null,
     tender_award_count:       Number.isFinite(r.tenderAwardCount) ? r.tenderAwardCount : null,
     number_of_tenderers:      Number.isFinite(r.numberOfTenderers) ? r.numberOfTenderers : null,

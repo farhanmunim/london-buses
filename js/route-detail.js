@@ -44,6 +44,7 @@ const TIPS = {
   // Tender · Current contract rows
   'last-award':    'Award date of the current contract, from TfL tender results',
   term:            'Contract length, from tender notes where stated, otherwise inferred from historical award gaps',
+  'contract-start':'Date the current contract began service, from the TfL tendering programme',
   'award-count':   'Number of recorded tender awards since 2003, from TfL tender results',
   bids:            'Number of operators that bid for the current contract, from TfL tender results',
   joint:           'Whether the current contract was tendered as part of a joint bid, from TfL tender results',
@@ -339,13 +340,19 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   toggleRow(node, 'bids', Number.isFinite(bids) && bids > 0);
   if (Number.isFinite(bids) && bids > 0) set('[data-rc-bids]', `${bids}${bids === 1 ? ' bid' : ' bids'}`);
 
-  // Joint bid — only render the row when the route was bundled (the "No"
-  // case is the boring default). The bundled-routes phrase TfL fills in
-  // can be a paragraph long, so we collapse to a plain "Yes" — the value
-  // is the *flag*, not the partner list, which would dominate the card.
+  // Joint bid — always rendered Yes/No so the user can see at a glance.
+  // The TfL `joint_bids` field is populated for ~52% of awards; we collapse
+  // its (sometimes paragraph-long) bundled-routes list to a plain Yes.
   const wasJB = classification?.wasJointBid === true;
-  toggleRow(node, 'joint', wasJB);
-  if (wasJB) set('[data-rc-joint]', 'Yes');
+  set('[data-rc-joint]', wasJB ? 'Yes' : 'No');
+
+  // Contract start date — when the current contract actually began service.
+  // Joined from the LBSL tender programme PDFs (~277 routes covered;
+  // routes whose current contract started pre-2017 are blank). Hidden
+  // when missing rather than rendered as "—".
+  const start = classification?.contractStartDate;
+  toggleRow(node, 'contract-start', !!start);
+  if (start) set('[data-rc-contract-start]', formatHumanDate(start));
 
   // Previous operator — derived from tender history (most recent earlier
   // award whose operator differs from the current incumbent). Subsidiary

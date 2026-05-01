@@ -99,9 +99,17 @@ function parseTenderersCount(s) {
 
 function parseMoney(s) {
   if (!s) return null;
-  // Strip pound-token, commas, whitespace; reject if non-numeric
-  // (e.g. "Please see joint bid below", "N/A").
-  const cleaned = String(s).replace(/GBP_|,|\s/g, '');
+  // Strip pound token + whitespace. Comma handling is more nuanced: TfL's
+  // tender pages mix two conventions in the same column —
+  //   '4,205,196'  → thousands separators  → 4205196
+  //   '6,25'       → European decimal mark → 6.25
+  // The decimal-comma form is "a single comma with 1-2 digits after and no
+  // other commas or dots". Anything else gets the standard thousands strip.
+  // Bug fix: previously every comma was stripped, turning '6,25' into 625
+  // (caused outliers in cost_per_mile for btID 1521 / 1148 / 2073, etc.).
+  let cleaned = String(s).replace(/GBP_|\s/g, '');
+  if (/^-?\d+,\d{1,2}$/.test(cleaned)) cleaned = cleaned.replace(',', '.');
+  else                                  cleaned = cleaned.replace(/,/g, '');
   if (!/^-?\d+(?:\.\d+)?$/.test(cleaned)) return null;
   return parseFloat(cleaned);
 }

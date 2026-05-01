@@ -94,6 +94,7 @@ function buildRouteRows(routes, stopCounts) {
 
         // ── Tender — last (current) contract ──
         last_award_date:           str(cls.lastAwardDate),
+        contract_start_date:       str(cls.contractStartDate),
         awards_on_record:          num(cls.tenderAwardCount),
         bids_received:             num(cls.numberOfTenderers),
         was_joint_bid:             yesNo(cls.wasJointBid),
