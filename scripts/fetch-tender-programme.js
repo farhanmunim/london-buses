@@ -37,18 +37,15 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { sanitizeRecord } from './_lib/sanitize.js';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
+import { fileURLToPath } from 'url';
+import { fetchWithTimeout, headLastModified, userAgentHeaders } from './_lib/http.js';
+import { extractPdfRowsByPage }                                 from './_lib/pdf.js';
+import { sanitizeRecord }                                       from './_lib/sanitize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
 const OUT_PATH  = path.join(ROOT, 'data', 'source', 'tender-programme.json');
-const USER_AGENT = 'london-buses-map/2.6 (programme; +https://london-buses.farhan.app)';
-const TIMEOUT_MS = 30_000;
+const SCRIPT    = 'tender-programme';
 
 // Programme years to fetch -- expand the upper bound when TfL publishes a
 // new financial-year programme (typically September each year).
@@ -59,52 +56,21 @@ const YEARS = [
 
 const PDF_URL = (yr) => `https://tfl.gov.uk/cdn/static/cms/documents/uploads/forms/${yr}-lbsl-tendering-programme.pdf`;
 
-// Worker setup (same pattern as fetch-route-performance.js)
-pdfjs.GlobalWorkerOptions.workerSrc =
-  pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')).href;
-
 // ── HTTP fetch ──────────────────────────────────────────────────────────────
 async function fetchPdf(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      signal:  controller.signal,
-      headers: { 'User-Agent': USER_AGENT },
-    });
-    if (!res.ok) {
-      if (res.status === 404) return null;          // year not yet published
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const lastMod = res.headers.get('last-modified');
-    const buf = Buffer.from(await res.arrayBuffer());
-    return { buffer: buf, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
-  } finally {
-    clearTimeout(timer);
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
+  if (!res.ok) {
+    if (res.status === 404) return null;          // year not yet published
+    throw new Error(`HTTP ${res.status}`);
   }
+  const lastMod = res.headers.get('last-modified');
+  const buf = Buffer.from(await res.arrayBuffer());
+  return { buffer: buf, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
 }
 
 // HEAD-only request so we can skip the body when Last-Modified matches cache.
 async function fetchPdfModified(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      method:  'HEAD',
-      signal:  controller.signal,
-      headers: { 'User-Agent': USER_AGENT },
-    });
-    if (!res.ok) {
-      if (res.status === 404) return { status: 404, lastModified: null };
-      return { status: res.status, lastModified: null };
-    }
-    const lastMod = res.headers.get('last-modified');
-    return { status: 200, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
-  } catch {
-    return { status: 0, lastModified: null };
-  } finally {
-    clearTimeout(timer);
-  }
+  return headLastModified(url, SCRIPT);
 }
 
 // Load the previous run's per-year entries so we can copy them forward when
@@ -121,33 +87,9 @@ function loadPriorYears() {
   }
 }
 
-// ── PDF → row[][] (per page, position-clustered) ────────────────────────────
-async function extractRows(buffer) {
-  const doc = await pdfjs.getDocument({
-    data: new Uint8Array(buffer),
-    useSystemFonts: true,
-    disableFontFace: true,
-  }).promise;
-  const pages = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    const byY = new Map();
-    for (const it of content.items) {
-      const s = (it.str || '').trim();
-      if (!s) continue;
-      const y = Math.round(it.transform[5]);
-      const x = it.transform[4];
-      if (!byY.has(y)) byY.set(y, []);
-      byY.get(y).push({ x, s });
-    }
-    const rows = [...byY.keys()]
-      .sort((a, b) => b - a)                                // top-to-bottom (PDF y0 = bottom)
-      .map(y => byY.get(y).sort((a, b) => a.x - b.x).map(c => c.s));
-    pages.push(rows);
-  }
-  return pages;
-}
+// PDF row extraction now lives in `_lib/pdf.js`. Local alias kept for
+// readability of the call sites below.
+const extractRows = extractPdfRowsByPage;
 
 // ── Cell-level helpers ──────────────────────────────────────────────────────
 const DD_MON_YY  = /^\d{1,2}-[A-Za-z]{3}-\d{2}$/;          // '04-Mar-25'

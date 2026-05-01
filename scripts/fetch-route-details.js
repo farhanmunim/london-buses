@@ -30,6 +30,7 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -37,7 +38,7 @@ const DATA_DIR  = path.join(ROOT, 'data');
 const OUT_PATH  = path.join(DATA_DIR, 'source', 'route_details.json');
 const GARAGES_PATH = path.join(DATA_DIR, 'garages.geojson');
 const DETAILS_URL  = 'http://www.londonbusroutes.net/details.htm';
-const TIMEOUT_MS   = 30_000;
+const SCRIPT       = 'route-details';
 
 // ── Normalise operators to parent brands ──────────────────────────────────────
 const OPERATOR_ALIASES = {
@@ -59,25 +60,14 @@ function normaliseOperator(name) {
 }
 
 async function fetchText(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'london-buses-map/2.0' },
-    });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    // Detect encoding: details.htm sometimes serves Windows-1252.
-    const buf = Buffer.from(await res.arrayBuffer());
-    // Try UTF-8 strict; if replacement chars (U+FFFD) appear, fall back to Latin-1.
-    let txt = buf.toString('utf8');
-    if (txt.includes('\uFFFD')) txt = buf.toString('latin1');
-    return txt;
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // Detect encoding: details.htm sometimes serves Windows-1252.
+  const buf = Buffer.from(await res.arrayBuffer());
+  // Try UTF-8 strict; if replacement chars (U+FFFD) appear, fall back to Latin-1.
+  let txt = buf.toString('utf8');
+  if (txt.includes('\uFFFD')) txt = buf.toString('latin1');
+  return txt;
 }
 
 // ── 1. Load authoritative garage → route allocation from garages.geojson ────

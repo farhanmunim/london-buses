@@ -31,16 +31,17 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
 const OUT_PATH  = path.join(ROOT, 'data', 'source', 'route-vehicles.json');
 const BASE_URL  = 'https://api.tfl.gov.uk';
+const SCRIPT    = 'route-vehicles';
 
 const OBSERVATION_TTL_DAYS = 56;   // ~8 weeks of Monday samples accumulate
 const CONC                 = 4;
 const REQS_PER_MIN         = 300;
-const TIMEOUT_MS           = 30_000;
 
 loadEnv();
 const API_KEY = process.env.BUS_API_KEY ?? '';
@@ -49,18 +50,16 @@ function apiUrl(ep) {
   return `${BASE_URL}${ep}${API_KEY ? `${ep.includes('?') ? '&' : '?'}app_key=${API_KEY}` : ''}`;
 }
 
+// HTTP timeout + UA come from `_lib/http.js`. Retry / backoff stays local
+// because TfL's quirks dictate the policy (4 attempts, linear backoff).
 async function fetchJson(url, retries = 4) {
   for (let i = 1; i <= retries; i++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const r = await fetch(url, { signal: controller.signal });
-      clearTimeout(timer);
+      const r = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return await r.json();
     } catch (err) {
-      clearTimeout(timer);
       if (i === retries) return null;
       await new Promise(r => setTimeout(r, i * 800));
     }

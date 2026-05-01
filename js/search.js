@@ -63,6 +63,10 @@ export function clearAll() {
   setInputValue('');
   closeAutocomplete();
   showRoutePrompt();
+  // Tell the toggles HUD to hide the Stops button — applySelection() fires
+  // this when clearing via pill removal, but clearAll bypasses that path
+  // (clear-all button, Escape, app:resetall) so we have to fire it here too.
+  document.dispatchEvent(new CustomEvent('app:routefocuschange', { detail: false }));
   syncClearBtn();
 }
 

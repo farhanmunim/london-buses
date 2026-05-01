@@ -12,6 +12,7 @@
  */
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
+import { opColor } from './map.js';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -80,20 +81,10 @@ const TYPE_CHIP = {
   prefix:     'Prefix',
 };
 
-const OPERATOR_COLORS = {
-  'Arriva':            '#2563eb',
-  'Arriva London':     '#2563eb',
-  'First':             '#7c3aed',
-  'First London':      '#7c3aed',
-  'Go-Ahead':          '#e8192c',
-  'Go-Ahead London':   '#e8192c',
-  'Metroline':         '#0891b2',
-  'Stagecoach':        '#1b3d72',
-  'Stagecoach London': '#1b3d72',
-  'Transport UK':      '#db2777',
-  'RATP':              '#16a34a',
-  'Uno':               '#d97706',
-};
+// OPERATOR_COLORS / opColor live in map.js (single source of truth — see
+// import above). Local copy removed so palettes can never diverge. The
+// previous local table here was missing 'RATP Dev' and 'Uno Buses' so those
+// labels rendered as grey while showing correctly elsewhere.
 
 // Short labels for the route-card operator pill (Stagecoach London → Stagecoach).
 const OPERATOR_SHORT = {
@@ -239,7 +230,7 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const opEl = node.querySelector('[data-rc-op]');
   if (opEl) {
     opEl.textContent = OPERATOR_SHORT[op] ?? op;
-    opEl.style.background = OPERATOR_COLORS[op] ?? '#64748b';
+    opEl.style.background = opColor(op);
   }
 
   // Type chip — only for 24-hour and school. Regular / night / prefix are

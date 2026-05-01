@@ -21,17 +21,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 import { XMLParser } from 'fast-xml-parser';
+import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
-// Load .env file if present (simple key=value parser, no extra dependency needed)
-try {
-  const envPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.+?)\s*$/);
-      if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-    }
-  }
-} catch { /* .env is optional */ }
+loadEnv();
+const SCRIPT = 'fetch-data';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -48,7 +42,7 @@ const COORD_PRECISION = 6;
 // --- Utilities ---------------------------------------------------------------
 
 async function fetchBuffer(url) {
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) }, 60_000);
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
   const ab = await res.arrayBuffer();
   return Buffer.from(ab);
@@ -93,7 +87,7 @@ function roundCoord(v, precision) {
 async function findLatestZipKey() {
   console.log('Listing S3 bucket for latest Route_Geometry ZIP...');
   const url = `${S3_BASE}/?list-type=2&prefix=bus-geometry/`;
-  const res = await fetch(url);
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
   if (!res.ok) throw new Error(`S3 listing failed: HTTP ${res.status}`);
   const xml = await res.text();
 

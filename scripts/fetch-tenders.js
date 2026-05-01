@@ -29,10 +29,11 @@
  * Run: npm run fetch-tenders
  */
 
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sanitizeText } from './_lib/sanitize.js';
+import { fetchWithTimeout, userAgentHeaders }                 from './_lib/http.js';
+import { loadJsonCache, atomicWriteJson, installSignalFlush } from './_lib/cache.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -40,23 +41,16 @@ const OUT_PATH  = path.join(ROOT, 'data', 'source', 'tenders.json');
 
 const DISCOVERY_URL = 'https://tfl.gov.uk/forms/13923.aspx';
 const RESULT_URL    = (id) => `https://tfl.gov.uk/forms/13796.aspx?btID=${id}`;
-const USER_AGENT    = 'london-buses-map/2.6 (tenders; +https://london-buses.farhan.app)';
-const TIMEOUT_MS    = 30_000;
+const SCRIPT        = 'tenders';
 const CONC          = 4;
 const REQS_PER_MIN  = 200;            // ~3.3 RPS -- polite rate against TfL
 const FLUSH_EVERY   = 100;            // periodic cache flush so a CI timeout doesn't lose progress
 const MAX_PER_RUN   = 4000;           // hard cap; cold-start week takes one extended run
 
 async function fetchText(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal, headers: { 'User-Agent': USER_AGENT } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timer);
-  }
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.text();
 }
 
 // Discovery: pull every option value from the route dropdown
@@ -181,29 +175,19 @@ function parseTenderHtml(html, btId) {
   };
 }
 
-// Cache I/O
+// Cache I/O — load + atomic flush via `_lib/cache.js`.
 function loadCache() {
-  if (!fs.existsSync(OUT_PATH)) return { tenders: {} };
-  try {
-    const j = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
-    return { tenders: j.tenders ?? {} };
-  } catch (err) {
-    console.warn(`Cache unreadable (${err.message}) -- starting fresh`);
-    return { tenders: {} };
-  }
+  const j = loadJsonCache(OUT_PATH, {});
+  return { tenders: j.tenders ?? {} };
 }
 function flushCache(cache, totalKnown, newThisRun) {
-  const output = {
+  atomicWriteJson(OUT_PATH, {
     generatedAt:   new Date().toISOString(),
     totalKnownIds: totalKnown,
     newThisRun,
     tenderCount:   Object.keys(cache.tenders).length,
     tenders:       cache.tenders,
-  };
-  const tmp = OUT_PATH + '.tmp';
-  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(tmp, JSON.stringify(output), 'utf8');
-  fs.renameSync(tmp, OUT_PATH);
+  });
 }
 
 // Main
@@ -226,9 +210,7 @@ async function main() {
   let fetched = 0, errored = 0;
 
   // SIGTERM handler: flush before exit so a CI timeout never loses progress.
-  const onSignal = () => { try { flushCache(cache, allIds.length, fetched); } catch {} process.exit(130); };
-  process.once('SIGINT',  onSignal);
-  process.once('SIGTERM', onSignal);
+  installSignalFlush(() => flushCache(cache, allIds.length, fetched));
 
   const minIntervalMs = Math.ceil(60_000 / REQS_PER_MIN);
   let nextSlot = Date.now();

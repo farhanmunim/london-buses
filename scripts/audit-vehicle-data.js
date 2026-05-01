@@ -29,12 +29,13 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
 const DATA_DIR  = path.join(ROOT, 'data');
 const OUT_DIR   = path.join(DATA_DIR, 'audit');
-const USER_AGENT = 'london-buses-map/2.6 audit (+https://london-buses.farhan.app)';
+const SCRIPT    = 'audit-vehicle-data';
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
@@ -128,7 +129,7 @@ const BUSTIMES_OPERATOR_SLUGS = [
 
 async function fetchOperatorVehicles(slug) {
   const url = `https://bustimes.org/operators/${slug}/vehicles`;
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
   if (!res.ok) return null;
   return await res.text();
 }

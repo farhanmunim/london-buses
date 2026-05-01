@@ -22,12 +22,14 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const OUT_PATH = path.join(DATA_DIR, 'frequencies.json');
 const BASE_URL = 'https://api.tfl.gov.uk';
+const SCRIPT = 'frequencies';
 
 loadEnv();
 const API_KEY = process.env.BUS_API_KEY ?? '';
@@ -39,7 +41,7 @@ function apiUrl(ep) {
 async function fetchJson(url, retries = 4) {
   for (let i = 1; i <= retries; i++) {
     try {
-      const r = await fetch(url);
+      const r = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
       if (r.status === 404) return null;
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       return await r.json();
@@ -193,8 +195,8 @@ async function main() {
     // correct filename (e.g. N1 → times/N001.htm).
     let hrefMap = {};
     try {
-      const routesHtml = await (await fetch('http://www.londonbusroutes.net/routes.htm', {
-        headers: { 'User-Agent': 'london-buses-map/2.0 (personal project)' },
+      const routesHtml = await (await fetchWithTimeout('http://www.londonbusroutes.net/routes.htm', {
+        headers: userAgentHeaders(SCRIPT),
       })).text();
       const re = /<a\s+name=["']?[MN]([A-Z0-9]+)["']?\s+href=["']?([^"'>]+)["']?>([^<]+)<\/a>/gi;
       let mm;
@@ -212,7 +214,7 @@ async function main() {
       const url = `http://www.londonbusroutes.net/${href}`;
       try {
         await new Promise(r => setTimeout(r, 250)); // polite pacing
-        const res = await fetch(url, { headers: { 'User-Agent': 'london-buses-map/2.0 (personal project)' } });
+        const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
         if (!res.ok) continue;
         const html = await res.text();
 

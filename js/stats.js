@@ -22,6 +22,7 @@ import {
   opDrawer, drawerBack, drawerName, drawerSub, drawerSwatch,
   dGarages, dContracts,
 } from './state.js';
+import { opColor } from './map.js';
 
 // Populate one of the four generic drawer KPI slots (v1/v2/v3/v4).
 function setKpi(slot, value, label) {
@@ -40,20 +41,11 @@ let _networkTotalPvr    = 0;
 // drawer re-openings that don't originate from the "View routes" CTA.
 let _activeGarageCode = null;
 
-const OPERATOR_COLORS = {
-  'Arriva':            '#2563eb',
-  'First':             '#7c3aed',
-  'Go-Ahead':          '#e8192c',
-  'Metroline':         '#0891b2',
-  'Stagecoach':        '#1b3d72',
-  'Stagecoach London': '#1b3d72',
-  'Transport UK':      '#db2777',
-  'RATP':              '#16a34a',
-  'RATP Dev':          '#16a34a',
-  'Uno':               '#d97706',
-};
-const FALLBACK_COLOR = '#64748b';
-const opColor = name => OPERATOR_COLORS[name] ?? FALLBACK_COLOR;
+// OPERATOR_COLORS / fallback / opColor now live in map.js (single source of
+// truth — see import above). Local copies removed so palettes can never
+// diverge. The previous local table here was missing 'Arriva London' and
+// 'Uno Buses', causing those operators to silently fall back to grey on
+// stats panels while displaying correct colours on the map.
 
 // Short, customer-facing operator names. Data values may arrive as either
 // the short form (Go-Ahead) or the longer marketing form (Go-Ahead London);

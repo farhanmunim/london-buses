@@ -35,59 +35,37 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { sanitizeRecord } from './_lib/sanitize.js';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-// pdfjs-dist 4.x ships ESM by default but the legacy CJS build is friendlier
-// to call from a Node script with synchronous require.
-const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
+import { fileURLToPath } from 'url';
+import { fetchWithTimeout, headLastModified, userAgentHeaders } from './_lib/http.js';
+import { extractPdfRowsByPage }                                 from './_lib/pdf.js';
+import { sanitizeRecord }                                       from './_lib/sanitize.js';
 
 const __dirname    = path.dirname(fileURLToPath(import.meta.url));
 const ROOT         = path.resolve(__dirname, '..');
 const OUT_PATH     = path.join(ROOT, 'data', 'source', 'route-performance.json');
 const RAW_PATH     = path.join(ROOT, 'data', 'source', 'route-performance-raw.txt');
 const SOURCE_URL   = 'http://bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf';
+const SCRIPT       = 'route-performance';
+// 60-second timeout vs the 30s default elsewhere — the QSI PDF is the
+// largest single artefact in the pipeline (~1 MB) and TfL's static-PDF host
+// occasionally serves it slowly.
 const TIMEOUT_MS   = 60_000;
-const USER_AGENT   = 'london-buses-map/2.6 (route-performance)';
 
 // ── HTTP fetch with timeout ─────────────────────────────────────────────────
 async function fetchPdfBuffer() {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(SOURCE_URL, {
-      signal:  controller.signal,
-      headers: { 'User-Agent': USER_AGENT },
-    });
-    if (!res.ok) throw new Error(`PDF fetch failed: HTTP ${res.status}`);
-    const lastMod = res.headers.get('last-modified');
-    const buf = Buffer.from(await res.arrayBuffer());
-    return { buffer: buf, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
-  } finally {
-    clearTimeout(timer);
-  }
+  const res = await fetchWithTimeout(SOURCE_URL, {
+    headers: userAgentHeaders(SCRIPT),
+  }, TIMEOUT_MS);
+  if (!res.ok) throw new Error(`PDF fetch failed: HTTP ${res.status}`);
+  const lastMod = res.headers.get('last-modified');
+  const buf = Buffer.from(await res.arrayBuffer());
+  return { buffer: buf, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
 }
 
-// HEAD-only fetch so we can compare Last-Modified before pulling 1+ MB.
+// HEAD-only check so we can compare Last-Modified before pulling 1+ MB.
 async function fetchPdfHead() {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(SOURCE_URL, {
-      method:  'HEAD',
-      signal:  controller.signal,
-      headers: { 'User-Agent': USER_AGENT },
-    });
-    if (!res.ok) return null;
-    const lastMod = res.headers.get('last-modified');
-    return lastMod ? new Date(lastMod).toISOString() : null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
+  const r = await headLastModified(SOURCE_URL, SCRIPT, TIMEOUT_MS);
+  return r.status === 200 ? r.lastModified : null;
 }
 
 // ── Period parsing (header text) ────────────────────────────────────────────
@@ -109,50 +87,8 @@ function parsePeriod(text) {
   return r ? { label: `Q${q} ${m[2]}/${m[3]}`, start: r[0], end: r[1] } : { label: null, start: null, end: null };
 }
 
-// ── Position-aware row extraction ───────────────────────────────────────────
-// Walk every page, pull every text item with its (x, y) transform, group items
-// by y-coordinate (rounded to nearest unit) into rows, then sort each row's
-// items by x to recover column order. The result is a 2-D array of "cells"
-// per page — actual table rows that we can match against the route-id pattern.
-async function extractTextRows(buffer) {
-  // pdfjs-dist needs a worker URL even in Node. require.resolve returns a
-  // platform-native absolute path (`C:\…\pdf.worker.mjs` on Windows), which
-  // the ESM loader rejects ("Only URLs with a scheme in: file, data, and
-  // node are supported"). pathToFileURL gives us the correct `file://` form
-  // that works on Windows, macOS and Linux.
-  const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
-  pdfjs.GlobalWorkerOptions.workerSrc = pathToFileURL(workerPath).href;
-  const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true, disableFontFace: true }).promise;
-
-  const pages = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-
-    // Bucket text items by their y-coordinate (rounded to integer pixels).
-    // Excel-exported PDFs place every cell at consistent y per row, so this
-    // groups co-baseline fragments together cleanly.
-    const byY = new Map();
-    for (const item of content.items) {
-      const str = (item.str ?? '').trim();
-      if (!str) continue;
-      const x = item.transform[4];
-      const y = Math.round(item.transform[5]);
-      if (!byY.has(y)) byY.set(y, []);
-      byY.get(y).push({ x, str });
-    }
-
-    // Sort y descending (PDF coords have y0 at the bottom) so rows come out
-    // in visual top-to-bottom order. Then sort each row left-to-right.
-    const sortedYs = [...byY.keys()].sort((a, b) => b - a);
-    const rows = sortedYs.map(y => {
-      const cells = byY.get(y).sort((a, b) => a.x - b.x).map(c => c.str);
-      return cells;
-    });
-    pages.push(rows);
-  }
-  return pages;
-}
+// PDF row extraction now lives in `_lib/pdf.js` — `extractPdfRowsByPage`
+// implements the same y-coord clustering used here previously.
 
 // ── Table-shape detection ───────────────────────────────────────────────────
 // A page can carry one of two table types — high-frequency or low-frequency —
@@ -264,7 +200,7 @@ async function main() {
   console.log(`  ${(buffer.length / 1024).toFixed(0)} KB, last-modified ${lastModified ?? 'unknown'}`);
 
   console.log('Extracting text positions with pdfjs-dist ...');
-  const pages = await extractTextRows(buffer);
+  const pages = await extractPdfRowsByPage(buffer);
   console.log(`  ${pages.length} pages, ${pages.reduce((n, p) => n + p.length, 0)} rows total`);
 
   // Persist raw rows for debugging — one row per line, cells tab-separated, page break markers between.

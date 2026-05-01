@@ -37,57 +37,32 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { sanitizeRecord } from './_lib/sanitize.js';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const pdfjs = require('pdfjs-dist/legacy/build/pdf.mjs');
-pdfjs.GlobalWorkerOptions.workerSrc =
-  pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')).href;
+import { fileURLToPath } from 'url';
+import { fetchWithTimeout, headLastModified, userAgentHeaders } from './_lib/http.js';
+import { extractPdfRows }                                      from './_lib/pdf.js';
+import { loadJsonCache, atomicWriteJson, installSignalFlush }  from './_lib/cache.js';
+import { sanitizeRecord }                                      from './_lib/sanitize.js';
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const ROOT       = path.resolve(__dirname, '..');
 const ROUTES_IDX = path.join(ROOT, 'data', 'routes', 'index.json');
 const OUT_PATH   = path.join(ROOT, 'data', 'source', 'route-mps.json');
 
+const SCRIPT     = 'route-mps';
 const PDF_URL    = (id) => `https://bus.data.tfl.gov.uk/boroughreports/routes/performance-route-${id}.pdf`;
-const USER_AGENT = 'london-buses-map/2.7 (route-mps)';
 
 // ── Config ──────────────────────────────────────────────────────────────────
-const MPS_TTL_DAYS    = 28;     // re-check every TfL period (~4 weeks). MPS itself only moves at tender renewal but we want fresh actuals.
+const MPS_TTL_DAYS    = 28;     // re-check every TfL period (~4 weeks).
 const RPS             = 4;      // gentle on TfL's static-PDF host
-const TIMEOUT_MS      = 30_000;
-const MAX_PER_RUN     = 1000;   // hard cap per run; whole London fleet ~700 routes so a cold start fits comfortably
+const MAX_PER_RUN     = 1000;   // cap per run; ~700 routes so a cold start fits
 const FLUSH_EVERY     = 50;
 const RETRIES         = 3;
 
-// ── HTTP ────────────────────────────────────────────────────────────────────
-async function fetchWithTimeout(url, opts = {}, timeoutMs = TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...opts, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function headLastModified(url) {
-  try {
-    const r = await fetchWithTimeout(url, { method: 'HEAD', headers: { 'User-Agent': USER_AGENT } });
-    if (!r.ok) return { status: r.status, lastModified: null };
-    const lm = r.headers.get('last-modified');
-    return { status: 200, lastModified: lm ? new Date(lm).toISOString() : null };
-  } catch {
-    return { status: 0, lastModified: null };
-  }
-}
-
+// ── PDF download with retries (helper-backed) ───────────────────────────────
 async function fetchPdfBuffer(url) {
   for (let attempt = 1; attempt <= RETRIES; attempt++) {
     try {
-      const r = await fetchWithTimeout(url, { headers: { 'User-Agent': USER_AGENT } });
+      const r = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
       if (r.status === 404) return { status: 404 };
       if (!r.ok) {
         if (attempt === RETRIES) return { status: r.status };
@@ -102,33 +77,6 @@ async function fetchPdfBuffer(url) {
       await new Promise(s => setTimeout(s, 500 * 2 ** (attempt - 1)));
     }
   }
-}
-
-// ── PDF → rows by y-coord ──────────────────────────────────────────────────
-async function extractRows(buffer) {
-  const doc = await pdfjs.getDocument({
-    data: new Uint8Array(buffer),
-    useSystemFonts: true,
-    disableFontFace: true,
-  }).promise;
-  const rows = [];
-  for (let p = 1; p <= doc.numPages; p++) {
-    const page = await doc.getPage(p);
-    const content = await page.getTextContent();
-    const byY = new Map();
-    for (const it of content.items) {
-      const s = (it.str || '').trim();
-      if (!s) continue;
-      const y = Math.round(it.transform[5]);
-      const x = it.transform[4];
-      if (!byY.has(y)) byY.set(y, []);
-      byY.get(y).push({ x, s });
-    }
-    for (const y of [...byY.keys()].sort((a, b) => b - a)) {
-      rows.push(byY.get(y).sort((a, b) => a.x - b.x).map(c => c.s));
-    }
-  }
-  return rows;
 }
 
 // ── MPS parser ─────────────────────────────────────────────────────────────
@@ -190,19 +138,11 @@ function parseMps(rows) {
 }
 
 // ── Cache I/O ──────────────────────────────────────────────────────────────
-function loadCache() {
-  if (!fs.existsSync(OUT_PATH)) return { routes: {} };
-  try {
-    const j = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
-    return { routes: j.routes ?? {} };
-  } catch (err) {
-    console.warn(`Cache unreadable (${err.message}) — starting fresh`);
-    return { routes: {} };
-  }
-}
-
-function flushCache(cache, fetchedThisRun, errored) {
-  const output = {
+// Cache load + atomic flush both go through `_lib/cache.js`. The flush
+// closes over the running counters so the SIGTERM hook can call it without
+// passing args through the signal handler.
+function buildOutput(cache, fetchedThisRun, errored) {
+  return {
     generatedAt:     new Date().toISOString(),
     mpsTtlDays:      MPS_TTL_DAYS,
     totalRoutes:     Object.keys(cache.routes).length,
@@ -210,10 +150,6 @@ function flushCache(cache, fetchedThisRun, errored) {
     errored,
     routes:          cache.routes,
   };
-  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  const tmp = OUT_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(sanitizeRecord(output)), 'utf8');
-  fs.renameSync(tmp, OUT_PATH);
 }
 
 function isFresh(cached, cutoffMs) {
@@ -232,7 +168,8 @@ async function main() {
   const allRoutes = (idx.routes ?? []).map(s => String(s).toUpperCase());
   console.log(`Index: ${allRoutes.length} routes`);
 
-  const cache  = loadCache();
+  const cache  = loadJsonCache(OUT_PATH, { routes: {} });
+  if (!cache.routes) cache.routes = {};   // legacy file shape guard
   const cutoff = Date.now() - MPS_TTL_DAYS * 86_400_000;
 
   // Order: never-fetched first, then oldest-checked, capped by MAX_PER_RUN.
@@ -247,16 +184,14 @@ async function main() {
 
   if (!toFetch.length) {
     console.log('Cache fully warm — nothing to fetch.');
-    flushCache(cache, 0, 0);
+    atomicWriteJson(OUT_PATH, buildOutput(cache, 0, 0));
     return;
   }
 
   let fetched = 0, errored = 0, skippedHead = 0;
 
   // SIGTERM/SIGINT safe: flush before exit so a CI timeout never loses progress.
-  const onSignal = () => { try { flushCache(cache, fetched, errored); } catch {} process.exit(130); };
-  process.once('SIGINT',  onSignal);
-  process.once('SIGTERM', onSignal);
+  installSignalFlush(() => atomicWriteJson(OUT_PATH, buildOutput(cache, fetched, errored)));
 
   const minIntervalMs = Math.ceil(1000 / RPS);
   let nextSlot = Date.now();
@@ -272,7 +207,7 @@ async function main() {
     // HEAD short-circuit — if the PDF hasn't moved since we last parsed it,
     // skip the body. Keeps the fetcher cheap during steady-state runs.
     if (prev.pdf_modified_at) {
-      const head = await headLastModified(url);
+      const head = await headLastModified(url, SCRIPT);
       if (head.status === 200 && head.lastModified === prev.pdf_modified_at) {
         cache.routes[id] = { ...prev, lastCheckedAt: new Date().toISOString(), status: 200 };
         skippedHead++;
@@ -288,7 +223,7 @@ async function main() {
     const now = new Date().toISOString();
     if (dl.status === 200 && dl.buffer) {
       try {
-        const rows = await extractRows(dl.buffer);
+        const rows = await extractPdfRows(dl.buffer);
         const parsed = parseMps(rows);
         cache.routes[id] = {
           ...parsed,
@@ -311,12 +246,12 @@ async function main() {
     }
 
     if ((fetched + errored + skippedHead) % FLUSH_EVERY === 0) {
-      flushCache(cache, fetched, errored);
+      atomicWriteJson(OUT_PATH, buildOutput(cache, fetched, errored));
       console.log(`  ${fetched + errored + skippedHead}/${toFetch.length}  ok=${fetched} skip=${skippedHead} err=${errored} (cache flushed)`);
     }
   }
 
-  flushCache(cache, fetched, errored);
+  atomicWriteJson(OUT_PATH, buildOutput(cache, fetched, errored));
   console.log(`Done: ok=${fetched} skip=${skippedHead} err=${errored}  total cached=${Object.keys(cache.routes).length}`);
 }
 

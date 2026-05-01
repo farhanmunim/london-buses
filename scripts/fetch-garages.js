@@ -16,8 +16,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { sanitizeRecord } from './_lib/sanitize.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SCRIPT = 'garages';
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'data');
 const OUT_PATH = path.join(DATA_DIR, 'garages.geojson');
@@ -76,9 +78,9 @@ function saveCache(c) {
 }
 
 async function bulkLookup(postcodes) {
-  const res = await fetch(POSTCODES_URL, {
+  const res = await fetchWithTimeout(POSTCODES_URL, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: userAgentHeaders(SCRIPT, { 'content-type': 'application/json' }),
     body: JSON.stringify({ postcodes }),
   });
   if (!res.ok) throw new Error(`postcodes.io HTTP ${res.status}`);
@@ -126,7 +128,7 @@ function loadExisting(p) {
 
 async function main() {
   console.log(`Downloading ${GARAGES_CSV_URL}...`);
-  const res = await fetch(GARAGES_CSV_URL);
+  const res = await fetchWithTimeout(GARAGES_CSV_URL, { headers: userAgentHeaders(SCRIPT) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const csvText = await res.text();
   const rows = parseCsv(csvText);

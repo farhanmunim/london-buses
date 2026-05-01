@@ -36,6 +36,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import AdmZip from 'adm-zip';
 import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders }                 from './_lib/http.js';
+import { loadJsonCache, atomicWriteJson, installSignalFlush } from './_lib/cache.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -45,12 +47,11 @@ const OUT_PATH  = path.join(ROOT, 'data', 'source', 'vehicle-fleet.json');
 const CACHE_TTL_DAYS    = 90;               // re-query DVLA every 90 days max
 const DVLA_RPS          = 5;                // < 15 RPS published free-tier limit
 const DVLA_RETRIES      = 4;                // exponential backoff on 429 / 5xx
-const TIMEOUT_MS        = 30_000;
 const FLUSH_EVERY       = 250;              // periodic cache flush so a CI timeout doesn't lose progress
 const MAX_LOOKUPS_RUN   = 6000;             // hard cap per run — bounds runtime even if cache is cold (≈20 min @ 5 RPS)
 const IBUS_BASE      = 'https://s3-eu-west-1.amazonaws.com/ibus.data.tfl.gov.uk';
 const DVLA_URL       = 'https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles';
-const USER_AGENT     = 'london-buses-map/2.6 (vehicle-fleet)';
+const SCRIPT         = 'vehicle-fleet';
 
 loadEnv();
 const DVLA_API_KEY = process.env.DVLA_API_KEY ?? '';
@@ -75,22 +76,15 @@ function normaliseFuel(raw) {
   return null; // unknown — leave raw value in place for inspection
 }
 
-// ── HTTP helpers ────────────────────────────────────────────────────────────
-async function fetchWithTimeout(url, opts = {}, timeoutMs = TIMEOUT_MS) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...opts, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
+// ── iBus discovery + download ──────────────────────────────────────────────
+// HTTP helpers (timeout, UA, retries) live in `_lib/http.js`. Local logic
+// here is just the iBus-specific parsing.
 
 // Discover the most recent Base_Version_YYYYMMDD/ folder in the iBus bucket.
 // Sorts lexically because the date format YYYYMMDD is lex-sortable.
 async function findLatestBaseVersion() {
   const res = await fetchWithTimeout(`${IBUS_BASE}/?list-type=2&delimiter=/`, {
-    headers: { 'User-Agent': USER_AGENT },
+    headers: userAgentHeaders(SCRIPT),
   });
   if (!res.ok) throw new Error(`iBus bucket list failed: HTTP ${res.status}`);
   const xml = await res.text();
@@ -103,7 +97,7 @@ async function findLatestBaseVersion() {
 
 async function downloadVehicleXml(version) {
   const url = `${IBUS_BASE}/Base_Version_${version}/Vehicle_${version}.zip`;
-  const res = await fetchWithTimeout(url, { headers: { 'User-Agent': USER_AGENT } });
+  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
   if (!res.ok) throw new Error(`Vehicle ZIP fetch failed: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
   const zip = new AdmZip(buf);
@@ -137,12 +131,11 @@ async function dvlaLookup(reg) {
     let res;
     try {
       res = await fetchWithTimeout(DVLA_URL, {
-        method: 'POST',
-        headers: {
-          'x-api-key':   DVLA_API_KEY,
+        method:  'POST',
+        headers: userAgentHeaders(SCRIPT, {
+          'x-api-key':    DVLA_API_KEY,
           'Content-Type': 'application/json',
-          'User-Agent':  USER_AGENT,
-        },
+        }),
         body: JSON.stringify({ registrationNumber: reg }),
       });
     } catch (err) {
@@ -180,35 +173,25 @@ async function dvlaLookup(reg) {
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
+// Cache load + atomic flush both go through `_lib/cache.js`. `flushCache`
+// builds the output shape and writes it; the closure over `cache` is what
+// lets the SIGTERM hook flush without passing args through the signal.
 function loadCache() {
-  if (fs.existsSync(OUT_PATH)) {
-    try {
-      const j = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
-      return {
-        vehicles: j.vehicles ?? {},
-        ibusBaseVersion: j.ibusBaseVersion ?? null,
-      };
-    } catch (err) {
-      console.warn(`Cache file unreadable (${err.message}) — starting fresh`);
-    }
-  }
-  return { vehicles: {}, ibusBaseVersion: null };
+  const j = loadJsonCache(OUT_PATH, {});
+  return {
+    vehicles:        j.vehicles ?? {},
+    ibusBaseVersion: j.ibusBaseVersion ?? null,
+  };
 }
 
 function flushCache(cache, ibusBaseVersion) {
-  const output = {
+  atomicWriteJson(OUT_PATH, {
     generatedAt:     new Date().toISOString(),
-    ibusBaseVersion: ibusBaseVersion,
+    ibusBaseVersion,
     cacheTtlDays:    CACHE_TTL_DAYS,
     vehicleCount:    Object.keys(cache.vehicles).length,
     vehicles:        cache.vehicles,
-  };
-  fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  // Atomic-ish write: write to .tmp, rename. Avoids a torn cache file if the
-  // process is killed mid-write (e.g. CI timeout, Ctrl-C).
-  const tmp = OUT_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(sanitizeRecord(output)), 'utf8');
-  fs.renameSync(tmp, OUT_PATH);
+  });
 }
 
 function isStale(cached, cutoffMs) {
@@ -268,12 +251,7 @@ async function main() {
 
     // Atomic-ish flush on Ctrl-C / SIGTERM — preserves whatever progress was
     // made before the kill signal so a CI timeout never wastes a run.
-    const onSignal = () => {
-      try { flushCache(cache, version); } catch {}
-      process.exit(130);
-    };
-    process.once('SIGINT',  onSignal);
-    process.once('SIGTERM', onSignal);
+    installSignalFlush(() => flushCache(cache, version));
 
     for (const v of toFetch) {
       const wait = nextSlot - Date.now();

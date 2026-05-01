@@ -19,6 +19,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadEnv } from './_lib/env.js';
+import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -26,6 +27,7 @@ const DATA_DIR = path.join(ROOT, 'data');
 const ROUTE_STOPS_PATH = path.join(DATA_DIR, 'route_stops.json');
 const STOPS_PATH = path.join(DATA_DIR, 'stops.json');
 const BASE_URL = 'https://api.tfl.gov.uk';
+const SCRIPT = 'route-stops';
 
 loadEnv();
 const API_KEY = process.env.BUS_API_KEY ?? '';
@@ -39,7 +41,7 @@ function apiUrl(endpoint) {
 async function fetchJson(url, retries = 4) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url);
+      const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
       if (res.status === 429 || res.status >= 500) throw new Error(`HTTP ${res.status}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();

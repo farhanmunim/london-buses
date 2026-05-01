@@ -184,7 +184,21 @@ All skip-capable scripts accept `--force` to bypass the cache and re-fetch. `npm
 
 We scrape from external sources (TfL forms, londonbusroutes.net, bustimes.org, DVLA, postcodes.io, TfL PDFs). The scraped strings flow through to public artefacts (`route_classifications.json`, `routes-overview.geojson`) and into the XLSX export. **Defence-in-depth policy: every freeform string is sanitised before it lands in a JSON cache.**
 
-**Helper:** [`scripts/_lib/sanitize.js`](scripts/_lib/sanitize.js) exports two functions:
+### Shared helpers in `scripts/_lib/`
+
+The pipeline factors common patterns into a small set of helper modules so each script declares its config and stays focused on its specific upstream:
+
+| Module | Exports | Used by |
+|---|---|---|
+| `_lib/env.js` | `loadEnv()`, `userAgent(scriptName)` | every script (loadEnv); HTTP-using scripts (userAgent) |
+| `_lib/http.js` | `fetchWithTimeout`, `headLastModified`, `userAgentHeaders`, `DEFAULT_TIMEOUT_MS` | every fetcher that hits an HTTP source |
+| `_lib/cache.js` | `loadJsonCache`, `atomicWriteJson`, `installSignalFlush` | sticky-cache fetchers (vehicle-fleet, route-mps, tenders) |
+| `_lib/pdf.js` | `extractPdfRowsByPage`, `extractPdfRows`, `initPdfWorker` | PDF fetchers (route-performance, route-mps, tender-programme) |
+| `_lib/sanitize.js` | `sanitizeText`, `sanitizeRecord` | every fetcher + every build step at the JSON-write boundary |
+
+`userAgent()` reads the package version at module load so every outbound HTTP request stamps with the same value (`london-buses-map/2.8 (route-mps)`) — no per-script version drift.
+
+**Sanitisation helper:** [`scripts/_lib/sanitize.js`](scripts/_lib/sanitize.js) exports two functions:
 - `sanitizeText(value, opts)` — strips every HTML tag, every C0 control character (except `\n` and `\t`), decodes the named/numeric HTML entities the scrapers see in practice, normalises whitespace, and caps the result at `maxLen` (default 4000 chars).
 - `sanitizeRecord(value, opts)` — recursively applies `sanitizeText` to every string leaf of an object or array. Used at the JSON-write boundary so structured records get sanitised in one call.
 

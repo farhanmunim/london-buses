@@ -22,9 +22,10 @@ const TYPE_COLORS = {
 // Canonical operator palette — single source of truth used by route lines,
 // garage markers, overview table, operator cards, drawer swatches, route-card
 // operator pill and sidebar filter pill dots. Matches the colours declared
-// inline in the sidebar filter pills in index.html. If this ever needs to
-// become a shared module, export from here rather than duplicating.
-const OPERATOR_COLORS = {
+// inline in the sidebar filter pills in index.html. Exported so stats.js
+// and route-detail.js share the same dictionary instead of keeping their
+// own (previously divergent) copies.
+export const OPERATOR_COLORS = {
   'Arriva':            '#2563eb',
   'Arriva London':     '#2563eb',
   'First':             '#7c3aed',
@@ -40,7 +41,9 @@ const OPERATOR_COLORS = {
   'Uno':               '#d97706',
   'Uno Buses':         '#d97706',
 };
-const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
+export const OPERATOR_FALLBACK_COLOR = '#64748b'; // slate-500 — unknown operator
+/** Look up an operator's brand colour with the canonical fallback. */
+export const opColor = (name) => OPERATOR_COLORS[name] ?? OPERATOR_FALLBACK_COLOR;
 
 // Paint mode: how should route lines be coloured?
 //   'operator' — by operator brand livery  [default]
