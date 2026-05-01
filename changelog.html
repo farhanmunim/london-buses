@@ -75,370 +75,121 @@
             </p>
           </header>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.9 — Full route-card record denormalised onto Supabase
-               ═══════════════════════════════════════════════════════════════ -->
+          <p class="cl-tag-legend"><strong>Tags:</strong>
+            <span class="cl-tag cl-tag--new">NEW</span> new feature ·
+            <span class="cl-tag cl-tag--fix">FIX</span> bug fix ·
+            <span class="cl-tag cl-tag--data">DATA</span> pipeline / data source change ·
+            <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement ·
+            <span class="cl-tag cl-tag--perf">PERF</span> performance.
+          </p>
+
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.9</span> May 1, 2026</div>
-            <a href="#v2_9" class="cl-entry-title">Full route-card record now lands on every weekly Supabase snapshot</a>
-            <p class="cl-body-text">
-              <strong>Migration <code>0009_route_snapshot_full_record.sql</code></strong> adds 20 columns to <code>route_snapshots</code> so each weekly row carries the full route-card record without needing JOINs to <code>tenders</code> / <code>tender_programme</code> / <code>route_performance</code> at query time. Three groups: reliability snapshot (<code>service_class</code>, <code>ewt_minutes</code>, <code>on_time_percent</code>, <code>perf_period</code>); last/current tender (<code>previous_operator</code>, <code>last_award_date</code>, <code>last_cost_per_mile</code>, <code>tender_award_count</code>, <code>number_of_tenderers</code>, <code>was_joint_bid</code>, <code>contract_term_years</code>, <code>awarded_propulsion</code>, <code>awarded_deck</code>, <code>prev_awarded_propulsion</code>, <code>prev_awarded_deck</code>); and next/upcoming tender (<code>next_tender_start</code>, <code>next_tender_year</code>, <code>extension_eligible</code>, <code>next_award_propulsion</code>, <code>next_award_deck</code>).
-            </p>
-            <p class="cl-body-text">
-              <strong><code>pushRouteSnapshots()</code> extended</strong> to write all 20 new columns from the existing <code>route_classifications.json</code> derivations — no new fetch step or schema work elsewhere. First push under 0009 populated 733/747 routes with award data, 665/747 with reliability data, 694/747 with contract length. Three new indexes (<code>service_class</code>, <code>previous_operator</code>, <code>last_award_date</code>) enable single-table trend queries — a "worst-performers-vs-MPS" board is now one <code>SELECT</code> with no JOINs.
-            </p>
-            <p class="cl-body-text">
-              <strong>Senior-engineer review</strong> confirmed the rest of the stack is structurally sound: 16-step orchestrator matches disk + npm scripts; soft-fail vs hard-fail correctly assigned; workflow secrets / permissions / force-add list aligned; build outputs healthy; frontend renders all tooltips with zero JS errors. Dead <code>TYPE_MAP</code> constant removed from <code>route-detail.js</code>.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_9" class="cl-entry-title">Contract start dates &amp; cost-per-mile fix</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered). Sourced from londonbusroutes.net <code>details.htm</code>, with the LBSL programme PDFs as backup.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Cost-per-mile parser misread European decimal commas (<code>6,25</code> was becoming <code>625</code>). 3 historical awards corrected.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Joint bid row now always shows Yes / No (was hidden when "No").</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.8 — Per-route Minimum Performance Standards
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>
-            <a href="#v2_8" class="cl-entry-title">Per-route contractual EWT/OTP/mileage standards on every route card</a>
-            <p class="cl-body-text">
-              <strong>Per-route Minimum Performance Standards (MPS) now flow through the whole stack.</strong> A new <code>fetch-route-mps.js</code> step parses the per-route TfL QSI PDFs at <code>bus.data.tfl.gov.uk/boroughreports/routes/performance-route-{ID}.pdf</code> and extracts three contractual benchmarks per route: EWT MPS (high-frequency, observed 0.7–1.4 min), OTP MPS (low-frequency, observed 74–90%), and Mileage MPS (98 or 99%). The values genuinely vary route-by-route within a service class — e.g. route 122 (EWT 1.20 min) and route EL2 (EWT 0.70 min) are both high-frequency but have very different contractual thresholds. 662 routes parsed cleanly; 85 (mostly school) have no published MPS PDF and cache as 404.
-            </p>
-            <p class="cl-body-text">
-              <strong>Surfaced on the route card</strong> in the <em>Tender · Current contract</em> section as <em>EWT standard</em> / <em>OTP standard</em> / <em>Mileage standard</em> rows (hidden when no MPS data). The Route-section reliability KPI tile also gets an inline <code>actual / standard</code> reading (e.g. <code>1.6 / 1.0</code>) so pass/fail is readable at a glance.
-            </p>
-            <p class="cl-body-text">
-              <strong>Pushed to Supabase</strong> via migration <code>0008_route_mps.sql</code>: three new columns on <code>route_snapshots</code> (<code>ewt_mps_minutes</code>, <code>otp_mps_percent</code>, <code>mileage_mps_percent</code>) so trend queries can see the benchmark drift over time as contracts renew. The XLSX export Routes sheet picks them up automatically.
-            </p>
-            <p class="cl-body-text">
-              <strong>Sticky-cache pipeline.</strong> MPS values are contract-defined and only move at tender renewal, so the cache uses a 28-day TTL plus per-route <code>Last-Modified</code> HEAD short-circuit. Cold-start week parses ~700 PDFs at 4 RPS (~3 min); steady-state weekly runs are mostly HEAD-only and finish in seconds. Per-run cap of 1,000, periodic flush every 50, SIGTERM-safe.
-            </p>
-            <p class="cl-body-text">
-              <strong>Route-card UX polish.</strong> Tender section restructured into <em>Current contract</em> / <em>Previous contract</em> (the <em>Next contract</em> block was removed since nothing in it has actually been awarded yet). Labels tightened: <em>Last awarded</em> → <em>Awarded on</em>, <em>Total awards</em> → <em>Times tendered</em>, <em>Vehicle make / Vehicle model</em> → <em>Make / Model</em>, <em>Contract term</em> → <em>Length</em>. Deck values render as DD / SD; the frequency tile shows just H / L. The route-type chip moved next to the route number and only renders for non-default classes (24h / Night / School / Prefix). A new <em>MPS</em> KPI tile sits next to EWT/OTP so contractual targets and actuals read side-by-side. Tender-history operator names roll up to the parent group (Docklands / Blue Triangle / Metrobus → Go-Ahead, Selkent / East London → Stagecoach, London United / Quality Line → RATP).
-            </p>
-            <p class="cl-body-text">
-              <strong>Custom hover tooltips</strong> on every route-card label (<code>js/tooltip.js</code>) replacing the native <code>title</code> tooltip so we control timing and look. Labels get a faint dashed underline as the "more info on hover" cue; the popup is a single shared element appended to <code>&lt;body&gt;</code>, position-tracked above its anchor with viewport-edge clamping and a 120 ms show delay. Tooltip copy is short <em>"&lt;metric&gt;, from &lt;source&gt;"</em> lines so each label answers what the value is and where it comes from at a glance.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_8" class="cl-entry-title">Per-route Minimum Performance Standards</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, scraped from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> "MPS" KPI tile next to actual EWT / OTP so contract-vs-actual reads at a glance.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> New <code>fetch-route-mps.js</code> step in the weekly pipeline (now 16 steps).</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.7 — Tender data & pipeline short-circuits
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.7</span> Apr 30, 2026</div>
-            <a href="#v2_7" class="cl-entry-title">Tender data on every route card, three pipeline short-circuits, and contributors</a>
-            <p class="cl-body-text">
-              <strong>Tender award history is now surfaced on every route card.</strong> The placeholder rows for <em>Previous operator</em>, <em>Contract expires</em>, and <em>Contract value</em> are wired up. <code>build-classifications.js</code> joins <code>data/source/tenders.json</code> (~2,500 historical awards going back to 2003) with <code>data/source/tender-programme.json</code> (the LBSL programme PDFs) to compute per-route <code>previousOperator</code>, <code>lastAwardDate</code>, <code>lastCostPerMile</code> (£/mile, directly comparable across routes), <code>nextTenderStart</code> and <code>nextTenderYear</code>. Combined route IDs like <code>341/N341</code> automatically feed both the day route and its night sibling. "Previous operator" walks the sorted award list to find the most recent earlier operator that genuinely differs from the current incumbent, so a route re-awarded twice to the same operator still shows its real predecessor.
-            </p>
-            <p class="cl-body-text">
-              <strong>Tender data pushed to Supabase</strong> with four derived columns on <code>public.tenders</code> (<code>propulsion_type</code>, <code>is_joint_bid</code>, <code>vehicles_basis</code>, <code>previous_operator</code>) and two on <code>public.tender_programme</code> (<code>propulsion_type</code>, <code>previous_operator</code>). All derivations run automatically in <code>push-to-supabase.js</code> from the existing notes / vehicle-type / award-date fields; <code>data/tender-overrides.json</code> applies any manual corrections.
-            </p>
-            <p class="cl-body-text">
-              <strong>Three pipeline short-circuits</strong> stop the weekly run from re-doing work upstream hasn't changed.
-              <code>fetch-data.js</code> lists S3, compares the latest ZIP date against <code>data/geometry-source.json::zipDate</code>, and skips the ~10 MB download + 700 file rewrites when unchanged (≈95% of weeks).
-              <code>fetch-route-performance.js</code> sends a <code>HEAD</code> first and skips the PDF parse if <code>Last-Modified</code> matches the cached <code>pdfModifiedAt</code> — the QSI PDF only republishes every ~4 weeks so most runs now exit in milliseconds.
-              <code>fetch-tender-programme.js</code> does a per-year <code>HEAD</code>; closed financial years are copied forward unchanged, dropping 10 PDF parses to 1 in steady state.
-              All three accept <code>--force</code> for manual re-runs.
-            </p>
-            <p class="cl-body-text">
-              <strong>Truthful nulls in the build.</strong> When a source file loads cleanly but a route has no entries, the build writes <code>null</code> instead of falling back to last-known-good — otherwise stale values persist forever. Last-known-good now only kicks in when the source file itself is missing (i.e. the upstream scrape failed).
-            </p>
-            <p class="cl-body-text">
-              <strong>About → Contributors.</strong> Daniel Plumb, Mark Leonard-Adoko, and Ross Levine added under the Developer section.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_7" class="cl-entry-title">Tender data on every route card</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs scraped weekly. Operator names roll up to parent groups (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).</li>
+              <li><span class="cl-tag cl-tag--perf">PERF</span> Three pipeline short-circuits (HEAD-first checks for the geometry ZIP, the QSI PDF, and the programme PDFs) cut weekly runtime by ~70 % when upstream data hasn't moved.</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.6 — Frequency rules, propulsion fix, headway tier-3 fallback
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.6</span> Apr 28, 2026</div>
-            <a href="#v2_6" class="cl-entry-title">Binary frequency rule, BZL→EV fix, and an automated tier-3 headway fallback</a>
-            <p class="cl-body-text">
-              <strong>Frequency is now a binary classification.</strong> A route is <em>High</em> if it operates 5 or more buses per hour (≤12 min headway), and <em>Low</em> otherwise. The old three-band scheme (Low / Regular / High at ≤6 / 7–15 / >15 min) is gone — across the bin function, the route-card KPI, the filter pills, the schema docs, and every data file. SL7 is manually pinned to High via <code>route-overrides.json</code> since its scraped 15-min headway would otherwise sort it Low.
-            </p>
-            <p class="cl-body-text">
-              <strong>Propulsion correction for 11 routes.</strong> Stagecoach London and Metroline encode their MCV eVoSeti EV buses with the fleet code <code>BZL</code> in <code>details.htm</code> (e.g. <code>BZL (dd) 10.9m/MCV 2D</code>). The body string alone has no EV marker and the prefix is stripped during cleanup, so the regex was defaulting to diesel. Adding <code>\bBZL\b</code> to the EV pattern correctly classifies <strong>D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487</strong> as Electric.
-            </p>
-            <p class="cl-body-text">
-              <strong>The pipeline now reads the headway columns straight from <code>details.htm</code>.</strong> A new <code>representativeHeadway()</code> in <code>fetch-route-details.js</code> parses the Mon-Sat / Sunday / evening cells (handling night-route layout where headways sit just before the date, and skipping school routes whose columns hold endpoint names instead of numbers). The value flows through <code>route_details.json</code> as <code>headwayMin</code> per route. <code>build-classifications.js</code> uses it as a <strong>tier-3 frequency fallback</strong> when TfL <code>/Line/&lt;id&gt;/Timetable</code> (tier 1) and <code>times/&lt;id&gt;.htm</code> (tier 2) both yield null — same ≤12 cutoff so the rule is identical across every tier. Every weekly refresh now reproduces the manual rebin automatically.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_6" class="cl-entry-title">Frequency rules &amp; propulsion fix</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Frequency band collapsed to binary: H = 5+ buses/hour, L = fewer.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> 11 routes (D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487) corrected from "diesel" to "electric" — <code>BZL</code> fleet code wasn't in the EV regex.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Tier-3 frequency fallback reads headways straight from <code>details.htm</code> when both TfL Timetable API and the per-route HTML grid yield null.</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.5 — Network Overview & operator / garage drawers
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.5</span> Apr 24, 2026</div>
-            <a href="#v2_5" class="cl-entry-title">A new Network Overview with operator and garage drawers</a>
-            <p class="cl-body-text">
-              The right-hand panel is now a proper <strong>Network Overview</strong>. Four KPI cards (Routes, Operators, Garages, PVR) sit above a per-operator breakdown with Routes %, PVR % and EV % — tap any row and the drawer slides in with routes, PVR, a PVR-weighted <strong>Fleet Mix</strong> stacked bar and the operator's garages. Each garage opens its own drawer with the same shape plus a <em>View all routes operated here</em> CTA that loads those routes onto the map and stacks route cards in the Routes tab.
-            </p>
-            <p class="cl-body-text">
-              <strong>XLSX export</strong> picked up a Fleet Mix block in the Network overview sheet — PVR-weighted propulsion split for the currently visible routes, matching what's on screen.
-            </p>
-            <p class="cl-body-text">
-              On the route card: a <strong>direction toggle</strong> in single-route mode flips outbound ⇄ inbound in place while the map re-renders in the new direction's colour. KPIs switched from Length to <strong>Stops</strong>, reading the pre-baked per-route count from <code>route_stops.json</code>.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_5" class="cl-entry-title">Network Overview &amp; operator / garage drawers</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Network Overview panel — KPI tiles (Routes / Operators / Garages / PVR), clickable per-operator table, PVR-weighted Fleet Mix.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Operator drawer (Routes operated · Garages · PVR · % of network) and Garage drawer with a "View all routes" CTA.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Global Clear-all button resets every filter, marker and search in one click.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> XLSX export gains a Fleet Mix block in the Network overview sheet.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Direction toggle on single-route cards (outbound ⇄ inbound).</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.4 — Stops baked in & bus-stop filter
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.4</span> Apr 23, 2026</div>
-            <a href="#v2_4" class="cl-entry-title">Bus-stop filter and a stops-first refresh</a>
-            <p class="cl-body-text">
-              New in the filters panel: a <strong>Bus stop</strong> search, right below Propulsion. Pick a stop and the visible route set narrows to only the routes serving it — composed with every other filter (operator, route type, frequency, deck, propulsion) as AND. So "Go-Ahead electric routes passing through Camden Town" is one click away.
-            </p>
-            <p class="cl-body-text">
-              Under the hood, <strong>stops are now pre-baked weekly</strong> instead of fetched live from TfL. A new pipeline step produces <code>data/stops.json</code> (every London bus stop, with a reverse <em>stop → routes</em> index) and <code>data/route_stops.json</code> (per-route ordered stop lists with the "Towards …" label). Opening a route is instant, and the app behaves the same whether TfL is reachable or not.
-            </p>
-            <p class="cl-body-text">
-              Also: CI Actions bumped to v5 (Node 24) to clear the Node 20 deprecation warning, and the refresh pipeline grew from 8 to 9 steps to fit the new stops fetch.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_4" class="cl-entry-title">Stops baked in, bus-stop filter</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Bus-stop filter — search any stop and filter the network to routes serving it.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Stops now baked weekly into <code>stops.json</code> + <code>route_stops.json</code> (no runtime TfL API calls for stop data).</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.2 — TfL-first data pipeline & accuracy overhaul
-               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.3</span> Apr 21, 2026</div>
+            <a href="#v2_3" class="cl-entry-title">Night-route frequencies &amp; pipeline slimming</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--fix">FIX</span> All 120 night routes now resolve a frequency band. TfL encodes after-midnight departures as hour ≥ 24; the previous code didn't wrap, so every night journey landed at 1400+ minutes.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Pipeline slimmed from 11 → 8 steps; removed unused outputs (route summary CSV, PVR aggregates JSON, stops GeoJSON).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Garage popup gains an Electrification row (% of garage's PVR run by electric routes).</li>
+            </ul>
+          </article>
+
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.2</span> Apr 17, 2026</div>
-            <a href="#v2_2" class="cl-entry-title">Accurate data: TfL-first pipeline with scrape fallbacks</a>
-            <p class="cl-body-text">
-              Every route's operator, garage, vehicle type, PVR, deck, propulsion and destinations are now <strong>verified against the TfL Unified API</strong>, correcting routes that had been mis-assigned (e.g. route 1 had been tagged as a tram). The pipeline puts TfL first and uses <a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a> and <a href="https://bustimes.org" target="_blank" rel="noopener">bustimes.org</a> only as fallbacks — TfL values are never overwritten by scraped ones.
-            </p>
-            <p class="cl-body-text">
-              New under the hood: numeric <strong>frequencies</strong> per peak band, a <strong>garages</strong> geodataset (postcodes.io geocoded), <strong>all London bus stops</strong>, and named bus / coach stations.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_2" class="cl-entry-title">TfL-first data pipeline</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--data">DATA</span> TfL Unified API as primary source for routes, destinations, timetables and stops. Scrapers fall back only when the API is sparse.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Per-route HTML grid fallback for frequency when the API is silent.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Multiple correctness improvements to operator and garage attribution.</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v2.0 — Operator garages, split filters, multi-sheet export
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.0</span> Apr 15, 2026</div>
-            <a href="#v2_0" class="cl-entry-title">Operator garages on the map and multi-sheet export</a>
-            <p class="cl-body-text">
-              <strong>Operator garages on the map.</strong> Every London bus garage is now plotted at its real address, colour-coded by operator's brand livery. Hover for address, operator, and how many routes run from there.
-            </p>
-            <p class="cl-body-text">
-              <strong>Filters split by concern.</strong> Route type / frequency / deck / propulsion / operator drive the route lines. A separate <em>Garage operator</em> filter drives the garage markers independently — so one operator's route network can be overlaid on a competitor's garage footprint.
-            </p>
-            <p class="cl-body-text">
-              <strong>Smarter data pipeline.</strong> Night-route data (N128, N29, N9, …) that was previously blank now inherits from the daytime sibling when <code>routes.htm</code> confirms a 24-hour service. Unknown-operator routes dropped from 71 to 37 in a single refresh.
-            </p>
-            <p class="cl-body-text">
-              <strong>Export</strong> now produces a single <code>.xlsx</code> workbook with three sheets — Routes, Garages, and a Network overview — each honouring the currently applied filters.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <a href="#v2_0" class="cl-entry-title">Operator garages, split filters, multi-sheet export</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Operator-coloured garage markers on the map.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Split filter design — Routes / Garages tabs in the sidebar.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> XLSX export with three sheets (Routes / Garages / Network overview).</li>
+            </ul>
           </article>
 
-          <!-- ═══════════════════════════════════════════════════════════════
-               v1.6 — Route classifications
-               ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
-            <div class="cl-date"><span class="cl-version">v1.6</span> Mar 03, 2026</div>
-            <a href="#v1_6" class="cl-entry-title">Route classifications and frequency filters</a>
-            <div class="cl-hero dark">
-              <div class="hero-mock">
-                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
-                <div class="hm-body">
-                  <div class="hm-side">
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 65%"></span></div>
-                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 55%"></span></div>
-                  </div>
-                  <div class="hm-main">
-                    <div class="hm-title" style="width: 30%"></div>
-                    <div class="hm-table">
-                      <div class="hm-row"></div>
-                      <div class="hm-row sel"></div>
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p class="cl-body-text">
-              Routes are now classified as <strong>Regular, Prefix, Night, School, or 24-hour</strong> — each rendered in its own hue on the map so the network reads at a glance. New sidebar filters let you narrow by service <strong>frequency</strong>, <strong>deck type</strong>, and <strong>propulsion</strong> (electric, hydrogen, hybrid, diesel).
-            </p>
-            <p class="cl-body-text">
-              Behind the scenes: a new weekly build step scrapes <code>londonbusroutes.net</code> for operational details (vehicle type, garage code, PVR, frequency bands) and merges them into the route dataset.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
-          </article>
-
-          <!-- ═══════════════════════════════════════════════════════════════
-               v1.4 — Multi-route compare
-               ═══════════════════════════════════════════════════════════════ -->
-          <article class="cl-entry">
-            <div class="cl-date"><span class="cl-version">v1.4</span> Jan 12, 2026</div>
-            <a href="#v1_4" class="cl-entry-title">Compare multiple routes on one map</a>
-            <div class="cl-hero">
-              <div class="hero-mock">
-                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
-                <div class="hm-body">
-                  <div class="hm-side">
-                    <div class="hm-si sel"><span class="d"></span><span class="l" style="width: 70%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 55%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 65%"></span></div>
-                  </div>
-                  <div class="hm-main">
-                    <div class="hm-title"></div>
-                    <div class="hm-cards">
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p class="cl-body-text">
-              Add multiple route numbers to the search to see them together. The selected routes render as dark-outlined coloured lines, with <strong>route-number labels</strong> pinned at each end, making it easy to compare corridors that serve the same neighbourhoods.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
-          </article>
-
-          <!-- ═══════════════════════════════════════════════════════════════
-               v1.2 — Filters and operator stats
-               ═══════════════════════════════════════════════════════════════ -->
-          <article class="cl-entry">
-            <div class="cl-date"><span class="cl-version">v1.2</span> Nov 18, 2025</div>
-            <a href="#v1_2" class="cl-entry-title">Operator filters and network stats</a>
-            <div class="cl-hero dark">
-              <div class="hero-mock">
-                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
-                <div class="hm-body">
-                  <div class="hm-side">
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 60%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 72%"></span></div>
-                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
-                  </div>
-                  <div class="hm-main">
-                    <div class="hm-title" style="width: 40%"></div>
-                    <div class="hm-table">
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                      <div class="hm-row sel"></div>
-                      <div class="hm-row"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p class="cl-body-text">
-              Chip-style <strong>operator filters</strong> (Arriva, First, Go-Ahead, Metroline, Stagecoach, Transport UK) let you isolate any operator's slice of the network. A new <strong>operator stats table</strong> in the sidebar shows per-operator share of routes, peak vehicle requirement, and electric-fleet percentage — recomputed live as you filter.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
-          </article>
-
-          <!-- ═══════════════════════════════════════════════════════════════
-               v1.0 — Initial launch
-               ═══════════════════════════════════════════════════════════════ -->
-          <article class="cl-entry">
-            <div class="cl-date"><span class="cl-version">v1.0</span> Sep 08, 2025</div>
-            <a href="#v1_0" class="cl-entry-title">Every London bus route on one map</a>
-            <div class="cl-hero">
-              <div class="hero-mock">
-                <div class="hm-bar"><span class="hm-dot"></span><span class="hm-dot"></span><span class="hm-dot"></span></div>
-                <div class="hm-body">
-                  <div class="hm-side">
-                    <div class="hm-si sel"><span class="d"></span><span class="l"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 62%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 48%"></span></div>
-                    <div class="hm-si"><span class="d"></span><span class="l" style="width: 70%"></span></div>
-                  </div>
-                  <div class="hm-main">
-                    <div class="hm-title" style="width: 55%"></div>
-                    <div class="hm-cards">
-                      <div class="hm-card hl"><div class="t"></div><div class="b"></div></div>
-                      <div class="hm-card"><div class="t"></div><div class="b"></div></div>
-                    </div>
-                    <div class="hm-table">
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                      <div class="hm-row"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p class="cl-body-text">
-              First public release. An interactive Leaflet map showing every TfL bus route in London, sourced from the <strong>TfL Unified API</strong> and the <strong>TfL Bus Open Data</strong> feed. Type a route number to highlight its path, view outbound / inbound endpoints, and see every stop it serves.
-            </p>
-            <p class="cl-body-text">
-              Launched with an automated <strong>weekly refresh pipeline</strong> so the network is always up to date, and deployed on Cloudflare Pages.
-            </p>
-            <div class="cl-authors">
-              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
-                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
-                Farhan
-              </a>
-            </div>
+            <div class="cl-date"><span class="cl-version">v1</span> Apr 13–14, 2026</div>
+            <a href="#v1" class="cl-entry-title">Foundation</a>
+            <p class="cl-body-text">The initial v1.0 → v1.8 series established the core map, data pipeline and route detail experience.</p>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Interactive map of every London bus route (~700) with route-type colouring.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Route search with autocomplete; click-map identify tool to find nearby routes.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Route detail panel — number, endpoints, stop count, direction toggle, operator, garage, vehicle type, deck, propulsion, frequency, length.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Filter system (route type, operator, deck, propulsion, frequency) with live filtering.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Multi-route selection via pill-based input; export filtered routes to CSV.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Per-operator statistics panel (Routes %, PVR %, EV %).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Manual override system (<code>data/route-overrides.json</code>) — any field can be hand-edited and wins over scraped data.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Weekly automated GitHub Actions pipeline; auto-deploys to Cloudflare Pages.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> API key moved to environment variables; modular module architecture.</li>
+            </ul>
           </article>
 
           <!-- Support CTA — tasteful, at the end of the release history -->

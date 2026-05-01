@@ -545,6 +545,11 @@ for (const file of routeFiles) {
     garageCode:  self?.garageCode  ?? alias?.garageCode  ?? null,
     pvr:         self?.pvr         ?? alias?.pvr         ?? null,
     headwayMin:  self?.headwayMin  ?? alias?.headwayMin  ?? null,
+    // Contract start date scraped directly from LBR's details.htm. Covers
+    // ~600 routes (vs ~277 from the LBSL programme PDFs alone). N-route
+    // rows in LBR show "See <day-route>" without their own date — the
+    // alias chain falls through to the daytime route's value.
+    contractStart: self?.contractStart ?? alias?.contractStart ?? null,
   };
   const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
@@ -713,11 +718,18 @@ for (const file of routeFiles) {
     // to the lastAwardDate→nextTenderStart gap (a reasonable approximation
     // since real bus contracts run 5y+optional-2y, capped 3-10 to filter out
     // anomalies).
-    // Contract start date — when the current contract began service. Joined
-    // from the tender programme (TfL's 13796 tender form has no
-    // contract_start column; the programme PDFs publish it for ~400 routes
-    // 2017+). NULL for routes whose current contract started pre-2017.
-    contractStartDate: override.contractStartDate ?? (programmeLoaded ? currentContractStart : (lastRec.contractStartDate ?? null)),
+    // Contract start date — when the current contract began service.
+    // Two-tier source chain:
+    //   1. LBR `details.htm` "Contract specification | date" column
+    //      (~600 routes covered; primary source).
+    //   2. LBSL tender programme PDFs (~277 routes; cross-validates
+    //      and fills any gaps LBR misses).
+    // The TfL tender form 13796.aspx itself has no contract-start column
+    // so neither source is the tender-result page.
+    contractStartDate: override.contractStartDate
+                    ?? details.contractStart
+                    ?? (programmeLoaded ? currentContractStart : null)
+                    ?? (lastRec.contractStartDate ?? null),
     contractTermYears: override.contractTermYears ?? (
       // Tier 1: explicit term in tender notes (rare, authoritative).
       (tendersLoaded ? deriveContractTermFromNotes(lastTender?.notes) : null) ??

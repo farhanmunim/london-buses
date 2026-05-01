@@ -194,6 +194,24 @@ function parseDetailsText(html) {
     return null;
   }
 
+  // Pull the contract-start date out of a row. LBR's column layout puts:
+  //   ... <Mon-Sat> <Sunday> <evening> <timetable date> <contract spec> <contract date>
+  // Where `contract spec` is "TQ N" / "See N" / similar, and `contract date`
+  // is the start date of the current contract (dd/mm/yy). For routes with
+  // only one date in the row (older contracts pre-current tracking), the
+  // single date is the timetable date — no contract date available, return
+  // null. Returns ISO yyyy-mm-dd or null.
+  function extractContractStart(line) {
+    const dates = [...line.matchAll(/\b(\d{2})\/(\d{2})\/(\d{2})\b/g)];
+    if (dates.length < 2) return null;
+    const [, dd, mm, yy] = dates[dates.length - 1];   // last date in the row
+    const day   = parseInt(dd, 10);
+    const month = parseInt(mm, 10);
+    const year  = 2000 + parseInt(yy, 10);            // LBR data is post-2000 only
+    if (!(month >= 1 && month <= 12) || !(day >= 1 && day <= 31)) return null;
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
   // Representative weekday headway for a row. Daytime routes carry it directly
   // in the Mon-Sat / Sunday / evening fixed-width columns. Night routes leave
   // those columns empty and put the night headways just before the date — fall
@@ -242,6 +260,7 @@ function parseDetailsText(html) {
         garageCodeFromDetails: /^[A-Z0-9]{1,4}$/.test(garageRaw) ? garageRaw : null,
         pvrFromDetails: Number.isFinite(pvrNum) ? pvrNum : null,
         headwayMinFromDetails: representativeHeadway(line),
+        contractStartFromDetails: extractContractStart(line),
       };
     }
   }
@@ -368,6 +387,10 @@ async function main() {
       // details.htm row. Used by build-classifications.js as a fallback
       // signal when TfL's published timetable yields no band.
       headwayMin:  v?.headwayMinFromDetails ?? null,
+      // Contract start date as ISO yyyy-mm-dd. LBR's details.htm publishes
+      // the current contract's start in the last column of every route row,
+      // covering routes the LBSL programme PDFs miss (~470 of 747).
+      contractStart: v?.contractStartFromDetails ?? null,
     };
     if (operator) operatorByRoute[id] = operator;
   }
