@@ -677,7 +677,12 @@ for (const file of routeFiles) {
     // four fall back to last-known-good when this run produced no observations
     // (e.g. TfL arrivals returned empty) so a flaky upstream doesn't wipe the
     // fields between runs.
-    make:            override.make            ?? fleetAgg?.make            ?? lastRec.make            ?? null,
+    //
+    // `make` precedence: override → DVLA observed → vehicle-lookup-implied
+    // (chassis manufacturer derived from the LBR vehicleType string) → last
+    // known good. The lookup fallback covers ~488 routes where DVLA didn't
+    // return observations because fleet samples were too sparse this week.
+    make:            override.make            ?? fleetAgg?.make            ?? fallback?.make            ?? lastRec.make            ?? null,
     vehicleAgeYears: override.vehicleAgeYears ?? fleetAgg?.vehicleAgeYears ?? lastRec.vehicleAgeYears ?? null,
     fleetSize:       override.fleetSize       ?? fleetAgg?.fleetSize       ?? lastRec.fleetSize       ?? null,
     // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
@@ -787,3 +792,49 @@ fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
 console.log(`Written: ${OUT_PATH}`);
 console.log('  Routes:', output.count);
 console.log('  Types:', counts);
+
+// ── Make / model alignment audit ────────────────────────────────────────────
+// Cross-check the DVLA-observed `make` against the vehicle-lookup's chassis
+// `make` (which comes from the LBR vehicleType string). Mismatches usually
+// mean either (a) sparse DVLA observations caught a loan-in bus, (b) the
+// route is mid-way through a fleet swap, or (c) the lookup is missing/wrong.
+// Surfaced as a build-log line + a diff written to data/source/ so the team
+// can investigate without grepping the whole classifications file.
+const audit = { aligned: [], mismatch: [], dvlaOnly: [], lookupOnly: [], neither: [] };
+for (const [id, r] of Object.entries(classifications)) {
+  // The build's `make` field prefers DVLA over lookup, so it matches both
+  // when both agree. To flag genuine drift we re-derive the DVLA-observed
+  // value (mode of `make` across this route's observed registrations) and
+  // compare it to the lookup-implied chassis manufacturer.
+  const norm = v => (v ? String(v).toUpperCase() : null);
+  const obs  = routeVehicles[id] ?? routeVehicles[id?.toUpperCase()] ?? [];
+  const dvlaCounts = {};
+  for (const entry of obs) {
+    const reg = (typeof entry === 'string' ? entry : entry?.reg)?.toUpperCase();
+    const m = norm(fleet[reg]?.make);
+    if (m) dvlaCounts[m] = (dvlaCounts[m] ?? 0) + 1;
+  }
+  let rd = null;
+  for (const [m, n] of Object.entries(dvlaCounts)) if (rd == null || n > dvlaCounts[rd]) rd = m;
+  const l = norm(vehicleLookup[r.vehicleType]?.make);
+  if (!rd && !l)        audit.neither.push(id);
+  else if (!rd)         audit.lookupOnly.push(id);
+  else if (!l)          audit.dvlaOnly.push({ id, dvla: rd });
+  else if (rd === l)    audit.aligned.push(id);
+  else                  audit.mismatch.push({ id, dvla: rd, lookup: l, model: r.vehicleType, fleetSize: r.fleetSize ?? 0 });
+}
+const auditOut = path.join(DATA_DIR, 'source', 'make-alignment.json');
+fs.mkdirSync(path.dirname(auditOut), { recursive: true });
+fs.writeFileSync(auditOut, JSON.stringify({
+  generatedAt: new Date().toISOString(),
+  summary: {
+    aligned:    audit.aligned.length,
+    mismatch:   audit.mismatch.length,
+    dvla_only:  audit.dvlaOnly.length,
+    lookup_only: audit.lookupOnly.length,
+    neither:    audit.neither.length,
+  },
+  mismatch: audit.mismatch,
+}, null, 2), 'utf8');
+console.log(`  Make alignment: aligned=${audit.aligned.length} mismatch=${audit.mismatch.length} dvla-only=${audit.dvlaOnly.length} lookup-only=${audit.lookupOnly.length} neither=${audit.neither.length}`);
+console.log(`  Mismatch detail: ${auditOut}`);
