@@ -1,12 +1,19 @@
 /**
  * export.js — XLSX export (topbar Export button).
  *
- * Three sheets, all honouring the current filter state:
+ * Four sheets, all honouring the current filter state:
  *   • Routes            — per-route data, full record (identity / service /
  *                         fleet / reliability / last tender / next tender)
  *   • Garages           — per-garage data (code, name, operator, address, …)
  *   • Network overview  — per-operator aggregates (share of routes, PVR, EV)
  *                         + PVR-weighted fleet mix
+ *   • Tenders           — every historical tender award (~2,500 since 2003)
+ *                         AND every upcoming-tender programme entry, in one
+ *                         sheet keyed by route + date with a `kind` column.
+ *                         Filtered to the visible routes.
+ *
+ * The Tenders sheet lazy-loads its source JSON only on Export click so an
+ * idle page load stays fast (the files together are ~1 MB).
  *
  * SheetJS is loaded via a <script defer> tag. If the user clicks before it
  * finishes downloading we surface a friendly "try again" message rather than
@@ -30,15 +37,24 @@ exportBtn?.addEventListener('click', async () => {
   // calls are O(1). Using Promise.all keeps the click → file gap under a
   // second on a warm cache and ~1-2 s on a cold one.
   const stopCounts = new Map();
-  await Promise.all([...routes.keys()].map(async (id) => {
-    try { stopCounts.set(id, await fetchRouteStopCount(id)); }
-    catch { stopCounts.set(id, null); }
-  }));
+  // Lazy-load tender + programme JSON in parallel with stop counts. Cached
+  // by the browser after the first export so subsequent clicks are instant.
+  const [_, tendersJson, programmeJson] = await Promise.all([
+    Promise.all([...routes.keys()].map(async (id) => {
+      try { stopCounts.set(id, await fetchRouteStopCount(id)); }
+      catch { stopCounts.set(id, null); }
+    })),
+    fetch('./data/source/tenders.json').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch('./data/source/tender-programme.json').then(r => r.ok ? r.json() : null).catch(() => null),
+  ]);
+
+  const visibleIds = new Set([...routes.keys()].map(s => String(s).toUpperCase()));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRouteRows(routes, stopCounts)), 'Routes');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildGarageRows()),                  'Garages');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildOverviewRows(routes)),          'Network overview');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRouteRows(routes, stopCounts)),                  'Routes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildGarageRows()),                                   'Garages');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildOverviewRows(routes)),                           'Network overview');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildTenderRows(tendersJson, programmeJson, visibleIds)), 'Tenders');
   XLSX.writeFile(wb, `london-buses-${new Date().toISOString().slice(0, 10)}.xlsx`);
 });
 
@@ -139,6 +155,113 @@ function buildGarageRows() {
       route_count: g.routeCount ?? 0,
       total_pvr:   pvrByGarage[g.code] ?? 0,
     }));
+}
+
+// Combined Tenders sheet — historical award rows + upcoming programme rows
+// in one stream, keyed by route. The `kind` column ('historical' / 'programme')
+// tells consumers which set a row belongs to; columns common to both (date,
+// operator, vehicle spec) are reused, columns specific to one stay blank for
+// the other. Sorted by route_id then by the row's primary date so a route's
+// full timeline reads top-to-bottom for analysts.
+//
+// Filter: only routes currently passing the page filter contribute. A
+// historical award keyed "341/N341" feeds rows for both 341 and N341 if
+// either is visible.
+function buildTenderRows(tendersJson, programmeJson, visibleIds) {
+  const rows = [];
+
+  // ── Historical awards ───────────────────────────────────────────────────
+  for (const [btId, t] of Object.entries(tendersJson?.tenders ?? {})) {
+    if (!t?.route_id) continue;
+    // route_id may be combined ("341/N341"); emit one row per id IF the id
+    // is in the visible set.
+    const ids = String(t.route_id).split('/').map(s => s.trim().toUpperCase()).filter(Boolean);
+    const matchedIds = ids.filter(id => visibleIds.has(id));
+    if (!matchedIds.length) continue;
+    for (const id of matchedIds) {
+      const wasJB = !!(t.joint_bids && t.joint_bids.trim().length > 5 && !/^N\/?A$/i.test(t.joint_bids.trim()));
+      rows.push({
+        route_id:               id,
+        kind:                   'historical',
+        date:                   str(t.award_announced_date),         // award announcement
+        contract_start_date:    '',                                  // not in tender form
+        operator:               str(t.awarded_operator),
+        bids_received:          num(t.number_of_tenderers),
+        accepted_bid_gbp:       num(t.accepted_bid),
+        lowest_bid_gbp:         num(t.lowest_bid),
+        highest_bid_gbp:        num(t.highest_bid),
+        cost_per_mile_gbp:      num(t.cost_per_mile),
+        was_joint_bid:          yesNo(wasJB),
+        joint_bid_partners:     str(wasJB ? t.joint_bids : ''),
+        reason_not_lowest:      str(t.reason_not_lowest),
+        notes:                  str(t.notes),
+        // Programme-only fields — blank for historical
+        programme_year:         '',
+        tranche:                '',
+        tender_issue_date:      '',
+        tender_return_date:     '',
+        award_estimated:        '',
+        vehicle_specification:  '',
+        two_year_extension:     '',
+        route_description:      '',
+        // Provenance
+        tfl_tender_id:          parseInt(btId, 10),
+        source_url:             str(t.source_url),
+      });
+    }
+  }
+
+  // ── Upcoming programme entries ──────────────────────────────────────────
+  for (const yr of (programmeJson?.years ?? [])) {
+    for (const e of (yr.entries ?? [])) {
+      if (!e?.route_id) continue;
+      const ids = String(e.route_id).split('/').map(s => s.trim().toUpperCase()).filter(Boolean);
+      const matchedIds = ids.filter(id => visibleIds.has(id));
+      if (!matchedIds.length) continue;
+      for (const id of matchedIds) {
+        rows.push({
+          route_id:               id,
+          kind:                   'programme',
+          // For programme rows the row's primary "date" column is the
+          // contract start (when the contract begins service); the explicit
+          // contract_start_date column carries the same value so the column
+          // semantics are unambiguous when sorting/filtering.
+          date:                   str(e.contract_start_date),
+          contract_start_date:    str(e.contract_start_date),
+          operator:               '',                                // not yet awarded
+          bids_received:          '',
+          accepted_bid_gbp:       '',
+          lowest_bid_gbp:         '',
+          highest_bid_gbp:        '',
+          cost_per_mile_gbp:      '',
+          was_joint_bid:          '',
+          joint_bid_partners:     '',
+          reason_not_lowest:      '',
+          notes:                  '',
+          // Programme-specific fields
+          programme_year:         str(e.programme_year),
+          tranche:                str(e.tranche),
+          tender_issue_date:      str(e.tender_issue_date),
+          tender_return_date:     str(e.tender_return_date),
+          award_estimated:        str(e.award_estimated),
+          vehicle_specification:  str(e.vehicle_type),
+          two_year_extension:     yesNo(!!e.two_year_extension),
+          route_description:      str(e.route_description),
+          tfl_tender_id:          '',
+          source_url:             str(e.source_url),
+        });
+      }
+    }
+  }
+
+  // Sort by route_id (numeric-aware) then by date so a single route's full
+  // timeline reads chronologically.
+  rows.sort((a, b) => {
+    const r = String(a.route_id).localeCompare(String(b.route_id), undefined, { numeric: true });
+    if (r !== 0) return r;
+    return String(a.date ?? '').localeCompare(String(b.date ?? ''));
+  });
+  return rows;
 }
 
 function buildOverviewRows(routes) {
