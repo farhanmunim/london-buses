@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.8</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.9</a>
 
       <div style="flex:1"></div>
 
@@ -76,6 +76,29 @@
           </header>
 
           <!-- ═══════════════════════════════════════════════════════════════
+               v2.9 — Full route-card record denormalised onto Supabase
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.9</span> May 1, 2026</div>
+            <a href="#v2_9" class="cl-entry-title">Full route-card record now lands on every weekly Supabase snapshot</a>
+            <p class="cl-body-text">
+              <strong>Migration <code>0009_route_snapshot_full_record.sql</code></strong> adds 20 columns to <code>route_snapshots</code> so each weekly row carries the full route-card record without needing JOINs to <code>tenders</code> / <code>tender_programme</code> / <code>route_performance</code> at query time. Three groups: reliability snapshot (<code>service_class</code>, <code>ewt_minutes</code>, <code>on_time_percent</code>, <code>perf_period</code>); last/current tender (<code>previous_operator</code>, <code>last_award_date</code>, <code>last_cost_per_mile</code>, <code>tender_award_count</code>, <code>number_of_tenderers</code>, <code>was_joint_bid</code>, <code>contract_term_years</code>, <code>awarded_propulsion</code>, <code>awarded_deck</code>, <code>prev_awarded_propulsion</code>, <code>prev_awarded_deck</code>); and next/upcoming tender (<code>next_tender_start</code>, <code>next_tender_year</code>, <code>extension_eligible</code>, <code>next_award_propulsion</code>, <code>next_award_deck</code>).
+            </p>
+            <p class="cl-body-text">
+              <strong><code>pushRouteSnapshots()</code> extended</strong> to write all 20 new columns from the existing <code>route_classifications.json</code> derivations — no new fetch step or schema work elsewhere. First push under 0009 populated 733/747 routes with award data, 665/747 with reliability data, 694/747 with contract length. Three new indexes (<code>service_class</code>, <code>previous_operator</code>, <code>last_award_date</code>) enable single-table trend queries — a "worst-performers-vs-MPS" board is now one <code>SELECT</code> with no JOINs.
+            </p>
+            <p class="cl-body-text">
+              <strong>Senior-engineer review</strong> confirmed the rest of the stack is structurally sound: 16-step orchestrator matches disk + npm scripts; soft-fail vs hard-fail correctly assigned; workflow secrets / permissions / force-add list aligned; build outputs healthy; frontend renders all tooltips with zero JS errors. Dead <code>TYPE_MAP</code> constant removed from <code>route-detail.js</code>.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
+
+          <!-- ═══════════════════════════════════════════════════════════════
                v2.8 — Per-route Minimum Performance Standards
                ═══════════════════════════════════════════════════════════════ -->
           <article class="cl-entry">
@@ -92,6 +115,12 @@
             </p>
             <p class="cl-body-text">
               <strong>Sticky-cache pipeline.</strong> MPS values are contract-defined and only move at tender renewal, so the cache uses a 28-day TTL plus per-route <code>Last-Modified</code> HEAD short-circuit. Cold-start week parses ~700 PDFs at 4 RPS (~3 min); steady-state weekly runs are mostly HEAD-only and finish in seconds. Per-run cap of 1,000, periodic flush every 50, SIGTERM-safe.
+            </p>
+            <p class="cl-body-text">
+              <strong>Route-card UX polish.</strong> Tender section restructured into <em>Current contract</em> / <em>Previous contract</em> (the <em>Next contract</em> block was removed since nothing in it has actually been awarded yet). Labels tightened: <em>Last awarded</em> → <em>Awarded on</em>, <em>Total awards</em> → <em>Times tendered</em>, <em>Vehicle make / Vehicle model</em> → <em>Make / Model</em>, <em>Contract term</em> → <em>Length</em>. Deck values render as DD / SD; the frequency tile shows just H / L. The route-type chip moved next to the route number and only renders for non-default classes (24h / Night / School / Prefix). A new <em>MPS</em> KPI tile sits next to EWT/OTP so contractual targets and actuals read side-by-side. Tender-history operator names roll up to the parent group (Docklands / Blue Triangle / Metrobus → Go-Ahead, Selkent / East London → Stagecoach, London United / Quality Line → RATP).
+            </p>
+            <p class="cl-body-text">
+              <strong>Custom hover tooltips</strong> on every route-card label (<code>js/tooltip.js</code>) replacing the native <code>title</code> tooltip so we control timing and look. Labels get a faint dashed underline as the "more info on hover" cue; the popup is a single shared element appended to <code>&lt;body&gt;</code>, position-tracked above its anchor with viewport-edge clamping and a 120 ms show delay. Tooltip copy is short <em>"&lt;metric&gt;, from &lt;source&gt;"</em> lines so each label answers what the value is and where it comes from at a glance.
             </p>
             <div class="cl-authors">
               <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">

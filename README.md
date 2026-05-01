@@ -39,6 +39,7 @@ Every fetcher self-throttles and persists its own freshness watermark, so the we
 
 - **Geometry ZIP** — list S3, compare ZIP date against `data/geometry-source.json::zipDate`; skip download + extract if unchanged (~95% of weeks)
 - **Route performance PDF** — `HEAD` first, compare `Last-Modified` against cached value; skip parse if unchanged (PDF only republishes every ~4 weeks)
+- **Per-route MPS PDFs** — per-route `HEAD` with 28-day TTL; cold-start week parses ~700 small PDFs, steady-state weeks are mostly HEAD-only and finish in seconds
 - **Tender programme PDFs** — per-year `HEAD`; skip closed financial years that haven't been re-published (drops the active year only in steady state)
 - **Vehicle fleet (DVLA)** — sticky 90-day TTL per registration; cap of 6,000 lookups/run
 - **Tender awards** — once cached, never re-fetched (awards are immutable); cap of 4,000 per run

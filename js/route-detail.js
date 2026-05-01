@@ -23,7 +23,6 @@ const FREQ_MAP  = { high: 'H', low: 'L' };
 // (e.g. "Electric (DD)" instead of "Electric (double)").
 const DECK_MAP  = { double: 'DD', single: 'SD' };
 const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid', diesel: 'Diesel' };
-const TYPE_MAP  = { regular: 'Regular', night: 'Night', twentyfour: '24 Hour', school: 'School', prefix: 'Prefix' };
 
 // Tooltip text per field — short, professional "what + source" lines.
 // Keyed by the value element's data-rc-* attribute (without the prefix).

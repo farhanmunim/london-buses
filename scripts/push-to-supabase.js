@@ -181,6 +181,33 @@ async function pushRouteSnapshots() {
     ewt_mps_minutes:     Number.isFinite(r.ewtMps)     ? r.ewtMps     : null,
     otp_mps_percent:     Number.isFinite(r.otpMps)     ? r.otpMps     : null,
     mileage_mps_percent: Number.isFinite(r.mileageMps) ? r.mileageMps : null,
+    // Reliability snapshot (denormalised from route_performance for clean
+    // per-week trend queries). Source-of-truth for the period history is
+    // still the route_performance table.
+    service_class:     r.serviceClass   ?? null,
+    ewt_minutes:       Number.isFinite(r.ewtMinutes)    ? r.ewtMinutes    : null,
+    on_time_percent:   Number.isFinite(r.onTimePercent) ? r.onTimePercent : null,
+    perf_period:       r.perfPeriod ?? null,
+    // Last (current) tender derivations — denormalised from tenders
+    // history so a snapshot row carries the full tender story without a
+    // multi-table JOIN at query time.
+    previous_operator:        r.previousOperator ?? null,
+    last_award_date:          r.lastAwardDate ?? null,
+    last_cost_per_mile:       Number.isFinite(r.lastCostPerMile)  ? r.lastCostPerMile : null,
+    tender_award_count:       Number.isFinite(r.tenderAwardCount) ? r.tenderAwardCount : null,
+    number_of_tenderers:      Number.isFinite(r.numberOfTenderers) ? r.numberOfTenderers : null,
+    was_joint_bid:            (typeof r.wasJointBid === 'boolean') ? r.wasJointBid : null,
+    contract_term_years:      Number.isFinite(r.contractTermYears) ? r.contractTermYears : null,
+    awarded_propulsion:       r.awardedPropulsion ?? null,
+    awarded_deck:             r.awardedDeck ?? null,
+    prev_awarded_propulsion:  r.prevAwardedPropulsion ?? null,
+    prev_awarded_deck:        r.prevAwardedDeck ?? null,
+    // Next (upcoming) tender derivations — denormalised from tender_programme.
+    next_tender_start:        r.nextTenderStart ?? null,
+    next_tender_year:         r.nextTenderYear ?? null,
+    extension_eligible:       (typeof r.extensionEligible === 'boolean') ? r.extensionEligible : null,
+    next_award_propulsion:    r.nextAwardPropulsion ?? null,
+    next_award_deck:          r.nextAwardDeck ?? null,
   }));
   await upsertInBatches('route_snapshots', rows, 'route_id,snapshot_date');
 }

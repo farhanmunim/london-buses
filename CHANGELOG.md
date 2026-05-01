@@ -10,6 +10,20 @@ All notable changes to **London Buses** are listed here.
 
 ---
 
+## v2.9 – Full route-card record denormalised onto Supabase
+
+_2026-05-01_
+
+- **Migration `0009_route_snapshot_full_record.sql`** adds 20 columns to `route_snapshots` so every weekly row carries the full route-card record without needing JOINs to `tenders` / `tender_programme` / `route_performance` at query time. Three logical groups:
+  - **Reliability snapshot** — `service_class`, `ewt_minutes`, `on_time_percent`, `perf_period` (denormalised from `route_performance`).
+  - **Last (current) tender** — `previous_operator`, `last_award_date`, `last_cost_per_mile`, `tender_award_count`, `number_of_tenderers`, `was_joint_bid`, `contract_term_years`, `awarded_propulsion`, `awarded_deck`, `prev_awarded_propulsion`, `prev_awarded_deck`.
+  - **Next (upcoming) tender** — `next_tender_start`, `next_tender_year`, `extension_eligible`, `next_award_propulsion`, `next_award_deck`.
+- **`pushRouteSnapshots()` extended** in `push-to-supabase.js` to write all 20 new columns from the existing `route_classifications.json` derivations — no extra fetch step or schema work elsewhere. First push under 0009 populated 733/747 with award data, 665/747 with reliability data, 694/747 with contract length, etc.
+- **Indexes added** for the trend queries this enables: `idx_snapshots_service_class`, `idx_snapshots_previous_op`, `idx_snapshots_last_award_date`. A "worst performers vs MPS" query is now a single-table `SELECT` with no JOINs.
+- **Senior-engineer pipeline review** confirmed the rest of the stack is structurally sound: 16-step orchestrator matches disk + npm scripts; soft-fail vs hard-fail correctly assigned; workflow secrets, permissions and force-add list all aligned; build outputs healthy; frontend renders 21/21 tooltips per card with zero JS errors. Dead `TYPE_MAP` constant removed from `route-detail.js`.
+
+---
+
 ## v2.8 – Per-route Minimum Performance Standards
 
 _2026-05-01_
@@ -19,6 +33,8 @@ _2026-05-01_
 - **Surfaced on the route card** in the *Tender · Current contract* section as **EWT standard / OTP standard / Mileage standard** rows, hidden when no MPS data. The Route-section EWT/OTP KPI tile also gets an inline `actual / standard` reading (e.g. `1.6 / 1.0`) so the user can read pass/fail at a glance.
 - **Pushed to Supabase** via migration `0008_route_mps.sql`: three new columns on `route_snapshots` (`ewt_mps_minutes`, `otp_mps_percent`, `mileage_mps_percent`) so trend queries can see the benchmark drift over time as contracts renew.
 - **Pipeline grew to 16 steps** (`refresh.js`) with `fetch-route-mps.js` slotted between QSI actuals and tender awards. Added to `package.json` scripts (`npm run fetch-route-mps`) and the workflow force-adds `data/source/route-mps.json` so the cache persists week-over-week.
+- **Route-card UX polish.** Tender section restructured into *Current contract* / *Previous contract* (the *Next contract* block was removed since nothing in it has actually been awarded yet). Labels tightened: *Last awarded* → *Awarded on*, *Total awards* → *Times tendered*, *Vehicle make / Vehicle model* → *Make / Model*, *Contract term* → *Length*. Deck values now render as *DD* / *SD*. Frequency tile shows just *H* / *L*. Route-type chip moved next to the route number and only renders for non-default classes (24h / Night / School / Prefix). New **MPS** KPI tile sits next to EWT/OTP so contractual targets and actuals read side-by-side. Tender-history operator names roll up to the parent group (Docklands / Blue Triangle / Metrobus → Go-Ahead, Selkent / East London → Stagecoach, London United / Quality Line → RATP, etc.).
+- **Custom hover tooltips** (`js/tooltip.js`) on every route-card label, replacing native `title` so we control timing and look. Each label gets a faint dashed underline (the standard "more info on hover" cue) plus a `cursor: help`; the popup is a single shared element appended to `<body>`, position-tracked above the anchor with viewport-edge clamping and a 120 ms show delay. Tooltip text is concise *"<metric>, from <source>"* lines (e.g. *"Manufacturer, from DVLA Vehicle Enquiry Service"*).
 
 ---
 

@@ -323,7 +323,7 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── about.js                     # About modal — injects HTML, traps focus, works on every page
 │   └── roadmap.js                   # Roadmap modal — same pattern; items defined as a plain array
 ├── scripts/
-│   ├── refresh.js                   # Orchestrator: runs all 15 pipeline steps in sequence
+│   ├── refresh.js                   # Orchestrator: runs all 16 pipeline steps in sequence
 │   ├── fetch-data.js                # Step 1 — geometry ZIP → per-route GeoJSON (TfL S3) — skip-if-unchanged via geometry-source.json::zipDate
 │   ├── fetch-route-destinations.js  # Step 2 — TfL /Line API → destinations {destination,qualifier,full} + scrape fallback
 │   ├── fetch-route-stops.js         # Step 3 — TfL StopPoint API → stops.json + route_stops.json
@@ -333,12 +333,13 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── fetch-vehicle-fleet.js       # Step 7 — iBus Vehicle.xml + DVLA VES → per-registration cache (sticky 90-day)
 │   ├── fetch-route-vehicles.js      # Step 8 — TfL /Line/<id>/Arrivals → per-route observed registrations (rolling 56-day TTL)
 │   ├── fetch-route-performance.js   # Step 9 — TfL QSI PDF (pdfjs-dist) → per-route EWT (high-freq) / OTP (low-freq) — skip-if-unchanged via Last-Modified
-│   ├── fetch-tenders.js             # Step 10 — TfL forms 13796.aspx?btID=… → ~2,500 historical tender awards (sticky cache; immutable)
-│   ├── fetch-tender-programme.js    # Step 11 — 10 LBSL programme PDFs → upcoming tender schedule (per-year skip-if-unchanged)
-│   ├── build-classifications.js     # Step 12 — merge all sources into per-route record (route_classifications.json)
-│   ├── build-overview.js            # Step 13 — simplified overview GeoJSON for the map layer
-│   ├── build-garage-locations.js    # Step 14 — legacy garage-locations.json for frontend (Photon-geocoded)
-│   ├── push-to-supabase.js          # Step 15 — mirror current state + tenders + programme into Supabase historical store
+│   ├── fetch-route-mps.js           # Step 10 — Per-route TfL QSI PDFs → contractual EWT/OTP/mileage Minimum Performance Standards (sticky 28-day cache, per-route HEAD short-circuit)
+│   ├── fetch-tenders.js             # Step 11 — TfL forms 13796.aspx?btID=… → ~2,500 historical tender awards (sticky cache; immutable)
+│   ├── fetch-tender-programme.js    # Step 12 — 10 LBSL programme PDFs → upcoming tender schedule (per-year skip-if-unchanged)
+│   ├── build-classifications.js     # Step 13 — merge all sources into per-route record (route_classifications.json)
+│   ├── build-overview.js            # Step 14 — simplified overview GeoJSON for the map layer
+│   ├── build-garage-locations.js    # Step 15 — legacy garage-locations.json for frontend (Photon-geocoded)
+│   ├── push-to-supabase.js          # Step 16 — mirror current state + tenders + programme + MPS into Supabase historical store
 │   └── update-vehicle-lookup.js     # Maintenance — adds new vehicle types to manual lookup
 ├── db/
 │   └── migrations/                  # Supabase schema migrations (paste into SQL Editor)
