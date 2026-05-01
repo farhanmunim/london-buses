@@ -1163,9 +1163,14 @@ html.changelog-page .topbar{position:sticky;top:0;z-index:40;flex-shrink:0}
 .cl-tag--ux  {background:rgba(168, 85,247,.12);color:#a855f7;border:1px solid rgba(168, 85,247,.25)}
 .cl-tag--perf{background:rgba(245,158, 11,.12);color:#f59e0b;border:1px solid rgba(245,158, 11,.25)}
 
-/* Tag legend at the top of the changelog — tiny single-line key. */
+/* Tag legend at the top of the changelog — tiny single-line key.
+   The legend sits between .cl-header and the first .cl-entry. We pull it
+   close to the subheading (lighter top spacing) and push the first article
+   further away (heavier bottom spacing) so the legend reads as part of the
+   header block rather than as an awkward middle section. */
+.cl-header:has(+ .cl-tag-legend){margin-bottom:18px}
 .cl-tag-legend{
-  font-size:12px;color:var(--mu);margin:0 0 32px;
+  font-size:12px;color:var(--mu);margin:0 0 64px;
   display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.8;
 }
 .cl-tag-legend strong{color:var(--tx);margin-right:4px}
