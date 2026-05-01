@@ -23,6 +23,7 @@
 import { getVisibleRouteProps, getVisibleGarages } from './map.js';
 import { state, exportBtn } from './state.js';
 import { fetchRouteStopCount } from './api.js';
+import { getPinnedRouteIds } from './search.js';
 
 // Threshold above which we warn the user before assembling a full-network
 // export. Filtered exports usually return well under this, and skip the
@@ -35,14 +36,45 @@ exportBtn?.addEventListener('click', async () => {
     alert('Export library still loading — try again in a moment.');
     return;
   }
-  const routes = getVisibleRouteProps();
+
+  // Selection precedence: searched routes (pinned in the topbar) take over
+  // and become the export set, so typing "25, 30, 100" + Export gives those
+  // three routes only — even if other filters would otherwise admit more.
+  // When no pills are active we fall back to the filter-derived view.
+  const pinnedIds = getPinnedRouteIds();
+  let routes = getVisibleRouteProps();
+  if (pinnedIds.size) {
+    const restricted = new Map();
+    for (const id of pinnedIds) {
+      if (routes.has(id)) {
+        restricted.set(id, routes.get(id));
+      } else {
+        // Pinned but currently hidden by other filters — synthesise an
+        // overview-shaped props record from classifications so buildRouteRows
+        // sees consistent fields. Pin overrides filter exclusion.
+        const cls = state.classifications?.[id];
+        if (!cls) continue;
+        restricted.set(id, {
+          routeId:    id,
+          routeType:  cls.type ?? null,
+          isPrefix:   !!cls.isPrefix,
+          lengthBand: cls.lengthBand ?? null,
+          deck:       cls.deck ?? null,
+          frequency:  cls.frequency ?? null,
+          operator:   cls.operator ?? null,
+          propulsion: cls.propulsion ?? null,
+        });
+      }
+    }
+    routes = restricted;
+  }
   if (!routes.size) return;
 
   // Heads-up for large exports — full-network exports add ~3,400 tender
   // rows on top of the route/garage data and take a few seconds to
   // assemble. The confirm dialog only fires above the threshold; a tightly
-  // filtered selection (typical use case) goes straight through.
-  if (routes.size >= LARGE_EXPORT_THRESHOLD) {
+  // filtered selection (or any pinned-route selection) goes straight through.
+  if (!pinnedIds.size && routes.size >= LARGE_EXPORT_THRESHOLD) {
     const ok = confirm(
       `You're exporting ${routes.size} routes with no filters applied.\n\n` +
       `This includes the full historical tender history (~3,400 rows) and may take a few seconds to download.\n\n` +
@@ -66,6 +98,13 @@ exportBtn?.addEventListener('click', async () => {
 });
 
 async function runExport(routes) {
+  // When the user has pinned specific routes via the topbar search, every
+  // sheet should reflect that selection — including Garages (only the
+  // garage(s) running the pinned routes) and Tenders (only those routes'
+  // history). Visibility-by-pin is detected by comparing the routes Map
+  // size to the underlying overview's full count.
+  const pinned = getPinnedRouteIds();
+  const pinnedRouteIds = pinned.size ? new Set([...routes.keys()]) : null;
   // Pre-resolve per-route stop counts so the Routes sheet can include them.
   // First call warms the route_stops bundle (~1.3 MB gzipped); subsequent
   // calls are O(1). Using Promise.all keeps the click → file gap under a
@@ -85,10 +124,10 @@ async function runExport(routes) {
   const visibleIds = new Set([...routes.keys()].map(s => String(s).toUpperCase()));
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRouteRows(routes, stopCounts)),                  'Routes');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildGarageRows()),                                   'Garages');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildOverviewRows(routes)),                           'Network overview');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildTenderRows(tendersJson, programmeJson, visibleIds)), 'Tenders');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildRouteRows(routes, stopCounts)),                       'Routes');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildGarageRows(pinnedRouteIds)),                          'Garages');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildOverviewRows(routes)),                                'Network overview');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildTenderRows(tendersJson, programmeJson, visibleIds)),  'Tenders');
   XLSX.writeFile(wb, `london-buses-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 
@@ -166,18 +205,27 @@ function buildRouteRows(routes, stopCounts) {
     });
 }
 
-function buildGarageRows() {
+function buildGarageRows(pinnedRouteIds) {
   // Pre-index PVR by garage code so we can attach each garage's contracted
   // PVR (sum of every route assigned to it). PVR is per-route in the
   // classifications, not per-garage, so it has to be aggregated here.
+  // When pinned routes are passed in, the PVR sum and route_count restrict
+  // to just those routes, and the garage list filters to garages running
+  // at least one pinned route.
   const pvrByGarage = {};
-  for (const cls of Object.values(state.classifications ?? {})) {
+  const pinnedRoutesByGarage = {};
+  for (const [routeId, cls] of Object.entries(state.classifications ?? {})) {
     const code = cls.garageCode;
-    if (!code || !Number.isFinite(cls.pvr)) continue;
-    pvrByGarage[code] = (pvrByGarage[code] ?? 0) + cls.pvr;
+    if (!code) continue;
+    if (pinnedRouteIds && !pinnedRouteIds.has(String(routeId).toUpperCase())) continue;
+    if (Number.isFinite(cls.pvr)) {
+      pvrByGarage[code] = (pvrByGarage[code] ?? 0) + cls.pvr;
+    }
+    pinnedRoutesByGarage[code] = (pinnedRoutesByGarage[code] ?? 0) + 1;
   }
 
   return getVisibleGarages()
+    .filter(g => !pinnedRouteIds || pinnedRoutesByGarage[g.code])
     .sort((a, b) => (a.code ?? '').localeCompare(b.code ?? ''))
     .map(g => ({
       garage_code: g.code,
@@ -186,7 +234,7 @@ function buildGarageRows() {
       address:     g.address  ?? '',
       latitude:    g.lat,
       longitude:   g.lon,
-      route_count: g.routeCount ?? 0,
+      route_count: pinnedRouteIds ? (pinnedRoutesByGarage[g.code] ?? 0) : (g.routeCount ?? 0),
       total_pvr:   pvrByGarage[g.code] ?? 0,
     }));
 }

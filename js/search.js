@@ -36,6 +36,14 @@ import {
 const pillIds = new Set();
 let _acIndex = -1; // autocomplete highlight index
 
+/** Snapshot of the current search pills. Returned as a fresh Set so callers
+ *  can iterate without risking mutation of the live set. Empty when no
+ *  routes are pinned. Read by export.js to restrict the workbook to the
+ *  user's pinned selection (overrides the broader filter-derived view). */
+export function getPinnedRouteIds() {
+  return new Set(pillIds);
+}
+
 const autocompleteList   = document.getElementById('globalAutocomplete');
 const routeAutocomplete  = document.getElementById('routeAutocomplete');
 const clearRouteSearch   = document.getElementById('clearRouteSearch');
