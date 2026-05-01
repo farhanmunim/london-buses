@@ -876,8 +876,8 @@ a{color:inherit;text-decoration:none}
   padding:8px 10px;border-radius:6px;font-size:13px;line-height:1.45;color:var(--tx);
 }
 .credits-list li:hover{background:var(--surf2)}
-.credits-list a{color:var(--tx);text-decoration:none;border-bottom:1px dashed var(--bd2);font-weight:500}
-.credits-list a:hover{color:var(--blue);border-bottom-color:var(--blue)}
+.credits-list a{color:var(--tx);font-weight:500;text-decoration:underline dashed var(--bd2);text-underline-offset:3px}
+.credits-list a:hover{color:var(--blue);text-decoration-color:var(--blue)}
 .credits-plain{color:var(--tx);font-family:var(--font-mono);font-size:11.5px}
 .credits-note{color:var(--mu);font-size:11.5px;text-align:left}
 .credits-list--inline li{flex-direction:row;justify-content:space-between;align-items:baseline;gap:16px}
@@ -1009,8 +1009,7 @@ body.changelog-page html{height:auto}
   color:var(--mu)!important;
   line-height:1.2!important;
 }
-.ov-ops thead th:not(:first-child),
-.roadmap thead th:not(:first-child){text-align:right!important}
+.ov-ops thead th:not(:first-child){text-align:right!important}
 
 /* .rp-tabs-top is a no-op — left in place as a stable selector on the
    markup in case we ever want to shift the right-panel tabs independently. */
@@ -1483,8 +1482,8 @@ html.changelog-page .topbar{position:sticky;top:0;z-index:40;flex-shrink:0}
   font-size:var(--fs-sm);line-height:1.45;color:var(--text-1);
 }
 .credits-list li:hover{background:var(--muted-bg)}
-.credits-list a{color:var(--text-1);text-decoration:none;border-bottom:1px dashed var(--border-2);font-weight:500}
-.credits-list a:hover{color:hsl(var(--info));border-bottom-color:hsl(var(--info))}
+.credits-list a{color:var(--text-1);font-weight:500;text-decoration:underline dashed var(--border-2);text-underline-offset:3px}
+.credits-list a:hover{color:hsl(var(--info));text-decoration-color:hsl(var(--info))}
 .credits-plain{color:var(--text-1);font-family:var(--font-mono);font-size:var(--fs-xs)}
 .credits-note{color:var(--text-3);font-size:var(--fs-xs);text-align:left}
 .credits-list--inline li{flex-direction:row;justify-content:space-between;align-items:baseline;gap:var(--sp-4)}
