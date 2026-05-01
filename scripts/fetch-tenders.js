@@ -32,6 +32,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeText } from './_lib/sanitize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -159,18 +160,22 @@ function parseTenderHtml(html, btId) {
     if (label) rows[label] = value;
   }
 
+  // Defence-in-depth: every freeform field from the TfL form passes through
+  // sanitizeText so any embedded HTML / control chars / oversized payloads
+  // never reach the JSON cache. Numeric / known-shape fields skip this
+  // (parseMoney etc. already enforce shape).
   return {
-    route_id:               routeId,
+    route_id:               sanitizeText(routeId, { maxLen: 64 }),
     award_announced_date:   awardDate,
-    awarded_operator:       rowByPrefix(rows, 'Successful Tenderer'),
+    awarded_operator:       sanitizeText(rowByPrefix(rows, 'Successful Tenderer'),         { maxLen: 200 }),
     number_of_tenderers:    parseTenderersCount(rowByPrefix(rows, 'Number of Tenderers')),
     accepted_bid:           parseMoney(rowByPrefix(rows, 'Accepted Bid')),
     lowest_bid:             parseMoney(rowByPrefix(rows, 'Lowest Individual Compliant Bid')),
     highest_bid:            parseMoney(rowByPrefix(rows, 'Highest Individual Compliant Bid')),
     cost_per_mile:          parseMoney(rowByPrefix(rows, 'Cost per live mile')),
-    reason_not_lowest:      rowByPrefix(rows, 'Reason for not awarding'),
-    joint_bids:             rowByPrefix(rows, 'Joint Bids'),
-    notes:                  rowByPrefix(rows, 'Notes'),
+    reason_not_lowest:      sanitizeText(rowByPrefix(rows, 'Reason for not awarding'),     { maxLen: 1000 }),
+    joint_bids:             sanitizeText(rowByPrefix(rows, 'Joint Bids'),                  { maxLen: 1000 }),
+    notes:                  sanitizeText(rowByPrefix(rows, 'Notes'),                       { maxLen: 2000 }),
     source_url:             RESULT_URL(btId),
     scraped_at:             new Date().toISOString(),
   };

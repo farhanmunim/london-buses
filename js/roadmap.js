@@ -10,7 +10,7 @@
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
     { title: 'Route tender details',
-      desc:  'Previous operator, contract value (£/mile) and next-tender date on every route card. Historical awards (~2,500) and the upcoming LBSL tendering programme parsed weekly.',
+      desc:  'Previous operator, contract value (£/mile) and next-tender date on every route card. Historical awards (~2,500) and the upcoming LBSL tendering programme refreshed weekly.',
       stage: 'shipped' },
     { title: 'Analytics',
       desc:  'A dedicated analytics page reading from the Supabase historical store. Trend charts for fleet age, electrification, operator share, EWT/OTP movement around tender events, and per-route operator churn.',

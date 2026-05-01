@@ -1,3 +1,4 @@
+import { sanitizeRecord } from './_lib/sanitize.js';
 /**
  * fetch-route-details.js — Per-route supplementary data
  *
@@ -405,7 +406,7 @@ async function main() {
     operatorByRouteBustimes: {},
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output)), 'utf8');
   console.log(`Wrote: ${OUT_PATH}`);
   console.log(`  Routes: ${output.routeCount}`);
   // Spot-check

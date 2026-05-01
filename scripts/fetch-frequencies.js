@@ -1,3 +1,4 @@
+import { sanitizeRecord } from './_lib/sanitize.js';
 /**
  * fetch-frequencies.js — Per-route frequency-band cache
  *
@@ -278,7 +279,7 @@ async function main() {
   const sorted = {};
   for (const k of Object.keys(out).sort()) sorted[k] = out[k];
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(sorted), 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(sorted)), 'utf8');
   console.log(`Wrote ${Object.keys(sorted).length} routes to ${OUT_PATH}`);
 }
 

@@ -19,6 +19,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR  = path.join(__dirname, '..', 'data');
@@ -76,7 +77,7 @@ const output = {
   garages,
 };
 
-fs.writeFileSync(OUT_PATH, JSON.stringify(output, null, 2) + '\n', 'utf8');
+fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output), null, 2) + '\n', 'utf8');
 console.log(`Wrote ${output.count} garages → ${path.relative(process.cwd(), OUT_PATH)}`);
 if (skipped) console.log(`  (skipped ${skipped} features without a garage code)`);
 

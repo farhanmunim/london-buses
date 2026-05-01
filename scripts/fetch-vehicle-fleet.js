@@ -1,3 +1,4 @@
+import { sanitizeRecord } from './_lib/sanitize.js';
 /**
  * fetch-vehicle-fleet.js — Per-vehicle fleet metadata cache
  *
@@ -206,7 +207,7 @@ function flushCache(cache, ibusBaseVersion) {
   // Atomic-ish write: write to .tmp, rename. Avoids a torn cache file if the
   // process is killed mid-write (e.g. CI timeout, Ctrl-C).
   const tmp = OUT_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(tmp, JSON.stringify(sanitizeRecord(output)), 'utf8');
   fs.renameSync(tmp, OUT_PATH);
 }
 

@@ -40,6 +40,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const ROOT       = path.resolve(__dirname, '..');
@@ -788,7 +789,12 @@ const output = {
   routes:      classifications,
 };
 
-fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
+// Defence-in-depth: every string field passes through sanitizeRecord at the
+// write boundary so the committed `route_classifications.json` (the file the
+// frontend consumes) can never carry hostile markup, control chars, or
+// pathological strings — even if a new upstream source is added later
+// without remembering to sanitise at its own scrape point.
+fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output)), 'utf8');
 console.log(`Written: ${OUT_PATH}`);
 console.log('  Routes:', output.count);
 console.log('  Types:', counts);

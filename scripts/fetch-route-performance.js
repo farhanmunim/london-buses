@@ -36,6 +36,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -312,7 +313,7 @@ async function main() {
     routeCount:     Object.keys(routes).length,
     routes,
   };
-  fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output)), 'utf8');
   console.log(`Wrote ${OUT_PATH}`);
 }
 

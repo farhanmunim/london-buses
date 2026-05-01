@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.9</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.8</a>
 
       <div style="flex:1"></div>
 
@@ -84,22 +84,18 @@
           </p>
 
           <article class="cl-entry">
-            <div class="cl-date"><span class="cl-version">v2.9</span> May 1, 2026</div>
-            <a href="#v2_9" class="cl-entry-title">Contract start dates &amp; cost-per-mile fix</a>
-            <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered). Sourced from londonbusroutes.net <code>details.htm</code>, with the LBSL programme PDFs as backup.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Cost-per-mile parser misread European decimal commas (<code>6,25</code> was becoming <code>625</code>). 3 historical awards corrected.</li>
-              <li><span class="cl-tag cl-tag--ux">UX</span> Joint bid row now always shows Yes / No (was hidden when "No").</li>
-            </ul>
-          </article>
-
-          <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>
-            <a href="#v2_8" class="cl-entry-title">Per-route Minimum Performance Standards</a>
+            <a href="#v2_8" class="cl-entry-title">MPS standards, contract start dates, ingress sanitisation</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, scraped from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %.</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> "MPS" KPI tile next to actual EWT / OTP so contract-vs-actual reads at a glance.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %. New "MPS" KPI tile next to the actual EWT / OTP so contract-vs-actual reads at a glance.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered). Sourced from londonbusroutes.net <code>details.htm</code>, with the LBSL programme PDFs as backup.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream, keyed by route + date with a <code>kind</code> column.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Search pills in the topbar now drive the export — typing <code>25, 30, 100</code> + Export emits a workbook restricted to those routes (Garages and Tenders sheets follow the same selection).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Build-time make/model alignment audit. Cross-checks DVLA-observed manufacturer against the lookup's chassis make for every route; logs a summary line and writes <code>data/source/make-alignment.json</code>.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Defence-in-depth ingress sanitisation — new <code>_lib/sanitize.js</code> strips HTML tags, control characters and oversized payloads from every freeform string before it lands in the JSON cache. Wired into all 11 fetchers and the build steps.</li>
               <li><span class="cl-tag cl-tag--data">DATA</span> New <code>fetch-route-mps.js</code> step in the weekly pipeline (now 16 steps).</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Cost-per-mile reader was misreading European decimal commas (<code>6,25</code> was becoming <code>625</code>). 3 historical awards corrected.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Joint bid row now always shows Yes / No (was hidden when "No"). Tender section restructured into Current / Previous; tooltip system rolled out across every route-card label.</li>
             </ul>
           </article>
 
@@ -109,7 +105,7 @@
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs scraped weekly. Operator names roll up to parent groups (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly. Operator names roll up to parent groups (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).</li>
               <li><span class="cl-tag cl-tag--perf">PERF</span> Three pipeline short-circuits (HEAD-first checks for the geometry ZIP, the QSI PDF, and the programme PDFs) cut weekly runtime by ~70 % when upstream data hasn't moved.</li>
             </ul>
           </article>
@@ -159,7 +155,7 @@
             <div class="cl-date"><span class="cl-version">v2.2</span> Apr 17, 2026</div>
             <a href="#v2_2" class="cl-entry-title">TfL-first data pipeline</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--data">DATA</span> TfL Unified API as primary source for routes, destinations, timetables and stops. Scrapers fall back only when the API is sparse.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> TfL Unified API as primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Per-route HTML grid fallback for frequency when the API is silent.</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> Multiple correctness improvements to operator and garage attribution.</li>
             </ul>
@@ -186,7 +182,7 @@
               <li><span class="cl-tag cl-tag--new">NEW</span> Filter system (route type, operator, deck, propulsion, frequency) with live filtering.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Multi-route selection via pill-based input; export filtered routes to CSV.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Per-operator statistics panel (Routes %, PVR %, EV %).</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> Manual override system (<code>data/route-overrides.json</code>) — any field can be hand-edited and wins over scraped data.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Manual override system (<code>data/route-overrides.json</code>) — any field can be hand-edited and wins over data.</li>
               <li><span class="cl-tag cl-tag--data">DATA</span> Weekly automated GitHub Actions pipeline; auto-deploys to Cloudflare Pages.</li>
               <li><span class="cl-tag cl-tag--data">DATA</span> API key moved to environment variables; modular module architecture.</li>
             </ul>

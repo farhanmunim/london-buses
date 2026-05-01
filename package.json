@@ -1,6 +1,6 @@
 {
   "name": "tfl-bus-map",
-  "version": "2.9.0",
+  "version": "2.8.0",
   "description": "Interactive London bus route map — farhan.app",
   "type": "module",
   "scripts": {

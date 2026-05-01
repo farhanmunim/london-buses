@@ -38,6 +38,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -337,7 +338,7 @@ async function main() {
   out.totalEntries = totalEntries;
   out.yearsWithData = yearsWithData;
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(out), 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(out)), 'utf8');
   console.log(`\nWrote ${totalEntries} entries across ${yearsWithData} years to ${OUT_PATH}`);
 }
 

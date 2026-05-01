@@ -12,6 +12,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROUTES_DIR = path.resolve(__dirname, '../data/routes');
@@ -135,7 +136,10 @@ const output = {
   features,
 };
 
-fs.writeFileSync(OUT_FILE, JSON.stringify(output), 'utf8');
+// Defence-in-depth: sanitise every string property in the GeoJSON feature
+// collection before writing the public artefact (operator names, route IDs,
+// any future feature-property additions).
+fs.writeFileSync(OUT_FILE, JSON.stringify(sanitizeRecord(output)), 'utf8');
 
 const DATA_DIR = path.resolve(__dirname, '../data');
 const buildAt  = new Date().toISOString();

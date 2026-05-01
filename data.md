@@ -180,7 +180,30 @@ All skip-capable scripts accept `--force` to bypass the cache and re-fetch. `npm
 
 ---
 
-## 5. Known traps
+## 5. Data hygiene & ingress sanitisation
+
+We scrape from external sources (TfL forms, londonbusroutes.net, bustimes.org, DVLA, postcodes.io, TfL PDFs). The scraped strings flow through to public artefacts (`route_classifications.json`, `routes-overview.geojson`) and into the XLSX export. **Defence-in-depth policy: every freeform string is sanitised before it lands in a JSON cache.**
+
+**Helper:** [`scripts/_lib/sanitize.js`](scripts/_lib/sanitize.js) exports two functions:
+- `sanitizeText(value, opts)` — strips every HTML tag, every C0 control character (except `\n` and `\t`), decodes the named/numeric HTML entities the scrapers see in practice, normalises whitespace, and caps the result at `maxLen` (default 4000 chars).
+- `sanitizeRecord(value, opts)` — recursively applies `sanitizeText` to every string leaf of an object or array. Used at the JSON-write boundary so structured records get sanitised in one call.
+
+**Applied at two layers:**
+1. **Ingress** — every `fetch-*.js` script either sanitises individual fields as it parses (e.g. `fetch-tenders.js` wraps the freeform `notes` / `joint_bids`) or passes its full output through `sanitizeRecord` at the `JSON.stringify` site. Cached files in `data/source/*.json` are guaranteed clean.
+2. **Build-step output** — `build-classifications.js`, `build-overview.js`, and `build-garage-locations.js` re-sanitise their outputs at the public-artefact write site. So even if a future upstream is added to the pipeline without remembering to sanitise at its own ingress, the public files stay safe.
+
+**What this guards against:**
+- HTML/script injection from any upstream that becomes hostile (TfL form notes, LBR garage names, scraped PDFs).
+- Control-character pollution (NUL bytes, BEL, etc.) that could break downstream tools.
+- Pathological-length strings being committed to git via the weekly refresh.
+
+**What this is NOT:**
+- A replacement for frontend HTML escaping. The frontend already uses an `escapeHtml()` helper at every `innerHTML` site that interpolates data; the sanitiser is an additional layer at the data-flow boundary.
+- A full HTML parser. The output of `sanitizeText` is plain text, not HTML — by design.
+
+---
+
+## 6. Known traps
 
 - **Routes 700–799** — coach / excluded from geometry ZIP. No classification entry.
 - **Route 969** — TfL Line endpoint returns nothing. Hard-coded in `fetch-route-destinations.js`.
@@ -196,7 +219,7 @@ All skip-capable scripts accept `--force` to bypass the cache and re-fetch. `npm
 
 ---
 
-## 6. Hosting & platform limits
+## 7. Hosting & platform limits
 
 | Dimension | Limit | Headroom today |
 |---|---|---|

@@ -1,3 +1,4 @@
+import { sanitizeRecord } from './_lib/sanitize.js';
 /**
  * fetch-route-destinations.js — Passenger-facing destination cache (TfL API)
  *
@@ -255,7 +256,7 @@ async function main() {
     routes: sorted,
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(payload), null, 2) + '\n', 'utf8');
   console.log(`Wrote ${Object.keys(sorted).length} route destinations to ${OUT_PATH}`);
 }
 

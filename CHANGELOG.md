@@ -12,23 +12,19 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source 
 
 ---
 
-## v2.9 — Contract start dates & cost-per-mile fix
+## v2.8 — MPS standards, contract start dates, ingress sanitisation
 
 _2026-05-01_
 
+- **NEW** Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %. New "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.
 - **NEW** Contract start date on the route card (~700 / 747 routes covered). Sourced from londonbusroutes.net `details.htm`, with the LBSL programme PDFs as backup.
-- **FIX** Cost-per-mile parser misread European decimal commas (`6,25` was becoming `625`). 3 historical awards corrected.
-- **UX** Joint bid row now always shows Yes / No (was hidden when "No").
-
----
-
-## v2.8 — Per-route Minimum Performance Standards
-
-_2026-05-01_
-
-- **NEW** Contractual EWT / OTP / Mileage standards per route, scraped from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %.
-- **NEW** "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.
-- **DATA** New `fetch-route-mps.js` step in the weekly pipeline (now 16 steps).
+- **NEW** Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream, keyed by route + date with a `kind` column. Rows filter to the search-pinned routes when set.
+- **NEW** Search pills in the topbar now drive the export — typing `25, 30, 100` and pressing Export emits a workbook restricted to those routes (Garages and Tenders sheets follow the same selection).
+- **NEW** Build-time make/model alignment audit. Cross-checks DVLA-observed manufacturer against the lookup's chassis make for every route; logs a summary line and writes `data/source/make-alignment.json` with the per-route diff. Vehicle lookup expanded with verified `make` for every entry.
+- **DATA** Defence-in-depth ingress sanitisation. New `scripts/_lib/sanitize.js` strips HTML tags, control characters and oversized payloads from every freeform string before it lands in the JSON cache. Wired into all 11 fetchers and all build-step writers, so the public artefacts can never carry hostile markup even if an upstream source changes shape.
+- **DATA** New `fetch-route-mps.js` step in the weekly pipeline (now 16 steps). Migration `0008_route_mps.sql` adds the MPS columns to `route_snapshots`.
+- **FIX** Cost-per-mile reader was misreading European decimal commas (`6,25` was becoming `625`). 3 historical awards corrected; manual override added for the one TfL-side typo we can't auto-correct.
+- **UX** Joint bid row now always shows Yes / No (was previously hidden when "No"). Tender section restructured into Current / Previous; tooltip system rolled out across every route-card label.
 
 ---
 
@@ -38,7 +34,7 @@ _2026-04-30_
 
 - **NEW** Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.
 - **NEW** Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.
-- **DATA** ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs scraped weekly. Tender-history operator names now roll up to the parent group (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).
+- **DATA** ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly. Tender-history operator names now roll up to the parent group (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).
 - **PERF** Three pipeline short-circuits (`HEAD`-first checks for the geometry ZIP, the QSI PDF, and the programme PDFs) cut weekly runtime by ~70 % when upstream data hasn't moved.
 
 ---
@@ -88,7 +84,7 @@ _2026-04-21_
 
 _2026-04-17_
 
-- **DATA** TfL Unified API as primary source for routes, destinations, timetables and stops. Scrapers fall back only when the API is sparse.
+- **DATA** TfL Unified API as primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.
 - **NEW** Per-route HTML grid fallback for frequency when the API is silent.
 - **FIX** Multiple correctness improvements to operator and garage attribution.
 
@@ -116,6 +112,6 @@ The initial v1.0 → v1.8 series established the core map, data pipeline and rou
 - **NEW** Filter system (route type, operator, deck, propulsion, frequency) with live filtering.
 - **NEW** Multi-route selection via pill-based input; export filtered routes to CSV.
 - **NEW** Per-operator statistics panel (Routes %, PVR %, EV %).
-- **NEW** Manual override system (`data/route-overrides.json`) — any field can be hand-edited and wins over scraped data.
+- **NEW** Manual override system (`data/route-overrides.json`) — any field can be hand-edited and wins over data.
 - **DATA** Weekly automated GitHub Actions pipeline; auto-deploys to Cloudflare Pages.
 - **DATA** API key moved to environment variables; modular module architecture.

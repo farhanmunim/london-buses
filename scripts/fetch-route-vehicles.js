@@ -1,3 +1,4 @@
+import { sanitizeRecord } from './_lib/sanitize.js';
 /**
  * fetch-route-vehicles.js — Per-route vehicle observations from TfL arrivals
  *
@@ -157,7 +158,7 @@ async function main() {
     routes:             routesOut,
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output)), 'utf8');
   console.log(`Wrote vehicle observations for ${output.routeCount} routes to ${OUT_PATH}`);
 }
 

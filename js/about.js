@@ -41,7 +41,7 @@
             <li><a href="https://api.tfl.gov.uk" target="_blank" rel="noopener">TfL Unified API</a><span class="credits-note">route list · destinations · bus stops · named bus/coach stations · timetable headways — Powered by TfL Open Data; contains OS data © Crown copyright &amp; database rights 2016</span></li>
             <li><a href="https://bus.data.tfl.gov.uk" target="_blank" rel="noopener">TfL Bus Open Data (S3)</a><span class="credits-note">weekly detailed route geometry (Route_Geometry ZIP)</span></li>
             <li><a href="http://www.londonbusroutes.net" target="_blank" rel="noopener">londonbusroutes.net</a><span class="credits-note">authoritative vehicle type · PVR · operator / garage assignment · garage CSV · used only as fallback for routes TfL omits</span></li>
-            <li><a href="https://bustimes.org/regions/L" target="_blank" rel="noopener">bustimes.org</a><span class="credits-note">timetable + destination scrape fallback for the handful of routes absent from TfL</span></li>
+            <li><a href="https://bustimes.org/regions/L" target="_blank" rel="noopener">bustimes.org</a><span class="credits-note">timetable + destination fallback for the handful of routes absent from TfL</span></li>
             <li><a href="https://postcodes.io" target="_blank" rel="noopener">postcodes.io</a><span class="credits-note">bulk postcode → lat/lon geocoding for garages (ONS data · OGL v3)</span></li>
             <li><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a><span class="credits-note">legacy garage-locations geocoder (OpenStreetMap-backed)</span></li>
           </ul>

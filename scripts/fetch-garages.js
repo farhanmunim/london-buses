@@ -15,6 +15,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -235,7 +236,12 @@ async function main() {
     },
     features,
   };
-  fs.writeFileSync(OUT_PATH, JSON.stringify(payload), 'utf8');
+  // Defence-in-depth: walk every string in the payload and sanitise (strip
+  // tags / control chars / cap length) before writing. The CSV cells from
+  // londonbusroutes.net are already plain text, but this guarantees that
+  // any future format change can never inject hostile markup into the
+  // committed JSON.
+  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(payload, { maxLen: 500 })), 'utf8');
   console.log(`Wrote ${features.length} garage features to ${OUT_PATH}`);
 }
 

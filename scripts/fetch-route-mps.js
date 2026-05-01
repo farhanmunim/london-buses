@@ -38,6 +38,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { sanitizeRecord } from './_lib/sanitize.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
@@ -211,7 +212,7 @@ function flushCache(cache, fetchedThisRun, errored) {
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   const tmp = OUT_PATH + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(output), 'utf8');
+  fs.writeFileSync(tmp, JSON.stringify(sanitizeRecord(output)), 'utf8');
   fs.renameSync(tmp, OUT_PATH);
 }
 
