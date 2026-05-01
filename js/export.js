@@ -24,6 +24,12 @@ import { getVisibleRouteProps, getVisibleGarages } from './map.js';
 import { state, exportBtn } from './state.js';
 import { fetchRouteStopCount } from './api.js';
 
+// Threshold above which we warn the user before assembling a full-network
+// export. Filtered exports usually return well under this, and skip the
+// confirm dialog. Set just below the typical full count (~750 routes) so a
+// "few hundred operator-filtered" export still skips the prompt.
+const LARGE_EXPORT_THRESHOLD = 250;
+
 exportBtn?.addEventListener('click', async () => {
   if (typeof XLSX === 'undefined') {
     alert('Export library still loading — try again in a moment.');
@@ -32,6 +38,34 @@ exportBtn?.addEventListener('click', async () => {
   const routes = getVisibleRouteProps();
   if (!routes.size) return;
 
+  // Heads-up for large exports — full-network exports add ~3,400 tender
+  // rows on top of the route/garage data and take a few seconds to
+  // assemble. The confirm dialog only fires above the threshold; a tightly
+  // filtered selection (typical use case) goes straight through.
+  if (routes.size >= LARGE_EXPORT_THRESHOLD) {
+    const ok = confirm(
+      `You're exporting ${routes.size} routes with no filters applied.\n\n` +
+      `This includes the full historical tender history (~3,400 rows) and may take a few seconds to download.\n\n` +
+      `Continue?`
+    );
+    if (!ok) return;
+  }
+
+  // Visual feedback while the workbook assembles. Disabling the button
+  // also prevents double-click duplicate exports.
+  const originalLabel = exportBtn.textContent;
+  exportBtn.disabled  = true;
+  exportBtn.textContent = 'Preparing…';
+
+  try {
+    await runExport(routes);
+  } finally {
+    exportBtn.disabled  = false;
+    exportBtn.textContent = originalLabel;
+  }
+});
+
+async function runExport(routes) {
   // Pre-resolve per-route stop counts so the Routes sheet can include them.
   // First call warms the route_stops bundle (~1.3 MB gzipped); subsequent
   // calls are O(1). Using Promise.all keeps the click → file gap under a
@@ -56,7 +90,7 @@ exportBtn?.addEventListener('click', async () => {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildOverviewRows(routes)),                           'Network overview');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildTenderRows(tendersJson, programmeJson, visibleIds)), 'Tenders');
   XLSX.writeFile(wb, `london-buses-${new Date().toISOString().slice(0, 10)}.xlsx`);
-});
+}
 
 // Helpers — keep formatting consistent across the sheet so a downstream
 // pivot or sort behaves predictably.
