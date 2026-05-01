@@ -219,6 +219,20 @@ if (Object.keys(routePerf).length) {
   console.log(`Loaded route performance for ${Object.keys(routePerf).length} routes (${routePerfPeriod ?? 'unknown period'})`);
 }
 
+// Per-route Minimum Performance Standards (contractual benchmarks). Values
+// vary per route (EL2 high-freq EWT 0.70 vs route 122 high-freq EWT 1.20)
+// because each tender contract sets its own threshold. The card surfaces
+// these alongside the actuals in the Tender · Current contract section.
+const routeMpsPath = path.join(DATA_DIR, 'source', 'route-mps.json');
+const routeMpsFile = fs.existsSync(routeMpsPath)
+  ? JSON.parse(fs.readFileSync(routeMpsPath, 'utf8'))
+  : { routes: {} };
+const routeMps = routeMpsFile.routes ?? {};
+if (Object.keys(routeMps).length) {
+  const ok = Object.values(routeMps).filter(r => r.status === 200).length;
+  console.log(`Loaded route MPS for ${ok} routes`);
+}
+
 // ── Tender award enrichment ─────────────────────────────────────────────────
 // Joins data/source/tenders.json (every historical tender award keyed by btID)
 // to per-route fields surfaced on the route card:
@@ -370,6 +384,30 @@ function deriveContractTermFromDates(lastAwardIso, nextStartIso) {
   // surface as "12 year contract" on the route card.
   if (yrs < 3 || yrs > 10) return null;
   return Math.round(yrs);
+}
+
+// Contract length inferred from the route's own award history — median gap
+// between consecutive award_announced_dates. Strong signal because each
+// route's contracts have been re-tendered at consistent intervals (5y or
+// 5+2 historically, 7y post-2020). Coverage: ~99% of routes (any with
+// 2+ awards on file). Same 3-10y plausibility clamp.
+function deriveContractTermFromHistory(history) {
+  if (!Array.isArray(history) || history.length < 2) return null;
+  const dates = history.map(t => t.award_announced_date).filter(Boolean).sort();
+  if (dates.length < 2) return null;
+  const gaps = [];
+  for (let i = 1; i < dates.length; i++) {
+    const a = Date.parse(dates[i - 1]);
+    const b = Date.parse(dates[i]);
+    if (Number.isFinite(a) && Number.isFinite(b) && b > a) {
+      gaps.push((b - a) / (365.25 * 86_400_000));
+    }
+  }
+  if (!gaps.length) return null;
+  gaps.sort((a, b) => a - b);
+  const med = gaps[Math.floor(gaps.length / 2)];
+  if (med < 3 || med > 10) return null;
+  return Math.round(med);
 }
 
 function modeOf(counts) {
@@ -575,6 +613,7 @@ for (const file of routeFiles) {
   // because the PDF only updates every ~4 weeks — between releases the value
   // is the same as last run, so preserving the previous reading is correct.
   const perf = routePerf[routeId] ?? null;
+  const mps  = (routeMps[routeId]?.status === 200) ? routeMps[routeId] : null;
 
   // Tender history lookup. routeId is upper-case here, matching the keys in
   // tendersByRoute / programmeByRoute. N-route fallback: an N-prefixed route
@@ -616,10 +655,16 @@ for (const file of routeFiles) {
     // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
     // populated depending on serviceClass. perfPeriod tells the UI which TfL
     // reporting period the figure covers.
-    serviceClass:    perf?.service_class   ?? lastRec.serviceClass    ?? null,
+    serviceClass:    perf?.service_class   ?? mps?.service_class      ?? lastRec.serviceClass    ?? null,
     ewtMinutes:      perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null,
     onTimePercent:   perf?.on_time_percent ?? lastRec.onTimePercent   ?? null,
     perfPeriod:      (perf ? routePerfPeriod : null) ?? lastRec.perfPeriod ?? null,
+    // Per-route Minimum Performance Standards (the contractual benchmark
+    // each route is graded against). Set per tender, vary route-by-route
+    // even within the same service class.
+    ewtMps:          override.ewtMps     ?? mps?.ewt_mps_minutes      ?? lastRec.ewtMps     ?? null,
+    otpMps:          override.otpMps     ?? mps?.otp_mps_percent      ?? lastRec.otpMps     ?? null,
+    mileageMps:      override.mileageMps ?? mps?.mileage_mps_percent  ?? lastRec.mileageMps ?? null,
     // Tender enrichment — only fall back to last-known-good when the *source
     // file* didn't load (so a missing tenders.json or programme.json after a
     // failed fetch doesn't wipe the card). When the source loaded but a
@@ -646,8 +691,15 @@ for (const file of routeFiles) {
     // since real bus contracts run 5y+optional-2y, capped 3-10 to filter out
     // anomalies).
     contractTermYears: override.contractTermYears ?? (
+      // Tier 1: explicit term in tender notes (rare, authoritative).
       (tendersLoaded ? deriveContractTermFromNotes(lastTender?.notes) : null) ??
+      // Tier 2: gap between this award and the upcoming programme contract
+      // start (only when both are known).
       (tendersLoaded && programmeLoaded ? deriveContractTermFromDates(lastTender?.award_announced_date, nextProgramme?.contract_start_date) : null) ??
+      // Tier 3: median inter-award gap from the route's own history
+      // (~99% coverage; strong signal since each route's tenders have
+      // historically re-cycled at consistent intervals).
+      (tendersLoaded ? deriveContractTermFromHistory(tenderHistory) : null) ??
       (lastRec.contractTermYears ?? null)
     ),
     // Awarded vehicle spec — parsed from the most recent tender's notes.

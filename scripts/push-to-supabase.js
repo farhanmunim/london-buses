@@ -176,6 +176,11 @@ async function pushRouteSnapshots() {
     pvr:               Number.isFinite(r.pvr) ? r.pvr : null,
     frequency:         r.frequency ?? null,
     stop_count:        Number.isFinite(stopCounts[routeId]) ? stopCounts[routeId] : null,
+    // Contractual Minimum Performance Standards (per route, from the
+    // per-route TfL QSI PDFs — vary route-by-route within a service class).
+    ewt_mps_minutes:     Number.isFinite(r.ewtMps)     ? r.ewtMps     : null,
+    otp_mps_percent:     Number.isFinite(r.otpMps)     ? r.otpMps     : null,
+    mileage_mps_percent: Number.isFinite(r.mileageMps) ? r.mileageMps : null,
   }));
   await upsertInBatches('route_snapshots', rows, 'route_id,snapshot_date');
 }

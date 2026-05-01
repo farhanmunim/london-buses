@@ -13,16 +13,72 @@
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
 
-// Frequency label matches the filter pill vocabulary — High / Regular / Low
-// rather than raw headway bands so "Freq" reads the same way everywhere the
-// user sees it (filter pill, route card KPI).
-const FREQ_MAP  = { high: 'High', low: 'Low' };
+// Frequency label — the underlying classification is binary high/low, but
+// in the narrow Freq KPI tile we render just the initial (H / L) so the
+// value visually matches the compact treatment of EWT / OTP / PVR / Stops.
+// The full word is still used in filter pills and tooltips elsewhere.
+const FREQ_MAP  = { high: 'H', low: 'L' };
 // Deck rendered as the standard industry abbreviations — saves horizontal
 // space on the small Fleet rows and the composite "Awarded vehicle" cell
 // (e.g. "Electric (DD)" instead of "Electric (double)").
 const DECK_MAP  = { double: 'DD', single: 'SD' };
 const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid', diesel: 'Diesel' };
 const TYPE_MAP  = { regular: 'Regular', night: 'Night', twentyfour: '24 Hour', school: 'School', prefix: 'Prefix' };
+
+// Tooltip text per field — short, professional "what + source" lines.
+// Keyed by the value element's data-rc-* attribute (without the prefix).
+// The dynamic perf / MPS tiles flip their tip text alongside their label
+// (EWT vs OTP) and are wired separately in buildCard's reliability block.
+const TIPS = {
+  // Route KPI tiles
+  pvr:             'Peak Vehicle Requirement, from londonbusroutes.net',
+  stops:           'Stop count, from TfL StopPoint API',
+  freq:            'Frequency band, from TfL Timetable API. H = 5 or more buses per hour, L = fewer',
+  // Route detail rows
+  garage:          'Operating garage, from londonbusroutes.net',
+  // Fleet rows
+  deck:            'Deck type, from londonbusroutes.net',
+  propulsion:      'Propulsion type, from DVLA Vehicle Enquiry Service cross-referenced with TfL iBus',
+  'vehicle-make':  'Manufacturer, from DVLA Vehicle Enquiry Service',
+  'vehicle-model': 'Vehicle model (chassis and body), from londonbusroutes.net',
+  age:             'Mean age of buses observed on the route, from DVLA first-registration dates',
+  // Tender · Current contract rows
+  'last-award':    'Award date of the current contract, from TfL tender results',
+  term:            'Contract length, from tender notes where stated, otherwise inferred from historical award gaps',
+  'award-count':   'Number of recorded tender awards since 2003, from TfL tender results',
+  bids:            'Number of operators that bid for the current contract, from TfL tender results',
+  joint:           'Whether the current contract was tendered as part of a joint bid, from TfL tender results',
+  'awarded-veh':   'Vehicle specification required by the contract, parsed from TfL tender notes',
+  value:           'Cost per live mile of the accepted bid, from TfL tender results',
+  'mil-mps':       'Contractual minimum mileage operated, from TfL per-route QSI report',
+  // Tender · Previous contract rows
+  previous:        'Operator before the current incumbent, derived from TfL tender history',
+  'prev-veh':      'Vehicle specification required by the previous contract, parsed from TfL tender notes',
+};
+
+// Walk the TIPS map and attach `data-tip` attributes to each row's label.
+// `js/tooltip.js` is the listener that turns these into a custom-styled
+// hover popup; using `data-tip` (not the native `title`) lets us control
+// timing and look. Pseudo-element ⓘ glyph (CSS) advertises availability.
+function attachTooltips(card) {
+  for (const [key, tip] of Object.entries(TIPS)) {
+    const valueEl = card.querySelector(`[data-rc-${key}]`);
+    if (!valueEl) continue;
+    const labelEl = valueEl.parentElement?.querySelector('.rc-tr-l, .rc-kpi-l');
+    if (labelEl) labelEl.dataset.tip = tip;
+  }
+}
+
+// Chip text per route type. Regular routes are the silent default — every
+// other classification (night, 24-hour, school, letter-prefix) gets a chip
+// so the user can read the route's category at a glance regardless of how
+// "obvious" the prefix or numbering already makes it.
+const TYPE_CHIP = {
+  night:      'Night',
+  twentyfour: '24h',
+  school:     'School',
+  prefix:     'Prefix',
+};
 
 const OPERATOR_COLORS = {
   'Arriva':            '#2563eb',
@@ -49,36 +105,63 @@ const OPERATOR_SHORT = {
   'RATP Dev':          'RATP',
 };
 
-// Tender-history operators — historical TfL tender data carries subsidiary
-// names (Arriva London North, First London East, Abellio West London, …)
-// that should fold into the parent brand for display, while genuinely
-// distinct historical brands (Tower Transit, Selkent, London Sovereign,
-// Blue Triangle, Docklands Buses, …) stay as-is so the predecessor reads
-// as a meaningful contractor rather than an over-collapsed "Stagecoach".
-// Order matters: longest prefix first so "Arriva London North" beats "Arriva".
+// Tender-history operator → parent group rollup. The TfL tender form
+// carries decades of subsidiary brands and historical names that have
+// since been acquired or merged into a handful of UK groups. Surfacing
+// the parent group rather than the legacy brand makes "Previous operator"
+// directly comparable to the current incumbent shown elsewhere on the card.
+//
+// Three lookup tiers, in order:
+//   1. TENDER_OP_GROUP — exact match for legacy brands now under a parent
+//      (Selkent → Stagecoach, Metrobus → Go-Ahead, London United → RATP, …).
+//   2. TENDER_OP_PREFIXES — prefix match for subsidiary names
+//      (Arriva London North → Arriva, First London East → First, …).
+//   3. OPERATOR_SHORT — current-incumbent display aliases (above).
+//
+// Brands that never were part of a group, or are themselves the group
+// label, fall through unchanged (Tower Transit, CT Plus, HCT Group,
+// Sullivan Buses, NCP, TGM, Uno).
+const TENDER_OP_GROUP = {
+  // Go-Ahead family
+  'London General':       'Go-Ahead',
+  'London Central':       'Go-Ahead',
+  'Blue Triangle':        'Go-Ahead',
+  'Docklands Buses':      'Go-Ahead',
+  'Metrobus':             'Go-Ahead',
+  'East Thames Buses':    'Go-Ahead',
+  'East Thames':          'Go-Ahead',
+  // Stagecoach family
+  'Selkent':              'Stagecoach',
+  'East London':          'Stagecoach',
+  // RATP family
+  'London United':        'RATP',
+  'London Sovereign':     'RATP',
+  'Sovereign':            'RATP',
+  'Quality Line':         'RATP',
+  'NSL':                  'RATP',
+  // First family (CentreWest was acquired by First in 1997)
+  'CentreWest':           'First',
+  // Abellio family (Travel London was rebranded to Abellio)
+  'Travel London':        'Abellio',
+  // Naming canonicalisation
+  'National Car Parks':   'NCP',
+};
+// Order matters: longest prefix first so "Arriva London North" matches
+// before the bare "Arriva ".
 const TENDER_OP_PREFIXES = [
-  ['Arriva London',    'Arriva'],
-  ['Arriva Kent',      'Arriva'],
-  ['Arriva The Shires','Arriva'],
-  ['Arriva the Shires','Arriva'],
-  ['Abellio London',   'Abellio'],
-  ['Abellio West',     'Abellio'],
-  ['Stagecoach East',  'Stagecoach'],
-  ['Stagecoach Selkent','Stagecoach'],
-  ['Stagecoach London','Stagecoach'],
-  ['First London',     'First'],
-  ['First CentreWest', 'First'],
-  ['First Capital',    'First'],
-  ['Metroline West',   'Metroline'],
-  ['Metroline Travel', 'Metroline'],
-  ['Go-Ahead London',  'Go-Ahead'],
+  ['Arriva ',          'Arriva'],
+  ['Abellio ',         'Abellio'],
+  ['Stagecoach ',      'Stagecoach'],
+  ['First ',           'First'],
+  ['Metroline ',       'Metroline'],
+  ['Go-Ahead ',        'Go-Ahead'],
 ];
 function normaliseTenderOperator(name) {
   if (!name) return name;
+  if (TENDER_OP_GROUP[name]) return TENDER_OP_GROUP[name];
   for (const [prefix, brand] of TENDER_OP_PREFIXES) {
     if (name.startsWith(prefix)) return brand;
   }
-  // Existing OPERATOR_SHORT covers current-incumbent labels.
   return OPERATOR_SHORT[name] ?? name;
 }
 
@@ -159,11 +242,15 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
     opEl.style.background = OPERATOR_COLORS[op] ?? '#64748b';
   }
 
-  // Prefix is a sub-classification of regular in the dataset (isPrefix=true on
-  // letter-prefixed routes like EL1, W7). Surface it as its own Type value
-  // since that's how the sidebar filters it.
-  const typeKey = classification?.isPrefix ? 'prefix' : (classification?.type ?? '');
-  set('[data-rc-type]',       TYPE_MAP[typeKey] ?? 'XXX');
+  // Type chip — only for 24-hour and school. Regular / night / prefix are
+  // already self-evident from the route number itself.
+  const typeKey  = classification?.isPrefix ? 'prefix' : (classification?.type ?? '');
+  const chipText = TYPE_CHIP[typeKey];
+  const chipEl   = node.querySelector('[data-rc-type]');
+  if (chipEl) {
+    if (chipText) { chipEl.textContent = chipText; chipEl.hidden = false; }
+    else          { chipEl.textContent = '';      chipEl.hidden = true;  }
+  }
   set('[data-rc-pvr]',        classification?.pvr ?? 'XXX');
   set('[data-rc-stops]',      Number.isFinite(stopCount) ? stopCount.toLocaleString() : '—');
   set('[data-rc-freq]',       FREQ_MAP[classification?.frequency]  ?? 'XXX');
@@ -189,33 +276,64 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const age = classification?.vehicleAgeYears;
   set('[data-rc-age]', Number.isFinite(age) ? `${age.toFixed(1)} years` : 'XXX');
 
-  // Reliability — exactly one of (EWT, OTP) is populated per route depending
-  // on serviceClass. Label swaps with the metric so the user always sees the
-  // right vocabulary ("EWT 1.6 min" for high-freq, "On time 80%" for low-freq).
-  const perfL = node.querySelector('[data-rc-perf-l]');
-  const sc    = classification?.serviceClass;
-  const ewt   = classification?.ewtMinutes;
-  const otp   = classification?.onTimePercent;
-  if (sc === 'high-frequency' && Number.isFinite(ewt)) {
-    if (perfL) perfL.textContent = 'Excess wait time';
-    set('[data-rc-perf]', `${ewt.toFixed(1)} min`);
-  } else if (sc === 'low-frequency' && Number.isFinite(otp)) {
-    if (perfL) perfL.textContent = 'On-time performance';
-    set('[data-rc-perf]', `${otp.toFixed(0)}%`);
+  // Reliability KPIs — paired tiles in the Route section. The first tile
+  // shows the actual measurement (EWT for high-freq, OTP for low-freq);
+  // the second shows the contractual minimum performance standard for the
+  // same metric. Splitting them keeps each tile readable on a narrow card
+  // while still letting the eye compare actual vs standard side-by-side.
+  // Both labels swap together so the user always knows which metric is
+  // being shown (EWT/EWT-MPS vs OTP/OTP-MPS).
+  const perfL    = node.querySelector('[data-rc-perf-l]');
+  const perfMpsL = node.querySelector('[data-rc-perf-mps-l]');
+  const sc       = classification?.serviceClass;
+  const ewt      = classification?.ewtMinutes;
+  const otp      = classification?.onTimePercent;
+  const ewtMps   = classification?.ewtMps;
+  const otpMps   = classification?.otpMps;
+  // Tile 1 = actual measurement (EWT / OTP). Tile 2 = the contractual
+  // Minimum Performance Standard for the same metric. Labels and tooltips
+  // both swap together so the metric is unambiguous regardless of class.
+  const TIP_EWT     = 'Excess Wait Time in minutes, from TfL QSI report';
+  const TIP_OTP     = 'On-Time Performance, from TfL QSI report';
+  const TIP_EWT_MPS = 'Contractual EWT minimum, from TfL per-route QSI report';
+  const TIP_OTP_MPS = 'Contractual OTP minimum, from TfL per-route QSI report';
+  if (sc === 'high-frequency') {
+    if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
+    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
+    set('[data-rc-perf]',     Number.isFinite(ewt)    ? ewt.toFixed(1)    : '—');
+    set('[data-rc-perf-mps]', Number.isFinite(ewtMps) && ewtMps > 0 ? ewtMps.toFixed(1) : '—');
+  } else if (sc === 'low-frequency') {
+    if (perfL)    { perfL.textContent    = 'OTP'; perfL.dataset.tip    = TIP_OTP; }
+    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_OTP_MPS; }
+    set('[data-rc-perf]',     Number.isFinite(otp)    ? `${otp.toFixed(0)}%` : '—');
+    set('[data-rc-perf-mps]', Number.isFinite(otpMps) && otpMps > 0 ? `${otpMps.toFixed(0)}%` : '—');
   } else {
-    if (perfL) perfL.textContent = 'Reliability';
-    set('[data-rc-perf]', 'XXX');
+    if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
+    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
+    set('[data-rc-perf]',     '—');
+    set('[data-rc-perf-mps]', '—');
   }
 
-  // Last awarded — when the most recent tender on this route was decided.
+  // Awarded on — when the most recent tender on this route was decided.
   const lastAwd = classification?.lastAwardDate;
   set('[data-rc-last-award]', lastAwd ? formatHumanDate(lastAwd) : 'XXX');
 
-  // Awards on record — total number of historical TfL tenders we've seen for
-  // this route. Stability signal (one award since 2003 = incumbent-dominated;
-  // 5+ awards = competitive corridor).
+  // Length (contract term) — note-derived (rare, authoritative) or
+  // date-derived (broader coverage, ±1y precision). Declared up here
+  // because it's reused below to infer the Next-contract Starts-on date
+  // when TfL's programme PDF doesn't yet list the route.
+  const term      = classification?.contractTermYears;
+  const termValid = Number.isFinite(term) && term > 0;
+  toggleRow(node, 'term', termValid);
+  if (termValid) set('[data-rc-term]', `${term} years`);
+
+  // Times tendered — number of times this route has been put out to tender
+  // historically (in our data going back to 2003). Stability signal: 1 =
+  // incumbent-dominated / new route, 5+ = competitive corridor with regular
+  // operator churn. Render as a bare integer so the row reads "5" rather
+  // than "5 awards" (which sounds like a count of prizes won).
   const awardCnt = classification?.tenderAwardCount;
-  set('[data-rc-award-count]', awardCnt ? `${awardCnt}${awardCnt === 1 ? ' award' : ' awards'}` : 'XXX');
+  set('[data-rc-award-count]', awardCnt ? `${awardCnt}${awardCnt === 1 ? ' time' : ' times'}` : 'XXX');
 
   // Bids received — competitiveness of the most recent tender.
   const bids = classification?.numberOfTenderers;
@@ -262,17 +380,18 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
     }
   }
 
-  // Contract expires — when the next scheduled tender's contract starts on
-  // this route. Falls back to "—" rather than a stale past date when TfL
-  // hasn't yet published a future programme entry for the route.
-  const nextStart = classification?.nextTenderStart;
-  set('[data-rc-expiry]', nextStart ? formatHumanDate(nextStart) : 'XXX');
-
   // Cost per mile — most recent tender's £/mile (normalised so comparisons
   // across routes of different lengths actually mean something). Two decimals
   // matches TfL's published precision.
   const cpm = classification?.lastCostPerMile;
   set('[data-rc-value]', Number.isFinite(cpm) ? `£${cpm.toFixed(2)}` : 'XXX');
+
+  // EWT/OTP MPS live in the KPI strip above; only Mileage standard needs a
+  // row here since it has no dedicated tile. Hidden when no MPS data
+  // (school routes have no per-route QSI PDF, hence no published MPS).
+  const milMps = classification?.mileageMps;
+  toggleRow(node, 'mil-mps', Number.isFinite(milMps) && milMps > 0);
+  if (Number.isFinite(milMps) && milMps > 0) set('[data-rc-mil-mps]', `${milMps.toFixed(0)}%`);
 
   // Awarded vehicle — what TfL specified the most recent contract should
   // run. Worth comparing against the live `propulsion` / `deck` above; a
@@ -290,21 +409,17 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   toggleRow(node, 'prev-veh', !!specChanged);
   if (specChanged) set('[data-rc-prev-veh]', formatAwardedVehicle(pP, pD));
 
-  // Contract term — note-derived (rare, authoritative) or date-derived
-  // (broader coverage, ±1y precision).
-  const term = classification?.contractTermYears;
-  toggleRow(node, 'term', Number.isFinite(term) && term > 0);
-  if (Number.isFinite(term) && term > 0) set('[data-rc-term]', `${term} years`);
+  // The Next-contract section was removed — nothing in it has actually
+  // been awarded yet, so labels like "Awarded vehicle" mis-state what we
+  // know. The underlying fields (`nextTenderStart`, `nextAwardPropulsion`,
+  // `nextAwardDeck`, `extensionEligible`) are still derived in
+  // build-classifications.js and surfaced via the XLSX export — they're
+  // just not rendered on the card today.
 
-  // Next award spec — what TfL plans the *next* tender to require. Often
-  // the strongest signal of an electrification transition.
-  set('[data-rc-next-veh]', formatAwardedVehicle(classification?.nextAwardPropulsion, classification?.nextAwardDeck));
-
-  // Extension eligible — TfL's 'x' marker on the programme entry. Only
-  // render the row when Yes; "No" is the silent default.
-  const ext = classification?.extensionEligible === true;
-  toggleRow(node, 'extension', ext);
-  if (ext) set('[data-rc-extension]', 'Yes (2 years)');
+  // Hover tooltips on every label — explains where each metric comes from
+  // and how it's derived. Pseudo-element ⓘ glyph (CSS) advertises that a
+  // tooltip is available; the browser shows the `title` text on hover.
+  attachTooltips(node);
 
   return node;
 }

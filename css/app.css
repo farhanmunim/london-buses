@@ -356,22 +356,27 @@ a{color:inherit;text-decoration:none}
 .rc-name{font-size:11.5px;color:var(--mu);margin-top:3px;line-height:1.35}
 .rc-op{
   font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);
-  color:#fff;white-space:nowrap;flex-shrink:0;align-self:flex-end;
+  color:#fff;white-space:nowrap;flex-shrink:0;align-self:flex-start;
   letter-spacing:.2px;line-height:1.4;
 }
-/* Meta column on the top-right — operator pill on top, route-type label
-   below. Right-aligned so both items sit flush with the card edge. The
-   type label is intentionally quieter (uppercase eyebrow) so it doesn't
-   compete with the operator pill for attention. */
-.rc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-.rc-type{
-  font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
-  color:var(--mu);line-height:1;
+/* Route number + type chip on the same line. The chip sits next to the
+   route number rather than the operator pill so it visually belongs to the
+   route's identity (which it describes), not to the contractor relationship. */
+.rc-num-row{display:flex;align-items:center;gap:8px;line-height:1}
+.rc-type-chip{
+  font-size:9px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--mu);background:var(--surf-s);border:1px solid var(--bd);
+  padding:2px 6px;border-radius:var(--r-pill);line-height:1.2;white-space:nowrap;
 }
+.rc-type-chip[hidden]{display:none}
 
-/* KPI grid — single row of 3 KPI tiles for the headline route facts.
-   (Type moved out of the grid into the top-right meta column above.) */
-.rc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px}
+/* KPI grid — single row of 4 KPI tiles for the headline route facts
+   (PVR · Stops · Freq · EWT/OTP). Lives inside the Route section now,
+   so margin-bottom is small — the section already provides bottom spacing.
+   .rc-kpis--five extends to 5 columns when the MPS tile is added — same
+   tile metrics, just narrower. */
+.rc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px}
+.rc-kpis--five{grid-template-columns:repeat(5,1fr)}
 .rc-kpi{background:var(--surf-s);border:none;border-radius:var(--r-md);padding:7px 9px}
 .rc-kpi-l{font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:2px}
 .rc-kpi-v{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--tx);line-height:1.2}
@@ -395,6 +400,51 @@ a{color:inherit;text-decoration:none}
 /* "(no change)" / "first award" placeholder vocabulary — quieter than the
    real data values, distinct from the bare "—" we use for missing data. */
 .rc-tr-v.rc-tr-v--muted{color:var(--mu);font-style:italic;font-weight:400}
+
+/* Tooltip-available labels — a faint dashed underline (standard "more
+   info on hover" convention) signals availability without taking up any
+   horizontal space the way a glyph would. text-underline-offset keeps
+   the dashes off the label baseline so they don't compete with the text.
+   The actual popup is rendered by js/tooltip.js (see .app-tooltip below). */
+.rc-tr-l[data-tip], .rc-kpi-l[data-tip]{
+  cursor:help;
+  text-decoration:underline dashed;
+  text-decoration-color:color-mix(in srgb, currentColor 35%, transparent);
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
+}
+
+/* Custom hover tooltip — a single shared element controlled by
+   js/tooltip.js. Positioned via inline style by the JS; this rule
+   defines look + the open/close transition. position:fixed so the tip
+   floats above any overflow:hidden parent. */
+.app-tooltip{
+  position:fixed;z-index:9999;
+  display:none;max-width:280px;
+  background:var(--surf2);color:var(--tx);
+  border:1px solid var(--bd);
+  border-radius:var(--r-md);
+  padding:8px 10px;
+  font-family:var(--font-sans);font-size:11.5px;line-height:1.45;font-weight:400;
+  letter-spacing:0;text-transform:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.32);
+  pointer-events:none;
+  opacity:0;transition:opacity .12s ease-out;
+}
+.app-tooltip.is-visible{opacity:1}
+/* Small triangle pointing at the anchor — sits below the bubble by
+   default (because the bubble is above the target) and flips above the
+   bubble when --below is applied (target near the top of the viewport). */
+.app-tooltip::after{
+  content:"";position:absolute;left:50%;transform:translateX(-50%);
+  width:0;height:0;border:5px solid transparent;
+  border-top-color:var(--bd);
+  bottom:-10px;
+}
+.app-tooltip--below::after{
+  border-top-color:transparent;border-bottom-color:var(--bd);
+  top:-10px;bottom:auto;
+}
 
 .route-search-prompt{
   display:flex;flex-direction:column;align-items:center;justify-content:center;

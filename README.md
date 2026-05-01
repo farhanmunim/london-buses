@@ -25,6 +25,7 @@ See [AGENTS.md](AGENTS.md) for the full architecture, data pipeline, and reposit
 - [DVLA Vehicle Enquiry Service](https://developer-portal.driver-vehicle-licensing.api.gov.uk/) — registration → make, fuel type, year of first registration. Authoritative per-route propulsion + average fleet age
 - [londonbusroutes.net](https://londonbusroutes.net/) — operator, vehicle type, PVR, garage allocation, headway-column fallback for routes TfL doesn't surface
 - TfL Bus Performance (QSI) PDF — per-route Excess Wait Time (EWT) for high-frequency routes and On-Time Performance (OTP) for low-frequency, refreshed every 4 weeks
+- TfL per-route QSI PDFs (`bus.data.tfl.gov.uk/boroughreports/routes/performance-route-{ID}.pdf`) — per-route Minimum Performance Standard (MPS), the contractual EWT/OTP/mileage threshold each route is graded against. Values vary route-by-route within a service class because each tender contract sets its own standard.
 - TfL tender awards (`tfl.gov.uk/forms/13796.aspx`) — every historical bus tender (~2,500 awards back to 2003) with awarded operator, accepted/lowest/highest bids, cost per live mile, and notes
 - TfL annual tendering programme PDFs — upcoming tender schedule by financial year (issue/return/award/contract-start dates, vehicle spec)
 

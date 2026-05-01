@@ -83,10 +83,13 @@ function buildRouteRows(routes, stopCounts) {
         avg_fleet_age_years:       num(cls.vehicleAgeYears),
         observed_fleet_size:       num(cls.fleetSize),
 
-        // ── Reliability (TfL QSI PDF) ──
+        // ── Reliability (TfL QSI PDF — actuals + per-route contractual MPS) ──
         service_class:             str(cls.serviceClass),
         ewt_minutes:               num(cls.ewtMinutes),
+        ewt_mps_minutes:           num(cls.ewtMps),
         on_time_percent:           num(cls.onTimePercent),
+        otp_mps_percent:           num(cls.otpMps),
+        mileage_mps_percent:       num(cls.mileageMps),
         performance_period:        str(cls.perfPeriod),
 
         // ── Tender — last (current) contract ──

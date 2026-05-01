@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.7</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.8</a>
 
       <div style="flex:1"></div>
 
@@ -74,6 +74,32 @@
               Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 05:00 UTC.
             </p>
           </header>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.8 — Per-route Minimum Performance Standards
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>
+            <a href="#v2_8" class="cl-entry-title">Per-route contractual EWT/OTP/mileage standards on every route card</a>
+            <p class="cl-body-text">
+              <strong>Per-route Minimum Performance Standards (MPS) now flow through the whole stack.</strong> A new <code>fetch-route-mps.js</code> step parses the per-route TfL QSI PDFs at <code>bus.data.tfl.gov.uk/boroughreports/routes/performance-route-{ID}.pdf</code> and extracts three contractual benchmarks per route: EWT MPS (high-frequency, observed 0.7–1.4 min), OTP MPS (low-frequency, observed 74–90%), and Mileage MPS (98 or 99%). The values genuinely vary route-by-route within a service class — e.g. route 122 (EWT 1.20 min) and route EL2 (EWT 0.70 min) are both high-frequency but have very different contractual thresholds. 662 routes parsed cleanly; 85 (mostly school) have no published MPS PDF and cache as 404.
+            </p>
+            <p class="cl-body-text">
+              <strong>Surfaced on the route card</strong> in the <em>Tender · Current contract</em> section as <em>EWT standard</em> / <em>OTP standard</em> / <em>Mileage standard</em> rows (hidden when no MPS data). The Route-section reliability KPI tile also gets an inline <code>actual / standard</code> reading (e.g. <code>1.6 / 1.0</code>) so pass/fail is readable at a glance.
+            </p>
+            <p class="cl-body-text">
+              <strong>Pushed to Supabase</strong> via migration <code>0008_route_mps.sql</code>: three new columns on <code>route_snapshots</code> (<code>ewt_mps_minutes</code>, <code>otp_mps_percent</code>, <code>mileage_mps_percent</code>) so trend queries can see the benchmark drift over time as contracts renew. The XLSX export Routes sheet picks them up automatically.
+            </p>
+            <p class="cl-body-text">
+              <strong>Sticky-cache pipeline.</strong> MPS values are contract-defined and only move at tender renewal, so the cache uses a 28-day TTL plus per-route <code>Last-Modified</code> HEAD short-circuit. Cold-start week parses ~700 PDFs at 4 RPS (~3 min); steady-state weekly runs are mostly HEAD-only and finish in seconds. Per-run cap of 1,000, periodic flush every 50, SIGTERM-safe.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
 
           <!-- ═══════════════════════════════════════════════════════════════
                v2.7 — Tender data & pipeline short-circuits

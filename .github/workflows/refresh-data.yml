@@ -101,6 +101,13 @@ jobs:
           git add -f data/source/route-performance.json     || true
           git add -f data/source/route-performance-raw.txt  || true
 
+          # Persist per-route Minimum Performance Standards. ~700 routes
+          # parsed from TfL's per-route QSI PDFs. MPS values are contract-
+          # defined (only change at tender renewal) so this cache is very
+          # sticky; without persistence we'd hammer TfL with ~700 PDF
+          # downloads every Monday for data that rarely moves.
+          git add -f data/source/route-mps.json             || true
+
           # Persist the historical tender award cache. ~2500 rows; immutable
           # once written so steady-state weekly runs only add the handful of
           # new btIDs TfL has published since last week.

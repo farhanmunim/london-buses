@@ -24,6 +24,7 @@ import './garage-filter.js'; // garage-selection pill in sidebar (parity with st
 import './route-detail.js';  // route-card renderer (imported for side-effect-free exports)
 import './mobile-nav.js';    // pull-up sheet + bottom nav
 import './export.js';        // XLSX export
+import './tooltip.js';       // custom [data-tip] hover tooltip used by route-card labels
 
 import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js';
 import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';

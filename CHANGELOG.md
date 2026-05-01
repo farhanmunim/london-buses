@@ -10,6 +10,18 @@ All notable changes to **London Buses** are listed here.
 
 ---
 
+## v2.8 – Per-route Minimum Performance Standards
+
+_2026-05-01_
+
+- **Per-route Minimum Performance Standards (MPS)** scraped from TfL's per-route QSI PDFs (`bus.data.tfl.gov.uk/boroughreports/routes/performance-route-{ID}.pdf`). New `fetch-route-mps.js` parses three contractual benchmarks per route: **EWT MPS** (high-frequency, observed 0.7–1.4 min — varies per contract; route 122 = 1.20 min, route EL2 = 0.70 min), **OTP MPS** (low-frequency, observed 74–90%), and **Mileage MPS** (98 or 99%). 662 routes parsed; 85 (mostly school) have no published MPS PDF and cache as 404 to avoid retry storms.
+- **Sticky-cache pipeline pattern** matching the existing fetchers: per-route `Last-Modified` HEAD short-circuit, 28-day TTL, per-run cap of 1000, periodic flush every 50, SIGTERM handler. MPS only changes when a tender renews so steady-state weekly runs are mostly HEAD-only (cheap).
+- **Surfaced on the route card** in the *Tender · Current contract* section as **EWT standard / OTP standard / Mileage standard** rows, hidden when no MPS data. The Route-section EWT/OTP KPI tile also gets an inline `actual / standard` reading (e.g. `1.6 / 1.0`) so the user can read pass/fail at a glance.
+- **Pushed to Supabase** via migration `0008_route_mps.sql`: three new columns on `route_snapshots` (`ewt_mps_minutes`, `otp_mps_percent`, `mileage_mps_percent`) so trend queries can see the benchmark drift over time as contracts renew.
+- **Pipeline grew to 16 steps** (`refresh.js`) with `fetch-route-mps.js` slotted between QSI actuals and tender awards. Added to `package.json` scripts (`npm run fetch-route-mps`) and the workflow force-adds `data/source/route-mps.json` so the cache persists week-over-week.
+
+---
+
 ## v2.7 – Tender data & pipeline short-circuits
 
 _2026-04-30_
