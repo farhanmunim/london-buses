@@ -45,7 +45,7 @@
             <li><a href="https://postcodes.io" target="_blank" rel="noopener">postcodes.io</a><span class="credits-note">bulk postcode → lat/lon geocoding for garages (ONS data · OGL v3)</span></li>
             <li><a href="https://photon.komoot.io/" target="_blank" rel="noopener">Photon</a><span class="credits-note">legacy garage-locations geocoder (OpenStreetMap-backed)</span></li>
           </ul>
-          <p class="modal-note">Data refreshes automatically every <strong>Monday at 05:00 UTC</strong>. TfL data is used under the terms of the <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" target="_blank" rel="noopener">TfL Open Data Licence</a>.</p>
+          <p class="modal-note">Data refreshes automatically every <strong>Monday at 09:00 UTC</strong>. TfL data is used under the terms of the <a href="https://tfl.gov.uk/corporate/terms-and-conditions/transport-data-service" target="_blank" rel="noopener">TfL Open Data Licence</a>.</p>
         </section>
 
         <section class="modal-section">
