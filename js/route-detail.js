@@ -52,7 +52,7 @@ const TIPS = {
   'awarded-veh':   'Vehicle specification required by the contract, parsed from TfL tender notes',
   value:           'Cost per live mile of the accepted bid, from TfL tender results',
   'mil-mps':       'Contractual minimum mileage operated, from TfL per-route QSI report',
-  // Tender · Previous contract rows
+  // Tender · Previous operator rows
   previous:        'Operator before the current incumbent, derived from TfL tender history',
   'prev-award':    'Award date of the previous contract, from TfL tender results',
   'prev-term':     'Length of the previous contract, measured between its award and the next award on file',
@@ -378,7 +378,7 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
     }
   }
 
-  // Previous contract — Awarded on / Length, mirroring the current-contract
+  // Previous operator — Awarded on / Length, mirroring the current-contract
   // block. Both rows hide when the previous-operator row resolves to "no
   // change" or "first award" (no genuine predecessor → no separate contract
   // to date or measure).
