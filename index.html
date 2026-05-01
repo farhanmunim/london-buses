@@ -74,7 +74,7 @@
         </div>
           <span class="tb-name">London Buses</span>
         </a>
-        <a class="tb-ver" href="changelog.html" title="View changelog">v2.6</a>
+        <a class="tb-ver" href="changelog.html" title="View changelog">v2.7</a>
 
         <div class="tb-search-wrap">
           <div class="tb-search" id="globalSearch" role="search">
@@ -439,25 +439,58 @@
                       </button>
                     </div>
                   </div>
-                  <div class="rc-op" data-rc-op>—</div>
+                  <div class="rc-meta">
+                    <div class="rc-op" data-rc-op>—</div>
+                    <div class="rc-type" data-rc-type>—</div>
+                  </div>
                 </div>
                 <div class="rc-kpis">
-                  <div class="rc-kpi"><div class="rc-kpi-l">Type</div><div class="rc-kpi-v" data-rc-type>—</div></div>
                   <div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v" data-rc-pvr>—</div></div>
                   <div class="rc-kpi"><div class="rc-kpi-l">Stops</div><div class="rc-kpi-v" data-rc-stops>—</div></div>
                   <div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v" data-rc-freq>—</div></div>
-                  <div class="rc-kpi"><div class="rc-kpi-l">Deck</div><div class="rc-kpi-v" data-rc-deck>—</div></div>
-                  <div class="rc-kpi"><div class="rc-kpi-l">Propulsion</div><div class="rc-kpi-v" data-rc-propulsion>—</div></div>
                 </div>
-                <div class="rc-tender">
-                  <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v" data-rc-garage>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Vehicle make</span><span class="rc-tr-v" data-rc-vehicle-make>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Vehicle model</span><span class="rc-tr-v" data-rc-vehicle-model>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Avg fleet age</span><span class="rc-tr-v" data-rc-age>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l" data-rc-perf-l>Reliability</span><span class="rc-tr-v" data-rc-perf>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Previous operator</span><span class="rc-tr-v" data-rc-previous>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Contract expires</span><span class="rc-tr-v" data-rc-expiry>XXX</span></div>
-                  <div class="rc-tr"><span class="rc-tr-l">Contract value</span><span class="rc-tr-v" data-rc-value>XXX</span></div>
+
+                <div class="rc-section">
+                  <div class="rc-section-tag">Route</div>
+                  <div class="rc-tender">
+                    <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v" data-rc-garage>XXX</span></div>
+                  </div>
+                </div>
+
+                <div class="rc-section">
+                  <div class="rc-section-tag">Fleet</div>
+                  <div class="rc-tender">
+                    <div class="rc-tr"><span class="rc-tr-l">Deck</span><span class="rc-tr-v" data-rc-deck>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Propulsion</span><span class="rc-tr-v" data-rc-propulsion>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Vehicle make</span><span class="rc-tr-v" data-rc-vehicle-make>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Vehicle model</span><span class="rc-tr-v" data-rc-vehicle-model>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Avg fleet age</span><span class="rc-tr-v" data-rc-age>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l" data-rc-perf-l>Reliability</span><span class="rc-tr-v" data-rc-perf>XXX</span></div>
+                  </div>
+                </div>
+
+                <div class="rc-section">
+                  <div class="rc-section-tag">Tender · Last contract</div>
+                  <div class="rc-tender">
+                    <div class="rc-tr"><span class="rc-tr-l">Last awarded</span><span class="rc-tr-v" data-rc-last-award>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Awards on record</span><span class="rc-tr-v" data-rc-award-count>XXX</span></div>
+                    <div class="rc-tr" data-rc-row="bids" hidden><span class="rc-tr-l">Bids received</span><span class="rc-tr-v" data-rc-bids>—</span></div>
+                    <div class="rc-tr" data-rc-row="joint" hidden><span class="rc-tr-l">Joint bid</span><span class="rc-tr-v" data-rc-joint>—</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Previous operator</span><span class="rc-tr-v" data-rc-previous>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Awarded vehicle</span><span class="rc-tr-v" data-rc-awarded-veh>XXX</span></div>
+                    <div class="rc-tr" data-rc-row="prev-veh" hidden><span class="rc-tr-l">Previous spec</span><span class="rc-tr-v" data-rc-prev-veh>—</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Cost per mile</span><span class="rc-tr-v" data-rc-value>XXX</span></div>
+                    <div class="rc-tr" data-rc-row="term" hidden><span class="rc-tr-l">Contract term</span><span class="rc-tr-v" data-rc-term>—</span></div>
+                  </div>
+                </div>
+
+                <div class="rc-section">
+                  <div class="rc-section-tag">Tender · Next contract</div>
+                  <div class="rc-tender">
+                    <div class="rc-tr"><span class="rc-tr-l">Contract expires</span><span class="rc-tr-v" data-rc-expiry>XXX</span></div>
+                    <div class="rc-tr"><span class="rc-tr-l">Next award spec</span><span class="rc-tr-v" data-rc-next-veh>XXX</span></div>
+                    <div class="rc-tr" data-rc-row="extension" hidden><span class="rc-tr-l">Extension eligible</span><span class="rc-tr-v" data-rc-extension>—</span></div>
+                  </div>
                 </div>
               </article>
             </template>
@@ -553,7 +586,7 @@
         </div>
         <span class="mob-title">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog">v2.6</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog">v2.7</a>
       <div style="flex:1"></div>
       <button type="button" class="theme-btn" id="themeToggleMob" aria-label="Toggle theme">
         <svg class="i-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>

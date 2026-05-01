@@ -219,6 +219,159 @@ if (Object.keys(routePerf).length) {
   console.log(`Loaded route performance for ${Object.keys(routePerf).length} routes (${routePerfPeriod ?? 'unknown period'})`);
 }
 
+// ── Tender award enrichment ─────────────────────────────────────────────────
+// Joins data/source/tenders.json (every historical tender award keyed by btID)
+// to per-route fields surfaced on the route card:
+//   previousOperator   the operator BEFORE the current incumbent. Walks the
+//                      sorted award list and returns the first earlier
+//                      operator that differs from the current incumbent — so
+//                      a route that's been re-awarded to the same operator
+//                      twice still shows the genuine predecessor.
+//   lastAwardDate      most-recent award_announced_date
+//   lastCostPerMile    cost_per_mile of the most-recent award (£/mile,
+//                      directly comparable across routes regardless of length)
+// Tender route_ids carry combined day/night IDs ("341/N341"), so a single
+// entry feeds both the day route and the N-prefixed sibling.
+const tendersPath = path.join(DATA_DIR, 'source', 'tenders.json');
+const tendersLoaded = fs.existsSync(tendersPath);
+const tendersFile = tendersLoaded
+  ? JSON.parse(fs.readFileSync(tendersPath, 'utf8'))
+  : { tenders: {} };
+const tendersByRoute = {};
+for (const t of Object.values(tendersFile.tenders ?? {})) {
+  if (!t?.route_id || !t.award_announced_date) continue;
+  for (const id of String(t.route_id).split('/').map(s => s.trim().toUpperCase()).filter(Boolean)) {
+    (tendersByRoute[id] ??= []).push(t);
+  }
+}
+for (const list of Object.values(tendersByRoute)) {
+  list.sort((a, b) => b.award_announced_date.localeCompare(a.award_announced_date));
+}
+if (Object.keys(tendersByRoute).length) {
+  console.log(`Loaded tender history for ${Object.keys(tendersByRoute).length} routes`);
+}
+
+// Upcoming tender programme — join by canonical route id.
+//   nextTenderStart    contract_start_date of the next scheduled tender
+//                      (= when the current contract effectively expires)
+//   nextTenderYear     programme financial year ('2026-2027') for context
+const programmePath = path.join(DATA_DIR, 'source', 'tender-programme.json');
+const programmeLoaded = fs.existsSync(programmePath);
+const programmeFile = programmeLoaded
+  ? JSON.parse(fs.readFileSync(programmePath, 'utf8'))
+  : { years: [] };
+const programmeByRoute = {};
+const todayIso = new Date().toISOString().slice(0, 10);
+for (const yr of (programmeFile.years ?? [])) {
+  for (const e of (yr.entries ?? [])) {
+    if (!e?.route_id) continue;
+    for (const id of String(e.route_id).split('/').map(s => s.trim().toUpperCase()).filter(Boolean)) {
+      (programmeByRoute[id] ??= []).push(e);
+    }
+  }
+}
+// Pick "next" = earliest contract_start_date >= today. Past entries are NOT
+// a useful fallback for the "Contract expires" cell -- a stale date is more
+// misleading than an honest "we don't know yet". Routes without a future
+// programme entry just leave the field null and the UI shows "—".
+function pickNextProgramme(list) {
+  if (!list?.length) return null;
+  const future = list
+    .filter(e => e.contract_start_date && e.contract_start_date >= todayIso)
+    .sort((a, b) => a.contract_start_date.localeCompare(b.contract_start_date));
+  return future[0] ?? null;
+}
+if (Object.keys(programmeByRoute).length) {
+  console.log(`Loaded tender programme for ${Object.keys(programmeByRoute).length} routes`);
+}
+
+function derivePreviousOperator(history, current) {
+  if (!history?.length) return null;
+  for (const t of history.slice(1)) {
+    if (t.awarded_operator && t.awarded_operator !== current) return t.awarded_operator;
+  }
+  return null;
+}
+
+// Derive awarded-vehicle propulsion from a tender's freeform notes. Same
+// vocabulary as the live `propulsion` field so the UI can compare apples
+// to apples (e.g. awarded=electric vs actual=diesel during a fleet
+// transition). Plurals tolerated: "new electrics", "existing diesels".
+function deriveAwardedPropulsion(notes, jointBids) {
+  const pool = `${notes ?? ''} ${jointBids ?? ''}`.toLowerCase();
+  if (!pool.trim()) return null;
+  if (/\b(?:fuel\s*cells?|fcev|hydrogen)\b/.test(pool))                                             return 'hydrogen';
+  if (/\b(?:battery\s*hybrids?|hybrid\s*electrics?|hybrids?)\b/.test(pool))                         return 'hybrid';
+  if (/\b(?:zero\s*emission|battery\s*electrics?|electrics?|evs?|zedd|zesd)\b/.test(pool))         return 'electric';
+  if (/\b(?:diesels?|euro\s*\d|euro\s*v[i]*)\b/.test(pool) && !/electric|hybrid/.test(pool))        return 'diesel';
+  return null;
+}
+function deriveAwardedDeck(notes) {
+  const t = (notes ?? '').toLowerCase();
+  if (!t.trim()) return null;
+  if (/\bdouble[\s-]?deck/.test(t))                          return 'double';
+  if (/\bsingle[\s-]?deck/.test(t))                          return 'single';
+  // Tail markers in vehicle codes -- DD / SD when standalone words
+  if (/\b(?:zedd|hdd|dd)\b/.test(t))                         return 'double';
+  if (/\b(?:zesd|hsd|sd)\b/.test(t))                         return 'single';
+  return null;
+}
+// Programme PDFs encode vehicle type as a compact code: 'ZEDD' (zero-emission
+// double-deck), 'ZESD' (single-deck), 'HDD'/'HSD' (hybrid), 'DD'/'SD' (no
+// propulsion specified, just deck), 'FC' (fuel cell). Returns { propulsion, deck }.
+function decodeProgrammeVehicle(vehicleType) {
+  if (!vehicleType) return { propulsion: null, deck: null };
+  const t = String(vehicleType).toUpperCase();
+  let propulsion = null, deck = null;
+  if (/ZE(?:DD|SD)|\bZE\b|\bELECTRIC|\bZERO/.test(t)) propulsion = 'electric';
+  else if (/\bH(?:DD|SD)\b|HYBRID/.test(t))           propulsion = 'hybrid';
+  else if (/\bFC|HYDROGEN/.test(t))                   propulsion = 'hydrogen';
+  if (/\b(?:ZEDD|HDD|DD)\b/.test(t))                  deck = 'double';
+  else if (/\b(?:ZESD|HSD|SD)\b/.test(t))             deck = 'single';
+  return { propulsion, deck };
+}
+
+// Joint bid signal — TfL's Joint Bids column lists which other routes were
+// bundled when populated, or is "N/A" / blank otherwise. Returning the raw
+// list lets the UI render "Yes (with 96, 99, 178)" so the user can tell at
+// a glance whether the route was tendered alone or in a package.
+function deriveJointBid(notes, jointBids) {
+  const jb = (jointBids ?? '').trim();
+  const hasList = jb.length > 5 && !/^N\/?A$/i.test(jb);
+  if (hasList) return { wasJointBid: true, jointBidNotes: jb };
+  if (notes && /\b(?:joint\s*bid|jb)\b/i.test(notes)) return { wasJointBid: true, jointBidNotes: null };
+  return { wasJointBid: false, jointBidNotes: null };
+}
+
+// Contract length from tender notes — TfL sometimes spells out the term
+// ("five year fixed term contract", "seven year contract", "5-year"). Rare
+// in the dataset (~1% of awards) but when present it's authoritative.
+const TERM_WORDS = { two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10 };
+function deriveContractTermFromNotes(notes) {
+  if (!notes) return null;
+  const m = /\b(\d+|two|three|four|five|six|seven|eight|nine|ten)[\s-]?year\b/i.exec(notes);
+  if (!m) return null;
+  const w = m[1].toLowerCase();
+  const n = TERM_WORDS[w] ?? parseInt(w, 10);
+  return Number.isFinite(n) && n >= 3 && n <= 12 ? n : null;
+}
+
+// Contract length inferred from the gap between the most recent award and
+// the upcoming tender's contract start. Real bus contracts are usually
+// 5 + optional 2-year extension, so the observed gap (rounded) is a
+// reasonable proxy when notes don't spell it out.
+function deriveContractTermFromDates(lastAwardIso, nextStartIso) {
+  if (!lastAwardIso || !nextStartIso) return null;
+  const a = Date.parse(lastAwardIso);
+  const b = Date.parse(nextStartIso);
+  if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return null;
+  const yrs = (b - a) / (365.25 * 86_400_000);
+  // Clamp to plausible bus-contract lengths so a TfL data anomaly doesn't
+  // surface as "12 year contract" on the route card.
+  if (yrs < 3 || yrs > 10) return null;
+  return Math.round(yrs);
+}
+
 function modeOf(counts) {
   let best = null, bestN = 0;
   for (const [k, n] of Object.entries(counts)) if (n > bestN) { best = k; bestN = n; }
@@ -423,6 +576,20 @@ for (const file of routeFiles) {
   // is the same as last run, so preserving the previous reading is correct.
   const perf = routePerf[routeId] ?? null;
 
+  // Tender history lookup. routeId is upper-case here, matching the keys in
+  // tendersByRoute / programmeByRoute. N-route fallback: an N-prefixed route
+  // with no separate tender history inherits from its daytime sibling (same
+  // tender event covers both — see the "341/N341" combined ids above).
+  const tenderHistory = tendersByRoute[routeId]
+                     ?? (/^N\d/.test(routeId) ? tendersByRoute[routeId.slice(1)] : null)
+                     ?? null;
+  const lastTender    = tenderHistory?.[0] ?? null;
+  const previousOp    = derivePreviousOperator(tenderHistory, lastTender?.awarded_operator);
+  const nextProgramme = pickNextProgramme(
+    programmeByRoute[routeId]
+      ?? (/^N\d/.test(routeId) ? programmeByRoute[routeId.slice(1)] : null)
+  );
+
   const override = routeOverrides[routeId] ?? {};
   const lastRec  = lastGood[routeId] ?? {};
   classifications[routeId] = {
@@ -453,6 +620,59 @@ for (const file of routeFiles) {
     ewtMinutes:      perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null,
     onTimePercent:   perf?.on_time_percent ?? lastRec.onTimePercent   ?? null,
     perfPeriod:      (perf ? routePerfPeriod : null) ?? lastRec.perfPeriod ?? null,
+    // Tender enrichment — only fall back to last-known-good when the *source
+    // file* didn't load (so a missing tenders.json or programme.json after a
+    // failed fetch doesn't wipe the card). When the source loaded but a
+    // particular route has no entries, null IS the truthful answer and must
+    // win — otherwise stale values from prior runs persist forever.
+    previousOperator: override.previousOperator ?? (tendersLoaded   ? previousOp                            : (lastRec.previousOperator ?? null)),
+    lastAwardDate:    override.lastAwardDate    ?? (tendersLoaded   ? (lastTender?.award_announced_date ?? null) : (lastRec.lastAwardDate    ?? null)),
+    lastCostPerMile:  override.lastCostPerMile  ?? (tendersLoaded   ? (lastTender?.cost_per_mile        ?? null) : (lastRec.lastCostPerMile  ?? null)),
+    // Award count lets the UI tell apart "no previous operator because the
+    // incumbent has held the route from day one" (count >= 2 + previousOp
+    // null = "No change") from "no previous operator because we only have one
+    // award on file" (count == 1 = "First award") from "no tender history
+    // at all" (count == 0 = "—").
+    tenderAwardCount: tendersLoaded ? (tenderHistory?.length ?? 0) : (lastRec.tenderAwardCount ?? 0),
+    // Bids received on the most recent tender. 1 = sole-source; 4-5 = highly
+    // competitive. Caps reality-check at 12 to discard data anomalies.
+    numberOfTenderers: override.numberOfTenderers ?? (tendersLoaded ? ((Number.isFinite(lastTender?.number_of_tenderers) && lastTender.number_of_tenderers > 0 && lastTender.number_of_tenderers <= 12) ? lastTender.number_of_tenderers : null) : (lastRec.numberOfTenderers ?? null)),
+    // Joint-bid flag — boolean only. The card shows just "Yes" when true
+    // and hides the row otherwise; the bundled-routes phrase TfL fills in
+    // can be a paragraph long and would crowd the card.
+    wasJointBid: override.wasJointBid ?? (tendersLoaded ? deriveJointBid(lastTender?.notes, lastTender?.joint_bids).wasJointBid : (lastRec.wasJointBid ?? null)),
+    // Contract length — note-derived (rare but authoritative) with a fallback
+    // to the lastAwardDate→nextTenderStart gap (a reasonable approximation
+    // since real bus contracts run 5y+optional-2y, capped 3-10 to filter out
+    // anomalies).
+    contractTermYears: override.contractTermYears ?? (
+      (tendersLoaded ? deriveContractTermFromNotes(lastTender?.notes) : null) ??
+      (tendersLoaded && programmeLoaded ? deriveContractTermFromDates(lastTender?.award_announced_date, nextProgramme?.contract_start_date) : null) ??
+      (lastRec.contractTermYears ?? null)
+    ),
+    // Awarded vehicle spec — parsed from the most recent tender's notes.
+    // Useful as a comparison against the *actual* live fleet (`propulsion` /
+    // `deck` above): a route mid-transition will show awarded=electric but
+    // actual=hybrid until the new buses arrive.
+    awardedPropulsion: override.awardedPropulsion ?? (tendersLoaded ? deriveAwardedPropulsion(lastTender?.notes, lastTender?.joint_bids) : (lastRec.awardedPropulsion ?? null)),
+    awardedDeck:       override.awardedDeck       ?? (tendersLoaded ? deriveAwardedDeck(lastTender?.notes)                                : (lastRec.awardedDeck       ?? null)),
+    // Previous-tender vehicle spec — derived from the SECOND-most-recent
+    // tender. The UI only renders this when it differs from the most recent
+    // ("was Hybrid (double)") — a clean propulsion-transition indicator.
+    prevAwardedPropulsion: override.prevAwardedPropulsion ?? (tendersLoaded && tenderHistory?.[1] ? deriveAwardedPropulsion(tenderHistory[1].notes, tenderHistory[1].joint_bids) : (lastRec.prevAwardedPropulsion ?? null)),
+    prevAwardedDeck:       override.prevAwardedDeck       ?? (tendersLoaded && tenderHistory?.[1] ? deriveAwardedDeck(tenderHistory[1].notes)                                   : (lastRec.prevAwardedDeck       ?? null)),
+    nextTenderStart:  override.nextTenderStart  ?? (programmeLoaded ? (nextProgramme?.contract_start_date ?? null) : (lastRec.nextTenderStart ?? null)),
+    nextTenderYear:   override.nextTenderYear   ?? (programmeLoaded ? (nextProgramme?.programme_year      ?? null) : (lastRec.nextTenderYear  ?? null)),
+    // 'x' marker on the programme PDF means TfL has flagged the route as
+    // eligible for a 2-year extension on top of the base contract length.
+    // Materially changes when the contract really ends.
+    extensionEligible: override.extensionEligible ?? (programmeLoaded ? (nextProgramme?.two_year_extension ?? false) : (lastRec.extensionEligible ?? null)),
+    // Upcoming programme spec — what TfL plans the next contract to require.
+    // Often the strongest signal of an electrification transition (a route
+    // currently running diesel with awardedPropulsion=null but
+    // nextAwardPropulsion=electric is a route about to convert).
+    nextAwardPropulsion: override.nextAwardPropulsion ?? (programmeLoaded ? decodeProgrammeVehicle(nextProgramme?.vehicle_type).propulsion : (lastRec.nextAwardPropulsion ?? null)),
+    nextAwardDeck:       override.nextAwardDeck       ?? (programmeLoaded ? decodeProgrammeVehicle(nextProgramme?.vehicle_type).deck       : (lastRec.nextAwardDeck       ?? null)),
   };
 }
 

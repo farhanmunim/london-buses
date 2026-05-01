@@ -10,7 +10,10 @@
   // Stages: 'idea' | 'planned' | 'building' | 'shipped'
   const ITEMS = [
     { title: 'Route tender details',
-      desc:  'Tender number, contract start / end, current bid winner and previous operator for each route.',
+      desc:  'Previous operator, contract value (£/mile) and next-tender date on every route card. Historical awards (~2,500) and the upcoming LBSL tendering programme parsed weekly.',
+      stage: 'shipped' },
+    { title: 'Analytics',
+      desc:  'A dedicated analytics page reading from the Supabase historical store. Trend charts for fleet age, electrification, operator share, EWT/OTP movement around tender events, and per-route operator churn.',
       stage: 'building' },
     { title: 'TfL zone map overlay',
       desc:  'Optional overlay tinting the map by TfL fare zone (1–9) for quick geographic context.',

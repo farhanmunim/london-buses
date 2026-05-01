@@ -82,6 +82,11 @@
           </ul>
         </section>
 
+        <section class="modal-section">
+          <span class="modal-section-tag">Contributors</span>
+          <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">Daniel Plumb, Mark Leonard-Adoko, Ross Levine</p>
+        </section>
+
         <section class="modal-section modal-support">
           <span class="modal-section-tag">Support</span>
           <p class="modal-support__copy">

@@ -240,10 +240,32 @@ async function main() {
   fs.mkdirSync(ROUTES_DIR, { recursive: true });
 
   const { date: dateToken, key: zipKey } = await findLatestZipKey();
+
+  // Skip-if-unchanged short-circuit: TfL only republishes the geometry ZIP
+  // when there's a network change (~quarterly), but this script runs weekly.
+  // Comparing the bucket-listed date against the date we already processed
+  // avoids a ~10 MB download + ~700 file rewrites on the ~95% of weeks where
+  // nothing changed. The `--force` flag bypasses for manual re-runs.
+  const sourceMetaPath = path.join(DATA_DIR, 'geometry-source.json');
+  const force = process.argv.includes('--force');
+  if (!force && fs.existsSync(sourceMetaPath)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(sourceMetaPath, 'utf8'));
+      if (prev.zipDate === dateToken) {
+        console.log(`  ZIP date unchanged (${dateToken}) — skipping download + extract. Use --force to override.`);
+        // Refresh the timestamp so downstream "how stale is this?" checks see
+        // we did look upstream this run, even if the data itself didn't move.
+        writeJson(sourceMetaPath, { zipDate: dateToken, generatedAt: new Date().toISOString() });
+        console.log('\n=== Done (cache hit) ===');
+        return;
+      }
+    } catch { /* fall through to a full refresh */ }
+  }
+
   const zipBuffer = await downloadZip(zipKey);
   processZip(zipBuffer, dateToken);
 
-  writeJson(path.join(DATA_DIR, 'geometry-source.json'), {
+  writeJson(sourceMetaPath, {
     zipDate: dateToken,
     generatedAt: new Date().toISOString(),
   });

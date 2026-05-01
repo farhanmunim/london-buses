@@ -3,10 +3,9 @@
 Definitive reference for every datapoint in this project: where it comes from, how
 it is cleaned, how blanks get filled, and what to watch out for.
 
-**Cadence:** weekly, Mondays 05:00 UTC, via GitHub Actions (`.github/workflows/refresh-data.yml`).
-**Orchestrator:** `scripts/refresh.js` — runs the 9 pipeline steps in sequence; network-bound fetch steps soft-fail so one flaky source doesn't abort the week. Pure build steps hard-fail.
-**Philosophy:** TfL API first. Scrape only to fill blanks. Always keep last-known-good
-when a source fails, so a flaky upstream never wipes curated data.
+**Cadence:** weekly, Mondays 09:00 UTC, via GitHub Actions (`.github/workflows/refresh-data.yml`). Timed for AM peak so TfL `/Line/<id>/Arrivals` returns a representative active fleet.
+**Orchestrator:** `scripts/refresh.js` — runs the 15 pipeline steps in sequence; network-bound fetch steps soft-fail so one flaky source doesn't abort the week. Pure build steps hard-fail.
+**Philosophy:** TfL API first. Scrape only to fill blanks. Always keep last-known-good when a source fails, so a flaky upstream never wipes curated data. Every fetcher persists its own freshness watermark and short-circuits when the upstream hasn't moved (geometry ZIP date, PDF `Last-Modified`, per-registration TTL, immutable-by-ID for tender awards) — see §4 below.
 
 ---
 
@@ -22,6 +21,9 @@ when a source fails, so a flaky upstream never wipes curated data.
 | **londonbustimes.com / bustimes.org** | None | Secondary operator cross-reference | Independent of londonbusroutes.net — survives their downtime. |
 | **postcodes.io** | None | Bulk postcode → lat/lon for garages | Free, generous limits. Cached in `data/source/geocode_cache.json`, persisted between runs. |
 | **Photon → Nominatim (OSM)** | None | Fallback geocode for garage addresses without a clean postcode | Photon primary (OSM-backed, tolerates sustained use). Nominatim is strict — respect its 1 req/s and 60s back-off on 429. |
+| **TfL Bus Performance (QSI) PDF** (`bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf`) | None | Per-route Excess Wait Time (high-frequency) + On-Time Performance (low-frequency) for the latest reporting period | Updates every ~4 weeks. Parsed with `pdfjs-dist` (position-aware) so column ordering survives Excel-export quirks. Skipped when `Last-Modified` matches the cached value. |
+| **TfL tender awards** (`tfl.gov.uk/forms/13796.aspx?btID=…`) | None | Every historical bus tender (~2,500 awards back to 2003): awarded operator, accepted/lowest/highest bids, cost per live mile, joint-bids, notes | Awards are immutable once published. Cache only fetches new btIDs; per-run cap of 4,000; periodic flush every 100 + SIGTERM handler. |
+| **TfL tendering programme PDFs** (`tfl.gov.uk/cdn/static/cms/documents/uploads/forms/{YYYY-YYYY}-lbsl-tendering-programme.pdf`) | None | Upcoming tender schedule — tranche, route, issue/return/award/contract-start dates, vehicle spec, two-year-extension marker | One PDF per financial year. Parsed with `pdfjs-dist`. Per-year `HEAD` skips closed years that haven't been re-published — drops 10 PDF parses to 1 in steady state. |
 | **Supabase Postgres** (free tier) | `service_role` key via `SUPABASE_SERVICE_ROLE_KEY` env var | **Write target** for historical state and analytics. Append-only weekly snapshot of every route, plus master vehicle table and per-snapshot fleet observations. The static-JSON read path that powers the public map is unaffected — Supabase is not on the page-load critical path. | Free tier: 500 MB DB, 5 GB egress / mo, 7-day inactivity pause (immaterial — the weekly cron keeps it active). RLS on every table; anon role gets read on `route_snapshots` only, vehicles + observations are service-role-only. Service-role key held in GH Actions secret + local `.env`; **never** reaches the browser. |
 
 ---
@@ -46,6 +48,15 @@ Every field below is denormalized into this file so the frontend only needs **on
 | `garageName` / `garageCode` | string | Scraper (garages.csv route-column parse) | Alias → last-known-good | Some routes run from multiple garages; today we store the primary only — see "known gaps". |
 | `pvr` | integer | Scraper (details.htm) | Alias → last-known-good | Peak Vehicle Requirement. Sum of PVRs across all routes ≈ total fleet demand. |
 | `frequency` | `high` \| `low` \| null | TfL `/Line/<id>/Timetable` → `frequencies.json` | `times/<id>.htm` grid → `details.htm` Mon-Sat headway column → null | Binary band: `high` = ≤12 min between buses (5+/hr), `low` = >12 min (fewer than 5/hr). TfL is primary; if its timetable is sparse, the per-route HTML grid is parsed; if that also fails, `headwayMin` from the `details.htm` row is binned with the same ≤12 cutoff. School/limited-service routes (which encode endpoint names in the headway columns of `details.htm` instead of numeric headways) stay null rather than getting a spurious band. |
+| `serviceClass` | `high-frequency` \| `low-frequency` \| null | TfL QSI PDF (which table the route appears in) | Last-known-good | Determines whether the route gets EWT or OTP — independent of `frequency`, since QSI grouping is set by TfL. |
+| `ewtMinutes` | number \| null | TfL QSI PDF — `serviceClass = high-frequency` | Last-known-good | Excess Wait Time, in minutes (=AWT−SWT). Lower is better. |
+| `onTimePercent` | number \| null | TfL QSI PDF — `serviceClass = low-frequency` | Last-known-good | Percent of departures arriving 0–5 min late. Higher is better. |
+| `perfPeriod` | string \| null | TfL QSI PDF cover page (`Q3 25/26`) | Last-known-good | The 4-week reporting period the EWT/OTP figure covers. |
+| `previousOperator` | string \| null | `tenders.json` — most recent earlier award whose operator differs from current incumbent | Last-known-good (only if `tenders.json` failed to load) | Walks the route's tender history sorted by `award_announced_date` desc, returns the first operator that genuinely changed. Routes re-awarded twice to the same operator still surface their real predecessor. |
+| `lastAwardDate` | YYYY-MM-DD \| null | `tenders.json` — `award_announced_date` of the most recent award | Last-known-good (only if `tenders.json` failed to load) | When the current contract was awarded. UK bus contracts run ~5–7 yr so this is signal but not exact. |
+| `lastCostPerMile` | number \| null | `tenders.json` — `cost_per_mile` of the most recent award | Last-known-good (only if `tenders.json` failed to load) | £/live mile, directly comparable across routes regardless of length. Two-decimal precision matches TfL's published figure. |
+| `nextTenderStart` | YYYY-MM-DD \| null | `tender-programme.json` — earliest `contract_start_date >= today` | Last-known-good (only if `tender-programme.json` failed to load) | When the *next* contract starts on this route — i.e. when the current contract expires. Past entries are NOT a fallback (a stale date is more misleading than null). |
+| `nextTenderYear` | string \| null | `tender-programme.json` — `programme_year` of the next entry (e.g. `2026-2027`) | Last-known-good (only if `tender-programme.json` failed to load) | Surfaces which annual programme PDF the upcoming tender comes from. |
 
 ### Companion files
 
@@ -59,8 +70,11 @@ Every field below is denormalized into this file so the frontend only needs **on
 - **`data/route_stops.json`** — per-route ordered stop list: `{ routes: { "1": [{ id, towards }, …] } }`. The `towards` label is the TfL stop-flag hint ("Towards Hampstead") and is per route+stop, not per stop alone. Consumed by the frontend when rendering stops for a selected route.
 - **`data/source/vehicle-fleet.json`** — registration → `{ make, fuelType, yearOfManufacture, monthOfFirstRegistration, operator, bonnetNo, lastCheckedAt, dvlaStatus }`. Pipeline intermediate; consumed by `build-classifications.js`. Force-committed (90-day TTL) so weekly runs don't re-query DVLA from scratch.
 - **`data/source/route-vehicles.json`** — `{ routes: { [routeId]: [{ reg, lastSeenAt }, …] } }`. Per-route registrations observed in TfL arrivals over the trailing 56 days. Force-committed; coverage grows week-over-week.
+- **`data/source/route-performance.json`** — per-route EWT/OTP plus `pdfModifiedAt` (= the upstream PDF `Last-Modified` we last parsed). The `Last-Modified` watermark drives the skip-if-unchanged short-circuit. Force-committed.
+- **`data/source/tenders.json`** — every historical bus tender award keyed by btID (`{ tenders: { "1": { route_id: "341/N341", award_announced_date, awarded_operator, accepted_bid, lowest_bid, highest_bid, cost_per_mile, joint_bids, notes, … } } }`). ~2,500 rows back to 2003. Force-committed; awards are immutable so the cache only grows.
+- **`data/source/tender-programme.json`** — upcoming LBSL tendering programme parsed from 10 financial-year PDFs. Shape: `{ years: [{ programme_year, source_url, pdf_modified_at, entries: [{ tranche, route_id, tender_issue_date, tender_return_date, award_estimated, contract_start_date, route_description, vehicle_type, two_year_extension }] }] }`. Each year's `pdf_modified_at` watermark drives the per-year skip-if-unchanged short-circuit. Force-committed.
 - **`data/build-meta.json`** — generation timestamps shown in the footer.
-- **`data/geometry-source.json`** — upstream ZIP date, read by CI to skip re-committing unchanged per-route files.
+- **`data/geometry-source.json`** — upstream ZIP date, read by `fetch-data.js` to skip the download + extract when unchanged, and by CI to skip re-committing unchanged per-route files.
 
 Client-side aggregates (e.g. operator-level PVR share, electrification) are computed live in `js/stats.js` from `route_classifications.json` — no separate aggregate file on disk. Stops are **pre-baked weekly** into `stops.json` + `route_stops.json`; the frontend no longer calls the TfL API at runtime for stop data.
 
@@ -70,7 +84,7 @@ Client-side aggregates (e.g. operator-level PVR share, electrification) are comp
 
 | # | Script | Reads | Writes | Failure behaviour |
 |---|---|---|---|---|
-| 1 | `fetch-data.js` | TfL geometry ZIP | `data/routes/<id>.geojson`, `geometry-source.json` | Soft fail. |
+| 1 | `fetch-data.js` | TfL geometry ZIP | `data/routes/<id>.geojson`, `geometry-source.json` | Soft fail. **Skip-if-unchanged**: if the latest ZIP date matches `geometry-source.json::zipDate`, the download and extract are skipped (≈95% of weeks). `--force` to override. |
 | 2 | `fetch-route-destinations.js` | TfL API → routes.htm | `route_destinations.json` | Soft fail; per-route fallback. |
 | 3 | `fetch-route-stops.js` | TfL `/Line/<id>/StopPoints` | `stops.json`, `route_stops.json` | Soft fail; last-known-good kept on failure. |
 | 4 | `fetch-garages.js` | garages.csv + postcodes.io | `garages.geojson`, `geocode_cache.json` | Soft fail; geocode cache reused. |
@@ -78,11 +92,13 @@ Client-side aggregates (e.g. operator-level PVR share, electrification) are comp
 | 6 | `fetch-route-details.js` | garages.geojson + details.htm + bustimes | `source/route_details.json` (incl. `headwayMin` per route from the Mon-Sat / Sunday / evening columns) | Soft fail; each source independently optional. |
 | 7 | `fetch-vehicle-fleet.js` | iBus `Vehicle_<date>.xml` + DVLA VES per registration | `source/vehicle-fleet.json` (sticky 90-day cache, force-committed) | Soft fail. Per-run cap of 6000 lookups; periodic cache flush every 250 lookups; SIGTERM handler flushes on CI timeout. Cold-start week may take ~20 min; steady-state ~2 min. |
 | 8 | `fetch-route-vehicles.js` | TfL `/Line/<id>/Arrivals` (Monday peak snapshot) | `source/route-vehicles.json` (registrations per route, accumulated week-over-week with 56-day TTL) | Soft fail. Each Monday snapshot only sees buses currently running; the rolling-TTL accumulator builds full per-route fleet coverage over a few weeks. |
-| 9 | `fetch-route-performance.js` | `bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf` (TfL QSI report) | `source/route-performance.json` (per-route EWT/OTP for the latest 4-week period); also dumps `route-performance-raw.txt` for parser debugging | Soft fail. PDF parsing is brittle so the script logs raw extracted text alongside parsed records — if the parser ever silently produces zero routes, the raw dump tells us what changed. |
-| 10 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. Frequency uses the 3-tier chain (TfL → times-page → details.htm `headwayMin`); propulsion uses DVLA fleet aggregator → LBR heuristic → vehicle-lookup → null. |
-| 11 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 10. |
-| 12 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
-| 13 | `push-to-supabase.js` | `route_classifications.json` + `source/vehicle-fleet.json` + `source/route-vehicles.json` + `garages.geojson` + `source/route-performance.json` | Supabase tables `vehicles` (upsert), `route_snapshots`, `route_vehicle_observations`, `garage_snapshots`, `route_performance` | Soft fail. Skipped silently if `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are unset. |
+| 9 | `fetch-route-performance.js` | `bus.data.tfl.gov.uk/boroughreports/current-quarter.pdf` (TfL QSI report) | `source/route-performance.json` (per-route EWT/OTP for the latest 4-week period); also dumps `route-performance-raw.txt` for parser debugging | Soft fail. **Skip-if-unchanged**: `HEAD` first; if `Last-Modified` matches the cached `pdfModifiedAt` the parse is skipped (PDF only republishes every ~4 weeks). PDF parsing is brittle so the script logs raw extracted text alongside parsed records. `--force` to override. |
+| 10 | `fetch-tenders.js` | `tfl.gov.uk/forms/13923.aspx` (discovery) → `tfl.gov.uk/forms/13796.aspx?btID=…` (per award) | `source/tenders.json` (sticky cache, force-committed) | Soft fail. Awards are immutable; only new btIDs are fetched. Per-run cap of 4,000; flush every 100 + SIGTERM handler. |
+| 11 | `fetch-tender-programme.js` | 10 LBSL programme PDFs (one per FY 2017/18 → 2026/27) | `source/tender-programme.json` (force-committed) | Soft fail. **Skip-if-unchanged**: per-year `HEAD`; closed years copied forward when `Last-Modified` matches cache (drops 10 PDF parses to 1 in steady state). `--force` to override. |
+| 12 | `build-classifications.js` | all above + `route-overrides.json` + `vehicle-lookup.json` + `tenders.json` + `tender-programme.json` + last-known-good `route_classifications.json` | `route_classifications.json` | **Merges last-known-good** so one bad scrape never wipes curated fields. Frequency uses the 3-tier chain (TfL → times-page → details.htm `headwayMin`); propulsion uses DVLA fleet aggregator → LBR heuristic → vehicle-lookup → null. Tender enrichment derives `previousOperator` / `lastAwardDate` / `lastCostPerMile` / `nextTenderStart` / `nextTenderYear` per route. |
+| 13 | `build-overview.js` | classifications + per-route geojson | `routes-overview.geojson`, `build-meta.json` | Hard fail. Must re-run after step 12. |
+| 14 | `build-garage-locations.js` | `garages.geojson` + Photon/Nominatim | `garage-locations.json` | Soft fail; address-keyed cache, usually zero network calls. |
+| 15 | `push-to-supabase.js` | `route_classifications.json` + `source/vehicle-fleet.json` + `source/route-vehicles.json` + `garages.geojson` + `source/route-performance.json` + `source/tenders.json` + `source/tender-programme.json` + `tender-overrides.json` | Supabase tables `vehicles` (upsert), `route_snapshots`, `route_vehicle_observations`, `garage_snapshots`, `route_performance`, `tenders`, `tender_programme` (each with derived columns: tenders has `propulsion_type` / `is_joint_bid` / `vehicles_basis` / `previous_operator`; programme has `propulsion_type` / `previous_operator`) | Soft fail. Skipped silently if `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are unset. |
 
 ### Field-precedence (in `build-classifications.js`)
 
@@ -140,7 +156,24 @@ on the locked tables.
 
 ---
 
-## 4. Known traps
+## 4. Skip-if-unchanged & freshness watermarks
+
+Every fetcher writes its own freshness watermark into its cached output and reads it back at the start of the next run. There is no central "scrape index" file — each cache *is* the index for its own upstream. This avoids two-source-of-truth drift (e.g. the index says fresh but the cache file is gone) and self-heals: a deleted cache triggers a full re-fetch automatically.
+
+| Fetcher | Watermark | Skip rule |
+|---|---|---|
+| `fetch-data.js` | `data/geometry-source.json::zipDate` | List S3, compare new ZIP date; skip if equal. |
+| `fetch-route-performance.js` | `route-performance.json::pdfModifiedAt` | `HEAD` request, compare `Last-Modified`; skip if equal. |
+| `fetch-tender-programme.js` | per-year `pdf_modified_at` inside `tender-programme.json` | Per-year `HEAD`; copy entries forward when `Last-Modified` is unchanged. |
+| `fetch-vehicle-fleet.js` | per-registration `lastCheckedAt` | 90-day TTL — re-query DVLA only when stale. Failed lookups (404 / network) are also cached so they don't hammer DVLA on retries. |
+| `fetch-tenders.js` | btID presence in cache | Awards are immutable; never re-fetch a btID once cached. |
+| `fetch-garages.js` | postcode presence in `geocode_cache.json` | Geocode only postcodes not yet cached. |
+
+All skip-capable scripts accept `--force` to bypass the cache and re-fetch. `npm run refresh` runs the orchestrator, which honours these per-script skips automatically.
+
+---
+
+## 5. Known traps
 
 - **Routes 700–799** — coach / excluded from geometry ZIP. No classification entry.
 - **Route 969** — TfL Line endpoint returns nothing. Hard-coded in `fetch-route-destinations.js`.
@@ -156,7 +189,7 @@ on the locked tables.
 
 ---
 
-## 5. Hosting & platform limits
+## 6. Hosting & platform limits
 
 | Dimension | Limit | Headroom today |
 |---|---|---|
@@ -173,9 +206,10 @@ on the locked tables.
 
 ---
 
-## 6. Manual curation surfaces
+## 7. Manual curation surfaces
 
 - `data/route-overrides.json` — per-route field overrides; any set field wins over every other source.
 - `data/vehicle-lookup.json` — vehicleType → `{ deck, propulsion }`. Run `npm run update-vehicle-lookup` after a refresh to discover new entries.
+- `data/tender-overrides.json` — per-btID corrections for typos / row-shift artefacts in the upstream TfL tender form (e.g. btID 2010 had a misplaced `cost_per_mile` of 4,205,196). Applied during `push-to-supabase.js`.
 
-These two files are the only hand-maintained data in the project. Everything else is regenerated weekly.
+These three files are the only hand-maintained data in the project. Everything else is regenerated weekly.

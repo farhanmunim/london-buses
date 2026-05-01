@@ -356,22 +356,45 @@ a{color:inherit;text-decoration:none}
 .rc-name{font-size:11.5px;color:var(--mu);margin-top:3px;line-height:1.35}
 .rc-op{
   font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:var(--r-pill);
-  color:#fff;white-space:nowrap;flex-shrink:0;align-self:flex-start;
+  color:#fff;white-space:nowrap;flex-shrink:0;align-self:flex-end;
   letter-spacing:.2px;line-height:1.4;
 }
+/* Meta column on the top-right — operator pill on top, route-type label
+   below. Right-aligned so both items sit flush with the card edge. The
+   type label is intentionally quieter (uppercase eyebrow) so it doesn't
+   compete with the operator pill for attention. */
+.rc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.rc-type{
+  font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--mu);line-height:1;
+}
 
-/* KPI grid — flat tiles, no border. Less "card-in-card" feel. */
-.rc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:8px}
+/* KPI grid — single row of 3 KPI tiles for the headline route facts.
+   (Type moved out of the grid into the top-right meta column above.) */
+.rc-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:10px}
 .rc-kpi{background:var(--surf-s);border:none;border-radius:var(--r-md);padding:7px 9px}
 .rc-kpi-l{font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:2px}
 .rc-kpi-v{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--tx);line-height:1.2}
 
-/* Tender block: flat panel, tight rows. */
+/* Section grouping inside the route card — Route / Fleet / Tender.
+   Reuses the modal-section "tag" treatment so the visual vocabulary is
+   consistent with the About/Roadmap dialogs. */
+.rc-section{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.rc-section:last-child{margin-bottom:0}
+.rc-section-tag{
+  font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--mu);padding:0 2px;
+}
+
+/* Detail panel: flat surface, tight rows. */
 .rc-tender{background:var(--surf-s);border:none;border-radius:var(--r-md);padding:10px 12px;display:flex;flex-direction:column;gap:4px}
 .rc-tr{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;gap:10px;padding:3px 0}
 .rc-tr + .rc-tr{border-top:1px solid var(--bd)}
 .rc-tr-l{color:var(--mu)}
 .rc-tr-v{font-weight:500;color:var(--tx);display:inline-flex;align-items:center;gap:6px;text-align:right}
+/* "(no change)" / "first award" placeholder vocabulary — quieter than the
+   real data values, distinct from the bare "—" we use for missing data. */
+.rc-tr-v.rc-tr-v--muted{color:var(--mu);font-style:italic;font-weight:400}
 
 .route-search-prompt{
   display:flex;flex-direction:column;align-items:center;justify-content:center;

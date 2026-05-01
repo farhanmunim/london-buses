@@ -69,6 +69,26 @@ async function fetchPdfBuffer() {
   }
 }
 
+// HEAD-only fetch so we can compare Last-Modified before pulling 1+ MB.
+async function fetchPdfHead() {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(SOURCE_URL, {
+      method:  'HEAD',
+      signal:  controller.signal,
+      headers: { 'User-Agent': USER_AGENT },
+    });
+    if (!res.ok) return null;
+    const lastMod = res.headers.get('last-modified');
+    return lastMod ? new Date(lastMod).toISOString() : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ── Period parsing (header text) ────────────────────────────────────────────
 // Cover and table headers print "Quarter 03 25/26" style — map FY quarter to
 // UTC dates (TfL FY runs 1 April → 31 March).
@@ -223,6 +243,21 @@ function parsePage(rows, shape, out) {
 
 // ── Main ────────────────────────────────────────────────────────────────────
 async function main() {
+  // Skip-if-unchanged: TfL only republishes the QSI PDF every ~4 weeks (one
+  // 13-period reporting cycle). HEAD first; if Last-Modified matches what we
+  // already cached, skip the download + parse. `--force` re-runs unconditionally.
+  const force = process.argv.includes('--force');
+  if (!force && fs.existsSync(OUT_PATH)) {
+    try {
+      const cached = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
+      const upstreamMod = await fetchPdfHead();
+      if (upstreamMod && cached.pdfModifiedAt === upstreamMod) {
+        console.log(`PDF unchanged (Last-Modified ${upstreamMod}) — skipping. Use --force to override.`);
+        return;
+      }
+    } catch { /* fall through to a full fetch */ }
+  }
+
   console.log(`Fetching ${SOURCE_URL} ...`);
   const { buffer, lastModified } = await fetchPdfBuffer();
   console.log(`  ${(buffer.length / 1024).toFixed(0)} KB, last-modified ${lastModified ?? 'unknown'}`);

@@ -83,6 +83,43 @@ async function fetchPdf(url) {
   }
 }
 
+// HEAD-only request so we can skip the body when Last-Modified matches cache.
+async function fetchPdfModified(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      method:  'HEAD',
+      signal:  controller.signal,
+      headers: { 'User-Agent': USER_AGENT },
+    });
+    if (!res.ok) {
+      if (res.status === 404) return { status: 404, lastModified: null };
+      return { status: res.status, lastModified: null };
+    }
+    const lastMod = res.headers.get('last-modified');
+    return { status: 200, lastModified: lastMod ? new Date(lastMod).toISOString() : null };
+  } catch {
+    return { status: 0, lastModified: null };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Load the previous run's per-year entries so we can copy them forward when
+// a year's PDF Last-Modified hasn't moved.
+function loadPriorYears() {
+  if (!fs.existsSync(OUT_PATH)) return new Map();
+  try {
+    const j = JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'));
+    const map = new Map();
+    for (const yr of (j.years ?? [])) map.set(yr.programme_year, yr);
+    return map;
+  } catch {
+    return new Map();
+  }
+}
+
 // ── PDF → row[][] (per page, position-clustered) ────────────────────────────
 async function extractRows(buffer) {
   const doc = await pdfjs.getDocument({
@@ -237,10 +274,32 @@ async function main() {
   const out = { generatedAt: new Date().toISOString(), years: [] };
   let totalEntries = 0;
   let yearsWithData = 0;
+  let cacheHits    = 0;
+  const force      = process.argv.includes('--force');
+  const prior      = loadPriorYears();
 
   for (const year of YEARS) {
     const url = PDF_URL(year);
     process.stdout.write(`  ${year} ... `);
+
+    // Skip-if-unchanged: HEAD first. Closed financial years never change once
+    // the year has rolled over, so almost every run hits this fast path for
+    // 9 of 10 years. The active year (and any year TfL re-published mid-cycle)
+    // falls through to the full fetch + parse.
+    if (!force && prior.has(year)) {
+      const head = await fetchPdfModified(url);
+      const cached = prior.get(year);
+      if (head.status === 200 && head.lastModified && cached.pdf_modified_at === head.lastModified) {
+        out.years.push(cached);
+        totalEntries += cached.entry_count ?? cached.entries?.length ?? 0;
+        if ((cached.entry_count ?? cached.entries?.length ?? 0) > 0) yearsWithData++;
+        cacheHits++;
+        console.log(`unchanged (Last-Modified ${head.lastModified}) — using cache`);
+        continue;
+      }
+      if (head.status === 404) { console.log('not published yet'); continue; }
+    }
+
     let download;
     try {
       download = await fetchPdf(url);
@@ -273,6 +332,7 @@ async function main() {
     totalEntries += entries.length;
     yearsWithData++;
   }
+  if (cacheHits) console.log(`  ${cacheHits} year(s) served from cache`);
 
   out.totalEntries = totalEntries;
   out.yearsWithData = yearsWithData;

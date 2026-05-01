@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.6</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.7</a>
 
       <div style="flex:1"></div>
 
@@ -74,6 +74,39 @@
               Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 05:00 UTC.
             </p>
           </header>
+
+          <!-- ═══════════════════════════════════════════════════════════════
+               v2.7 — Tender data & pipeline short-circuits
+               ═══════════════════════════════════════════════════════════════ -->
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.7</span> Apr 30, 2026</div>
+            <a href="#v2_7" class="cl-entry-title">Tender data on every route card, three pipeline short-circuits, and contributors</a>
+            <p class="cl-body-text">
+              <strong>Tender award history is now surfaced on every route card.</strong> The placeholder rows for <em>Previous operator</em>, <em>Contract expires</em>, and <em>Contract value</em> are wired up. <code>build-classifications.js</code> joins <code>data/source/tenders.json</code> (~2,500 historical awards going back to 2003) with <code>data/source/tender-programme.json</code> (the LBSL programme PDFs) to compute per-route <code>previousOperator</code>, <code>lastAwardDate</code>, <code>lastCostPerMile</code> (£/mile, directly comparable across routes), <code>nextTenderStart</code> and <code>nextTenderYear</code>. Combined route IDs like <code>341/N341</code> automatically feed both the day route and its night sibling. "Previous operator" walks the sorted award list to find the most recent earlier operator that genuinely differs from the current incumbent, so a route re-awarded twice to the same operator still shows its real predecessor.
+            </p>
+            <p class="cl-body-text">
+              <strong>Tender data pushed to Supabase</strong> with four derived columns on <code>public.tenders</code> (<code>propulsion_type</code>, <code>is_joint_bid</code>, <code>vehicles_basis</code>, <code>previous_operator</code>) and two on <code>public.tender_programme</code> (<code>propulsion_type</code>, <code>previous_operator</code>). All derivations run automatically in <code>push-to-supabase.js</code> from the existing notes / vehicle-type / award-date fields; <code>data/tender-overrides.json</code> applies any manual corrections.
+            </p>
+            <p class="cl-body-text">
+              <strong>Three pipeline short-circuits</strong> stop the weekly run from re-doing work upstream hasn't changed.
+              <code>fetch-data.js</code> lists S3, compares the latest ZIP date against <code>data/geometry-source.json::zipDate</code>, and skips the ~10 MB download + 700 file rewrites when unchanged (≈95% of weeks).
+              <code>fetch-route-performance.js</code> sends a <code>HEAD</code> first and skips the PDF parse if <code>Last-Modified</code> matches the cached <code>pdfModifiedAt</code> — the QSI PDF only republishes every ~4 weeks so most runs now exit in milliseconds.
+              <code>fetch-tender-programme.js</code> does a per-year <code>HEAD</code>; closed financial years are copied forward unchanged, dropping 10 PDF parses to 1 in steady state.
+              All three accept <code>--force</code> for manual re-runs.
+            </p>
+            <p class="cl-body-text">
+              <strong>Truthful nulls in the build.</strong> When a source file loads cleanly but a route has no entries, the build writes <code>null</code> instead of falling back to last-known-good — otherwise stale values persist forever. Last-known-good now only kicks in when the source file itself is missing (i.e. the upstream scrape failed).
+            </p>
+            <p class="cl-body-text">
+              <strong>About → Contributors.</strong> Daniel Plumb, Mark Leonard-Adoko, and Ross Levine added under the Developer section.
+            </p>
+            <div class="cl-authors">
+              <a href="https://github.com/farhanmunim" target="_blank" rel="noopener" class="cl-author">
+                <span class="cl-author-avatar" style="background: #dc2626">FM</span>
+                Farhan
+              </a>
+            </div>
+          </article>
 
           <!-- ═══════════════════════════════════════════════════════════════
                v2.6 — Frequency rules, propulsion fix, headway tier-3 fallback

@@ -6,7 +6,25 @@ All notable changes to **London Buses** are listed here.
 
 ## Upcoming
 
-- **DVLA Vehicle Enquiry Service (VES) propulsion lookup** _(API access requested)_ — Replace the `details.htm` fleet-prefix heuristic with authoritative fuel-type data from DVLA VES. Pipeline: cross-reference [TfL iBus open data](https://ibus.data.tfl.gov.uk/) (`Vehicle.xml` → registration + operator + bonnet number) against DVLA VES (`registrationNumber → fuelType`) to build a per-vehicle propulsion table, then aggregate per route via TfL live arrivals (`vehicleId` per route). Eliminates the regex parsing of LBR vehicle strings and naturally handles mixed fleets / fleet transitions.
+- **Analytics page** — `/analytics` reading directly from Supabase via the anon key (RLS-locked to read-only). Charts under consideration: fleet-age trend, operator share over time, electrification curve, EWT/OTP movement around tender events, and per-route operator churn.
+
+---
+
+## v2.7 – Tender data & pipeline short-circuits
+
+_2026-04-30_
+
+- **Tender award history surfaced on every route card.** The placeholder rows (Previous operator / Contract expires / Contract value) are now wired up. `build-classifications.js` joins `data/source/tenders.json` (~2,500 historical awards back to 2003) and `data/source/tender-programme.json` (upcoming tender schedule from the LBSL programme PDFs) to compute per-route `previousOperator`, `lastAwardDate`, `lastCostPerMile`, `nextTenderStart`, `nextTenderYear`, plus six high-signal additions: `tenderAwardCount` (awards on file), `numberOfTenderers` (bids received), `wasJointBid` (Yes/No), `contractTermYears` (note-derived → date-derived fallback), `awardedPropulsion`/`awardedDeck` and `prevAwardedPropulsion`/`prevAwardedDeck` (so the card can show "Electric (double) — was Hybrid (double)" when a route changes spec), and `extensionEligible` (TfL's 2-year-extension marker from the programme PDF). Combined route IDs like `341/N341` automatically feed both the day route and its night sibling. "Previous operator" walks the sorted award list to find the most recent earlier operator that genuinely differs from the current incumbent.
+- **Route card restructured into Route / Fleet / Tender·Last / Tender·Next sections.** KPI strip slimmed to 4 tiles (Type · PVR · Stops · Freq); per-section labels match the modal-section vocabulary. Tender rows that don't apply to a route (no joint bid, no spec change, no extension flag) are now hidden rather than rendered as `—`, so cards stay compact for routes with sparse tender data.
+- **Tender-history operator names normalised** for display: subsidiary brands (Arriva London North, First London East, Abellio West London, Stagecoach East London, Metroline West, Go-Ahead London, …) fold into the parent brand for the "Previous operator" cell, while genuinely distinct historical brands (Tower Transit, Selkent, Blue Triangle, London Sovereign, Docklands Buses, …) stay verbatim. Three explicit UI states: a real predecessor name, "no change" (route re-awarded to the same operator), or "first award" / `XXX` (no prior history on file).
+- **Tender data pushed to Supabase** with four derived columns on `public.tenders` — `propulsion_type`, `is_joint_bid`, `vehicles_basis`, `previous_operator` — and two on `public.tender_programme` (`propulsion_type`, `previous_operator`). All derivations run automatically in `push-to-supabase.js` from the existing notes / vehicle-type / award-date fields, then `data/tender-overrides.json` applies any manual corrections. Migrations 0006 + 0007.
+- **Pipeline short-circuits** for the three fetchers that were doing unnecessary upstream work every weekly run:
+  - **Geometry ZIP** (`fetch-data.js`) — lists S3, compares the latest ZIP date against `data/geometry-source.json::zipDate`, and skips the ~10 MB download + 700 file rewrites if unchanged. Runs in ~1 s on weeks where TfL hasn't republished (≈95% of weeks).
+  - **Route performance PDF** (`fetch-route-performance.js`) — `HEAD` request first; skip the parse if `Last-Modified` matches the cached `pdfModifiedAt`. The QSI PDF only republishes every ~4 weeks (one TfL reporting cycle), so most weeks now exit in milliseconds.
+  - **Tender programme PDFs** (`fetch-tender-programme.js`) — per-year `HEAD`; copies the cached entries forward unchanged when a closed financial year's PDF hasn't been re-uploaded. In steady state this drops 10 PDF parses to 1 (the active year).
+  - All three accept `--force` for manual re-runs.
+- **Truthful nulls in the build.** When a source file (`tenders.json`, `tender-programme.json`) loads cleanly but a route has no entries, the relevant fields write `null` rather than falling back to last-known-good — otherwise stale values from earlier runs persist forever. Last-known-good is reserved for the case where the source file itself is missing (i.e. the upstream scrape failed).
+- **About → Contributors** — Daniel Plumb, Mark Leonard-Adoko, and Ross Levine added under the Developer section.
 
 ---
 
