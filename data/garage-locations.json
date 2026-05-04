@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-01T15:55:23.761Z",
+  "generatedAt": "2026-05-04T11:36:42.055Z",
   "count": 76,
   "garages": {
     "A": {
@@ -180,7 +180,7 @@
       "address": "Henley Road, North Woolwich, London, E16 2EJ",
       "lat": 51.500295,
       "lon": 0.055874,
-      "pvr": 141
+      "pvr": 138
     },
     "DT": {
       "code": "DT",
@@ -450,7 +450,7 @@
       "address": "Unit 2, Albright Industrial Estate, Ferry Lane, Rainham, Essex, RM13 9BU",
       "lat": 51.515664,
       "lon": 0.18476,
-      "pvr": 113
+      "pvr": 114
     },
     "RR": {
       "code": "RR",
@@ -459,7 +459,7 @@
       "address": "51 River Road, London, IG11 0DA",
       "lat": 51.523066,
       "lon": 0.096456,
-      "pvr": 227
+      "pvr": 206
     },
     "S": {
       "code": "S",
@@ -585,7 +585,7 @@
       "address": "180 Bromley Road, Catford, London, SE6 2XA",
       "lat": 51.433618,
       "lon": -0.018598,
-      "pvr": 130
+      "pvr": 129
     },
     "TV": {
       "code": "TV",
@@ -639,7 +639,7 @@
       "address": "Stephenson Street, Canning Town, London, E16 4SA",
       "lat": 51.51993,
       "lon": 0.003785,
-      "pvr": 31
+      "pvr": 32
     },
     "WJ": {
       "code": "WJ",

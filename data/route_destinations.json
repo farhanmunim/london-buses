@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-04-29T23:25:56Z",
-  "route_count": 677,
+  "generated_at_utc": "2026-05-04T10:59:40Z",
+  "route_count": 675,
   "routes": {
     "1": {
       "service_types": [
@@ -550,16 +550,18 @@
       }
     },
     "39": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Clapham Junction",
-        "qualifier": "",
+        "qualifier": "Clapham Junction Stn / the Falcon",
         "full": "Clapham Junction"
       },
       "inbound": {
-        "destination": "Putney",
-        "qualifier": "",
-        "full": "Putney"
+        "destination": "Putney Bridge",
+        "qualifier": "Putney Bridge Station",
+        "full": "Putney Bridge"
       }
     },
     "40": {
@@ -576,16 +578,18 @@
       }
     },
     "41": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Archway",
-        "qualifier": "",
-        "full": "Archway"
+        "destination": "Tottenham Hale",
+        "qualifier": "Tottenham Hale Bus Station",
+        "full": "Tottenham Hale"
       },
       "inbound": {
-        "destination": "Tottenham Hale",
-        "qualifier": "",
-        "full": "Tottenham Hale"
+        "destination": "Archway",
+        "qualifier": "Archway Station",
+        "full": "Archway"
       }
     },
     "42": {
@@ -1189,33 +1193,29 @@
       }
     },
     "85": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Kingston",
-        "qualifier": "Kingston Hall Road",
-        "full": "Kingston"
+        "destination": "Putney",
+        "qualifier": "",
+        "full": "Putney"
       },
       "inbound": {
-        "destination": "Putney Bridge",
-        "qualifier": "Putney Bridge Station",
-        "full": "Putney Bridge"
+        "destination": "Kingston",
+        "qualifier": "",
+        "full": "Kingston"
       }
     },
     "86": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Romford Station",
+        "destination": "Stratford",
         "qualifier": "",
-        "full": "Romford Station"
+        "full": "Stratford"
       },
       "inbound": {
-        "destination": "Stratford",
-        "qualifier": "Stratford Bus Station",
-        "full": "Stratford"
+        "destination": "Romford",
+        "qualifier": "",
+        "full": "Romford"
       }
     },
     "87": {
@@ -1375,16 +1375,18 @@
       }
     },
     "99": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Woolwich",
-        "qualifier": "",
-        "full": "Woolwich"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Geddes Place",
+        "full": "Bexleyheath, Shopping Centre, Geddes Place"
       },
       "inbound": {
-        "destination": "Bexleyheath",
-        "qualifier": "",
-        "full": "Bexleyheath"
+        "destination": "Woolwich",
+        "qualifier": "Beresford Sq / Woolwich Arsenal Stn",
+        "full": "Woolwich"
       }
     },
     "100": {
@@ -3023,17 +3025,15 @@
       }
     },
     "211": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Battersea Power Station",
+        "destination": "Waterloo Station",
         "qualifier": "",
-        "full": "Battersea Power Station"
+        "full": "Waterloo Station"
       },
       "inbound": {
         "destination": "Hammersmith",
-        "qualifier": "Hammersmith Bus Station",
+        "qualifier": "",
         "full": "Hammersmith"
       }
     },
@@ -3083,16 +3083,13 @@
       }
     },
     "215": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Walthamstow",
-        "qualifier": "",
-        "full": "Walthamstow"
-      },
-      "inbound": {
-        "destination": "Lee Valley Campsite",
-        "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "destination": "Walthamstow Central",
+        "qualifier": "Walthamstow Bus Station",
+        "full": "Walthamstow Central, Walthamstow Bus Station"
       }
     },
     "216": {
@@ -3304,16 +3301,18 @@
       }
     },
     "232": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Wood Green Turnpike Lane Station",
+        "destination": "Turnpike Lane Station",
         "qualifier": "",
-        "full": "Wood Green Turnpike Lane Station"
+        "full": "Turnpike Lane Station"
       },
       "inbound": {
-        "destination": "St Raphael's Estate",
-        "qualifier": "",
-        "full": "St Raphael's Estate"
+        "destination": "St Raphael's",
+        "qualifier": "Mitchell Way",
+        "full": "St Raphael's, Mitchell Way"
       }
     },
     "233": {
@@ -3591,8 +3590,8 @@
       },
       "inbound": {
         "destination": "Collier Row",
-        "qualifier": "Collier Row / Clockhouse Lane",
-        "full": "Collier Row"
+        "qualifier": "White Hart Lane",
+        "full": "Collier Row, White Hart Lane"
       }
     },
     "253": {
@@ -5396,16 +5395,18 @@
       }
     },
     "389": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Barnet",
-        "qualifier": "",
-        "full": "Barnet"
+        "destination": "Barnet, Western Way",
+        "qualifier": "Western Way",
+        "full": "Barnet, Western Way"
       },
       "inbound": {
-        "destination": "Western Way",
-        "qualifier": "",
-        "full": "Western Way"
+        "destination": "Barnet, The Spires",
+        "qualifier": "The Spires",
+        "full": "Barnet, The Spires"
       }
     },
     "390": {
@@ -5565,29 +5566,33 @@
       }
     },
     "406": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Kingston",
-        "qualifier": "",
-        "full": "Kingston"
+        "destination": "Epsom",
+        "qualifier": "Epsom High Street",
+        "full": "Epsom"
       },
       "inbound": {
-        "destination": "Epsom",
-        "qualifier": "",
-        "full": "Epsom"
+        "destination": "Kingston",
+        "qualifier": "Cromwell Road Bus Station",
+        "full": "Kingston, Cromwell Road Bus Station"
       }
     },
     "407": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Sutton",
-        "qualifier": "",
-        "full": "Sutton"
+        "destination": "Caterham",
+        "qualifier": "Caterham Valley",
+        "full": "Caterham"
       },
       "inbound": {
-        "destination": "Caterham",
-        "qualifier": "",
-        "full": "Caterham"
+        "destination": "Sutton, Town Centre",
+        "qualifier": "Sutton / Marshall's Road",
+        "full": "Sutton, Town Centre, Sutton / Marshall's Road"
       }
     },
     "410": {
@@ -6740,21 +6745,6 @@
         "full": "St. Paul's School"
       }
     },
-    "638": {
-      "service_types": [
-        "Regular"
-      ],
-      "outbound": {
-        "destination": "Kemnal Technology College",
-        "qualifier": "",
-        "full": "Kemnal Technology College"
-      },
-      "inbound": {
-        "destination": "Coney Hall",
-        "qualifier": "Glebe Way",
-        "full": "Coney Hall, Glebe Way"
-      }
-    },
     "639": {
       "service_types": [
         "Regular"
@@ -7140,21 +7130,6 @@
         "full": "Woolwich"
       }
     },
-    "674": {
-      "service_types": [
-        "Regular"
-      ],
-      "outbound": {
-        "destination": "Romford Station",
-        "qualifier": "",
-        "full": "Romford Station"
-      },
-      "inbound": {
-        "destination": "Harold Hill, Dagnam Park Square",
-        "qualifier": "Dagnam Park Square",
-        "full": "Harold Hill, Dagnam Park Square"
-      }
-    },
     "675": {
       "service_types": [
         "Regular"
@@ -7436,16 +7411,18 @@
       }
     },
     "A10": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Heathrow Airport Central",
-        "qualifier": "",
-        "full": "Heathrow Airport Central"
+        "destination": "Heathrow Central",
+        "qualifier": "Heathrow Central Bus Station",
+        "full": "Heathrow Central"
       },
       "inbound": {
         "destination": "Uxbridge",
-        "qualifier": "",
-        "full": "Uxbridge"
+        "qualifier": "Belmont Road",
+        "full": "Uxbridge, Belmont Road"
       }
     },
     "B11": {
@@ -7464,16 +7441,18 @@
       }
     },
     "B12": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Erith",
-        "qualifier": "",
-        "full": "Erith"
+        "destination": "Joyden's Wood",
+        "qualifier": "St Mary's Road",
+        "full": "Joyden's Wood, St Mary's Road"
       },
       "inbound": {
-        "destination": "Joydens Wood",
-        "qualifier": "",
-        "full": "Joydens Wood"
+        "destination": "Erith",
+        "qualifier": "Erith Town Centre / Riverside",
+        "full": "Erith"
       }
     },
     "B13": {
