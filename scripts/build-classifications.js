@@ -669,7 +669,10 @@ for (const file of routeFiles) {
   const operator     = details.operator;
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
-  const pvr          = details.pvr;
+  // PVR=0 is not a meaningful value (a route with zero peak vehicles isn't
+  // operational). Treat it as null so the audit doesn't flag it and the UI
+  // shows "—" rather than "0 buses".
+  const pvr          = (details.pvr === 0 || details.pvr === '0') ? null : details.pvr;
   // Frequency band: TfL-primary, with a tertiary fallback on the headway
   // column scraped straight from details.htm. The pipeline tier order is:
   //   1. fetch-frequencies.js → TfL /Line/<id>/Timetable (primary)
@@ -722,7 +725,10 @@ for (const file of routeFiles) {
     operator:    override.operator    ?? operator    ?? lastRec.operator    ?? null,
     garageName:  override.garageName  ?? garageName  ?? lastRec.garageName  ?? null,
     garageCode:  override.garageCode  ?? garageCode  ?? lastRec.garageCode  ?? null,
-    pvr:         override.pvr         ?? pvr         ?? lastRec.pvr         ?? null,
+    // PVR=0 anywhere in the fallback chain means "no peak vehicle assignment
+    // recorded" — semantically null, not 0. Without this final clamp a 0 in
+    // last-known-good would shadow a null from this run via `??`.
+    pvr:         (v => (v === 0 || v === '0' ? null : v))(override.pvr ?? pvr ?? lastRec.pvr ?? null),
     // Frequency is TfL-primary — no last-good fallback needed (if TfL says the
     // route has no published timetable that's new authoritative information).
     frequency:   override.frequency   ?? frequency,
@@ -741,9 +747,16 @@ for (const file of routeFiles) {
     // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
     // populated depending on serviceClass. perfPeriod tells the UI which TfL
     // reporting period the figure covers.
-    serviceClass:    perf?.service_class   ?? mps?.service_class      ?? lastRec.serviceClass    ?? null,
-    ewtMinutes:      perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null,
-    onTimePercent:   perf?.on_time_percent ?? lastRec.onTimePercent   ?? null,
+    // serviceClass precedence: MPS PDF (contractual, set per tender) wins
+    // over the QSI performance reading (a measurement that occasionally
+    // misclassifies — H25 is the canonical case where the perf PDF lists
+    // it under the high-frequency table but its MPS row + bus frequency
+    // are unambiguously low-frequency). Once serviceClass is locked, the
+    // two reliability metrics are mutually exclusive — only the metric
+    // matching the class is meaningful.
+    serviceClass:    mps?.service_class    ?? perf?.service_class     ?? lastRec.serviceClass    ?? null,
+    ewtMinutes:      (mps?.service_class === 'low-frequency') ? null : (perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null),
+    onTimePercent:   (mps?.service_class === 'high-frequency') ? null : (perf?.on_time_percent ?? lastRec.onTimePercent   ?? null),
     perfPeriod:      (perf ? routePerfPeriod : null) ?? lastRec.perfPeriod ?? null,
     // Per-route Minimum Performance Standards (the contractual benchmark
     // each route is graded against). Set per tender, vary route-by-route

@@ -80,6 +80,12 @@ jobs:
             data/frequencies.json \
             data/garages.geojson || true
 
+          # Persist the weekly data-quality audit report. The refresh
+          # hard-fails on CRITICAL issues (so a broken commit never lands),
+          # but committing the report each successful week gives a history
+          # we can diff for regressions.
+          git add -f data/audit/data-quality.json || true
+
           # Persist the postcodes.io geocode cache across runs to avoid
           # re-geocoding every garage weekly.
           git add -f data/source/geocode_cache.json || true

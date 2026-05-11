@@ -166,7 +166,15 @@ function parseTenderHtml(html, btId) {
     accepted_bid:           parseMoney(rowByPrefix(rows, 'Accepted Bid')),
     lowest_bid:             parseMoney(rowByPrefix(rows, 'Lowest Individual Compliant Bid')),
     highest_bid:            parseMoney(rowByPrefix(rows, 'Highest Individual Compliant Bid')),
-    cost_per_mile:          parseMoney(rowByPrefix(rows, 'Cost per live mile')),
+    // Sanity-clamp cost_per_mile. TfL's tender form occasionally has the
+    // full annual bid pasted into this cell instead of the per-mile rate
+    // (seen on btID 1521, 1148, 2073, 290 (2006), 265 (2022)). Real rates
+    // span £3-15 for regular passenger routes and up to ~£100 for school
+    // routes. Anything over 200 is a column-mix-up — drop it rather than
+    // surface a £4.2M-per-mile headline in the UI.
+    cost_per_mile:          (v => (v != null && v >= 0 && v <= 200 ? v : null))(
+                              parseMoney(rowByPrefix(rows, 'Cost per live mile'))
+                            ),
     reason_not_lowest:      sanitizeText(rowByPrefix(rows, 'Reason for not awarding'),     { maxLen: 1000 }),
     joint_bids:             sanitizeText(rowByPrefix(rows, 'Joint Bids'),                  { maxLen: 1000 }),
     notes:                  sanitizeText(rowByPrefix(rows, 'Notes'),                       { maxLen: 2000 }),
@@ -178,7 +186,23 @@ function parseTenderHtml(html, btId) {
 // Cache I/O — load + atomic flush via `_lib/cache.js`.
 function loadCache() {
   const j = loadJsonCache(OUT_PATH, {});
-  return { tenders: j.tenders ?? {} };
+  const tenders = j.tenders ?? {};
+  // Retro-sanitise pre-existing records. The cost_per_mile clamp in
+  // parseTenderHtml only protects future scrapes; entries already cached
+  // (e.g. btID for route 290 2006, route 265 2022) with absurd values like
+  // 4,205,196 (the full annual bid pasted into the per-mile cell at TfL)
+  // sit forever otherwise. Clearing them to null tells the build step "we
+  // don't have a reliable rate for this tender" rather than surfacing a
+  // £4.2M/mile headline.
+  let clamped = 0;
+  for (const rec of Object.values(tenders)) {
+    if (rec.cost_per_mile != null && (rec.cost_per_mile < 0 || rec.cost_per_mile > 200)) {
+      rec.cost_per_mile = null;
+      clamped++;
+    }
+  }
+  if (clamped) console.log(`  Sanitised ${clamped} cached cost_per_mile outlier(s)`);
+  return { tenders };
 }
 function flushCache(cache, totalKnown, newThisRun) {
   atomicWriteJson(OUT_PATH, {

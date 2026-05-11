@@ -22,6 +22,8 @@
     "build-garage-locations": "node scripts/build-garage-locations.js",
     "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js",
     "push-to-supabase": "node scripts/push-to-supabase.js",
+    "audit-data": "node scripts/audit-data.js",
+    "audit-data-strict": "node scripts/audit-data.js --strict",
     "audit-vehicle-data": "node scripts/audit-vehicle-data.js",
     "audit-summary": "node scripts/audit-summary.js"
   },

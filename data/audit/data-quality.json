@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-05-11T15:17:14.777Z",
+  "summary": {
+    "critical": 0,
+    "warn": 0,
+    "info": 5
+  },
+  "issues": [
+    {
+      "severity": "INFO",
+      "scope": "rc",
+      "id": "-",
+      "field": "coverage",
+      "expected": "—",
+      "actual": {
+        "operator": 734,
+        "garage": 734,
+        "pvr": 730,
+        "vt": 732,
+        "prop": 734,
+        "deck": 731,
+        "ewtOrOtp": 662,
+        "mileageMps": 660,
+        "age": 572
+      },
+      "note": "of 747"
+    },
+    {
+      "severity": "INFO",
+      "scope": "fleet",
+      "id": "-",
+      "field": "coverage",
+      "expected": "—",
+      "actual": {
+        "total": 9401,
+        "validVrm": 9401,
+        "invalidVrm": 0,
+        "dvla200": 9374,
+        "dvla404": 27,
+        "dvla400": 0,
+        "dvlaOther": 0,
+        "neverChecked": 0,
+        "ageOK": 9374,
+        "ageMissing": 27,
+        "ageImplausible": 0,
+        "propByFuel": {
+          "diesel": 5991,
+          "electric": 3382,
+          "gas": 1
+        }
+      },
+      "note": ""
+    },
+    {
+      "severity": "INFO",
+      "scope": "gar",
+      "id": "-",
+      "field": "coverage",
+      "expected": "—",
+      "actual": {
+        "count": 81
+      },
+      "note": ""
+    },
+    {
+      "severity": "INFO",
+      "scope": "obs",
+      "id": "-",
+      "field": "coverage",
+      "expected": "—",
+      "actual": {
+        "totalObs": 8767,
+        "missingFleet": 0
+      },
+      "note": ""
+    },
+    {
+      "severity": "INFO",
+      "scope": "mps",
+      "id": "-",
+      "field": "coherence",
+      "expected": "—",
+      "actual": {
+        "coherent": 662,
+        "mismatch": 0
+      },
+      "note": ""
+    }
+  ]
+}

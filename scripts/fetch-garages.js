@@ -226,6 +226,70 @@ async function main() {
     });
   }
 
+  // Filter out placeholder rows: out-of-London depots (Falcon Coaches Byfleet,
+  // First Purfleet, Sullivan Thorpe Park, etc.) appear in the CSV with no TfL
+  // garage code AND zero PVR. They're not part of the TfL contract estate;
+  // the pipeline can't do anything useful with them and the audit otherwise
+  // surfaces them as anomalies forever.
+  const beforeFilter = features.length;
+  for (let i = features.length - 1; i >= 0; i--) {
+    const p = features[i].properties ?? {};
+    const tfl = String(p['TfL garage code'] || '').trim();
+    const pvr = parseInt(p['PVR'], 10);
+    // No TfL code AND no peak vehicles assigned → not part of the TfL
+    // contract estate. LBR may track these (Falcon Coaches Byfleet, First
+    // Purfleet, Sullivan Thorpe Park, etc.) for reference but the
+    // pipeline downstream can't allocate routes to them.
+    if (!tfl && (!Number.isFinite(pvr) || pvr === 0)) features.splice(i, 1);
+  }
+  if (features.length !== beforeFilter) {
+    console.log(`  Filtered ${beforeFilter - features.length} placeholder out-of-London depot rows`);
+  }
+
+  // Deduplicate by TfL garage code. The upstream CSV occasionally lists the
+  // same garage twice (e.g. BN/BT/UX) — typically once with full PVR + route
+  // allocation and once with partial data from a different parent contract
+  // record. Merge: keep the row with the larger PVR + populated route list,
+  // and union route fields so neither source's allocation is lost.
+  const dedup = new Map();
+  const ROUTE_FIELDS_FOR_MERGE = [
+    'TfL main network routes', 'TfL night routes',
+    'TfL school/mobility routes', 'Other routes',
+  ];
+  for (const f of features) {
+    const code = String(f.properties['TfL garage code'] || '').toUpperCase().trim();
+    if (!code) {
+      // No TfL code → not part of the dedup keyspace. Keep as-is; the
+      // pipeline downstream filters these out by code anyway.
+      dedup.set(`__nocode_${dedup.size}`, f);
+      continue;
+    }
+    const existing = dedup.get(code);
+    if (!existing) { dedup.set(code, f); continue; }
+    // Choose canonical: higher PVR wins, then more populated route fields.
+    const ap = parseInt(existing.properties.PVR, 10) || 0;
+    const bp = parseInt(f.properties.PVR, 10) || 0;
+    const canonical = bp > ap ? f : existing;
+    const other     = bp > ap ? existing : f;
+    // Union route fields so neither side's allocation is dropped.
+    for (const k of ROUTE_FIELDS_FOR_MERGE) {
+      const a = String(canonical.properties[k] || '').trim();
+      const b = String(other.properties[k] || '').trim();
+      if (!a && b) canonical.properties[k] = b;
+      else if (a && b && a !== b) {
+        const tokens = new Set([...a.split(/\s+/), ...b.split(/\s+/)].filter(Boolean));
+        canonical.properties[k] = [...tokens].join(' ');
+      }
+    }
+    dedup.set(code, canonical);
+  }
+  const deduped = [...dedup.values()];
+  if (deduped.length !== features.length) {
+    console.log(`  Deduplicated garages: ${features.length} → ${deduped.length}`);
+  }
+  features.length = 0;
+  features.push(...deduped);
+
   features.sort((a, b) => {
     const ac = String(a.properties['TfL garage code'] || '').toUpperCase();
     const bc = String(b.properties['TfL garage code'] || '').toUpperCase();
