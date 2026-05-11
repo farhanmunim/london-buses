@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-04T11:36:42.055Z",
+  "generatedAt": "2026-05-11T12:10:59.229Z",
   "count": 76,
   "garages": {
     "A": {
@@ -99,7 +99,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 148
+      "pvr": 164
     },
     "BK": {
       "code": "BK",
@@ -423,7 +423,7 @@
       "address": "1 Warner Road, Camberwell, London, SE5 9LU",
       "lat": 51.474116,
       "lon": -0.09577,
-      "pvr": 198
+      "pvr": 199
     },
     "QB": {
       "code": "QB",
@@ -432,7 +432,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 228
+      "pvr": 210
     },
     "RA": {
       "code": "RA",
