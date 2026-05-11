@@ -147,6 +147,9 @@ jobs:
                 exit 1
               fi
               echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
-              git pull --rebase origin main
+              # --autostash handles the un-listed files the data pipeline
+              # leaves modified in the working tree (only a subset gets
+              # `git add`-ed). Without it, rebase aborts on a dirty tree.
+              git pull --rebase --autostash origin main
             done
           fi
