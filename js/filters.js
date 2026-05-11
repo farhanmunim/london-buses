@@ -56,7 +56,8 @@ export async function applyFilters() {
 
   const visible = [...getVisibleRouteProps().entries()].map(([id, props]) => ({
     ...props,
-    pvr: state.classifications[id]?.pvr ?? null,
+    pvr:             state.classifications[id]?.pvr ?? null,
+    vehicleAgeYears: state.classifications[id]?.vehicleAgeYears ?? null,
   }));
   renderOperatorStats(visible);
 }

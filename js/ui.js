@@ -68,6 +68,7 @@ Promise.all([
     propulsion: c.propulsion,
     lengthBand: c.lengthBand,
     pvr:        c.pvr ?? null,
+    vehicleAgeYears: c.vehicleAgeYears ?? null,
   }));
   renderOperatorStats(all);
   updateFooterDates();

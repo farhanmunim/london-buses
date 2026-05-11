@@ -349,7 +349,8 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
 function buildOverviewRows(routes) {
   const list = [...routes.entries()].map(([id, props]) => ({
     ...props,
-    pvr: state.classifications[id]?.pvr ?? null,
+    pvr:             state.classifications[id]?.pvr ?? null,
+    vehicleAgeYears: state.classifications[id]?.vehicleAgeYears ?? null,
   }));
   const totalRoutes = list.length;
   const totalPvr    = list.reduce((s, r) => s + (r.pvr ?? 0), 0);
@@ -357,11 +358,19 @@ function buildOverviewRows(routes) {
   const ops = {};
   for (const r of list) {
     const op = r.operator ?? 'Unknown';
-    (ops[op] ??= { routes: 0, pvr: 0, ev: 0 }).routes++;
-    ops[op].pvr += r.pvr ?? 0;
+    const pvr = Number.isFinite(r.pvr) ? r.pvr : 0;
+    (ops[op] ??= { routes: 0, pvr: 0, ev: 0, ageSum: 0, agePvr: 0 }).routes++;
+    ops[op].pvr += pvr;
     if (r.propulsion === 'electric') ops[op].ev++;
+    if (Number.isFinite(r.vehicleAgeYears) && pvr > 0) {
+      ops[op].ageSum += r.vehicleAgeYears * pvr;
+      ops[op].agePvr += pvr;
+    }
   }
   const pct = (n, d) => d ? Math.round(n / d * 100) + '%' : '–';
+  const avgAgeFmt = (sum, w) => w ? +(sum / w).toFixed(1) : '–';
+  let netAgeSum = 0, netAgePvr = 0;
+  for (const v of Object.values(ops)) { netAgeSum += v.ageSum; netAgePvr += v.agePvr; }
   const rows = Object.entries(ops)
     .sort(([aK, aV], [bK, bV]) => aK === 'Unknown' ? 1 : bK === 'Unknown' ? -1 : bV.routes - aV.routes)
     .map(([op, v]) => ({
@@ -372,6 +381,7 @@ function buildOverviewRows(routes) {
       pvr_share:       pct(v.pvr, totalPvr),
       electric_routes: v.ev,
       electric_share:  pct(v.ev, v.routes),
+      avg_fleet_age_y: avgAgeFmt(v.ageSum, v.agePvr),
     }));
   const totalEv = list.filter(r => r.propulsion === 'electric').length;
   rows.push({
@@ -382,6 +392,7 @@ function buildOverviewRows(routes) {
     pvr_share:       '100%',
     electric_routes: totalEv,
     electric_share:  pct(totalEv, totalRoutes),
+    avg_fleet_age_y: avgAgeFmt(netAgeSum, netAgePvr),
   });
 
   // Fleet mix block — mirrors the right-panel Fleet Mix chart. PVR-weighted

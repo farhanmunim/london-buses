@@ -107,12 +107,21 @@ export function renderOperatorStats(visibleRoutes) {
   for (const r of visibleRoutes) {
     const op  = r.operator ?? 'Unknown';
     const pvr = Number.isFinite(r.pvr) ? r.pvr : 0;
-    (ops[op] ??= { routes: 0, pvr: 0, ev: 0, evPvr: 0 }).routes++;
+    (ops[op] ??= { routes: 0, pvr: 0, ev: 0, evPvr: 0, ageSum: 0, agePvr: 0 }).routes++;
     ops[op].pvr += pvr;
     totalPvr    += pvr;
     if (r.propulsion === 'electric') {
       ops[op].ev++;
       ops[op].evPvr += pvr;
+    }
+    // PVR-weighted avg fleet age: a 50-bus route on 8y old buses contributes
+    // 10× a 5-bus route on 1y old buses to the operator's headline figure.
+    // Only routes that have BOTH age and pvr contribute — a route with age
+    // but no pvr would need to be unit-weighted, which would skew the average
+    // toward the smallest routes and mix with the dominant PVR-weighted logic.
+    if (Number.isFinite(r.vehicleAgeYears) && pvr > 0) {
+      ops[op].ageSum += r.vehicleAgeYears * pvr;
+      ops[op].agePvr += pvr;
     }
   }
 
@@ -160,11 +169,13 @@ function renderOpTable(sorted, totalRoutes, totalPvr) {
     tr.setAttribute('tabindex', '0');
     tr.setAttribute('role', 'button');
     tr.setAttribute('aria-label', `${DISPLAY_NAME[op] ?? op} — open details`);
+    const avgAge = v.agePvr ? (v.ageSum / v.agePvr) : null;
     tr.innerHTML = `
       <td>${escapeHtml(DISPLAY_NAME[op] ?? op)}</td>
       <td>${pct(v.routes, totalRoutes)}</td>
       <td>${pct(v.pvr,    totalPvr)}</td>
-      <td>${v.routes ? Math.round((v.ev / v.routes) * 100) + '%' : '—'}</td>`;
+      <td>${v.routes ? Math.round((v.ev / v.routes) * 100) + '%' : '—'}</td>
+      <td>${avgAge != null ? avgAge.toFixed(1) + 'y' : '—'}</td>`;
     tr.addEventListener('click', () => openOperatorDrawer(op, v));
     tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openOperatorDrawer(op, v); } });
     body.appendChild(tr);
