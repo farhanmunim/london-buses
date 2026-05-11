@@ -1,0 +1,47 @@
+name: Supabase Heartbeat
+
+# Free-tier Supabase auto-pauses a project after 7 days with no DB activity.
+# Our only writer is the weekly Monday refresh — exactly on the 7-day edge —
+# so any missed/failed run risks another pause. This job runs twice a week
+# (Thursday + Sunday) to keep the project warm by issuing a tiny PostgREST
+# read, which counts as DB activity.
+on:
+  schedule:
+    # Thursdays 12:00 UTC and Sundays 12:00 UTC
+    - cron: "0 12 * * 4"
+    - cron: "0 12 * * 0"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping Supabase via PostgREST
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY}" ]; then
+            echo "Supabase secrets not configured — nothing to ping"
+            exit 0
+          fi
+
+          # Smallest possible query against an always-present table. PostgREST
+          # forwards this to Postgres, which resets the inactivity clock.
+          # `Prefer: count=none` skips the count header; `limit=1` keeps it tiny.
+          http_status=$(curl -sS -o /tmp/heartbeat.out -w "%{http_code}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Prefer: count=none" \
+            "${SUPABASE_URL}/rest/v1/route_snapshots?select=snapshot_date&limit=1")
+
+          echo "HTTP ${http_status}"
+          cat /tmp/heartbeat.out
+          echo
+
+          if [ "${http_status}" != "200" ]; then
+            echo "Heartbeat failed (HTTP ${http_status})"
+            exit 1
+          fi
