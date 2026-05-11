@@ -133,5 +133,20 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
-            git push
+
+            # Retry push if origin/main moved between checkout and push.
+            # Rebase our single data commit onto whatever landed upstream;
+            # three attempts handles the rare case of a second race during
+            # the rebase itself.
+            for attempt in 1 2 3; do
+              if git push; then
+                break
+              fi
+              if [ "$attempt" = "3" ]; then
+                echo "Push still rejected after 3 attempts — giving up"
+                exit 1
+              fi
+              echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
+              git pull --rebase origin main
+            done
           fi
