@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.8</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.9</a>
 
       <div style="flex:1"></div>
 
@@ -82,6 +82,23 @@
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement ·
             <span class="cl-tag cl-tag--perf">PERF</span> performance.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.9</span> May 11, 2026</div>
+            <a href="#v2_9" class="cl-entry-title">Data-quality audit &amp; pipeline hardening</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Systematic data-quality audit (<code>scripts/audit-data.js</code>) checks every record in <code>route_classifications</code>, <code>vehicle-fleet</code>, <code>garages.geojson</code>, <code>route-vehicles</code>, and <code>route-mps</code> against per-field plausibility constraints. Hard-fails the weekly refresh on CRITICAL anomalies so broken data never gets committed; full report written to <code>data/audit/data-quality.json</code> for diffable regression history.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> PDF parser was silently rejecting every TfL QSI / MPS / programme PDF since pdfjs-dist 4.x added a Buffer rejection (Buffer is a Uint8Array subclass so the old check passed it through). Now converted to a plain Uint8Array view — unblocks 662 per-route MPS records and 481 entries across 10 years of tender programme PDFs.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Vehicle-fleet was sending bonnet numbers and TMP placeholders to DVLA, which rejected 26 % of the fleet (3,262 entries). Parser now filters to UK-VRM-shaped strings at parse time and prunes pre-existing junk on every cache load.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Per-route fleet aggregator was averaging avg-age across all observed vehicles regardless of drivetrain — a reserve diesel briefly covering an electric route would skew the displayed age by 1-2 years. Aggregator now filters to vehicles matching the dominant propulsion (route 339: 4.8 y → 2.9 y).</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Garage list had upstream-CSV duplicates (BN/BT/UX) and out-of-London placeholder rows. Deduped by TfL code with route-field union; placeholders filtered. 89 → 81 garage features.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> TfL tender form occasionally pastes the full annual bid into the cost-per-mile cell (route 290 2006, route 265 2022). Clamped to £0..200 at parse time + retro-sanitised on cache load.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> School routes default to <code>deck=single</code> and <code>propulsion=diesel</code> when every upstream returned null (London school services are uniformly single-deck diesel minibuses/coaches).</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> typeCounts were over-counting by 1 — EL1 was both 24h and prefix-shaped. Buckets are now mutually exclusive; sum equals total.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Weekly refresh workflow now retries <code>git push</code> up to 3 times with <code>git pull --rebase --autostash</code> between attempts. Eliminates the race where another commit lands on main between the runner's checkout and push.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> New twice-weekly Supabase heartbeat workflow keeps the free-tier project from auto-pausing on the 7-day inactivity timer.</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>

@@ -12,6 +12,28 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source 
 
 ---
 
+## v2.9 — Data-quality audit, pipeline hardening
+
+_2026-05-11_
+
+- **NEW** Systematic data-quality audit (`scripts/audit-data.js`) walks every record in `route_classifications`, `vehicle-fleet`, `garages.geojson`, `route-vehicles`, and `route-mps` against per-field plausibility constraints. Three severities — CRITICAL hard-fails the weekly refresh so broken data never gets committed; WARN is logged for human review; INFO records coverage stats. Report committed weekly to `data/audit/data-quality.json` so regressions are diffable. Wired into `refresh.js` as step 16 of 17.
+- **FIX** PDF parser was rejecting every TfL QSI/MPS/programme PDF since pdfjs-dist 4.x added an explicit `Buffer` rejection (Buffer is a Uint8Array subclass so the old `instanceof` check passed it through unchanged). Now converted to a plain Uint8Array view at the call site. Unblocks all 662 per-route MPS PDFs and 481 entries across 10 years of tender programme PDFs — both had been silently failing for weeks.
+- **FIX** Vehicle-fleet was sending bonnet numbers and `TMP*****` placeholders to DVLA, which rejected 26 % of the fleet (3,262 entries) with HTTP 400. Parser now filters to UK-VRM-shaped strings at parse time and the cache loader prunes pre-existing junk on every run. Fleet 12,663 → 9,401 valid registrations.
+- **FIX** MPS error rows were treated as fresh under the 28-day TTL — every parse_error entry persisted until the TTL expired. `isFresh` now also requires `status === 200 || 404`.
+- **FIX** `typeCounts` were over-counting by 1 — EL1 was both `twentyfour` and prefix-shaped, counted in both buckets. Buckets are now mutually exclusive (prefix wins over twentyfour/night/school); sum now matches total exactly.
+- **FIX** Route fleet aggregator was averaging avg-age across all observed vehicles regardless of drivetrain — a 14-year-old diesel reserve briefly covering an electric route would skew the headline age by 1-2 years. Aggregator now filters to vehicles matching the dominant propulsion. Route 339 went from 4.8 y to 2.9 y on this fix alone.
+- **FIX** TfL tender form occasionally pastes the full annual bid into the cost-per-mile cell (route 290 2006, route 265 2022 etc.) producing £4M/mile headlines. `fetch-tenders.js` now clamps to £0..200 at parse and retro-sanitises the existing cache on load.
+- **FIX** Garages were duplicated by code (BN/BT/UX listed twice with split allocations). Now deduped, taking the higher-PVR row and unioning the route fields so neither side's allocation is lost. Also filters out placeholder out-of-London depots (Falcon Coaches Byfleet, First Purfleet, Sullivan Thorpe Park, etc.) that have no TfL code AND zero PVR. 89 → 81 garage features.
+- **FIX** `pvr=0` was propagating through the `??` fallback chain from last-known-good. Now coerced to null anywhere it appears.
+- **FIX** TfL's MPS and QSI Performance PDFs occasionally disagree on a route's service class (H25 being the canonical case). `serviceClass` precedence is now MPS PDF (contractual) over performance PDF (measurement); the wrong-class metric is forced to null when serviceClass is known.
+- **FIX** School routes default to `deck=single` and `propulsion=diesel` when every upstream source returned null (London school services are uniformly single-deck diesel minibuses/coaches).
+- **FIX** `fetch-route-details.js` was hard-failing the whole step if details.htm returned no `<pre>` blocks (upstream HTML shape change). Now degrades gracefully, keeping garages-derived fields.
+- **DATA** New `data/audit/data-quality.json` artefact — full weekly report.
+- **CI** Weekly refresh workflow's `git push` now retries up to 3 times with `git pull --rebase --autostash` between attempts. Eliminates the race where a manual push or another workflow lands on `main` between checkout and push.
+- **CI** New `supabase-heartbeat.yml` workflow — twice-weekly (Thu+Sun 12:00 UTC) PostgREST read against `route_snapshots` to keep the free-tier Supabase project from auto-pausing on the 7-day inactivity timer.
+
+---
+
 ## v2.8 — MPS standards, contract start dates, ingress sanitisation
 
 _2026-05-01_
