@@ -235,6 +235,20 @@ function auditClassifications(rc, vf, ov, gar) {
         add('WARN', 'rc', id, 'lastCostPerMile', `£${lo}..${hi}`, r.lastCostPerMile);
     }
 
+    // Contracted annual miles (derived bid ÷ £/mile) and the bid itself.
+    // Sanity-only check — both are derived from upstream tender data and
+    // any per-input weirdness already gets caught by the lastCostPerMile
+    // audit above. Real-world spread:
+    //   • School routes: 1k-100k miles, £40k-£12M bids (some bundled tenders
+    //     attribute the full bundle figure to each route in the bundle)
+    //   • Regular passenger: 16k-3M miles, £250k-£20M bids
+    // Hard-fail boundaries are an order of magnitude beyond the observed
+    // tail in either direction.
+    if (r.contractedAnnualMiles != null && !inRange(r.contractedAnnualMiles, 0, 10_000_000))
+      add('WARN', 'rc', id, 'contractedAnnualMiles', '0..10M', r.contractedAnnualMiles);
+    if (r.lastAcceptedBid != null && !inRange(r.lastAcceptedBid, 0, 100_000_000))
+      add('WARN', 'rc', id, 'lastAcceptedBid', '£0..100M', r.lastAcceptedBid);
+
     // numberOfTenderers
     if (r.numberOfTenderers != null && !inRange(r.numberOfTenderers, 1, 12))
       add('WARN', 'rc', id, 'numberOfTenderers', '1..12', r.numberOfTenderers);

@@ -774,6 +774,23 @@ for (const file of routeFiles) {
     previousContractTermYears:override.previousContractTermYears ?? (tendersLoaded ? prevTender.termYears                : (lastRec.previousContractTermYears?? null)),
     lastAwardDate:    override.lastAwardDate    ?? (tendersLoaded   ? (lastTender?.award_announced_date ?? null) : (lastRec.lastAwardDate    ?? null)),
     lastCostPerMile:  override.lastCostPerMile  ?? (tendersLoaded   ? (lastTender?.cost_per_mile        ?? null) : (lastRec.lastCostPerMile  ?? null)),
+    // Annual contracted accepted bid (£). Useful by itself, and required to
+    // derive contractedAnnualMiles below — otherwise downstream consumers
+    // would have to fetch tenders.json separately to recompute it.
+    lastAcceptedBid:  override.lastAcceptedBid  ?? (tendersLoaded   ? (lastTender?.accepted_bid         ?? null) : (lastRec.lastAcceptedBid  ?? null)),
+    // Implied annual contracted miles (live miles operated, not headway-
+    // miles): bid ÷ £/mile. Both inputs come from the same tender row so
+    // the figure is internally consistent. Surfaced as its own field so
+    // the route card can display "1.26M miles/yr" without recomputing.
+    contractedAnnualMiles: (() => {
+      if (override.contractedAnnualMiles != null) return override.contractedAnnualMiles;
+      const bid = lastTender?.accepted_bid;
+      const cpm = lastTender?.cost_per_mile;
+      if (tendersLoaded && Number.isFinite(bid) && Number.isFinite(cpm) && cpm > 0) {
+        return Math.round(bid / cpm);
+      }
+      return tendersLoaded ? null : (lastRec.contractedAnnualMiles ?? null);
+    })(),
     // Award count lets the UI tell apart "no previous operator because the
     // incumbent has held the route from day one" (count >= 2 + previousOp
     // null = "No change") from "no previous operator because we only have one

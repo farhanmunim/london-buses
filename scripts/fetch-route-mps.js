@@ -98,26 +98,60 @@ async function fetchPdfBuffer(url) {
 function parseMps(rows) {
   let serviceClass = null;
   let section = null;          // 'reliability' | 'mileage'
-  const out = { service_class: null, ewt_mps_minutes: null, otp_mps_percent: null, mileage_mps_percent: null };
+  let mileageCurrentSeen = false;
+  const out = {
+    service_class: null,
+    ewt_mps_minutes: null,
+    otp_mps_percent: null,
+    mileage_mps_percent: null,
+    // Actual mileage-operated readings for the trailing 13 reporting periods.
+    // The MPS PDF carries them in the Mileage Performance section ("Current
+    // Year" row, period 7 of last TfL year through period 6 of this one).
+    // Headline figures: most recent period (responsive, noisy) and the
+    // 13-period mean (smoothed). Both are useful — the latter for trend
+    // questions, the former for "what happened last 4 weeks".
+    mileage_operated_latest_percent: null,
+    mileage_operated_avg_percent:    null,
+  };
 
-  for (const cells of rows) {
+  // Period-data rows in the PDF look like:
+  //   ['P07 24/25 to P06 25/26', '96.25', '97.41', ..., '92.77']   (current year)
+  //   ['P07 23/24 to P06 24/25', '92.10', '90.40', ..., '96.93']   (prior year)
+  // The first such row in each section is the current year. After
+  // splitting off the period label, the remaining cells are the 13
+  // chronological period readings (P7 → P6 of the next TfL year).
+  function extractPeriodValues(cells) {
+    // Some PDFs split the label and numbers across separate row-clusters
+    // (sample: row [16] is just the label, row [17] has the 13 numbers).
+    // Treat any leading non-numeric cell as the label and pull the numerics.
+    const nums = [];
+    for (const c of cells) {
+      const n = parseFloat(c);
+      if (Number.isFinite(n)) nums.push(n);
+    }
+    return nums.length === 13 ? nums : null;
+  }
+
+  // First pass: section state machine + MPS extraction.
+  // Track index because mileage-section "Current Year" row may live one row
+  // *after* its label cell (PDF text-extraction quirk on some routes).
+  for (let i = 0; i < rows.length; i++) {
+    const cells = rows[i];
     if (!cells.length) continue;
     const flat = cells.join(' ').toLowerCase();
 
     // Section detection
-    if (/reliability\s+performance/i.test(flat)) { section = 'reliability'; continue; }
-    if (/mileage\s+performance/i.test(flat))     { section = 'mileage';     continue; }
+    if (/reliability\s+performance/i.test(flat)) { section = 'reliability'; mileageCurrentSeen = false; continue; }
+    if (/mileage\s+performance/i.test(flat))     { section = 'mileage';     mileageCurrentSeen = false; continue; }
 
-    // Service class detection -- appears once near the top of the reliability section
+    // Service class detection — appears once near the top of the reliability section
     if (!serviceClass) {
       if (/high\s*frequency/i.test(flat) && /ewt/i.test(flat)) serviceClass = 'high-frequency';
       else if (/low\s*frequency/i.test(flat) && /on\s*time/i.test(flat)) serviceClass = 'low-frequency';
     }
 
     // Minimum Standard rows: first cell label, remaining cells are numbers (13 periods).
-    // Any cell that is "Minimum Standard" (case-insensitive, exact) marks the row.
     if (cells.some(c => /^minimum\s*standard$/i.test(c))) {
-      // Find the first numeric value in the row.
       let val = null;
       for (const c of cells) {
         const n = parseFloat(c);
@@ -129,6 +163,37 @@ function parseMps(rows) {
         else if (serviceClass === 'low-frequency') out.otp_mps_percent = val;
       } else if (section === 'mileage') {
         out.mileage_mps_percent = val;
+      }
+      continue;
+    }
+
+    // Mileage current-year readings: the first period-data row (13 numerics)
+    // that appears in the mileage section after the section header. The PDF
+    // sometimes places the period label and the 13 numerics in the same row
+    // (route 1 sample), and sometimes split across consecutive rows (route 1
+    // last-year sample shows the split). Either way, the FIRST 13-number row
+    // in the mileage section is the current-year reading.
+    if (section === 'mileage' && !mileageCurrentSeen) {
+      let nums = extractPeriodValues(cells);
+      // Split-row fallback: if THIS row is just a period label (no numerics
+      // OR a single year number) and the NEXT row has 13 numerics, use the
+      // next row.
+      if (!nums && rows[i + 1]) {
+        const nextNums = extractPeriodValues(rows[i + 1]);
+        if (nextNums && /^P\d+\s+\d+\/\d+\s+to\s+P\d+\s+\d+\/\d+$/i.test(cells[0] ?? '')) {
+          nums = nextNums;
+        }
+      }
+      if (nums) {
+        // Sanity-check the values look like percentages (50-100). Anything
+        // outside is almost certainly axis-tick text mistakenly clustered
+        // into the row.
+        const inRange = nums.filter(v => v >= 50 && v <= 100);
+        if (inRange.length === 13) {
+          out.mileage_operated_latest_percent = +nums[nums.length - 1].toFixed(2);
+          out.mileage_operated_avg_percent    = +(nums.reduce((a, b) => a + b, 0) / 13).toFixed(2);
+          mileageCurrentSeen = true;
+        }
       }
     }
   }

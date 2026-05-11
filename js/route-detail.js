@@ -397,6 +397,20 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const cpm = classification?.lastCostPerMile;
   set('[data-rc-value]', Number.isFinite(cpm) ? `£${cpm.toFixed(2)}` : 'XXX');
 
+  // Contracted annual miles — bid ÷ £/mile, computed at build time. Shown
+  // in millions when ≥1M (matching how operations folks talk about route
+  // size), otherwise in thousands. Hidden when the derivation isn't
+  // possible (no recent tender, or one of the two inputs missing).
+  const annualMiles = classification?.contractedAnnualMiles;
+  const milesValid  = Number.isFinite(annualMiles) && annualMiles > 0;
+  toggleRow(node, 'annual-miles', milesValid);
+  if (milesValid) {
+    const fmt = annualMiles >= 1_000_000
+      ? `${(annualMiles / 1_000_000).toFixed(2)}M`
+      : `${Math.round(annualMiles / 1_000).toLocaleString()}k`;
+    set('[data-rc-annual-miles]', fmt);
+  }
+
   // EWT/OTP MPS live in the KPI strip above; only Mileage standard needs a
   // row here since it has no dedicated tile. Hidden when no MPS data
   // (school routes have no per-route QSI PDF, hence no published MPS).

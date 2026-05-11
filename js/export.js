@@ -188,11 +188,15 @@ function buildRouteRows(routes, stopCounts) {
         bids_received:             num(cls.numberOfTenderers),
         was_joint_bid:             yesNo(cls.wasJointBid),
         previous_operator:         str(cls.previousOperator),
+        previous_award_date:       str(cls.previousAwardDate),
+        previous_contract_term_years: num(cls.previousContractTermYears),
         awarded_propulsion:        str(cls.awardedPropulsion),
         awarded_deck:              str(cls.awardedDeck),
         previous_awarded_propulsion: str(cls.prevAwardedPropulsion),
         previous_awarded_deck:     str(cls.prevAwardedDeck),
         cost_per_mile_gbp:         num(cls.lastCostPerMile),
+        accepted_bid_gbp:          num(cls.lastAcceptedBid),
+        contracted_annual_miles:   num(cls.contractedAnnualMiles),
         contract_term_years:       num(cls.contractTermYears),
 
         // ── Tender — next (upcoming) contract ──
@@ -262,6 +266,13 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
     if (!matchedIds.length) continue;
     for (const id of matchedIds) {
       const wasJB = !!(t.joint_bids && t.joint_bids.trim().length > 5 && !/^N\/?A$/i.test(t.joint_bids.trim()));
+      // Derived contracted annual miles: if both the accepted bid and the
+      // cost-per-mile were published, divide them. TfL only publishes the
+      // ratio (£/mile) explicitly; the absolute mileage is what people
+      // actually plan around (vehicle utilisation, depot allocation).
+      const milesPerYear = (Number.isFinite(t.accepted_bid) && Number.isFinite(t.cost_per_mile) && t.cost_per_mile > 0)
+        ? Math.round(t.accepted_bid / t.cost_per_mile)
+        : null;
       rows.push({
         route_id:               id,
         kind:                   'historical',
@@ -273,6 +284,7 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
         lowest_bid_gbp:         num(t.lowest_bid),
         highest_bid_gbp:        num(t.highest_bid),
         cost_per_mile_gbp:      num(t.cost_per_mile),
+        contracted_annual_miles: num(milesPerYear),
         was_joint_bid:          yesNo(wasJB),
         joint_bid_partners:     str(wasJB ? t.joint_bids : ''),
         reason_not_lowest:      str(t.reason_not_lowest),
@@ -316,6 +328,7 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
           lowest_bid_gbp:         '',
           highest_bid_gbp:        '',
           cost_per_mile_gbp:      '',
+          contracted_annual_miles: '',
           was_joint_bid:          '',
           joint_bid_partners:     '',
           reason_not_lowest:      '',
