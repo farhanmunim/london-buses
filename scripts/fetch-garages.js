@@ -148,8 +148,12 @@ async function main() {
   const existing = loadExisting(BASE_PATH_EXISTING);
   const byCode = { ...existing.byCode };
 
-  // Geocode uncached postcodes
+  // Geocode uncached postcodes. The workflow force-adds geocode_cache.json
+  // after this script runs; ensure the file exists even when no lookups
+  // were needed this run so `git add -f` doesn't emit a noisy pathspec
+  // warning.
   const cache = loadCache();
+  saveCache(cache);
   const neededPcs = new Set();
   for (const row of rows) {
     const pc = extractPostcode(row['Garage address'] || row['Company address']);

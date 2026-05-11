@@ -134,7 +134,13 @@ function parseDetailsText(html) {
   const preRe = /<pre[^>]*>([\s\S]*?)<\/pre>/gi;
   let m;
   while ((m = preRe.exec(html)) !== null) preBlocks.push(m[1]);
-  if (!preBlocks.length) throw new Error('No <pre> blocks in details.htm');
+  if (!preBlocks.length) {
+    // Upstream HTML structure changed or the page returned a transient
+    // error page. Degrade gracefully so the rest of the pipeline keeps
+    // its garages-derived fields rather than the whole step exiting 1.
+    console.warn('  No <pre> blocks in details.htm — vehicle types will be null this run');
+    return {};
+  }
 
   // The table uses fixed-width columns defined by a dash-separator header line:
   //   ---- ----------------------------- --- --- -- -- ------- ------- ------- ------- -------- -- - --------

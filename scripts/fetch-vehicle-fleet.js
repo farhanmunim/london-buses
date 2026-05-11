@@ -106,15 +106,26 @@ async function downloadVehicleXml(version) {
   return entry.getData().toString('utf8');
 }
 
+// A subset of iBus rows have the bonnet number in the Registration_Number
+// field (e.g. First's "2530"), not a real UK VRM. DVLA rejects those with
+// HTTP 400. We require at least one letter AND one digit, length 5-7,
+// alphanumeric — covers every UK plate format from 1963 onwards while
+// rejecting pure-numeric junk and stray test strings.
+function looksLikeUkVrm(s) {
+  return /^[A-Z0-9]{5,7}$/.test(s) && /[A-Z]/.test(s) && /[0-9]/.test(s);
+}
+
 // XML is a flat list of <Vehicle aVehicleId="..."><Registration_Number>...
 // Regex parse — XML is well-formed and the elements are simple.
 function parseVehicleXml(xml) {
   const out = [];
   const re = /<Vehicle\s+aVehicleId="(\d+)"\s*>\s*<Registration_Number>([^<]+)<\/Registration_Number>\s*<Bonnet_No>([^<]*)<\/Bonnet_No>\s*<Operator_Agency>([^<]*)<\/Operator_Agency>\s*<\/Vehicle>/g;
   let m;
+  let skipped = 0;
   while ((m = re.exec(xml)) !== null) {
     const reg = m[2].trim().toUpperCase().replace(/\s+/g, '');
     if (!reg) continue;
+    if (!looksLikeUkVrm(reg)) { skipped++; continue; }
     out.push({
       vehicleId: m[1],
       reg,
@@ -122,6 +133,7 @@ function parseVehicleXml(xml) {
       operator: m[4].trim() || null,
     });
   }
+  if (skipped) console.log(`  Skipped ${skipped} iBus rows with non-VRM Registration_Number (likely bonnet numbers)`);
   return out;
 }
 
@@ -178,8 +190,17 @@ async function dvlaLookup(reg) {
 // lets the SIGTERM hook flush without passing args through the signal.
 function loadCache() {
   const j = loadJsonCache(OUT_PATH, {});
+  const vehicles = j.vehicles ?? {};
+  // One-time prune of pre-existing non-VRM entries (bonnet numbers, etc).
+  // These were written before the parse-time VRM filter existed and have
+  // been silently rejected by DVLA every run since.
+  let pruned = 0;
+  for (const key of Object.keys(vehicles)) {
+    if (!looksLikeUkVrm(key)) { delete vehicles[key]; pruned++; }
+  }
+  if (pruned) console.log(`  Pruned ${pruned} cached entries with non-VRM keys`);
   return {
-    vehicles:        j.vehicles ?? {},
+    vehicles,
     ibusBaseVersion: j.ibusBaseVersion ?? null,
   };
 }

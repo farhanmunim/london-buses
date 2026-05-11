@@ -464,37 +464,56 @@ function aggregateRouteFleet(routeId) {
   const obs = routeVehicles[routeId] ?? routeVehicles[routeId?.toUpperCase()] ?? [];
   if (!obs.length) return null;
 
-  const makes = {}, props = {};
-  let ageSum = 0, ageN = 0, matched = 0;
+  // First pass: per-observation triplet (make, propulsion, ageYears). We need
+  // each separately so the second pass can filter outliers — a route's
+  // route-vehicles cache often picks up a reserve vehicle that briefly ran
+  // the route once during peak hour, and that reserve commonly has a
+  // different drivetrain (e.g. a 14-year-old diesel ADL on an electric
+  // route). One outlier in 10 observations skews the displayed avg age by
+  // 1-2 years, which the user notices.
   const nowMs = Date.now();
-
+  const samples = [];
   for (const entry of obs) {
     const reg = (typeof entry === 'string' ? entry : entry?.reg)?.toUpperCase();
     if (!reg) continue;
     const f = fleet[reg];
     if (!f || f.dvlaStatus !== 200) continue;
-    matched++;
-
-    if (f.make)     makes[f.make]     = (makes[f.make]     ?? 0) + 1;
-    if (f.fuelType) props[f.fuelType] = (props[f.fuelType] ?? 0) + 1;
-
-    // Age from first-registration month — closer to in-service than build year.
+    let ageYears = null;
     if (typeof f.monthOfFirstRegistration === 'string') {
       const m = /^(\d{4})-(\d{2})$/.exec(f.monthOfFirstRegistration);
       if (m) {
         const regDate = Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1);
-        const yrs = (nowMs - regDate) / (365.25 * 86_400_000);
-        if (yrs >= 0 && yrs < 40) { ageSum += yrs; ageN++; }
+        const y = (nowMs - regDate) / (365.25 * 86_400_000);
+        if (y >= 0 && y < 40) ageYears = y;
       }
     }
+    samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears });
+  }
+  if (!samples.length) return null;
+
+  // Modal propulsion across all observations (this is what the route "is").
+  const propCounts = {};
+  for (const s of samples) if (s.propulsion) propCounts[s.propulsion] = (propCounts[s.propulsion] ?? 0) + 1;
+  const dominantProp = modeOf(propCounts);
+
+  // Headline make/fleetSize/age computed only over vehicles matching the
+  // dominant propulsion. Reserves with a different drivetrain are dropped —
+  // they're not part of the route's actual fleet. If propulsion is null on
+  // every sample (no DVLA data at all) we fall back to averaging everything
+  // so the route still gets numbers.
+  const fleetSamples = dominantProp ? samples.filter(s => s.propulsion === dominantProp) : samples;
+  const makes = {};
+  let ageSum = 0, ageN = 0;
+  for (const s of fleetSamples) {
+    if (s.make) makes[s.make] = (makes[s.make] ?? 0) + 1;
+    if (s.ageYears != null) { ageSum += s.ageYears; ageN++; }
   }
 
-  if (!matched) return null;
   return {
     make:            modeOf(makes),
-    propulsion:      modeOf(props),
+    propulsion:      dominantProp,
     vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
-    fleetSize:       matched,
+    fleetSize:       fleetSamples.length,
   };
 }
 
@@ -603,7 +622,14 @@ for (const file of routeFiles) {
   }
   const fallback    = vehicleLookupBestMatch(vehicleType);
   const fleetAgg    = aggregateRouteFleet(routeId);
-  const deck        = details.deck       ?? fallback?.deck       ?? null;
+  // School routes in London are universally single-deck (minibuses / coaches);
+  // TfL contracts them with operators who don't run double-deckers for school
+  // work. When details.htm and the vehicle-lookup both produced null (typical
+  // for 600-series routes where details.htm just records "?"), fall back to
+  // 'single' rather than null so school routes still carry a deck verdict.
+  const deck        = details.deck
+                   ?? fallback?.deck
+                   ?? (type === 'school' ? 'single' : null);
 
   // ── Propulsion precedence ───────────────────────────────────────────────
   // Naive "DVLA always wins" was wrong: with fleetSize 1–3 (typical right
@@ -635,6 +661,11 @@ for (const file of routeFiles) {
   } else {
     propulsion = lbrProp ?? fallback?.propulsion ?? null;
   }
+  // School routes are still diesel-only across the London contract estate
+  // (no electric school minibuses on current contracts). Same shape as the
+  // school-deck default above — fill in rather than leave null when every
+  // other source has nothing to say.
+  if (!propulsion && type === 'school') propulsion = 'diesel';
   const operator     = details.operator;
   const garageName   = details.garageName;
   const garageCode   = details.garageCode;
@@ -797,12 +828,16 @@ for (const file of routeFiles) {
   };
 }
 
+// Buckets must be mutually exclusive so they partition the route set and sum
+// to total. `prefix` (a boolean overlay on top of the type axis) takes
+// precedence — e.g. EL1 is both 'twentyfour' and prefix-shaped, but counts
+// only as `prefix`, matching the existing `regular && !isPrefix` rule.
 const counts = {
   regular:    Object.values(classifications).filter(c => c.type === 'regular'    && !c.isPrefix).length,
   prefix:     Object.values(classifications).filter(c => c.isPrefix).length,
-  twentyfour: Object.values(classifications).filter(c => c.type === 'twentyfour').length,
-  night:      Object.values(classifications).filter(c => c.type === 'night').length,
-  school:     Object.values(classifications).filter(c => c.type === 'school').length,
+  twentyfour: Object.values(classifications).filter(c => c.type === 'twentyfour' && !c.isPrefix).length,
+  night:      Object.values(classifications).filter(c => c.type === 'night'      && !c.isPrefix).length,
+  school:     Object.values(classifications).filter(c => c.type === 'school'     && !c.isPrefix).length,
 };
 
 const output = {

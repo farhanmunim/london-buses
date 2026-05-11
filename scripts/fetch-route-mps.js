@@ -154,6 +154,10 @@ function buildOutput(cache, fetchedThisRun, errored) {
 
 function isFresh(cached, cutoffMs) {
   if (!cached?.lastCheckedAt) return false;
+  // Entries left in an error state are not "fresh" — they're stuck. Force
+  // a retry next run rather than waiting out the full TTL on a broken row.
+  // 200 (parsed OK) and 404 (route legitimately has no MPS PDF) are sticky.
+  if (cached.status !== 200 && cached.status !== 404) return false;
   const ts = new Date(cached.lastCheckedAt).getTime();
   return Number.isFinite(ts) && ts >= cutoffMs;
 }

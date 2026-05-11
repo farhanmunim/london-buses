@@ -48,7 +48,13 @@ export function initPdfWorker() {
  */
 export async function extractPdfRowsByPage(buffer) {
   initPdfWorker();
-  const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  // pdfjs-dist 4.x explicitly rejects Node `Buffer` (a Uint8Array subclass)
+  // and demands a plain Uint8Array. `buffer instanceof Uint8Array` is true
+  // for Buffer, so we have to test for Buffer first and rebuild the view as
+  // a plain Uint8Array over the same memory (zero-copy).
+  const data = (typeof Buffer !== 'undefined' && Buffer.isBuffer(buffer))
+    ? new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength)
+    : (buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer));
   const doc = await pdfjs.getDocument({
     data,
     useSystemFonts:  true,
