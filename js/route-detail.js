@@ -411,13 +411,6 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
     set('[data-rc-annual-miles]', fmt);
   }
 
-  // EWT/OTP MPS live in the KPI strip above; only Mileage standard needs a
-  // row here since it has no dedicated tile. Hidden when no MPS data
-  // (school routes have no per-route QSI PDF, hence no published MPS).
-  const milMps = classification?.mileageMps;
-  toggleRow(node, 'mil-mps', Number.isFinite(milMps) && milMps > 0);
-  if (Number.isFinite(milMps) && milMps > 0) set('[data-rc-mil-mps]', `${milMps.toFixed(0)}%`);
-
   // Awarded vehicle — what TfL specified the most recent contract should
   // run. Worth comparing against the live `propulsion` / `deck` above; a
   // route mid-conversion will show awarded=electric vs actual=hybrid.

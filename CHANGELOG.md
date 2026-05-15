@@ -9,6 +9,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source 
 ## Upcoming
 
 - Analytics page reading from the Supabase historical store (fleet-age trend, electrification, operator share, EWT/OTP movement around tender events, operator churn).
+- **30 Oct 2026 — Supabase Data API grant change.** Supabase is removing the implicit Data API grant on `public`-schema tables. All existing tables in this project keep their grants. Any new table or view added on or after that date must include explicit `GRANT` statements + RLS — `db/migrations/_template.sql` is the new starting point. See `agent.md` for the procedure.
 
 ---
 

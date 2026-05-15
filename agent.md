@@ -260,6 +260,16 @@ Google Analytics `G-J5GKHJN7K6` is **already configured** — no need to ask. Th
 
 The weekly CI workflow (`refresh-data.yml`) commits and pushes data files automatically via GitHub Actions — this is expected and exempt from the general "ask before committing" rule. That rule applies only to manual/agent-driven changes during development sessions.
 
+### Supabase migrations after 30 October 2026
+
+Supabase is removing the implicit Data API grant on `public`-schema tables. **Existing tables (every migration through `0010_*`) keep their grants forever.** But every NEW table or view created on or after 30 Oct 2026 must include explicit `GRANT` statements — otherwise `supabase-js` / PostgREST / GraphQL return PostgREST error code `42501` against it.
+
+**When adding a new migration:**
+
+1. Copy `db/migrations/_template.sql` as the starting point — it ships with the standard `GRANT` block + RLS-enable + a placeholder anon-read policy. The default grants are conservative (`anon → SELECT`, `authenticated → SELECT/INSERT/UPDATE/DELETE`, `service_role → ALL`) — drop the anon grant for any table containing registration plates (mirrors the precedent for `vehicles` and `route_vehicle_observations`).
+2. If the new table uses `bigserial`/`serial`, the template's sequence-grant block is required separately — Postgres treats sequences as their own grantable objects.
+3. Paste the migration into the Supabase SQL Editor before the next pipeline run that would write to it; otherwise `push-to-supabase.js` fails on the first batch.
+
 ---
 
 ## Project Overview
