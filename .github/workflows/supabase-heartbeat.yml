@@ -2,14 +2,14 @@ name: Supabase Heartbeat
 
 # Free-tier Supabase auto-pauses a project after 7 days with no DB activity.
 # Our only writer is the weekly Monday refresh — exactly on the 7-day edge —
-# so any missed/failed run risks another pause. This job runs twice a week
-# (Thursday + Sunday) to keep the project warm by issuing a tiny PostgREST
-# read, which counts as DB activity.
+# so any missed/failed run risks another pause. This job runs daily to keep
+# the project warm by issuing a tiny PostgREST read, which counts as DB
+# activity. Daily (vs. twice-weekly) gives ~6 days of slack against GitHub
+# Actions' scheduled-job delays and Supabase's inactivity-scan timing.
 on:
   schedule:
-    # Thursdays 12:00 UTC and Sundays 12:00 UTC
-    - cron: "0 12 * * 4"
-    - cron: "0 12 * * 0"
+    # Daily at 12:00 UTC
+    - cron: "0 12 * * *"
   workflow_dispatch:
 
 jobs:
