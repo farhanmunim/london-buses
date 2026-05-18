@@ -155,9 +155,16 @@ jobs:
                 exit 1
               fi
               echo "Push rejected (attempt $attempt) — rebasing onto origin/main"
-              # --autostash handles the un-listed files the data pipeline
-              # leaves modified in the working tree (only a subset gets
-              # `git add`-ed). Without it, rebase aborts on a dirty tree.
-              git pull --rebase --autostash origin main
+              # Originally `git pull --rebase --autostash`, but autostash
+              # silently failed on 2026-05-11 ("cannot pull with rebase: You
+              # have unstaged changes" — see run #10). The data pipeline
+              # leaves BOTH unstaged tracked files AND untracked files in
+              # the working tree; --autostash only handles the former.
+              # Stash explicitly with --include-untracked, and don't pop:
+              # everything stashed here is regenerable intermediate state
+              # and the runner is ephemeral.
+              git stash push --include-untracked --quiet \
+                --message "ci-pipeline-residue-$attempt" || true
+              git pull --rebase origin main
             done
           fi
