@@ -1,12 +1,14 @@
 name: Weekly Data Refresh
 
-# Runs every Monday at 09:00 UTC (09:00 GMT in winter, 10:00 BST in summer).
-# Timed deliberately for peak running so TfL `/Line/<id>/Arrivals` returns a
-# representative sample of the active fleet (used by fetch-route-vehicles.js).
-# Can also be triggered manually from the GitHub Actions tab.
+# Runs every Monday at 09:23 UTC (10:23 BST in summer, 09:23 GMT in winter).
+# Minute is deliberately off the top of the hour — GitHub Actions delays or
+# skips scheduled jobs that fire on the hour boundary (peak load). Timed for
+# peak running so TfL `/Line/<id>/Arrivals` returns a representative sample
+# of the active fleet (used by fetch-route-vehicles.js). Can also be
+# triggered manually from the GitHub Actions tab.
 on:
   schedule:
-    - cron: "0 9 * * 1"
+    - cron: "23 9 * * 1"
   workflow_dispatch:
 
 permissions:

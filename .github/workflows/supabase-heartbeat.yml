@@ -8,8 +8,10 @@ name: Supabase Heartbeat
 # Actions' scheduled-job delays and Supabase's inactivity-scan timing.
 on:
   schedule:
-    # Daily at 12:00 UTC
-    - cron: "0 12 * * *"
+    # Daily at 12:37 UTC. Minute is off the top of the hour because GitHub
+    # Actions delays or outright skips cron jobs that fire on the :00 mark
+    # (peak load).
+    - cron: "37 12 * * *"
   workflow_dispatch:
 
 jobs:
