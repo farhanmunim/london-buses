@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T12:19:18.649Z",
+  "generatedAt": "2026-05-22T14:01:41.710Z",
   "count": 76,
   "garages": {
     "A": {
@@ -10,7 +10,7 @@
       "lat": 51.369141,
       "lon": -0.19923,
       "pvr": 86,
-      "capacity": null
+      "capacity": 94
     },
     "AC": {
       "code": "AC",
@@ -30,7 +30,7 @@
       "lat": 51.612839,
       "lon": -0.108213,
       "pvr": 83,
-      "capacity": null
+      "capacity": 120
     },
     "AF": {
       "code": "AF",
@@ -40,7 +40,7 @@
       "lat": 51.462368,
       "lon": -0.217993,
       "pvr": 94,
-      "capacity": null
+      "capacity": 115
     },
     "AH": {
       "code": "AH",
@@ -50,7 +50,7 @@
       "lat": 51.483833,
       "lon": -0.314707,
       "pvr": 101,
-      "capacity": null
+      "capacity": 115
     },
     "AL": {
       "code": "AL",
@@ -60,7 +60,7 @@
       "lat": 51.416567,
       "lon": -0.181662,
       "pvr": 130,
-      "capacity": null
+      "capacity": 217
     },
     "AO": {
       "code": "AO",
@@ -70,7 +70,7 @@
       "lat": 51.537651,
       "lon": -0.302711,
       "pvr": 34,
-      "capacity": null
+      "capacity": 38
     },
     "AR": {
       "code": "AR",
@@ -80,7 +80,7 @@
       "lat": 51.588722,
       "lon": -0.072359,
       "pvr": 124,
-      "capacity": null
+      "capacity": 200
     },
     "AV": {
       "code": "AV",
@@ -90,7 +90,7 @@
       "lat": 51.471985,
       "lon": -0.355561,
       "pvr": 88,
-      "capacity": null
+      "capacity": 140
     },
     "AW": {
       "code": "AW",
@@ -110,7 +110,7 @@
       "lat": 51.383331,
       "lon": -0.133069,
       "pvr": 165,
-      "capacity": null
+      "capacity": 201
     },
     "BK": {
       "code": "BK",
@@ -130,7 +130,7 @@
       "lat": 51.446122,
       "lon": -0.12373,
       "pvr": 94,
-      "capacity": null
+      "capacity": 50
     },
     "BT": {
       "code": "BT",
@@ -140,7 +140,7 @@
       "lat": 51.611541,
       "lon": -0.273136,
       "pvr": 86,
-      "capacity": null
+      "capacity": 100
     },
     "BW": {
       "code": "BW",
@@ -160,7 +160,7 @@
       "lat": 51.460146,
       "lon": 0.153803,
       "pvr": 114,
-      "capacity": null
+      "capacity": 175
     },
     "C": {
       "code": "C",
@@ -170,7 +170,7 @@
       "lat": 51.383725,
       "lon": -0.1386,
       "pvr": 114,
-      "capacity": null
+      "capacity": 147
     },
     "CT": {
       "code": "CT",
@@ -180,7 +180,7 @@
       "lat": 51.547327,
       "lon": -0.05318,
       "pvr": 79,
-      "capacity": null
+      "capacity": 140
     },
     "DH": {
       "code": "DH",
@@ -190,7 +190,7 @@
       "lat": 51.513793,
       "lon": -0.436579,
       "pvr": 47,
-      "capacity": null
+      "capacity": 56
     },
     "DS": {
       "code": "DS",
@@ -200,7 +200,7 @@
       "lat": 51.500295,
       "lon": 0.055874,
       "pvr": 138,
-      "capacity": null
+      "capacity": 150
     },
     "DT": {
       "code": "DT",
@@ -210,7 +210,7 @@
       "lat": 51.450192,
       "lon": 0.220779,
       "pvr": 75,
-      "capacity": null
+      "capacity": 123
     },
     "DX": {
       "code": "DX",
@@ -220,7 +220,7 @@
       "lat": 51.532318,
       "lon": 0.113116,
       "pvr": 44,
-      "capacity": null
+      "capacity": 100
     },
     "E": {
       "code": "E",
@@ -230,7 +230,7 @@
       "lat": 51.648654,
       "lon": -0.050895,
       "pvr": 122,
-      "capacity": null
+      "capacity": 140
     },
     "EC": {
       "code": "EC",
@@ -240,7 +240,7 @@
       "lat": 51.607777,
       "lon": -0.04144,
       "pvr": 25,
-      "capacity": null
+      "capacity": 70
     },
     "EW": {
       "code": "EW",
@@ -250,7 +250,7 @@
       "lat": 51.611541,
       "lon": -0.273136,
       "pvr": 79,
-      "capacity": null
+      "capacity": 89
     },
     "FW": {
       "code": "FW",
@@ -260,7 +260,7 @@
       "lat": 51.433889,
       "lon": -0.35139,
       "pvr": 125,
-      "capacity": null
+      "capacity": 160
     },
     "G": {
       "code": "G",
@@ -280,7 +280,7 @@
       "lat": 51.38872,
       "lon": -0.159942,
       "pvr": 26,
-      "capacity": null
+      "capacity": 37
     },
     "GW": {
       "code": "GW",
@@ -290,7 +290,7 @@
       "lat": 51.506315,
       "lon": -0.358547,
       "pvr": 114,
-      "capacity": null
+      "capacity": 135
     },
     "GY": {
       "code": "GY",
@@ -310,7 +310,7 @@
       "lat": 51.605644,
       "lon": -0.340525,
       "pvr": 72,
-      "capacity": null
+      "capacity": 73
     },
     "HK": {
       "code": "HK",
@@ -330,7 +330,7 @@
       "lat": 51.555687,
       "lon": -0.014839,
       "pvr": 139,
-      "capacity": null
+      "capacity": 250
     },
     "HT": {
       "code": "HT",
@@ -340,7 +340,7 @@
       "lat": 51.56265,
       "lon": -0.131605,
       "pvr": 157,
-      "capacity": null
+      "capacity": 228
     },
     "KB": {
       "code": "KB",
@@ -370,7 +370,7 @@
       "lat": 51.356558,
       "lon": 0.087681,
       "pvr": 104,
-      "capacity": null
+      "capacity": 228
     },
     "MG": {
       "code": "MG",
@@ -390,7 +390,7 @@
       "lat": 51.430084,
       "lon": -0.103945,
       "pvr": 132,
-      "capacity": null
+      "capacity": 200
     },
     "NP": {
       "code": "NP",
@@ -400,7 +400,7 @@
       "lat": 51.600189,
       "lon": -0.051211,
       "pvr": 200,
-      "capacity": null
+      "capacity": 230
     },
     "NS": {
       "code": "NS",
@@ -420,7 +420,7 @@
       "lat": 51.474579,
       "lon": -0.04417,
       "pvr": 189,
-      "capacity": null
+      "capacity": 229
     },
     "PB": {
       "code": "PB",
@@ -450,7 +450,7 @@
       "lat": 51.46574,
       "lon": -0.061565,
       "pvr": 61,
-      "capacity": null
+      "capacity": 82
     },
     "PV": {
       "code": "PV",
@@ -460,7 +460,7 @@
       "lat": 51.533792,
       "lon": -0.318859,
       "pvr": 77,
-      "capacity": null
+      "capacity": 95
     },
     "Q": {
       "code": "Q",
@@ -470,7 +470,7 @@
       "lat": 51.474116,
       "lon": -0.09577,
       "pvr": 199,
-      "capacity": null
+      "capacity": 245
     },
     "QB": {
       "code": "QB",
@@ -480,7 +480,7 @@
       "lat": 51.472356,
       "lon": -0.145866,
       "pvr": 210,
-      "capacity": null
+      "capacity": 245
     },
     "RA": {
       "code": "RA",
@@ -490,7 +490,7 @@
       "lat": 51.50283,
       "lon": -0.109155,
       "pvr": 36,
-      "capacity": null
+      "capacity": 64
     },
     "RM": {
       "code": "RM",
@@ -510,7 +510,7 @@
       "lat": 51.523066,
       "lon": 0.096456,
       "pvr": 206,
-      "capacity": null
+      "capacity": 250
     },
     "S": {
       "code": "S",
@@ -520,7 +520,7 @@
       "lat": 51.501934,
       "lon": -0.226176,
       "pvr": 95,
-      "capacity": null
+      "capacity": 135
     },
     "SF": {
       "code": "SF",
@@ -530,7 +530,7 @@
       "lat": 51.574593,
       "lon": -0.067328,
       "pvr": 75,
-      "capacity": null
+      "capacity": 85
     },
     "SG": {
       "code": "SG",
@@ -540,7 +540,7 @@
       "lat": 51.476457,
       "lon": -0.361549,
       "pvr": 44,
-      "capacity": null
+      "capacity": 50
     },
     "SI": {
       "code": "SI",
@@ -550,7 +550,7 @@
       "lat": 51.500553,
       "lon": 0.054502,
       "pvr": 10,
-      "capacity": null
+      "capacity": 100
     },
     "SM": {
       "code": "SM",
@@ -560,7 +560,7 @@
       "lat": 51.426275,
       "lon": -0.035919,
       "pvr": 58,
-      "capacity": null
+      "capacity": 97
     },
     "SO": {
       "code": "SO",
@@ -580,7 +580,7 @@
       "lat": 51.474125,
       "lon": -0.123662,
       "pvr": 158,
-      "capacity": null
+      "capacity": 213
     },
     "T": {
       "code": "T",
@@ -610,7 +610,7 @@
       "lat": 51.354252,
       "lon": -0.097512,
       "pvr": 98,
-      "capacity": null
+      "capacity": 135
     },
     "TF": {
       "code": "TF",
@@ -620,7 +620,7 @@
       "lat": 51.437063,
       "lon": -0.347578,
       "pvr": 127,
-      "capacity": null
+      "capacity": 155
     },
     "TH": {
       "code": "TH",
@@ -630,7 +630,7 @@
       "lat": 51.39323,
       "lon": -0.114381,
       "pvr": 78,
-      "capacity": null
+      "capacity": 120
     },
     "TK": {
       "code": "TK",
@@ -660,7 +660,7 @@
       "lat": 51.375857,
       "lon": -0.278685,
       "pvr": 77,
-      "capacity": null
+      "capacity": 115
     },
     "UB": {
       "code": "UB",
@@ -670,7 +670,7 @@
       "lat": 51.771925,
       "lon": -0.240742,
       "pvr": 34,
-      "capacity": null
+      "capacity": 90
     },
     "UX": {
       "code": "UX",
@@ -680,7 +680,7 @@
       "lat": 51.536817,
       "lon": -0.48901,
       "pvr": 82,
-      "capacity": null
+      "capacity": 90
     },
     "V": {
       "code": "V",
@@ -690,7 +690,7 @@
       "lat": 51.493417,
       "lon": -0.249484,
       "pvr": 66,
-      "capacity": null
+      "capacity": 125
     },
     "W": {
       "code": "W",
@@ -700,7 +700,7 @@
       "lat": 51.562317,
       "lon": -0.221893,
       "pvr": 175,
-      "capacity": null
+      "capacity": 225
     },
     "WH": {
       "code": "WH",
@@ -720,7 +720,7 @@
       "lat": 51.533048,
       "lon": -0.247113,
       "pvr": 93,
-      "capacity": null
+      "capacity": 110
     },
     "WK": {
       "code": "WK",
@@ -730,7 +730,7 @@
       "lat": 51.463832,
       "lon": -0.398697,
       "pvr": 51,
-      "capacity": null
+      "capacity": 110
     },
     "WL": {
       "code": "WL",
@@ -740,7 +740,7 @@
       "lat": 51.475441,
       "lon": -0.095974,
       "pvr": 154,
-      "capacity": null
+      "capacity": 185
     },
     "WN": {
       "code": "WN",
@@ -750,7 +750,7 @@
       "lat": 51.597952,
       "lon": -0.112397,
       "pvr": 118,
-      "capacity": null
+      "capacity": 154
     },
     "X": {
       "code": "X",
@@ -760,7 +760,7 @@
       "lat": 51.523365,
       "lon": -0.201514,
       "pvr": 132,
-      "capacity": null
+      "capacity": 173
     }
   }
 }

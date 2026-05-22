@@ -32,6 +32,13 @@ desktop.ini
 screenshots/
 reference/
 
+# ── Garage-capacity source captures (heavy reference only) ─────────────────
+# The DVSA licence-page screenshots / crops are reference material for the
+# hand-curated capacity/licences.json — they don't need to be in the repo.
+# The extracted data (capacity/licences.json) and the bookmarklet ARE tracked.
+capacity/*.png
+capacity/_crops/
+
 # ── Pipeline intermediates ─────────────────────────────────────────────────
 # Most files in data/source/ are pipeline working state. The weekly workflow
 # `force-adds` the few we want to persist across runs (vehicle-fleet.json,

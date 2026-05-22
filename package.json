@@ -20,6 +20,7 @@
     "build-classifications": "node scripts/build-classifications.js",
     "build-overview": "node scripts/build-overview.js",
     "build-garage-locations": "node scripts/build-garage-locations.js",
+    "build-garage-capacity": "node scripts/build-garage-capacity.js",
     "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js",
     "push-to-supabase": "node scripts/push-to-supabase.js",
     "audit-data": "node scripts/audit-data.js",
