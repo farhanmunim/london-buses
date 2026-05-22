@@ -65,7 +65,7 @@
       "name": "Walthamstow Avenue",
       "operator": "Stagecoach London",
       "postcode": "E4 8SP",
-      "capacity": null
+      "capacity": 90
     },
     "BC": {
       "name": "Beddington",
@@ -77,7 +77,7 @@
       "name": "Barking",
       "operator": "Stagecoach London",
       "postcode": "IG11 8UE",
-      "capacity": null
+      "capacity": 140
     },
     "BN": {
       "name": "Brixton Hill",
@@ -95,7 +95,7 @@
       "name": "Bow",
       "operator": "Stagecoach London",
       "postcode": "E3 2QP",
-      "capacity": null
+      "capacity": 125
     },
     "BX": {
       "name": "Bexleyheath",
@@ -197,7 +197,7 @@
       "name": "Ash Grove",
       "operator": "Stagecoach London",
       "postcode": "E8 4RH",
-      "capacity": null
+      "capacity": 130
     },
     "HO": {
       "name": "Lea Interchange",
@@ -257,7 +257,7 @@
       "name": "Romford",
       "operator": "Stagecoach London",
       "postcode": "RM1 1DS",
-      "capacity": null
+      "capacity": 111
     },
     "NX": {
       "name": "New Cross",
@@ -311,7 +311,7 @@
       "name": "Rainham",
       "operator": "Stagecoach London",
       "postcode": "RM13 9BU",
-      "capacity": null
+      "capacity": 150
     },
     "RP": {
       "name": "Park Royal",
@@ -383,7 +383,7 @@
       "name": "Leyton",
       "operator": "Stagecoach London",
       "postcode": "E10 6AD",
-      "capacity": null
+      "capacity": 120
     },
     "TB": {
       "name": "Bromley",
@@ -455,7 +455,7 @@
       "name": "West Ham",
       "operator": "Stagecoach London",
       "postcode": "E16 4SA",
-      "capacity": null
+      "capacity": 160
     },
     "WJ": {
       "name": "Willesden Junction",
