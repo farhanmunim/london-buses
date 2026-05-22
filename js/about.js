@@ -29,7 +29,7 @@
           </div>
         </div>
 
-        <p class="modal-lede">An interactive map of every London bus route — search, filter by operator, propulsion, deck type, and more. <strong>Not a journey planner</strong> — for live times and travel advice, use <a href="https://tfl.gov.uk/plan-a-journey/" target="_blank" rel="noopener">tfl.gov.uk</a>.</p>
+        <p class="modal-lede">An interactive map of every London bus route — search, filter by operator, garage, route type, propulsion, and more. <strong>Not a journey planner</strong> — for live times and travel advice, use <a href="https://tfl.gov.uk/plan-a-journey/" target="_blank" rel="noopener">tfl.gov.uk</a>.</p>
 
         <div class="modal-disclaimer" role="note">
           <strong>Disclaimer.</strong> This site is an independent project and is <strong>not affiliated with, endorsed by, or operated by Transport for London (TfL), London Buses, or any bus operator</strong>. Data is compiled from public sources and may be incomplete, out of date, or inaccurate. You are responsible for verifying anything before acting on it; I take no responsibility for how this information is used.

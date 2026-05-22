@@ -17,7 +17,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source 
 
 _2026-05-22_
 
-- **NEW** Garage filter in the sidebar — pick any garage (grouped by operator) to show just the routes it operates on the map and Routes tab. The same result as a garage's "View all routes operated here", now one step away in the filter panel.
+- **NEW** Garage filter in the sidebar — pick any garage (grouped by operator) to narrow the network to its routes. It's a stackable filter like the others, so it combines with Operator, Route Type, Propulsion, etc. (and matches the garage drawer's "View all routes operated here").
 - **NEW** The Routes panel now lists every route matching your active filters (bus stop, operator, type, propulsion, deck, frequency) — not just coloured lines on the map. Click any route to open its full card.
 
 ---

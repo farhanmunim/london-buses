@@ -597,8 +597,9 @@ Every module has a single responsibility and a JSDoc header stating what it expo
 
 ```
 ui.js (boot) ──→ map.js · api.js · state.js · stats.js
-              ──→ search.js · route-detail.js
+              ──→ search.js · route-detail.js · filtered-routes.js
               ──→ panels.js · toggles.js · filters.js
+              ──→ stop-search.js · garage-filter.js · tooltip.js
               ──→ paint-mode.js · mobile-nav.js · export.js
 
 about.js   ── standalone (injects modal HTML, works on every page)
@@ -639,7 +640,7 @@ Exposes `window.AppShell` with six modules:
 
 ### Filter Semantics
 
-Unified null handling across all filter categories: **a filter is only active when at least one chip is selected; null values match only if the user ticks the `Unknown` chip.**
+Unified null handling across all chip filter categories: **a filter is only active when at least one chip is selected; null values match only if the user ticks the `Unknown` chip.**
 
 ```
 if (!_filters.X) return true              // no filter active → pass
@@ -647,14 +648,21 @@ if (value == null) return X.has('__unknown__')
 return X.has(value)
 ```
 
-**Two independent filter groups** are now maintained:
+**Route filters** all intersect — logical AND across categories, OR within a category — and drive the route-line overlay, the "routes shown" count, the per-operator stats, the filtered-routes list (below), and the Routes/Network export sheets:
 
-| Group         | Chip `data-filter` values                                  | Drives                                                             |
-| ------------- | ---------------------------------------------------------- | ------------------------------------------------------------------ |
-| Route filters | `routetype`, `operator`, `frequency`, `deck`, `propulsion` | Route-line overlay + stats table + Routes/Network sheets in export |
-| Garage filter | `garageoperator`                                           | Garage markers + Garages sheet in export                           |
+| Kind            | Source            | `data-filter` / state                                      |
+| --------------- | ----------------- | ---------------------------------------------------------- |
+| Chip filters    | sidebar pills     | `routetype`, `operator`, `frequency`, `deck`, `propulsion` |
+| Bus-stop filter | `stop-search.js`  | `state.selectedStop` → route-id set via `stops.json`       |
+| Garage filter   | `garage-filter.js`| `state.selectedGarage` → route-id set carried on selection |
 
-The garage filter is deliberately separate so a user can overlay (say) Stagecoach routes with Arriva's garage footprint for competitor analysis.
+The bus-stop and garage filters are **selection** filters: instead of chips they set a single selection (rendered as a sidebar pill) carrying the set of routes it keeps, then re-run `applyFilters()`. In `map.js` they intersect through `_filters.stopRouteIds` / `_filters.garageRouteIds` exactly like the chip filters, so they stack with everything else (e.g. Garage = Holloway **AND** propulsion = electric). The garage filter's route-id set is supplied to `garage-filter.js` at boot via `setGarageOptions(garages, garageRoutes)` (called from `ui.js`). Clearing one — its pill ×, or the scoped Clear button (`app:garagecleared` / `app:stopcleared`) — leaves the others intact; global Clear-all (`app:resetall`) wipes all of them.
+
+**Garage-marker filter** (`garageoperator` chips, Garages tab) is a **separate** concern: it toggles garage *marker* visibility on the map (and the Garages export sheet), so a user can overlay one operator's routes with another's garage footprint for competitor analysis. It does **not** affect the route set.
+
+### Filtered-routes list — `filtered-routes.js`
+
+When any route filter is active and no specific route is pinned, the Routes panel lists every matching route (number + destination + operator dot) and surfaces itself. Clicking a row opens that route's full card. Routes-panel priority: pinned/searched routes (full cards) → filtered list → search prompt. Recomputed on `app:filterchange` and `app:selectionchanged`.
 
 ### `ui.js` — Boot orchestrator
 
