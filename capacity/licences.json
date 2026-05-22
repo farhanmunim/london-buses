@@ -120,6 +120,29 @@
       { "address": "Plumstead Garage, Pettman Crescent, Plumstead, London, SE28 0BJ", "vehicles": 210 },
       { "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AT", "vehicles": 50 }
     ]},
+    { "id": "462612", "operator": "Arriva", "name": "Arriva (Grays, East of England)", "total": 70, "ocs": [
+      { "address": "Europa Park, London Road, Grays, RM20 4DB", "vehicles": 70 }
+    ]},
+    { "id": "295471", "operator": "Metroline", "name": "Metroline (Potters Bar, East of England)", "total": 190, "ocs": [
+      { "address": "Potters Bar Garage, High Street, Potters Bar, EN6 5BE", "vehicles": 190 }
+    ]},
+    { "id": "20449", "operator": "First", "name": "First (Slough, West of England)", "total": 136, "ocs": [
+      { "address": "Slough Depot, Stanley Cottages, Stoke Road, Slough, SL2 5AQ", "vehicles": 126 },
+      { "address": "Reading Buses, Great Knollys Street, Reading, RG1 7HH", "vehicles": 10 }
+    ]},
+    { "id": "20176", "operator": "Go-Ahead", "name": "Brighton & Hove / Metrobus", "total": 567, "ocs": [
+      { "address": "Conway Street, Hove, BN3 3LT", "vehicles": 287 },
+      { "address": "Whitehawk Road, Brighton, BN2 5NS", "vehicles": 250 },
+      { "address": "Tressler Coachworks, Bell Lane, Bellbrook Industrial Estate, Uckfield, TN22 1QL", "vehicles": 5 },
+      { "address": "Stagecoach Eastbourne, Birch Road, Eastbourne, BN23 6PD", "vehicles": 6 },
+      { "address": "Unit 1, Newhaven Workshops, Beach Close, Newhaven, BN9 0BY", "vehicles": 70 },
+      { "address": "107 Lewes Road, Brighton, BN2 4AE", "vehicles": 250 },
+      { "address": "Wheatstone Close, Crawley, RH10 9UA", "vehicles": 150 },
+      { "address": "Collinwood, Unit 3B, Wheatstone Close, Crawley, RH10 9UA", "vehicles": 12 },
+      { "address": "Southdown PSV Ltd, Unit 3, Silverwood, Snow Hill, Copthorne, RH10 3EN", "vehicles": 30 },
+      { "address": "Broyle Place Farm, Laughton Road, The Cloisters, Ringmer, Lewes, BN8 5SD", "vehicles": 45 },
+      { "address": "2a & 2b Birch Close, Eastbourne, BN23 6PE", "vehicles": 18 }
+    ]},
     { "id": "22544", "operator": "Uno", "name": "Universitybus Ltd (Uno)", "total": 110, "ocs": [
       { "address": "Gypsy Moth Avenue, Hatfield Business Park, Hatfield, AL10 9BS", "vehicles": 90 },
       { "address": "Cranfield University, College Road, Cranfield, Bedford, MK43 0AL", "vehicles": 10 },
