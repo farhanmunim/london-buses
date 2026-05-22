@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T14:01:41.710Z",
+  "generatedAt": "2026-05-22T14:15:19.427Z",
   "count": 76,
   "garages": {
     "A": {
@@ -20,7 +20,7 @@
       "lat": 51.548365,
       "lon": -0.238288,
       "pvr": 100,
-      "capacity": null
+      "capacity": 132
     },
     "AD": {
       "code": "AD",
@@ -270,7 +270,7 @@
       "lat": 51.523809,
       "lon": -0.35306,
       "pvr": 90,
-      "capacity": null
+      "capacity": 151
     },
     "GM": {
       "code": "GM",
@@ -350,7 +350,7 @@
       "lat": 51.426687,
       "lon": -0.034189,
       "pvr": 34,
-      "capacity": null
+      "capacity": 50
     },
     "KC": {
       "code": "KC",
@@ -360,7 +360,7 @@
       "lat": 51.540599,
       "lon": -0.125933,
       "pvr": 27,
-      "capacity": null
+      "capacity": 60
     },
     "MB": {
       "code": "MB",
@@ -380,7 +380,7 @@
       "lat": 51.493448,
       "lon": 0.003631,
       "pvr": 113,
-      "capacity": null
+      "capacity": 150
     },
     "N": {
       "code": "N",
@@ -440,7 +440,7 @@
       "lat": 51.491193,
       "lon": 0.083469,
       "pvr": 137,
-      "capacity": null
+      "capacity": 210
     },
     "PM": {
       "code": "PM",
@@ -600,7 +600,7 @@
       "lat": 51.375099,
       "lon": 0.045001,
       "pvr": 86,
-      "capacity": null
+      "capacity": 110
     },
     "TC": {
       "code": "TC",
@@ -650,7 +650,7 @@
       "lat": 51.433618,
       "lon": -0.018598,
       "pvr": 129,
-      "capacity": null
+      "capacity": 180
     },
     "TV": {
       "code": "TV",

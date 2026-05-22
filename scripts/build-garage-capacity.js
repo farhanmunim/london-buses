@@ -66,15 +66,33 @@ function byPostcode(pc, operator) {
   return pool.reduce((m, o) => Math.max(m, o.vehicles), 0) || null;
 }
 
+// Tier 1.5 — same operator + same postcode SECTOR (outward + first inward
+// digit, e.g. "NW10 2"). Resolves a garage whose exact postcode differs from
+// the registered OC but sits in the same sector, picking the right OC among
+// same-operator siblings (e.g. Willesden Garage NW10 2JX over Willesden
+// Junction NW10 4XB; Greenford Depot UB6 9AP over Vanguard Site UB6 8DW).
+const sectorOf = s => { const m = String(s || '').toUpperCase().match(/^([A-Z]{1,2}\d[A-Z\d]?)\s*(\d)/); return m ? `${m[1]} ${m[2]}` : null; };
+function bySector(pc, operator) {
+  const s = sectorOf(pc);
+  if (!s) return null;
+  const hits = allOcs.filter(o => o.operator === operator && sectorOf(o.pc) === s);
+  if (hits.length === 1) return hits[0].vehicles;
+  return null;
+}
+
 // Tier 2 — same operator + garage name appearing in the OC address. Catches
 // near-miss postcodes (our geocoded postcode vs DVSA's registered one differ,
 // e.g. Greenford UB6 9AR vs 9AP). Only used when exactly one OC matches, to
 // avoid false positives on common place-names.
+const cleanName = s => String(s || '').toLowerCase()
+  .replace(/\([^)]*\)/g, ' ')                              // drop parentheticals: "Morden Wharf (Greenwich)"
+  .replace(/['’]/g, '')                                    // drop apostrophes: "King's Cross"
+  .replace(/\b(garage|depot|bus garage|bus depot)\b/g, ' ')
+  .replace(/\s+/g, ' ').trim();
 function byName(name, operator) {
-  if (!name) return null;
-  const needle = name.toLowerCase().replace(/\s+(garage|depot|bus garage)$/i, '').trim();
+  const needle = cleanName(name);
   if (needle.length < 4) return null;
-  const hits = allOcs.filter(o => o.operator === operator && o.address.toLowerCase().includes(needle));
+  const hits = allOcs.filter(o => o.operator === operator && cleanName(o.address).includes(needle));
   if (hits.length !== 1) return null;
   return hits[0].vehicles;
 }
@@ -94,10 +112,10 @@ const rows = (gar.features ?? [])
   .filter(r => r.code)
   .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true }));
 
-let byNameCount = 0;
 for (const r of rows) {
-  let capacity = byPostcode(r.postcode, r.operator);
-  if (capacity == null) { capacity = byName(r.name, r.operator); if (capacity != null) byNameCount++; }
+  const capacity = byPostcode(r.postcode, r.operator)
+                ?? bySector(r.postcode, r.operator)
+                ?? byName(r.name, r.operator);
   garages[r.code] = { name: r.name, operator: r.operator, postcode: r.postcode, capacity: capacity ?? null };
   (capacity ? matched : unmatched).push(r.code);
 }
@@ -113,5 +131,11 @@ const out = {
 fs.writeFileSync(OUT_PATH, JSON.stringify(out, null, 2) + '\n', 'utf8');
 
 console.log(`Wrote ${Object.keys(garages).length} garages → data/garage-capacity.json`);
-console.log(`  matched: ${matched.length} (${byNameCount} via name fallback)  unmatched: ${unmatched.length}`);
-if (unmatched.length) console.log(`  unmatched codes: ${unmatched.join(', ')}`);
+console.log(`  matched: ${matched.length}  unmatched: ${unmatched.length}`);
+if (unmatched.length) {
+  console.log('  unmatched (need a licence capture):');
+  for (const code of unmatched) {
+    const g = garages[code];
+    console.log(`    ${code.padEnd(4)} ${(g.name || '').slice(0, 22).padEnd(23)} ${(g.postcode || '?').padEnd(9)} ${g.operator || '?'}`);
+  }
+}

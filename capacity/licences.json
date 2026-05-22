@@ -114,6 +114,12 @@
       { "address": "Walthamstowe Avenue, London, E4 8SP", "vehicles": 90 },
       { "address": "151 Ruckholt Road, London, E10 5PB", "vehicles": 38 }
     ]},
+    { "id": "19754", "operator": "Stagecoach London", "name": "Selkent Ltd", "total": 550, "ocs": [
+      { "address": "Bromley Garage, 111 Hastings Road, Bromley, BR2 8NH", "vehicles": 110 },
+      { "address": "Catford Garage, 180 Bromley Road, Catford, London, SE6 2XA", "vehicles": 180 },
+      { "address": "Plumstead Garage, Pettman Crescent, Plumstead, London, SE28 0BJ", "vehicles": 210 },
+      { "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AT", "vehicles": 50 }
+    ]},
     { "id": "22544", "operator": "Uno", "name": "Universitybus Ltd (Uno)", "total": 110, "ocs": [
       { "address": "Gypsy Moth Avenue, Hatfield Business Park, Hatfield, AL10 9BS", "vehicles": 90 },
       { "address": "Cranfield University, College Road, Cranfield, Bedford, MK43 0AL", "vehicles": 10 },
