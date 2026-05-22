@@ -404,18 +404,13 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   set('[data-rc-value]', Number.isFinite(cpm) ? `£${cpm.toFixed(2)}` : 'XXX');
 
   // Contracted annual miles — bid ÷ £/mile, computed at build time. Shown
-  // in millions when ≥1M (matching how operations folks talk about route
-  // size), otherwise in thousands. Hidden when the derivation isn't
-  // possible (no recent tender, or one of the two inputs missing).
+  // as the full figure with thousands separators (e.g. 1,258,932). Hidden
+  // when the derivation isn't possible (no recent tender, or one of the two
+  // inputs missing).
   const annualMiles = classification?.contractedAnnualMiles;
   const milesValid  = Number.isFinite(annualMiles) && annualMiles > 0;
   toggleRow(node, 'annual-miles', milesValid);
-  if (milesValid) {
-    const fmt = annualMiles >= 1_000_000
-      ? `${(annualMiles / 1_000_000).toFixed(2)}M`
-      : `${Math.round(annualMiles / 1_000).toLocaleString()}k`;
-    set('[data-rc-annual-miles]', fmt);
-  }
+  if (milesValid) set('[data-rc-annual-miles]', annualMiles.toLocaleString());
 
   // Awarded vehicle — what TfL specified the most recent contract should
   // run. Worth comparing against the live `propulsion` / `deck` above; a
@@ -439,11 +434,7 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const prevMiles = classification?.previousContractedAnnualMiles;
   const prevMilesValid = !!prevOp && Number.isFinite(prevMiles) && prevMiles > 0;
   toggleRow(node, 'prev-miles', prevMilesValid);
-  if (prevMilesValid) {
-    set('[data-rc-prev-miles]', prevMiles >= 1_000_000
-      ? `${(prevMiles / 1_000_000).toFixed(2)}M`
-      : `${Math.round(prevMiles / 1_000).toLocaleString()}k`);
-  }
+  if (prevMilesValid) set('[data-rc-prev-miles]', prevMiles.toLocaleString());
 
   // Awarded vehicle of the previous contract — shown whenever we have a spec
   // for it (parity with the current section), not only when it differs.
