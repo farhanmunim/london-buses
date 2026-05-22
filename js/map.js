@@ -599,11 +599,25 @@ export function renderGarages(garages, garageRoutes = {}) {
         }).join('')}</div>`
       : '';
 
+    // Operating-centre capacity (DVSA licence) + spare headroom, shown only
+    // when capacity is on file for this garage. Free space uses the same PVR
+    // value displayed above so the popup is internally consistent; clamped
+    // to 0-100 since PVR can edge over a single centre's licensed figure.
+    const capacity  = Number.isFinite(g.capacity) ? g.capacity : null;
+    const freeSpace = (capacity && Number.isFinite(totalPvr))
+      ? Math.max(0, Math.min(100, Math.round((1 - totalPvr / capacity) * 100)))
+      : null;
+    const capRows = capacity
+      ? `<div><dt>Capacity</dt><dd>${capacity}</dd></div>` +
+        (freeSpace == null ? '' : `<div><dt>Free space</dt><dd>${freeSpace}%</dd></div>`)
+      : '';
+
     marker.bindPopup(
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
         `<div><dt>Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
         `<div><dt>PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        capRows +
         `<div><dt>Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
         `<div><dt>Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>` +
