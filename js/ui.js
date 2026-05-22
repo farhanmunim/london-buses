@@ -22,6 +22,7 @@ import './search.js';        // topbar + routes-tab search (multi-route pills)
 import './stop-search.js';   // bus-stop filter in sidebar
 import './garage-filter.js'; // garage-selection pill in sidebar (parity with stop filter)
 import './route-detail.js';  // route-card renderer (imported for side-effect-free exports)
+import './filtered-routes.js'; // lists filter-matched routes in the Routes tab
 import './mobile-nav.js';    // pull-up sheet + bottom nav
 import './export.js';        // XLSX export
 import './tooltip.js';       // custom [data-tip] hover tooltip used by route-card labels
@@ -30,6 +31,7 @@ import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map
 import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations } from './api.js';
 import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js';
 import { renderOperatorStats, setGarageData } from './stats.js';
+import { setGarageOptions } from './garage-filter.js';
 import { applyFilters } from './filters.js';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
@@ -110,8 +112,9 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
   setGaragesVisible(localStorage.getItem('garages-visible') !== '0');
 
   // Hand the garage records to stats.js so operator cards / drawer can show
-  // real garage counts.
+  // real garage counts, and to garage-filter.js for the sidebar picker.
   setGarageData(garages, garageRoutes);
+  setGarageOptions(garages, garageRoutes);
   applyFilters(); // refresh op cards now that garage counts are known
 });
 

@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.10</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.11</a>
 
       <div style="flex:1"></div>
 
@@ -78,56 +78,50 @@
           <p class="cl-tag-legend"><strong>Tags:</strong>
             <span class="cl-tag cl-tag--new">NEW</span> new feature ·
             <span class="cl-tag cl-tag--fix">FIX</span> bug fix ·
-            <span class="cl-tag cl-tag--data">DATA</span> pipeline / data source change ·
-            <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement ·
-            <span class="cl-tag cl-tag--perf">PERF</span> performance.
+            <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
+            <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
 
           <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.11</span> May 22, 2026</div>
+            <a href="#v2_11" class="cl-entry-title">Garage filter &amp; filtered-route list</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Garage filter in the sidebar — pick any garage (grouped by operator) to show just the routes it operates on the map and Routes tab. The same result as a garage's "View all routes operated here", now one step away in the filter panel.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> The Routes panel now lists every route matching your active filters (bus stop, operator, type, propulsion, deck, frequency) — not just coloured lines on the map. Click any route to open its full card.</li>
+            </ul>
+          </article>
+
+          <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.10</span> May 11, 2026</div>
-            <a href="#v2_10" class="cl-entry-title">Tranche on the route card &amp; programme parser fix</a>
+            <a href="#v2_10" class="cl-entry-title">Tranche on the route card</a>
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Tranche reference on every route card — the LBSL programme batch a route's upcoming tender sits in (e.g. <code>913</code>). Coverage 712/747 routes; also added to the XLSX Routes sheet.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Tender programme parser was silently dropping every continuation row whose route number was a plain 3-digit value (424, 485, 95…). Tranche-vs-route is now disambiguated by position, not shape. Programme entries jumped 512 → 1,265.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Tranche refs with a trailing letter (e.g. <code>972a</code>) are now preserved.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Programme now sourced from content.tfl.gov.uk and extended to 11 financial years through 2027/28.</li>
-              <li><span class="cl-tag cl-tag--ux">UX</span> Route card Tender section reordered; "Mileage standard" and the mislabeled "Contract no." rows removed (TfL publishes no per-route contract reference).</li>
             </ul>
           </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.9</span> May 11, 2026</div>
-            <a href="#v2_9" class="cl-entry-title">Data-quality audit &amp; pipeline hardening</a>
+            <a href="#v2_9" class="cl-entry-title">Data accuracy corrections</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Systematic data-quality audit (<code>scripts/audit-data.js</code>) checks every record in <code>route_classifications</code>, <code>vehicle-fleet</code>, <code>garages.geojson</code>, <code>route-vehicles</code>, and <code>route-mps</code> against per-field plausibility constraints. Hard-fails the weekly refresh on CRITICAL anomalies so broken data never gets committed; full report written to <code>data/audit/data-quality.json</code> for diffable regression history.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> PDF parser was silently rejecting every TfL QSI / MPS / programme PDF since pdfjs-dist 4.x added a Buffer rejection (Buffer is a Uint8Array subclass so the old check passed it through). Now converted to a plain Uint8Array view — unblocks 662 per-route MPS records and 481 entries across 10 years of tender programme PDFs.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Vehicle-fleet was sending bonnet numbers and TMP placeholders to DVLA, which rejected 26 % of the fleet (3,262 entries). Parser now filters to UK-VRM-shaped strings at parse time and prunes pre-existing junk on every cache load.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Per-route fleet aggregator was averaging avg-age across all observed vehicles regardless of drivetrain — a reserve diesel briefly covering an electric route would skew the displayed age by 1-2 years. Aggregator now filters to vehicles matching the dominant propulsion (route 339: 4.8 y → 2.9 y).</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Garage list had upstream-CSV duplicates (BN/BT/UX) and out-of-London placeholder rows. Deduped by TfL code with route-field union; placeholders filtered. 89 → 81 garage features.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> TfL tender form occasionally pastes the full annual bid into the cost-per-mile cell (route 290 2006, route 265 2022). Clamped to £0..200 at parse time + retro-sanitised on cache load.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> School routes default to <code>deck=single</code> and <code>propulsion=diesel</code> when every upstream returned null (London school services are uniformly single-deck diesel minibuses/coaches).</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> typeCounts were over-counting by 1 — EL1 was both 24h and prefix-shaped. Buckets are now mutually exclusive; sum equals total.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Weekly refresh workflow now retries <code>git push</code> up to 3 times with <code>git pull --rebase --autostash</code> between attempts. Eliminates the race where another commit lands on main between the runner's checkout and push.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> New twice-weekly Supabase heartbeat workflow keeps the free-tier project from auto-pausing on the 7-day inactivity timer.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Average fleet age was being skewed by reserve vehicles of the wrong drivetrain briefly covering a route — a 14-year diesel on an electric route would add a year or two. Now only vehicles matching the route's main propulsion count (route 339: 4.8 y → 2.9 y).</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Garage list had duplicate rows and out-of-London placeholder depots. Deduped and filtered — a cleaner 81 garages.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> A handful of tender cards showed absurd cost-per-mile figures (e.g. £4M/mile) where TfL's form pasted the full annual bid into the per-mile cell. Now clamped to a sane range.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> School routes now default to single-deck diesel when no fleet data is available (London school services are uniformly single-deck diesel minibuses / coaches).</li>
             </ul>
           </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>
-            <a href="#v2_8" class="cl-entry-title">MPS standards, contract start dates, ingress sanitisation</a>
+            <a href="#v2_8" class="cl-entry-title">MPS standards &amp; contract start dates</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. EWT MPS observed range 0.7–1.4 min; OTP MPS 74–90 %. New "MPS" KPI tile next to the actual EWT / OTP so contract-vs-actual reads at a glance.</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered). Sourced from londonbusroutes.net <code>details.htm</code>, with the LBSL programme PDFs as backup.</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream, keyed by route + date with a <code>kind</code> column.</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> Search pills in the topbar now drive the export — typing <code>25, 30, 100</code> + Export emits a workbook restricted to those routes (Garages and Tenders sheets follow the same selection).</li>
-              <li><span class="cl-tag cl-tag--new">NEW</span> Build-time make/model alignment audit. Cross-checks DVLA-observed manufacturer against the lookup's chassis make for every route; logs a summary line and writes <code>data/source/make-alignment.json</code>.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Defence-in-depth ingress sanitisation — new <code>_lib/sanitize.js</code> strips HTML tags, control characters and oversized payloads from every freeform string before it lands in the JSON cache. Wired into all 11 fetchers and the build steps.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Pipeline shared-helpers extraction — <code>_lib/</code> gains <code>http.js</code>, <code>cache.js</code>, <code>pdf.js</code>. Every fetcher now routes through the shared helpers (all 11 weekly fetchers plus the on-demand audit script); ~200 LOC of duplication removed and User-Agent version drift fixed.</li>
-              <li><span class="cl-tag cl-tag--ux">UX</span> Frontend palette dedupe — <code>OPERATOR_COLORS</code> now lives only in <code>js/map.js</code>. Previously the <code>stats.js</code> copy was missing Arriva London + Uno Buses so those operators rendered as grey on stats panels.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> Stops toggle no longer lingers after clearing the route search.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> New <code>fetch-route-mps.js</code> step in the weekly pipeline (now 16 steps).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. A new "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Search pills in the topbar now drive the export — typing <code>25, 30, 100</code> + Export emits a workbook restricted to those routes (every sheet follows the same selection).</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Joint bid row now always shows Yes / No (was hidden when "No"). Tender section restructured into Current / Previous; tooltips rolled out across every route-card label.</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> Cost-per-mile reader was misreading European decimal commas (<code>6,25</code> was becoming <code>625</code>). 3 historical awards corrected.</li>
-              <li><span class="cl-tag cl-tag--ux">UX</span> Joint bid row now always shows Yes / No (was hidden when "No"). Tender section restructured into Current / Previous; tooltip system rolled out across every route-card label.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> A few operators rendered grey on the stats panels instead of their brand colour. Now consistent everywhere.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Stops toggle no longer lingers after clearing the route search.</li>
             </ul>
           </article>
 
@@ -137,8 +131,7 @@
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly. Operator names roll up to parent groups (Docklands → Go-Ahead, Selkent → Stagecoach, etc.).</li>
-              <li><span class="cl-tag cl-tag--perf">PERF</span> Three pipeline short-circuits (HEAD-first checks for the geometry ZIP, the QSI PDF, and the programme PDFs) cut weekly runtime by ~70 % when upstream data hasn't moved.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly.</li>
             </ul>
           </article>
 
@@ -147,8 +140,7 @@
             <a href="#v2_6" class="cl-entry-title">Frequency rules &amp; propulsion fix</a>
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Frequency band collapsed to binary: H = 5+ buses/hour, L = fewer.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> 11 routes (D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487) corrected from "diesel" to "electric" — <code>BZL</code> fleet code wasn't in the EV regex.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Tier-3 frequency fallback reads headways straight from <code>details.htm</code> when both TfL Timetable API and the per-route HTML grid yield null.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> 11 routes (D7, D8, 58, 187, 228, 251, 276, 314, 316, 384, 487) corrected from "diesel" to "electric".</li>
             </ul>
           </article>
 
@@ -166,19 +158,17 @@
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.4</span> Apr 23, 2026</div>
-            <a href="#v2_4" class="cl-entry-title">Stops baked in, bus-stop filter</a>
+            <a href="#v2_4" class="cl-entry-title">Bus-stop filter</a>
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Bus-stop filter — search any stop and filter the network to routes serving it.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Stops now baked weekly into <code>stops.json</code> + <code>route_stops.json</code> (no runtime TfL API calls for stop data).</li>
             </ul>
           </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.3</span> Apr 21, 2026</div>
-            <a href="#v2_3" class="cl-entry-title">Night-route frequencies &amp; pipeline slimming</a>
+            <a href="#v2_3" class="cl-entry-title">Night-route frequencies &amp; garage electrification</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--fix">FIX</span> All 120 night routes now resolve a frequency band. TfL encodes after-midnight departures as hour ≥ 24; the previous code didn't wrap, so every night journey landed at 1400+ minutes.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Pipeline slimmed from 11 → 8 steps; removed unused outputs (route summary CSV, PVR aggregates JSON, stops GeoJSON).</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> All 120 night routes now resolve a frequency band (after-midnight departures were previously mis-bucketed).</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Garage popup gains an Electrification row (% of garage's PVR run by electric routes).</li>
             </ul>
           </article>

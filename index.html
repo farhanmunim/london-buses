@@ -74,7 +74,7 @@
         </div>
           <span class="tb-name">London Buses</span>
         </a>
-        <a class="tb-ver" href="changelog.html" title="View changelog">v2.10</a>
+        <a class="tb-ver" href="changelog.html" title="View changelog">v2.11</a>
 
         <div class="tb-search-wrap">
           <div class="tb-search" id="globalSearch" role="search">
@@ -226,12 +226,21 @@
             </div>
           </section>
 
-          <section class="sb-sec" id="garage-sec" hidden>
+          <section class="sb-sec" id="garage-sec">
             <div class="sb-sec-hd" data-sec="garage">
               <span class="sb-sec-lbl">Garage</span>
               <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-            <div class="sb-sec-bd" style="max-height:80px">
+            <div class="sb-sec-bd" style="max-height:260px">
+              <div class="sb-input" id="garage-filter-box">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/></svg>
+                <label for="garage-filter-input" class="sr-only">Filter routes by garage</label>
+                <input id="garage-filter-input" placeholder="Select a garage…" autocomplete="off" spellcheck="false" />
+                <button type="button" id="garage-filter-clear" class="sb-input-x" aria-label="Clear garage search" hidden>
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              <ul id="garage-filter-list" class="sb-autocomplete" role="listbox" hidden></ul>
               <div id="garage-selected" class="sb-selected-pill" hidden></div>
             </div>
           </section>
@@ -418,6 +427,14 @@
             <p>Search for a route above, or tap a line on the map.<br><br>Try <strong>25</strong>, <strong>38</strong> or <strong>149</strong>.</p>
           </div>
 
+          <!-- Filtered-routes list — shown when sidebar filters are active but no
+               specific route is pinned. Lists the routes the filter kept; each
+               row opens that route's full card. Managed by filtered-routes.js. -->
+          <div id="routeFilteredList" class="rfl" hidden>
+            <div class="rfl-head"><span class="rfl-count" id="rflCount">0</span> <span id="rflLabel">routes match your filters</span></div>
+            <ul class="rfl-list" id="rflList" role="list"></ul>
+          </div>
+
           <div id="routeResults" hidden>
             <!-- Route cards rendered here by route-detail.js. Shape: -->
             <template id="tpl-route-card">
@@ -596,7 +613,7 @@
         </div>
         <span class="mob-title">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog">v2.10</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog">v2.11</a>
       <div style="flex:1"></div>
       <button type="button" class="theme-btn" id="themeToggleMob" aria-label="Toggle theme">
         <svg class="i-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
