@@ -12,8 +12,13 @@
  * every UK postcode correctly, so we just project its output into the legacy
  * shape instead of re-geocoding.
  *
- * Legacy shape preserved exactly so api.js and the map don't need to change:
- *   { generatedAt, count, garages: { <code>: { code, name, operator, address, lat, lon } } }
+ * Legacy shape preserved (plus `pvr` and `capacity`) so api.js and the map
+ * don't need to change:
+ *   { generatedAt, count, garages: { <code>: { code, name, operator, address,
+ *                                              lat, lon, pvr, capacity } } }
+ *
+ * `capacity` (operating-centre authorised vehicles, DVSA operator licence) is
+ * joined in from the hand-maintained data/garage-capacity.json by garage code.
  */
 
 import fs from 'fs';
@@ -35,6 +40,21 @@ if (!fs.existsSync(IN_PATH)) {
 }
 
 const fc = JSON.parse(fs.readFileSync(IN_PATH, 'utf8'));
+
+// Hand-maintained per-garage operating-centre capacity (authorised vehicles)
+// from the DVSA operator-licensing service. Not available via any bulk/API
+// export, so curated in data/garage-capacity.json. Joined here by garage code.
+const CAP_PATH = path.join(DATA_DIR, 'garage-capacity.json');
+let capByCode = {};
+if (fs.existsSync(CAP_PATH)) {
+  try {
+    const cap = JSON.parse(fs.readFileSync(CAP_PATH, 'utf8'));
+    capByCode = cap.garages ?? {};
+  } catch (e) {
+    console.warn(`  Could not parse garage-capacity.json: ${e.message}`);
+  }
+}
+
 const garages = {};
 let skipped = 0;
 
@@ -59,6 +79,8 @@ for (const f of fc.features ?? []) {
   const [lon, lat] = Array.isArray(coords) ? coords : [null, null];
 
   const pvrNum = parseInt(p['PVR'], 10);
+  const capRaw = capByCode[code]?.capacity;
+  const capacity = Number.isFinite(capRaw) ? capRaw : null;
 
   garages[code] = {
     code,
@@ -68,6 +90,9 @@ for (const f of fc.features ?? []) {
     lat:      Number.isFinite(lat) ? lat : null,
     lon:      Number.isFinite(lon) ? lon : null,
     pvr:      Number.isFinite(pvrNum) ? pvrNum : null,
+    // Authorised-vehicle capacity of the garage's operating centre (DVSA
+    // operator licence). null until hand-filled in garage-capacity.json.
+    capacity,
   };
 }
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-18T12:04:05.754Z",
+  "generatedAt": "2026-05-22T11:52:25.023Z",
   "count": 76,
   "garages": {
     "A": {
@@ -9,7 +9,8 @@
       "address": "Bushey Road, Sutton, SM1 1QJ",
       "lat": 51.369141,
       "lon": -0.19923,
-      "pvr": 86
+      "pvr": 86,
+      "capacity": null
     },
     "AC": {
       "code": "AC",
@@ -18,7 +19,8 @@
       "address": "287 High Road, Willesden, London, NW10 2JY",
       "lat": 51.548365,
       "lon": -0.238288,
-      "pvr": 100
+      "pvr": 100,
+      "capacity": null
     },
     "AD": {
       "code": "AD",
@@ -27,7 +29,8 @@
       "address": "Regents Avenue, Palmers Green, London, N13 5UR",
       "lat": 51.612839,
       "lon": -0.108213,
-      "pvr": 83
+      "pvr": 83,
+      "capacity": null
     },
     "AF": {
       "code": "AF",
@@ -36,7 +39,8 @@
       "address": "10 Chelverton Road, London, SW15 1RN",
       "lat": 51.462368,
       "lon": -0.217993,
-      "pvr": 94
+      "pvr": 94,
+      "capacity": null
     },
     "AH": {
       "code": "AH",
@@ -45,7 +49,8 @@
       "address": "Commerce Road, Brentford, Middlesex, TW8 8LZ",
       "lat": 51.483833,
       "lon": -0.314707,
-      "pvr": 101
+      "pvr": 101,
+      "capacity": null
     },
     "AL": {
       "code": "AL",
@@ -54,7 +59,8 @@
       "address": "High Street, London, SW19 1DN",
       "lat": 51.416567,
       "lon": -0.181662,
-      "pvr": 130
+      "pvr": 130,
+      "capacity": null
     },
     "AO": {
       "code": "AO",
@@ -63,7 +69,8 @@
       "address": "Unit 1-3, Capital Business Centre Athlon Road, Wembley, HA0 1YU",
       "lat": 51.537651,
       "lon": -0.302711,
-      "pvr": 34
+      "pvr": 34,
+      "capacity": null
     },
     "AR": {
       "code": "AR",
@@ -72,7 +79,8 @@
       "address": "Philip Lane, Tottenham, London, N15 4JB",
       "lat": 51.588722,
       "lon": -0.072359,
-      "pvr": 124
+      "pvr": 124,
+      "capacity": null
     },
     "AV": {
       "code": "AV",
@@ -81,7 +89,8 @@
       "address": "Kingsley Road, Hounslow, TW3 1PA",
       "lat": 51.471985,
       "lon": -0.355561,
-      "pvr": 88
+      "pvr": 88,
+      "capacity": null
     },
     "AW": {
       "code": "AW",
@@ -90,7 +99,8 @@
       "address": "Walthamstow Avenue, London, E4 8SP",
       "lat": 51.60255,
       "lon": -0.017188,
-      "pvr": 68
+      "pvr": 68,
+      "capacity": null
     },
     "BC": {
       "code": "BC",
@@ -99,7 +109,8 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 165
+      "pvr": 165,
+      "capacity": null
     },
     "BK": {
       "code": "BK",
@@ -108,7 +119,8 @@
       "address": "205 Longbridge Road, Barking, Essex, IG11 8UE",
       "lat": 51.547054,
       "lon": 0.095221,
-      "pvr": 105
+      "pvr": 105,
+      "capacity": null
     },
     "BN": {
       "code": "BN",
@@ -117,7 +129,8 @@
       "address": "239 Brixton Hill, London, SW2 1NR",
       "lat": 51.446122,
       "lon": -0.12373,
-      "pvr": 94
+      "pvr": 94,
+      "capacity": null
     },
     "BT": {
       "code": "BT",
@@ -126,7 +139,8 @@
       "address": "Approach Road, Edgware, Middlesex, HA8 7AN",
       "lat": 51.611541,
       "lon": -0.273136,
-      "pvr": 86
+      "pvr": 86,
+      "capacity": null
     },
     "BW": {
       "code": "BW",
@@ -135,7 +149,8 @@
       "address": "Fairfield Road, Bow, London, E3 2QP",
       "lat": 51.53235,
       "lon": -0.023324,
-      "pvr": 95
+      "pvr": 95,
+      "capacity": null
     },
     "BX": {
       "code": "BX",
@@ -144,7 +159,8 @@
       "address": "Erith Road, Bexleyheath, Kent, DA7 6BX",
       "lat": 51.460146,
       "lon": 0.153803,
-      "pvr": 114
+      "pvr": 114,
+      "capacity": null
     },
     "C": {
       "code": "C",
@@ -153,7 +169,8 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 114
+      "pvr": 114,
+      "capacity": null
     },
     "CT": {
       "code": "CT",
@@ -162,7 +179,8 @@
       "address": "15 Bohemia Place, Mare Street, London, E8 1DU",
       "lat": 51.547327,
       "lon": -0.05318,
-      "pvr": 79
+      "pvr": 79,
+      "capacity": null
     },
     "DH": {
       "code": "DH",
@@ -171,7 +189,8 @@
       "address": "Dawley Road, Hayes UB3 1EF",
       "lat": 51.513793,
       "lon": -0.436579,
-      "pvr": 47
+      "pvr": 47,
+      "capacity": null
     },
     "DS": {
       "code": "DS",
@@ -180,7 +199,8 @@
       "address": "Henley Road, North Woolwich, London, E16 2EJ",
       "lat": 51.500295,
       "lon": 0.055874,
-      "pvr": 138
+      "pvr": 138,
+      "capacity": null
     },
     "DT": {
       "code": "DT",
@@ -189,7 +209,8 @@
       "address": "Central Road, Dartford, Kent, DA1 5BG",
       "lat": 51.450192,
       "lon": 0.220779,
-      "pvr": 75
+      "pvr": 75,
+      "capacity": null
     },
     "DX": {
       "code": "DX",
@@ -198,7 +219,8 @@
       "address": "638 Ripple Road, Barking, IG11 0SR",
       "lat": 51.532318,
       "lon": 0.113116,
-      "pvr": 44
+      "pvr": 44,
+      "capacity": null
     },
     "E": {
       "code": "E",
@@ -207,7 +229,8 @@
       "address": "Southbury Road, Ponders End, Middlesex, EN3 4HX",
       "lat": 51.648654,
       "lon": -0.050895,
-      "pvr": 122
+      "pvr": 122,
+      "capacity": null
     },
     "EC": {
       "code": "EC",
@@ -216,7 +239,8 @@
       "address": "Unit 1E, Towpath Road, Stonehill Business Park, London N18 3QX",
       "lat": 51.607777,
       "lon": -0.04144,
-      "pvr": 25
+      "pvr": 25,
+      "capacity": null
     },
     "EW": {
       "code": "EW",
@@ -225,7 +249,8 @@
       "address": "Approach Road, Edgware, Middlesex, HA8 7AN",
       "lat": 51.611541,
       "lon": -0.273136,
-      "pvr": 79
+      "pvr": 79,
+      "capacity": null
     },
     "FW": {
       "code": "FW",
@@ -234,7 +259,8 @@
       "address": "Wellington Road, Fulwell, Middlesex, TW2 5NX",
       "lat": 51.433889,
       "lon": -0.35139,
-      "pvr": 125
+      "pvr": 125,
+      "capacity": null
     },
     "G": {
       "code": "G",
@@ -243,7 +269,8 @@
       "address": "Council Depot, Greenford Road, Greenford UB6 9AR",
       "lat": 51.523809,
       "lon": -0.35306,
-      "pvr": 90
+      "pvr": 90,
+      "capacity": null
     },
     "GM": {
       "code": "GM",
@@ -252,7 +279,8 @@
       "address": "Goat Road, CR4 4HU",
       "lat": 51.38872,
       "lon": -0.159942,
-      "pvr": 26
+      "pvr": 26,
+      "capacity": null
     },
     "GW": {
       "code": "GW",
@@ -261,7 +289,8 @@
       "address": "Great Western Industrial Park, Armstrong Way, Southall, UB2 4SD",
       "lat": 51.506315,
       "lon": -0.358547,
-      "pvr": 114
+      "pvr": 114,
+      "capacity": null
     },
     "GY": {
       "code": "GY",
@@ -270,7 +299,8 @@
       "address": "Unit 7, Europa Park, London Road, Grays, Essex, RM20 4DB",
       "lat": 51.477398,
       "lon": 0.29398,
-      "pvr": 56
+      "pvr": 56,
+      "capacity": null
     },
     "HD": {
       "code": "HD",
@@ -279,7 +309,8 @@
       "address": "467 High Road, Harrow Weald, Middlesex, HA3 6EJ",
       "lat": 51.605644,
       "lon": -0.340525,
-      "pvr": 72
+      "pvr": 72,
+      "capacity": null
     },
     "HK": {
       "code": "HK",
@@ -288,7 +319,8 @@
       "address": "Mare Street, South Hackney, London, E8 4RH",
       "lat": 51.53572,
       "lon": -0.057655,
-      "pvr": 108
+      "pvr": 108,
+      "capacity": null
     },
     "HO": {
       "code": "HO",
@@ -297,7 +329,8 @@
       "address": "151 Ruckholt Road, Leyton, London, E10 5PB",
       "lat": 51.555687,
       "lon": -0.014839,
-      "pvr": 139
+      "pvr": 139,
+      "capacity": null
     },
     "HT": {
       "code": "HT",
@@ -306,7 +339,8 @@
       "address": "37A Pemberton Gardens, London, N19 5RR",
       "lat": 51.56265,
       "lon": -0.131605,
-      "pvr": 157
+      "pvr": 157,
+      "capacity": null
     },
     "KB": {
       "code": "KB",
@@ -315,7 +349,8 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5BA",
       "lat": 51.426687,
       "lon": -0.034189,
-      "pvr": 34
+      "pvr": 34,
+      "capacity": null
     },
     "KC": {
       "code": "KC",
@@ -324,7 +359,8 @@
       "address": "Freight Lane, London N1C 4BE",
       "lat": 51.540599,
       "lon": -0.125933,
-      "pvr": 27
+      "pvr": 27,
+      "capacity": null
     },
     "MB": {
       "code": "MB",
@@ -333,7 +369,8 @@
       "address": "Oak Farm, Farnborough Hill, Green Street Green, Orpington, Kent, BR6 6DA",
       "lat": 51.356558,
       "lon": 0.087681,
-      "pvr": 104
+      "pvr": 104,
+      "capacity": null
     },
     "MG": {
       "code": "MG",
@@ -342,7 +379,8 @@
       "address": "Morden Wharf Road, Greenwich, London, SE10 0NU",
       "lat": 51.493448,
       "lon": 0.003631,
-      "pvr": 113
+      "pvr": 113,
+      "capacity": null
     },
     "N": {
       "code": "N",
@@ -351,7 +389,8 @@
       "address": "Ernest Avenue, West Norwood, London, SE27 0HN",
       "lat": 51.430084,
       "lon": -0.103945,
-      "pvr": 132
+      "pvr": 132,
+      "capacity": null
     },
     "NP": {
       "code": "NP",
@@ -360,7 +399,8 @@
       "address": "Marsh Lane, Tottenham, London, N17 0XB",
       "lat": 51.600189,
       "lon": -0.051211,
-      "pvr": 200
+      "pvr": 200,
+      "capacity": null
     },
     "NS": {
       "code": "NS",
@@ -369,7 +409,8 @@
       "address": "North Street, Romford, Essex, RM1 1DS",
       "lat": 51.583954,
       "lon": 0.175214,
-      "pvr": 88
+      "pvr": 88,
+      "capacity": null
     },
     "NX": {
       "code": "NX",
@@ -378,7 +419,8 @@
       "address": "208 New Cross Road, London, SE14 5UH",
       "lat": 51.474579,
       "lon": -0.04417,
-      "pvr": 189
+      "pvr": 189,
+      "capacity": null
     },
     "PB": {
       "code": "PB",
@@ -387,7 +429,8 @@
       "address": "High Street, Potters Bar, Herts, EN6 5BE",
       "lat": 51.697702,
       "lon": -0.176509,
-      "pvr": 124
+      "pvr": 124,
+      "capacity": null
     },
     "PD": {
       "code": "PD",
@@ -396,7 +439,8 @@
       "address": "Pettman Crescent, Plumstead, London, SE28 0BJ",
       "lat": 51.491193,
       "lon": 0.083469,
-      "pvr": 137
+      "pvr": 137,
+      "capacity": null
     },
     "PM": {
       "code": "PM",
@@ -405,7 +449,8 @@
       "address": "Blackpool Road, Peckham, London, SE15 3SE",
       "lat": 51.46574,
       "lon": -0.061565,
-      "pvr": 61
+      "pvr": 61,
+      "capacity": null
     },
     "PV": {
       "code": "PV",
@@ -414,7 +459,8 @@
       "address": "Alperton Lane, Western Avenue, Greenford, Middlesex, UB6 8DW",
       "lat": 51.533792,
       "lon": -0.318859,
-      "pvr": 77
+      "pvr": 77,
+      "capacity": null
     },
     "Q": {
       "code": "Q",
@@ -423,7 +469,8 @@
       "address": "1 Warner Road, Camberwell, London, SE5 9LU",
       "lat": 51.474116,
       "lon": -0.09577,
-      "pvr": 199
+      "pvr": 199,
+      "capacity": null
     },
     "QB": {
       "code": "QB",
@@ -432,7 +479,8 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 210
+      "pvr": 210,
+      "capacity": null
     },
     "RA": {
       "code": "RA",
@@ -441,7 +489,8 @@
       "address": "Cornwall Road, London, SE1 8TE",
       "lat": 51.50283,
       "lon": -0.109155,
-      "pvr": 36
+      "pvr": 36,
+      "capacity": null
     },
     "RM": {
       "code": "RM",
@@ -450,7 +499,8 @@
       "address": "Unit 2, Albright Industrial Estate, Ferry Lane, Rainham, Essex, RM13 9BU",
       "lat": 51.515664,
       "lon": 0.18476,
-      "pvr": 114
+      "pvr": 114,
+      "capacity": null
     },
     "RR": {
       "code": "RR",
@@ -459,7 +509,8 @@
       "address": "51 River Road, London, IG11 0DA",
       "lat": 51.523066,
       "lon": 0.096456,
-      "pvr": 206
+      "pvr": 206,
+      "capacity": null
     },
     "S": {
       "code": "S",
@@ -468,7 +519,8 @@
       "address": "Wells Road, London, W12 8DA",
       "lat": 51.501934,
       "lon": -0.226176,
-      "pvr": 95
+      "pvr": 95,
+      "capacity": null
     },
     "SF": {
       "code": "SF",
@@ -477,7 +529,8 @@
       "address": "Rookwood Road, London N16 6SS",
       "lat": 51.574593,
       "lon": -0.067328,
-      "pvr": 75
+      "pvr": 75,
+      "capacity": null
     },
     "SG": {
       "code": "SG",
@@ -486,7 +539,8 @@
       "address": "27A Spring Grove Rd, Hounslow TW3 4BE",
       "lat": 51.476457,
       "lon": -0.361549,
-      "pvr": 44
+      "pvr": 44,
+      "capacity": null
     },
     "SI": {
       "code": "SI",
@@ -495,7 +549,8 @@
       "address": "Factory Road, Silvertown, London, E16 2EL",
       "lat": 51.500553,
       "lon": 0.054502,
-      "pvr": 10
+      "pvr": 10,
+      "capacity": null
     },
     "SM": {
       "code": "SM",
@@ -504,7 +559,8 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AQ",
       "lat": 51.426275,
       "lon": -0.035919,
-      "pvr": 58
+      "pvr": 58,
+      "capacity": null
     },
     "SO": {
       "code": "SO",
@@ -513,7 +569,8 @@
       "address": "331 Pinner Road, Harrow, HA1 4HN",
       "lat": 51.584292,
       "lon": -0.358842,
-      "pvr": 80
+      "pvr": 80,
+      "capacity": null
     },
     "SW": {
       "code": "SW",
@@ -522,7 +579,8 @@
       "address": "Binfield Road, London, SW4 6ST",
       "lat": 51.474125,
       "lon": -0.123662,
-      "pvr": 158
+      "pvr": 158,
+      "capacity": null
     },
     "T": {
       "code": "T",
@@ -531,7 +589,8 @@
       "address": "High Road, Leyton, London, E10 6AD",
       "lat": 51.573884,
       "lon": -0.00875,
-      "pvr": 92
+      "pvr": 92,
+      "capacity": null
     },
     "TB": {
       "code": "TB",
@@ -540,7 +599,8 @@
       "address": "111 Hastings Road, Bromley, Kent, BR2 8NH",
       "lat": 51.375099,
       "lon": 0.045001,
-      "pvr": 86
+      "pvr": 86,
+      "capacity": null
     },
     "TC": {
       "code": "TC",
@@ -549,7 +609,8 @@
       "address": "Brighton Road, Croydon, Surrey, CR2 6EL",
       "lat": 51.354252,
       "lon": -0.097512,
-      "pvr": 98
+      "pvr": 98,
+      "capacity": null
     },
     "TF": {
       "code": "TF",
@@ -558,7 +619,8 @@
       "address": "The Old Tram Depot, Stanley Road, Twickenham, Middlesex, TW2 5NP",
       "lat": 51.437063,
       "lon": -0.347578,
-      "pvr": 127
+      "pvr": 127,
+      "capacity": null
     },
     "TH": {
       "code": "TH",
@@ -567,7 +629,8 @@
       "address": "719 London Road, Thornton Heath, CR7 6AU",
       "lat": 51.39323,
       "lon": -0.114381,
-      "pvr": 78
+      "pvr": 78,
+      "capacity": null
     },
     "TK": {
       "code": "TK",
@@ -576,7 +639,8 @@
       "address": "22 Coomber Way, Beddington, Croydon, CR0 4TQ",
       "lat": 51.386219,
       "lon": -0.134834,
-      "pvr": 28
+      "pvr": 28,
+      "capacity": null
     },
     "TL": {
       "code": "TL",
@@ -585,7 +649,8 @@
       "address": "180 Bromley Road, Catford, London, SE6 2XA",
       "lat": 51.433618,
       "lon": -0.018598,
-      "pvr": 129
+      "pvr": 129,
+      "capacity": null
     },
     "TV": {
       "code": "TV",
@@ -594,7 +659,8 @@
       "address": "Kingston Road, Tolworth, KT5 9NU",
       "lat": 51.375857,
       "lon": -0.278685,
-      "pvr": 77
+      "pvr": 77,
+      "capacity": null
     },
     "UB": {
       "code": "UB",
@@ -603,7 +669,8 @@
       "address": "Gypsy Moth Avenue, Hatfield Business Park, Hatfield, Hertfordshire, AL10 9BS",
       "lat": 51.771925,
       "lon": -0.240742,
-      "pvr": 34
+      "pvr": 34,
+      "capacity": null
     },
     "UX": {
       "code": "UX",
@@ -612,7 +679,8 @@
       "address": "51 Wallingford Road, Cowley, UB8 2RW",
       "lat": 51.536817,
       "lon": -0.48901,
-      "pvr": 82
+      "pvr": 82,
+      "capacity": null
     },
     "V": {
       "code": "V",
@@ -621,7 +689,8 @@
       "address": "72-74 Chiswick High Road, London, W4 1SY",
       "lat": 51.493417,
       "lon": -0.249484,
-      "pvr": 66
+      "pvr": 66,
+      "capacity": null
     },
     "W": {
       "code": "W",
@@ -630,7 +699,8 @@
       "address": "329 Edgware Road, Dollis Hill, London, NW2 6JP",
       "lat": 51.562317,
       "lon": -0.221893,
-      "pvr": 175
+      "pvr": 175,
+      "capacity": null
     },
     "WH": {
       "code": "WH",
@@ -639,7 +709,8 @@
       "address": "Stephenson Street, Canning Town, London, E16 4SA",
       "lat": 51.51993,
       "lon": 0.003785,
-      "pvr": 32
+      "pvr": 32,
+      "capacity": null
     },
     "WJ": {
       "code": "WJ",
@@ -648,7 +719,8 @@
       "address": "Station Road, Harlesden, NW10 4XB",
       "lat": 51.533048,
       "lon": -0.247113,
-      "pvr": 93
+      "pvr": 93,
+      "capacity": null
     },
     "WK": {
       "code": "WK",
@@ -657,7 +729,8 @@
       "address": "Tamian Way, Hounslow, Middlesex, TW4 6BL",
       "lat": 51.463832,
       "lon": -0.398697,
-      "pvr": 51
+      "pvr": 51,
+      "capacity": null
     },
     "WL": {
       "code": "WL",
@@ -666,7 +739,8 @@
       "address": "301 Camberwell New Road, London, SE5 0TF",
       "lat": 51.475441,
       "lon": -0.095974,
-      "pvr": 154
+      "pvr": 154,
+      "capacity": null
     },
     "WN": {
       "code": "WN",
@@ -675,7 +749,8 @@
       "address": "Jolly Butchers Hill, High Road, Wood Green, London, N22 7TZ",
       "lat": 51.597952,
       "lon": -0.112397,
-      "pvr": 118
+      "pvr": 118,
+      "capacity": null
     },
     "X": {
       "code": "X",
@@ -684,7 +759,8 @@
       "address": "Great Western Road, London, W9 3NW",
       "lat": 51.523365,
       "lon": -0.201514,
-      "pvr": 132
+      "pvr": 132,
+      "capacity": null
     }
   }
 }

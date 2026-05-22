@@ -248,6 +248,12 @@ function buildGarageRows(pinnedRouteIds) {
       longitude:   g.lon,
       route_count: pinnedRouteIds ? (pinnedRoutesByGarage[g.code] ?? 0) : (g.routeCount ?? 0),
       total_pvr:   pvrByGarage[g.code] ?? 0,
+      // Operating-centre authorised-vehicle capacity (DVSA licence) + the
+      // resulting spare headroom. Blank when capacity isn't on file.
+      capacity:    Number.isFinite(g.capacity) ? g.capacity : '',
+      free_space:  (Number.isFinite(g.capacity) && g.capacity > 0)
+        ? Math.max(0, Math.round((1 - (pvrByGarage[g.code] ?? 0) / g.capacity) * 100)) + '%'
+        : '',
     }));
 }
 

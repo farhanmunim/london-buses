@@ -370,6 +370,7 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── garage-locations.json        # Legacy garage lookup consumed by frontend (Photon-geocoded)
 │   ├── vehicle-lookup.json          # Manual vehicle-type → (deck, propulsion) lookup (fallback)
 │   ├── route-overrides.json         # Manual per-route field overrides (highest priority)
+│   ├── garage-capacity.json         # Manual per-garage operating-centre capacity (DVSA licence; hand-filled, joined into garage-locations.json)
 │   ├── build-meta.json              # Timestamps for footer display
 │   ├── geometry-source.json         # ZIP date for CI change detection
 │   ├── audit/                       # (gitignored except the report below)

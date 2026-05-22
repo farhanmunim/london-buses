@@ -1,0 +1,491 @@
+{
+  "description": "Per-garage operating-centre vehicle capacity from the DVSA operator-licensing service (vehicle-operator-licensing.service.gov.uk -> each operator's licence -> Operating centres -> Vehicles column). NOT available via any bulk/API export: the open data.gov.uk CSV carries only the licence-wide total, and the web service that shows the per-operating-centre figure is Incapsula bot-protected (blocks fetch AND headless browsers). So `capacity` is hand-filled. Capacity is a licensing figure that changes rarely (only when an operator varies its licence) -- refresh roughly yearly. Look up by operator: one licence page lists ALL that operator's garages at once. Match the licence's operating-centre row to a garage below by postcode. After editing, run `npm run build-garage-locations` then `npm run build-overview` (no overview change, but keeps meta fresh) to surface it. capacity:null hides the KPI for that garage until filled.",
+  "garages": {
+    "A": {
+      "name": "Sutton",
+      "operator": "Go-Ahead",
+      "postcode": "SM1 1QJ",
+      "capacity": null
+    },
+    "AC": {
+      "name": "Willesden",
+      "operator": "Metroline",
+      "postcode": "NW10 2JY",
+      "capacity": null
+    },
+    "AD": {
+      "name": "Palmers Green",
+      "operator": "Arriva",
+      "postcode": "N13 5UR",
+      "capacity": null
+    },
+    "AE": {
+      "name": "Ash Grove",
+      "operator": "Arriva",
+      "postcode": "E8 4RH",
+      "capacity": null
+    },
+    "AF": {
+      "name": "Putney",
+      "operator": "Go-Ahead",
+      "postcode": "SW15 1RN",
+      "capacity": null
+    },
+    "AH": {
+      "name": "Brentford",
+      "operator": "Metroline",
+      "postcode": "TW8 8LZ",
+      "capacity": null
+    },
+    "AL": {
+      "name": "Merton",
+      "operator": "Go-Ahead",
+      "postcode": "SW19 1DN",
+      "capacity": null
+    },
+    "AO": {
+      "name": "Athlon Road",
+      "operator": "Metroline",
+      "postcode": "HA0 1YU",
+      "capacity": null
+    },
+    "AR": {
+      "name": "Tottenham",
+      "operator": "Arriva",
+      "postcode": "N15 4JB",
+      "capacity": null
+    },
+    "AV": {
+      "name": "Hounslow",
+      "operator": "First",
+      "postcode": "TW3 1PA",
+      "capacity": null
+    },
+    "AW": {
+      "name": "Walthamstow Avenue",
+      "operator": "Stagecoach London",
+      "postcode": "E4 8SP",
+      "capacity": null
+    },
+    "BC": {
+      "name": "Beddington",
+      "operator": "Transport UK",
+      "postcode": "CR0 4XH",
+      "capacity": null
+    },
+    "BK": {
+      "name": "Barking",
+      "operator": "Stagecoach London",
+      "postcode": "IG11 8UE",
+      "capacity": null
+    },
+    "BN": {
+      "name": "Brixton Hill",
+      "operator": "Arriva",
+      "postcode": "SW2 1NR",
+      "capacity": null
+    },
+    "BT": {
+      "name": "Edgware",
+      "operator": "First",
+      "postcode": "HA8 7AN",
+      "capacity": null
+    },
+    "BW": {
+      "name": "Bow",
+      "operator": "Stagecoach London",
+      "postcode": "E3 2QP",
+      "capacity": null
+    },
+    "BX": {
+      "name": "Bexleyheath",
+      "operator": "Go-Ahead",
+      "postcode": "DA7 6BX",
+      "capacity": null
+    },
+    "C": {
+      "name": "Croydon",
+      "operator": "Go-Ahead",
+      "postcode": "CR0 4TD",
+      "capacity": null
+    },
+    "CT": {
+      "name": "Clapton",
+      "operator": "Arriva",
+      "postcode": "E8 1DU",
+      "capacity": null
+    },
+    "DH": {
+      "name": "Hayes",
+      "operator": "Transport UK",
+      "postcode": "UB3 1EF",
+      "capacity": null
+    },
+    "DS": {
+      "name": "Henley Road",
+      "operator": "Go-Ahead",
+      "postcode": "E16 2EJ",
+      "capacity": null
+    },
+    "DT": {
+      "name": "Dartford",
+      "operator": "Arriva",
+      "postcode": "DA1 5BG",
+      "capacity": null
+    },
+    "DX": {
+      "name": "Barking",
+      "operator": "Arriva",
+      "postcode": "IG11 0SR",
+      "capacity": null
+    },
+    "E": {
+      "name": "Enfield",
+      "operator": "Arriva",
+      "postcode": "EN3 4HX",
+      "capacity": null
+    },
+    "EC": {
+      "name": "Edmonton",
+      "operator": "Arriva",
+      "postcode": "N18 3QX",
+      "capacity": null
+    },
+    "EW": {
+      "name": "Edgware",
+      "operator": "Metroline",
+      "postcode": "HA8 7AN",
+      "capacity": null
+    },
+    "FW": {
+      "name": "Fulwell",
+      "operator": "First",
+      "postcode": "TW2 5NX",
+      "capacity": null
+    },
+    "G": {
+      "name": "Greenford",
+      "operator": "Metroline",
+      "postcode": "UB6 9AR",
+      "capacity": null
+    },
+    "GM": {
+      "name": "Ellis Road",
+      "operator": "Go-Ahead",
+      "postcode": "CR4 4HU",
+      "capacity": null
+    },
+    "GW": {
+      "name": "Southall",
+      "operator": "Transport UK",
+      "postcode": "UB2 4SD",
+      "capacity": null
+    },
+    "GY": {
+      "name": "Grays",
+      "operator": "Arriva",
+      "postcode": "RM20 4DB",
+      "capacity": null
+    },
+    "HD": {
+      "name": "Harrow Weald",
+      "operator": "Metroline",
+      "postcode": "HA3 6EJ",
+      "capacity": null
+    },
+    "HK": {
+      "name": "Ash Grove",
+      "operator": "Stagecoach London",
+      "postcode": "E8 4RH",
+      "capacity": null
+    },
+    "HO": {
+      "name": "Lea Interchange",
+      "operator": "Stagecoach London",
+      "postcode": "E10 5PB",
+      "capacity": null
+    },
+    "HT": {
+      "name": "Holloway",
+      "operator": "Metroline",
+      "postcode": "N19 5RR",
+      "capacity": null
+    },
+    "KB": {
+      "name": "Kangley Bridge Road",
+      "operator": "Stagecoach London",
+      "postcode": "SE26 5BA",
+      "capacity": null
+    },
+    "KC": {
+      "name": "King's Cross",
+      "operator": "Metroline",
+      "postcode": "N1C 4BE",
+      "capacity": null
+    },
+    "MB": {
+      "name": "Orpington",
+      "operator": "Go-Ahead",
+      "postcode": "BR6 6DA",
+      "capacity": null
+    },
+    "MG": {
+      "name": "Morden Wharf (Greenwich)",
+      "operator": "Go-Ahead",
+      "postcode": "SE10 0NU",
+      "capacity": null
+    },
+    "MY": {
+      "name": "Crawley",
+      "operator": "Go-Ahead",
+      "postcode": "RH10 9UA",
+      "capacity": null
+    },
+    "N": {
+      "name": "Norwood",
+      "operator": "Arriva",
+      "postcode": "SE27 0HN",
+      "capacity": null
+    },
+    "NP": {
+      "name": "Northumberland Park",
+      "operator": "Go-Ahead",
+      "postcode": "N17 0XB",
+      "capacity": null
+    },
+    "NS": {
+      "name": "Romford",
+      "operator": "Stagecoach London",
+      "postcode": "RM1 1DS",
+      "capacity": null
+    },
+    "NX": {
+      "name": "New Cross",
+      "operator": "Go-Ahead",
+      "postcode": "SE14 5UH",
+      "capacity": null
+    },
+    "PB": {
+      "name": "Potters Bar",
+      "operator": "Metroline",
+      "postcode": "EN6 5BE",
+      "capacity": null
+    },
+    "PD": {
+      "name": "Plumstead",
+      "operator": "Stagecoach London",
+      "postcode": "SE28 0BJ",
+      "capacity": null
+    },
+    "PM": {
+      "name": "Peckham",
+      "operator": "Go-Ahead",
+      "postcode": "SE15 3SE",
+      "capacity": null
+    },
+    "PV": {
+      "name": "Perivale [East]",
+      "operator": "Metroline",
+      "postcode": "UB6 8DW",
+      "capacity": null
+    },
+    "Q": {
+      "name": "Camberwell",
+      "operator": "Go-Ahead",
+      "postcode": "SE5 9LU",
+      "capacity": null
+    },
+    "QB": {
+      "name": "Battersea",
+      "operator": "Transport UK",
+      "postcode": "SW8 3HE",
+      "capacity": null
+    },
+    "RA": {
+      "name": "Waterloo",
+      "operator": "Go-Ahead",
+      "postcode": "SE1 8TE",
+      "capacity": null
+    },
+    "RM": {
+      "name": "Rainham",
+      "operator": "Stagecoach London",
+      "postcode": "RM13 9BU",
+      "capacity": null
+    },
+    "RP": {
+      "name": "Park Royal",
+      "operator": "First",
+      "postcode": "NW10 6DN",
+      "capacity": null
+    },
+    "RR": {
+      "name": "River Road",
+      "operator": "Go-Ahead",
+      "postcode": "IG11 0DA",
+      "capacity": null
+    },
+    "S": {
+      "name": "Shepherd's Bush",
+      "operator": "First",
+      "postcode": "W12 8DA",
+      "capacity": null
+    },
+    "SF": {
+      "name": "Stamford Hill",
+      "operator": "Arriva",
+      "postcode": "N16 6SS",
+      "capacity": null
+    },
+    "SG": {
+      "name": "Lampton",
+      "operator": "Metroline",
+      "postcode": "TW3 4BE",
+      "capacity": null
+    },
+    "SH": {
+      "name": "Slough",
+      "operator": "First",
+      "postcode": "SL2 5AQ",
+      "capacity": null
+    },
+    "SI": {
+      "name": "Silvertown",
+      "operator": "Go-Ahead",
+      "postcode": "E16 2EL",
+      "capacity": null
+    },
+    "SM": {
+      "name": "Sydenham",
+      "operator": "Go-Ahead",
+      "postcode": "SE26 5AQ",
+      "capacity": null
+    },
+    "SN": {
+      "name": "North Mymms",
+      "operator": "Sullivan Buses",
+      "postcode": "AL9 7TS",
+      "capacity": null
+    },
+    "SO": {
+      "name": "Harrow",
+      "operator": "First",
+      "postcode": "HA1 4HN",
+      "capacity": null
+    },
+    "SW": {
+      "name": "Stockwell",
+      "operator": "Go-Ahead",
+      "postcode": "SW4 6ST",
+      "capacity": null
+    },
+    "T": {
+      "name": "Leyton",
+      "operator": "Stagecoach London",
+      "postcode": "E10 6AD",
+      "capacity": null
+    },
+    "TB": {
+      "name": "Bromley",
+      "operator": "Stagecoach London",
+      "postcode": "BR2 8NH",
+      "capacity": null
+    },
+    "TC": {
+      "name": "Croydon",
+      "operator": "Arriva",
+      "postcode": "CR2 6EL",
+      "capacity": null
+    },
+    "TF": {
+      "name": "Fulwell (Twickenham)",
+      "operator": "Transport UK",
+      "postcode": "TW2 5NP",
+      "capacity": null
+    },
+    "TH": {
+      "name": "Thornton Heath",
+      "operator": "Arriva",
+      "postcode": "CR7 6AU",
+      "capacity": null
+    },
+    "TK": {
+      "name": "Therapia Lane",
+      "operator": "First",
+      "postcode": "CR0 4TQ",
+      "capacity": null
+    },
+    "TL": {
+      "name": "Catford",
+      "operator": "Stagecoach London",
+      "postcode": "SE6 2XA",
+      "capacity": null
+    },
+    "TV": {
+      "name": "Tolworth",
+      "operator": "First",
+      "postcode": "KT5 9NU",
+      "capacity": null
+    },
+    "UB": {
+      "name": "Hatfield",
+      "operator": "Uno",
+      "postcode": "AL10 9BS",
+      "capacity": null
+    },
+    "UX": {
+      "name": "Uxbridge Industrial Estate",
+      "operator": "Metroline",
+      "postcode": "UB8 2RW",
+      "capacity": null
+    },
+    "V": {
+      "name": "Stamford Brook",
+      "operator": "First",
+      "postcode": "W4 1SY",
+      "capacity": null
+    },
+    "W": {
+      "name": "Cricklewood",
+      "operator": "Metroline",
+      "postcode": "NW2 6JP",
+      "capacity": null
+    },
+    "WH": {
+      "name": "West Ham",
+      "operator": "Stagecoach London",
+      "postcode": "E16 4SA",
+      "capacity": null
+    },
+    "WJ": {
+      "name": "Willesden Junction",
+      "operator": "Metroline",
+      "postcode": "NW10 4XB",
+      "capacity": null
+    },
+    "WK": {
+      "name": "Hounslow Heath",
+      "operator": "First",
+      "postcode": "TW4 6BL",
+      "capacity": null
+    },
+    "WL": {
+      "name": "Walworth",
+      "operator": "Transport UK",
+      "postcode": "SE5 0TF",
+      "capacity": null
+    },
+    "WN": {
+      "name": "Wood Green",
+      "operator": "Arriva",
+      "postcode": "N22 7TZ",
+      "capacity": null
+    },
+    "X": {
+      "name": "Westbourne Park",
+      "operator": "First",
+      "postcode": "W9 3NW",
+      "capacity": null
+    }
+  }
+}

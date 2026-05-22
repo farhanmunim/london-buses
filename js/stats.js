@@ -24,12 +24,39 @@ import {
 } from './state.js';
 import { opColor } from './map.js';
 
-// Populate one of the four generic drawer KPI slots (v1/v2/v3/v4).
+// Populate a drawer KPI slot. Slots 1-4 are always visible; the optional
+// slots 5-6 (capacity / free space) carry a `data-dkpi-slot` wrapper that we
+// hide when `value` is null so they only appear for entities with capacity
+// data on file.
 function setKpi(slot, value, label) {
   const v = document.querySelector(`[data-dkpi="v${slot}"]`);
   const l = document.querySelector(`[data-dkpi="l${slot}"]`);
   if (v) v.textContent = value ?? '—';
   if (l) l.textContent = label ?? '';
+  const wrap = document.querySelector(`[data-dkpi-slot="${slot}"]`);
+  if (wrap) wrap.hidden = (value == null);
+}
+
+// Free-space % from PVR vs capacity: 1 − PVR/capacity, clamped to 0-100.
+// Returns null when capacity is missing or zero. PVR can exceed a single
+// operating centre's capacity (routes attributed to a code whose buses run
+// from more than one centre), so the clamp floors the headline at 0%.
+function freeSpacePct(pvr, capacity) {
+  if (!Number.isFinite(capacity) || capacity <= 0) return null;
+  const p = Number.isFinite(pvr) ? pvr : 0;
+  return Math.max(0, Math.min(100, Math.round((1 - p / capacity) * 100)));
+}
+
+// Set the capacity (slot 5) + free-space (slot 6) KPI pair, or hide both.
+function setCapacityKpis(capacity, pvr) {
+  if (Number.isFinite(capacity) && capacity > 0) {
+    setKpi(5, capacity.toLocaleString(), 'Capacity');
+    const free = freeSpacePct(pvr, capacity);
+    setKpi(6, free == null ? null : `${free}%`, 'Free space');
+  } else {
+    setKpi(5, null, '');
+    setKpi(6, null, '');
+  }
 }
 
 // Network totals (computed once per renderOperatorStats pass from the
@@ -281,6 +308,14 @@ export function openOperatorDrawer(operator, agg) {
   // of the filter state).
   const opRoutes = allRoutesForOperator(operator);
   const opPvr    = opRoutes.reduce((s, r) => s + (Number.isFinite(r.pvr) ? r.pvr : 0), 0);
+
+  // Operator capacity = sum of its garages' authorised-vehicle capacities.
+  // Only shown when EVERY garage of the operator has a capacity on file —
+  // a partial sum against the operator's full PVR would overstate
+  // utilisation. Hidden otherwise (the per-garage KPI still works).
+  const allHaveCap = opGarages.length > 0 && opGarages.every(g => Number.isFinite(g.capacity) && g.capacity > 0);
+  const opCapacity = allHaveCap ? opGarages.reduce((s, g) => s + g.capacity, 0) : null;
+  setCapacityKpis(opCapacity, opPvr);
   renderFleetMixInto(
     document.getElementById('dFleetMixBar'),
     document.getElementById('dFleetMixLegend'),
@@ -326,6 +361,10 @@ export function openGarageDrawer(code) {
   setKpi(2, totalPvr ? totalPvr.toLocaleString() : 'XXX',     'PVR');
   setKpi(3, pctPvr,                                            '% of network PVR');
   setKpi(4, pctRoutes,                                         '% of network routes');
+  // Capacity + free space (operating-centre authorised vehicles, DVSA
+  // licence). Hidden until the garage's capacity is filled in
+  // data/garage-capacity.json.
+  setCapacityKpis(garage.capacity, totalPvr);
 
   renderFleetMixInto(
     document.getElementById('dFleetMixBar'),
