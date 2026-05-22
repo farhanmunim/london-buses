@@ -12,9 +12,6 @@
  *   • Autocomplete       — prefix + substring matches from the route index,
  *                          capped at 8, shown below the topbar input with
  *                          ArrowUp/ArrowDown/Enter/Escape support.
- *   • Garage → routes    — `app:selectroutes` custom event dispatched by the
- *                          operator drawer replaces the current selection with
- *                          the garage's route list, switching to the Routes tab.
  */
 
 import {
@@ -68,14 +65,6 @@ export function clearAll() {
   // (clear-all button, Escape, app:resetall) so we have to fire it here too.
   document.dispatchEvent(new CustomEvent('app:routefocuschange', { detail: false }));
   syncClearBtn();
-}
-
-/** Replace the current selection with the given route ids. */
-export function selectRoutes(ids) {
-  pillIds.clear();
-  for (const id of ids) pillIds.add(String(id).toUpperCase());
-  renderPills();
-  applySelection();
 }
 
 // ── Internal: selection pipeline ─────────────────────────────────────────────
@@ -390,11 +379,4 @@ document.addEventListener('click', e => {
     const dest   = next === '1' ? out : inb;
     nameEl.textContent = `${origin} → ${dest}`;
   }
-});
-
-// Garage-click in the operator drawer → replace selection with that garage's routes
-document.addEventListener('app:selectroutes', e => {
-  const ids = Array.isArray(e.detail) ? e.detail : (e.detail?.ids ?? []);
-  if (!ids.length) return;
-  selectRoutes(ids);
 });

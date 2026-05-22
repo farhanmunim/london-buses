@@ -1,25 +1,27 @@
 /**
  * garage-filter.js — Sidebar "Garage" filter.
  *
- * Two entry points, one selection state (`state.selectedGarage`):
+ * A stackable, intersecting filter modelled on the bus-stop filter: it sets
+ * `state.selectedGarage` (carrying the garage's route ids) and re-runs the
+ * shared filter pipeline, so it combines with Operator / Route Type /
+ * Propulsion / Frequency / Deck and narrows the "routes shown" count just
+ * like every other left-panel filter.
  *
- *   1. Dropdown picker — a searchable combobox in the sidebar listing every
- *      garage that operates ≥1 route, grouped by operator. Picking one filters
- *      the map + Routes tab to that garage's routes — the same outcome as the
- *      operator-drawer "View all routes operated here" CTA, reachable without
- *      first opening a drawer.
+ * Two entry points, one selection state:
+ *   1. Dropdown picker — a searchable combobox listing every garage that
+ *      operates ≥1 route, grouped by operator.
+ *   2. Drawer CTA — the garage drawer's "View all routes operated here" button
+ *      dispatches `app:garageselected` (with route ids) and triggers a filter
+ *      pass via `app:filterschanged`.
  *
- *   2. Drawer CTA — stats.js dispatches `app:garageselected` when the user
- *      presses "View all routes operated here" inside a garage drawer.
- *
- * Both paths render the same selected-garage pill (mirrors the bus-stop filter)
- * and route the routes through `app:selectroutes` (handled by search.js).
- * Clearing — via the pill ×, the search box ×, or global `app:resetall` —
- * funnels through `clearSelection()` so the UX stays unified.
+ * Both render the same selected-garage pill. Clearing — via the pill ×, the
+ * scoped Clear button (`app:garagecleared`), or global `app:resetall` —
+ * funnels through the same path and re-filters.
  */
 
 import { state } from './state.js';
 import { opColor } from './map.js';
+import { applyFilters } from './filters.js';
 
 const section   = document.getElementById('garage-sec');
 const pill      = document.getElementById('garage-selected');
@@ -128,12 +130,13 @@ function findGarage(code) {
 function selectGarage(code) {
   const g = findGarage(code);
   if (!g) return;
-  state.selectedGarage = { code: g.code, name: g.name, operator: g.operator };
+  // routeIds ride along on the selection so the filter pipeline can intersect
+  // without re-deriving them (mirrors how the stop filter carries its routes).
+  state.selectedGarage = { code: g.code, name: g.name, operator: g.operator, routeIds: g.routeIds };
   if (input) input.value = '';
   closeList();
   render();
-  // Same outcome as the drawer CTA: pill + route selection go hand in hand.
-  document.dispatchEvent(new CustomEvent('app:selectroutes', { detail: g.routeIds }));
+  applyFilters(); // intersect with any other active filters
 }
 
 function clearSelection() {
@@ -142,9 +145,8 @@ function clearSelection() {
   closeList();
   if (!state.selectedGarage) { render(); return; }
   state.selectedGarage = null;
-  // Ask search.js to drop the committed route pills; it'll also reset the map.
-  document.dispatchEvent(new CustomEvent('app:resetall'));
   render();
+  applyFilters(); // scoped clear — leaves other filters untouched
 }
 
 // ── Render ────────────────────────────────────────────────────────────────────
@@ -194,8 +196,16 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#garage-filter-box, #garage-filter-list')) closeList();
 });
 
-// Drawer CTA path — stats.js sets state.selectedGarage then dispatches this.
+// Drawer CTA path — stats.js sets state.selectedGarage (with routeIds) then
+// dispatches this; filters re-run via its own app:filterschanged.
 document.addEventListener('app:garageselected', render);
+// Scoped clear from the sidebar Clear button — state already nulled by filters.js.
+document.addEventListener('app:garagecleared', () => {
+  if (input) input.value = '';
+  if (clearBtn) clearBtn.hidden = true;
+  closeList();
+  render();
+});
 document.addEventListener('app:resetall', () => {
   state.selectedGarage = null;
   if (input) input.value = '';

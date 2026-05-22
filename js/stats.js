@@ -361,11 +361,15 @@ export function openGarageDrawer(code) {
   if (cta) {
     const routeIds = routes.map(r => r.routeId);
     cta.onclick = () => {
-      // Route selection + sidebar "Selected garage" pill go hand-in-hand so
-      // the user always has context about *why* the routes are filtered.
-      state.selectedGarage = { code, name: garage.name ?? code, operator: garage.operator ?? null };
+      // Sets the sidebar garage filter (intersecting) — the exact same
+      // mechanism as the left-panel garage dropdown, so the drawer shortcut
+      // and the filter stay in lockstep. The pill gives context for *why* the
+      // network is narrowed; app:filterschanged re-runs the shared pipeline.
+      state.selectedGarage = { code, name: garage.name ?? code, operator: garage.operator ?? null, routeIds };
       document.dispatchEvent(new CustomEvent('app:garageselected', { detail: state.selectedGarage }));
-      document.dispatchEvent(new CustomEvent('app:selectroutes',  { detail: routeIds }));
+      document.dispatchEvent(new CustomEvent('app:filterschanged'));
+      opDrawer.classList.remove('open');
+      opDrawer.setAttribute('aria-hidden', 'true');
     };
   }
 
