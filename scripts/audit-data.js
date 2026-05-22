@@ -234,6 +234,19 @@ function auditClassifications(rc, vf, ov, gar) {
       if (!inRange(r.lastCostPerMile, lo, hi))
         add('WARN', 'rc', id, 'lastCostPerMile', `£${lo}..${hi}`, r.lastCostPerMile);
     }
+    // Previous-operator mirror fields. Lower floor than the current contract
+    // (£2 vs £3): a "previous" tender can be 15+ years old, and pre-2010
+    // awards were genuinely cheaper per mile before inflation.
+    if (r.previousCostPerMile != null) {
+      const lo = 2;
+      const hi = r.type === 'school' ? 200 : 60;
+      if (!inRange(r.previousCostPerMile, lo, hi))
+        add('WARN', 'rc', id, 'previousCostPerMile', `£${lo}..${hi}`, r.previousCostPerMile);
+    }
+    if (r.previousNumberOfTenderers != null && !inRange(r.previousNumberOfTenderers, 1, 12))
+      add('WARN', 'rc', id, 'previousNumberOfTenderers', '1..12', r.previousNumberOfTenderers);
+    if (r.previousContractedAnnualMiles != null && !inRange(r.previousContractedAnnualMiles, 0, 10_000_000))
+      add('WARN', 'rc', id, 'previousContractedAnnualMiles', '0..10M', r.previousContractedAnnualMiles);
 
     // Contracted annual miles (derived bid ÷ £/mile) and the bid itself.
     // Sanity-only check — both are derived from upstream tender data and

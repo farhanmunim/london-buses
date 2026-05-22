@@ -56,7 +56,11 @@ const TIPS = {
   previous:        'Operator before the current incumbent, derived from TfL tender history',
   'prev-award':    'Award date of the previous contract, from TfL tender results',
   'prev-term':     'Length of the previous contract, measured between its award and the next award on file',
+  'prev-joint':    'Whether the previous contract was tendered as part of a joint bid, from TfL tender results',
+  'prev-cpm':      'Cost per live mile of the previous contract’s accepted bid, from TfL tender results',
+  'prev-miles':    'Annual contracted live miles of the previous contract, derived from its accepted bid ÷ cost per mile',
   'prev-veh':      'Vehicle specification required by the previous contract, parsed from TfL tender notes',
+  'prev-bids':     'Number of operators that bid for the previous contract, from TfL tender results',
 };
 
 // Walk the TIPS map and attach `data-tip` attributes to each row's label.
@@ -418,16 +422,41 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // route mid-conversion will show awarded=electric vs actual=hybrid.
   set('[data-rc-awarded-veh]', formatAwardedVehicle(classification?.awardedPropulsion, classification?.awardedDeck));
 
-  // Previous spec — only render when the most-recent tender's awarded spec
-  // genuinely differs from the second-most-recent. A clean propulsion-
-  // transition surface ("Electric (double) — was Hybrid (double)").
-  const aP = classification?.awardedPropulsion;
-  const aD = classification?.awardedDeck;
+  // Previous-operator contract detail — mirrors the current-contract block
+  // (joint bid / cost per mile / contracted miles / awarded vehicle / bids
+  // received) for the changed-hands award, so the section reads like a
+  // like-for-like comparison. Every row hides when its value is absent or
+  // when there's no genuine predecessor.
+  const prevJoint = classification?.previousWasJointBid;
+  toggleRow(node, 'prev-joint', !!prevOp && prevJoint != null);
+  if (prevOp && prevJoint != null) set('[data-rc-prev-joint]', prevJoint ? 'Yes' : 'No');
+
+  const prevCpm = classification?.previousCostPerMile;
+  const prevCpmValid = !!prevOp && Number.isFinite(prevCpm) && prevCpm > 0;
+  toggleRow(node, 'prev-cpm', prevCpmValid);
+  if (prevCpmValid) set('[data-rc-prev-cpm]', `£${prevCpm.toFixed(2)}`);
+
+  const prevMiles = classification?.previousContractedAnnualMiles;
+  const prevMilesValid = !!prevOp && Number.isFinite(prevMiles) && prevMiles > 0;
+  toggleRow(node, 'prev-miles', prevMilesValid);
+  if (prevMilesValid) {
+    set('[data-rc-prev-miles]', prevMiles >= 1_000_000
+      ? `${(prevMiles / 1_000_000).toFixed(2)}M`
+      : `${Math.round(prevMiles / 1_000).toLocaleString()}k`);
+  }
+
+  // Awarded vehicle of the previous contract — shown whenever we have a spec
+  // for it (parity with the current section), not only when it differs.
   const pP = classification?.prevAwardedPropulsion;
   const pD = classification?.prevAwardedDeck;
-  const specChanged = (pP || pD) && (pP !== aP || pD !== aD);
-  toggleRow(node, 'prev-veh', !!specChanged);
-  if (specChanged) set('[data-rc-prev-veh]', formatAwardedVehicle(pP, pD));
+  const prevVeh = (pP || pD) ? formatAwardedVehicle(pP, pD) : null;
+  toggleRow(node, 'prev-veh', !!prevOp && !!prevVeh);
+  if (prevOp && prevVeh) set('[data-rc-prev-veh]', prevVeh);
+
+  const prevBids = classification?.previousNumberOfTenderers;
+  const prevBidsValid = !!prevOp && Number.isFinite(prevBids) && prevBids > 0;
+  toggleRow(node, 'prev-bids', prevBidsValid);
+  if (prevBidsValid) set('[data-rc-prev-bids]', `${prevBids}${prevBids === 1 ? ' bid' : ' bids'}`);
 
   // The Next-contract section was removed — nothing in it has actually
   // been awarded yet, so labels like "Awarded vehicle" mis-state what we

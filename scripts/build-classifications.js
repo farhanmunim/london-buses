@@ -329,11 +329,39 @@ if (Object.keys(programmeByRoute).length) {
 // next subsequent award on file). Returning the full tuple lets the route
 // card show Awarded-on / Length for the previous contract that mirror the
 // current-contract block.
+// Roll a raw tender operator name up to its parent group so "previous
+// operator" means a genuine change of parent — not a same-group re-award
+// under a renamed subsidiary (e.g. Stagecoach's "East London" → "Stagecoach
+// East London", or Go-Ahead's "London General"/"Blue Triangle"). Mirrors
+// `normaliseTenderOperator` in js/route-detail.js; keep the two in sync.
+const TENDER_OP_GROUP = {
+  'London General': 'Go-Ahead', 'London Central': 'Go-Ahead', 'Blue Triangle': 'Go-Ahead',
+  'Docklands Buses': 'Go-Ahead', 'Metrobus': 'Go-Ahead', 'East Thames Buses': 'Go-Ahead', 'East Thames': 'Go-Ahead',
+  'Selkent': 'Stagecoach', 'East London': 'Stagecoach',
+  'London United': 'RATP', 'London Sovereign': 'RATP', 'Sovereign': 'RATP', 'Quality Line': 'RATP', 'NSL': 'RATP',
+  'CentreWest': 'First',
+  'Travel London': 'Abellio',
+  'National Car Parks': 'NCP',
+};
+const TENDER_OP_PREFIXES = [
+  ['Arriva ', 'Arriva'], ['Abellio ', 'Abellio'], ['Stagecoach ', 'Stagecoach'],
+  ['First ', 'First'], ['Metroline ', 'Metroline'], ['Go-Ahead ', 'Go-Ahead'],
+];
+function tenderOpParent(name) {
+  if (!name) return null;
+  if (TENDER_OP_GROUP[name]) return TENDER_OP_GROUP[name];
+  for (const [prefix, brand] of TENDER_OP_PREFIXES) if (name.startsWith(prefix)) return brand;
+  return name;
+}
+
 function derivePreviousTenderInfo(history, current) {
-  if (!history?.length) return { operator: null, awardDate: null, termYears: null };
+  if (!history?.length) return { operator: null, awardDate: null, termYears: null, tender: null };
+  const currentParent = tenderOpParent(current);
   for (let i = 1; i < history.length; i++) {
     const t = history[i];
-    if (!t.awarded_operator || t.awarded_operator === current) continue;
+    // Skip same-parent re-awards (incl. renamed subsidiaries) — only a real
+    // change of parent group counts as a "previous operator".
+    if (!t.awarded_operator || tenderOpParent(t.awarded_operator) === currentParent) continue;
     // Term actually served by this award = gap to the next-later award on
     // file. history is sorted desc, so the next-later award sits at i-1.
     const next = history[i - 1];
@@ -346,9 +374,13 @@ function derivePreviousTenderInfo(history, current) {
         if (yrs >= 3 && yrs <= 12) termYears = Math.round(yrs);
       }
     }
-    return { operator: t.awarded_operator, awardDate: t.award_announced_date ?? null, termYears };
+    // Return the full matched tender so every "previous" field (cost/mile,
+    // bid, bids-received, joint-bid, awarded spec) derives from the SAME
+    // changed-hands award — not from tenderHistory[1], which can be a
+    // same-operator re-award.
+    return { operator: t.awarded_operator, awardDate: t.award_announced_date ?? null, termYears, tender: t };
   }
-  return { operator: null, awardDate: null, termYears: null };
+  return { operator: null, awardDate: null, termYears: null, tender: null };
 }
 
 // Derive awarded-vehicle propulsion from a tender's freeform notes. Same
@@ -781,6 +813,22 @@ for (const file of routeFiles) {
     previousOperator:         override.previousOperator         ?? (tendersLoaded ? previousOp                          : (lastRec.previousOperator         ?? null)),
     previousAwardDate:        override.previousAwardDate        ?? (tendersLoaded ? prevTender.awardDate                : (lastRec.previousAwardDate        ?? null)),
     previousContractTermYears:override.previousContractTermYears ?? (tendersLoaded ? prevTender.termYears                : (lastRec.previousContractTermYears?? null)),
+    // Previous-operator contract detail — mirrors the current-contract set
+    // (cost/mile, bid, contracted miles, bids received, joint bid) for the
+    // changed-hands award so the "Previous operator" card section reads like
+    // a like-for-like comparison against the current contract. All derived
+    // from prevTender.tender — the same award `previousOperator` came from.
+    previousCostPerMile:      override.previousCostPerMile      ?? (tendersLoaded ? (prevTender.tender?.cost_per_mile ?? null) : (lastRec.previousCostPerMile ?? null)),
+    previousAcceptedBid:      override.previousAcceptedBid      ?? (tendersLoaded ? (prevTender.tender?.accepted_bid  ?? null) : (lastRec.previousAcceptedBid ?? null)),
+    previousContractedAnnualMiles: (() => {
+      if (override.previousContractedAnnualMiles != null) return override.previousContractedAnnualMiles;
+      const bid = prevTender.tender?.accepted_bid;
+      const cpm = prevTender.tender?.cost_per_mile;
+      if (tendersLoaded && Number.isFinite(bid) && Number.isFinite(cpm) && cpm > 0) return Math.round(bid / cpm);
+      return tendersLoaded ? null : (lastRec.previousContractedAnnualMiles ?? null);
+    })(),
+    previousNumberOfTenderers: override.previousNumberOfTenderers ?? (tendersLoaded ? ((Number.isFinite(prevTender.tender?.number_of_tenderers) && prevTender.tender.number_of_tenderers > 0 && prevTender.tender.number_of_tenderers <= 12) ? prevTender.tender.number_of_tenderers : null) : (lastRec.previousNumberOfTenderers ?? null)),
+    previousWasJointBid:       override.previousWasJointBid       ?? (tendersLoaded ? (prevTender.tender ? deriveJointBid(prevTender.tender.notes, prevTender.tender.joint_bids).wasJointBid : null) : (lastRec.previousWasJointBid ?? null)),
     lastAwardDate:    override.lastAwardDate    ?? (tendersLoaded   ? (lastTender?.award_announced_date ?? null) : (lastRec.lastAwardDate    ?? null)),
     lastCostPerMile:  override.lastCostPerMile  ?? (tendersLoaded   ? (lastTender?.cost_per_mile        ?? null) : (lastRec.lastCostPerMile  ?? null)),
     // Annual contracted accepted bid (£). Useful by itself, and required to
@@ -847,11 +895,12 @@ for (const file of routeFiles) {
     // actual=hybrid until the new buses arrive.
     awardedPropulsion: override.awardedPropulsion ?? (tendersLoaded ? deriveAwardedPropulsion(lastTender?.notes, lastTender?.joint_bids) : (lastRec.awardedPropulsion ?? null)),
     awardedDeck:       override.awardedDeck       ?? (tendersLoaded ? deriveAwardedDeck(lastTender?.notes)                                : (lastRec.awardedDeck       ?? null)),
-    // Previous-tender vehicle spec — derived from the SECOND-most-recent
-    // tender. The UI only renders this when it differs from the most recent
-    // ("was Hybrid (double)") — a clean propulsion-transition indicator.
-    prevAwardedPropulsion: override.prevAwardedPropulsion ?? (tendersLoaded && tenderHistory?.[1] ? deriveAwardedPropulsion(tenderHistory[1].notes, tenderHistory[1].joint_bids) : (lastRec.prevAwardedPropulsion ?? null)),
-    prevAwardedDeck:       override.prevAwardedDeck       ?? (tendersLoaded && tenderHistory?.[1] ? deriveAwardedDeck(tenderHistory[1].notes)                                   : (lastRec.prevAwardedDeck       ?? null)),
+    // Previous-tender vehicle spec — derived from the same changed-hands
+    // award as `previousOperator` (not tenderHistory[1], which can be a
+    // same-operator re-award), so the whole "Previous operator" section
+    // describes one consistent contract.
+    prevAwardedPropulsion: override.prevAwardedPropulsion ?? (tendersLoaded && prevTender.tender ? deriveAwardedPropulsion(prevTender.tender.notes, prevTender.tender.joint_bids) : (lastRec.prevAwardedPropulsion ?? null)),
+    prevAwardedDeck:       override.prevAwardedDeck       ?? (tendersLoaded && prevTender.tender ? deriveAwardedDeck(prevTender.tender.notes)                                       : (lastRec.prevAwardedDeck       ?? null)),
     nextTenderStart:  override.nextTenderStart  ?? (programmeLoaded ? (nextProgramme?.contract_start_date ?? null) : (lastRec.nextTenderStart ?? null)),
     nextTenderYear:   override.nextTenderYear   ?? (programmeLoaded ? (nextProgramme?.programme_year      ?? null) : (lastRec.nextTenderYear  ?? null)),
     // Tranche reference from the LBSL programme PDF — the batch number TfL
