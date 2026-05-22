@@ -48,11 +48,11 @@ Pass `--force` to any of the above scripts to bypass and re-fetch.
 
 ## Upcoming
 
-- **Analytics page** — `/analytics` reading from Supabase via the anon key (RLS-locked to read-only). Charts: fleet-age trend, operator share over time, electrification curve, EWT/OTP movement around tender events, operator churn by route.
+- **Analytics page** — `/analytics` reading from Supabase via the anon key (RLS-locked to read-only). Charts and trends across the network: fleet-age trend, operator share over time, electrification curve, fleet capacity, and operator churn by route.
 
 ## Contributors
 
-Thanks to Daniel Plumb, Mark Leonard-Adoko, and Ross Levine for data, feedback, and reference material that has shaped this project.
+Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, and Paul Tran for data, feedback, and reference material that has shaped this project.
 
 ## Tech
 

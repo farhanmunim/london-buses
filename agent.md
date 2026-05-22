@@ -345,7 +345,7 @@ Deployed as a static site (no server, no build step at deploy time).
 │   ├── fetch-route-performance.js   # Step 9 — TfL QSI PDF (pdfjs-dist) → per-route EWT (high-freq) / OTP (low-freq) — skip-if-unchanged via Last-Modified
 │   ├── fetch-route-mps.js           # Step 10 — Per-route TfL QSI PDFs → contractual EWT/OTP/mileage Minimum Performance Standards (sticky 28-day cache, per-route HEAD short-circuit; error rows retried, not aged-out)
 │   ├── fetch-tenders.js             # Step 11 — TfL forms 13796.aspx?btID=… → ~2,500 historical tender awards (sticky cache; immutable; cost_per_mile clamped 0..200 at parse + retro-sanitised on load)
-│   ├── fetch-tender-programme.js    # Step 12 — 10 LBSL programme PDFs → upcoming tender schedule (per-year skip-if-unchanged)
+│   ├── fetch-tender-programme.js    # Step 12 — 11 LBSL programme PDFs (2017/18→2027/28, content.tfl.gov.uk) → upcoming tender schedule incl. tranche (per-year skip-if-unchanged)
 │   ├── build-classifications.js     # Step 13 — merge all sources into per-route record (route_classifications.json)
 │   ├── build-overview.js            # Step 14 — simplified overview GeoJSON for the map layer
 │   ├── build-garage-locations.js    # Step 15 — legacy garage-locations.json for frontend (Photon-geocoded)

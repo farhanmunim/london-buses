@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.9</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.10</a>
 
       <div style="flex:1"></div>
 
@@ -82,6 +82,18 @@
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement ·
             <span class="cl-tag cl-tag--perf">PERF</span> performance.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.10</span> May 11, 2026</div>
+            <a href="#v2_10" class="cl-entry-title">Tranche on the route card &amp; programme parser fix</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Tranche reference on every route card — the LBSL programme batch a route's upcoming tender sits in (e.g. <code>913</code>). Coverage 712/747 routes; also added to the XLSX Routes sheet.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Tender programme parser was silently dropping every continuation row whose route number was a plain 3-digit value (424, 485, 95…). Tranche-vs-route is now disambiguated by position, not shape. Programme entries jumped 512 → 1,265.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Tranche refs with a trailing letter (e.g. <code>972a</code>) are now preserved.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Programme now sourced from content.tfl.gov.uk and extended to 11 financial years through 2027/28.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Route card Tender section reordered; "Mileage standard" and the mislabeled "Contract no." rows removed (TfL publishes no per-route contract reference).</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.9</span> May 11, 2026</div>

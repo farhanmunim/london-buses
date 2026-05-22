@@ -200,6 +200,7 @@ function buildRouteRows(routes, stopCounts) {
         contract_term_years:       num(cls.contractTermYears),
 
         // ── Tender — next (upcoming) contract ──
+        tranche:                   str(cls.nextTenderTranche),
         contract_expires:          str(cls.nextTenderStart),
         next_programme_year:       str(cls.nextTenderYear),
         next_award_propulsion:     str(cls.nextAwardPropulsion),

@@ -43,15 +43,15 @@ const TIPS = {
   'vehicle-model': 'Vehicle model (chassis and body), from londonbusroutes.net',
   age:             'Mean age of buses observed on the route, from DVLA first-registration dates',
   // Tender · Current contract rows
+  tranche:         'Programme batch this route’s upcoming tender sits in, from the TfL tendering programme',
   'last-award':    'Award date of the current contract, from TfL tender results',
   term:            'Contract length, from tender notes where stated, otherwise inferred from historical award gaps',
   'contract-start':'Date the current contract began service, from the TfL tendering programme',
-  'award-count':   'Number of recorded tender awards since 2003, from TfL tender results',
   bids:            'Number of operators that bid for the current contract, from TfL tender results',
   joint:           'Whether the current contract was tendered as part of a joint bid, from TfL tender results',
   'awarded-veh':   'Vehicle specification required by the contract, parsed from TfL tender notes',
   value:           'Cost per live mile of the accepted bid, from TfL tender results',
-  'mil-mps':       'Contractual minimum mileage operated, from TfL per-route QSI report',
+  'annual-miles':  'Annual contracted live miles, derived from the accepted bid ÷ cost per mile',
   // Tender · Previous operator rows
   previous:        'Operator before the current incumbent, derived from TfL tender history',
   'prev-award':    'Award date of the previous contract, from TfL tender results',
@@ -320,12 +320,14 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   toggleRow(node, 'term', termValid);
   if (termValid) set('[data-rc-term]', `${term} years`);
 
-  // Awards on file — number of recorded tender awards for this route since
-  // ~2003 (the start of TfL's published tender results). Stability signal:
-  // 1 = new / incumbent-dominated, 5+ = competitive corridor with regular
-  // operator churn. Bare integer — the label carries the meaning.
-  const awardCnt = classification?.tenderAwardCount;
-  set('[data-rc-award-count]', awardCnt ? String(awardCnt) : 'XXX');
+  // Tranche — the LBSL programme batch number this route's upcoming tender
+  // sits in (e.g. 913). Sourced from TfL's tender programme PDFs; null for
+  // routes with no entry in any published programme year, so the row hides
+  // rather than showing a placeholder.
+  const tranche = classification?.nextTenderTranche;
+  const trancheValid = tranche != null && String(tranche).trim() !== '';
+  toggleRow(node, 'tranche', trancheValid);
+  if (trancheValid) set('[data-rc-tranche]', String(tranche));
 
   // Bids received — competitiveness of the most recent tender.
   const bids = classification?.numberOfTenderers;

@@ -712,6 +712,15 @@ for (const file of routeFiles) {
     ?? (/^N\d/.test(routeId) ? programmeByRoute[routeId.slice(1)] : null);
   const nextProgramme = pickNextProgramme(programmeEntries);
   const currentContractStart = pickCurrentContractStart(programmeEntries, lastTender?.award_announced_date);
+  // Tranche: prefer the upcoming tender's batch, but fall back to the most
+  // recent programme appearance overall so routes whose latest programme
+  // entry has a now-past contract start still surface their batch ref.
+  // (pickNextProgramme is future-only — too sparse for a standalone field.)
+  const latestProgramme = (programmeEntries?.length)
+    ? [...programmeEntries].sort((a, b) =>
+        String(b.contract_start_date ?? '').localeCompare(String(a.contract_start_date ?? '')))[0]
+    : null;
+  const trancheSource = nextProgramme ?? latestProgramme;
 
   const override = routeOverrides[routeId] ?? {};
   const lastRec  = lastGood[routeId] ?? {};
@@ -845,6 +854,11 @@ for (const file of routeFiles) {
     prevAwardedDeck:       override.prevAwardedDeck       ?? (tendersLoaded && tenderHistory?.[1] ? deriveAwardedDeck(tenderHistory[1].notes)                                   : (lastRec.prevAwardedDeck       ?? null)),
     nextTenderStart:  override.nextTenderStart  ?? (programmeLoaded ? (nextProgramme?.contract_start_date ?? null) : (lastRec.nextTenderStart ?? null)),
     nextTenderYear:   override.nextTenderYear   ?? (programmeLoaded ? (nextProgramme?.programme_year      ?? null) : (lastRec.nextTenderYear  ?? null)),
+    // Tranche reference from the LBSL programme PDF — the batch number TfL
+    // groups routes into for a tender round (e.g. 913). Identifies which
+    // upcoming tender batch this route belongs to; null for routes with no
+    // entry in any published programme year.
+    nextTenderTranche: override.nextTenderTranche ?? (programmeLoaded ? (trancheSource?.tranche ?? null) : (lastRec.nextTenderTranche ?? null)),
     // 'x' marker on the programme PDF means TfL has flagged the route as
     // eligible for a 2-year extension on top of the base contract length.
     // Materially changes when the contract really ends.

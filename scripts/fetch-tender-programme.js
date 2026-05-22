@@ -5,9 +5,11 @@
  * tender, grouped by tranche, with planned issue / return / award / start
  * dates and the required vehicle spec.
  *
- *   tfl.gov.uk/cdn/static/cms/documents/uploads/forms/{YYYY-YYYY}-lbsl-tendering-programme.pdf
+ *   content.tfl.gov.uk/uploads/forms/{YYYY-YYYY}-lbsl-tendering-programme.pdf  (≤2026/27)
+ *   content.tfl.gov.uk/uploads/forms/{YYYY-YYYY}-tendering-programme.pdf       (2027/28+)
  *
- * 10 financial years discovered (2017/18 through 2026/27). Each PDF is small
+ * 11 financial years discovered (2017/18 through 2027/28). From 2027/28 TfL
+ * dropped the `lbsl-` segment from the filename. Each PDF is small
  * (~80-400 KB) so the whole crawl is sub-minute and worth re-running weekly
  * to catch TfL's mid-year programme updates.
  *
@@ -52,9 +54,17 @@ const SCRIPT    = 'tender-programme';
 const YEARS = [
   '2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022',
   '2022-2023', '2023-2024', '2024-2025', '2025-2026', '2026-2027',
+  '2027-2028',
 ];
 
-const PDF_URL = (yr) => `https://tfl.gov.uk/cdn/static/cms/documents/uploads/forms/${yr}-lbsl-tendering-programme.pdf`;
+// TfL serves the programme PDFs from content.tfl.gov.uk. From 2027-2028 the
+// filename dropped the historical `lbsl-` segment (the programme is no longer
+// branded "LBSL"), so the slug is year-dependent.
+const PDF_URL = (yr) => {
+  const startYear = parseInt(yr.slice(0, 4), 10);
+  const slug = startYear >= 2027 ? `${yr}-tendering-programme` : `${yr}-lbsl-tendering-programme`;
+  return `https://content.tfl.gov.uk/uploads/forms/${slug}.pdf`;
+};
 
 // ── HTTP fetch ──────────────────────────────────────────────────────────────
 async function fetchPdf(url) {
@@ -94,13 +104,27 @@ const extractRows = extractPdfRowsByPage;
 // ── Cell-level helpers ──────────────────────────────────────────────────────
 const DD_MON_YY  = /^\d{1,2}-[A-Za-z]{3}-\d{2}$/;          // '04-Mar-25'
 const MON_YY     = /^[A-Za-z]{3}-\d{2}$/;                  // 'Jun-25'
-const TRANCHE_RE = /^\d{3,5}$/;                            // '954' .. '1029'
+// Tranche refs are 3-5 digits with an OPTIONAL trailing letter ('954',
+// '1029', '972a'). The letter is meaningful (TfL splits a tranche into
+// sub-batches) so it's kept verbatim — never stripped.
+const TRANCHE_RE = /^\d{3,5}[A-Za-z]?$/;
 const ROUTE_RE   = /^[A-Z]{0,3}\d{1,4}[A-Z]?(?:\/[A-Z]?\d{0,4}[A-Z]?)?$/;
 
-function isDateCell(s) { return DD_MON_YY.test(s) || MON_YY.test(s); }
-function isTrancheCell(s) { return TRANCHE_RE.test(s); }
+function isDateCell(s) { return typeof s === 'string' && (DD_MON_YY.test(s) || MON_YY.test(s)); }
+function isTrancheCell(s) { return typeof s === 'string' && TRANCHE_RE.test(s); }
+// A route id is shape-only here — crucially NOT excluding tranche-shaped
+// strings, because TfL route numbers (424, 485, 95…) overlap the tranche
+// number range exactly. Tranche-vs-route is disambiguated by POSITION in
+// parsePage (a leading number is a tranche only when the next cell is
+// itself a route), never by shape.
 function looksLikeRouteId(s) {
-  return ROUTE_RE.test(s) && !TRANCHE_RE.test(s) && !isDateCell(s);
+  return typeof s === 'string' && ROUTE_RE.test(s) && !isDateCell(s);
+}
+// Strip a trailing two-year-extension marker (' x' / ' *') from a route cell.
+function stripExtMarker(s) {
+  if (typeof s !== 'string') return { id: s, ext: false };
+  const m = /^(.*?)\s+([x*])$/.exec(s.trim());
+  return m ? { id: m[1].trim(), ext: true } : { id: s.trim(), ext: false };
 }
 
 const MONTHS = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
@@ -150,24 +174,30 @@ function parsePage(rows, programmeYear, sourceUrl, pdfModifiedAt) {
       continue;
     }
 
-    // Identify whether the leading cell is a tranche, a route, or absent (continuation row)
+    // Identify whether the leading cell is a tranche+route ("definer" row) or
+    // a bare route ("continuation" row). The leading cell is a TRANCHE only
+    // when the NEXT cell is itself route-shaped — the "tranche | first-route"
+    // layout. On a continuation row the leading cell IS the route (424, 485,
+    // 95 …), which collides with tranche-number shape, so shape alone can't
+    // tell them apart; position does.
     let idx = 0;
-    if (isTrancheCell(cells[idx])) {
+    if (isTrancheCell(cells[idx]) && looksLikeRouteId(stripExtMarker(cells[idx + 1]).id)) {
       currentTranche = cells[idx];
       idx++;
     }
 
-    // Route id
-    const routeId = cells[idx];
+    // Route id, with its two-year-extension marker ('x' / '*') — either an
+    // inline suffix on the route cell ("263/N271 x", the definer-row layout)
+    // or a separate following cell ("G1", "x", the continuation layout).
+    const { id: routeId, ext: inlineExt } = stripExtMarker(cells[idx]);
     if (!routeId || !looksLikeRouteId(routeId)) {
       // Couldn't find a recognisable route id -- skip
       continue;
     }
     idx++;
 
-    // Optional 'x' two-year-extension marker
-    let twoYearExtension = false;
-    if (cells[idx] === 'x' || cells[idx] === '*') {
+    let twoYearExtension = inlineExt;
+    if (!twoYearExtension && (cells[idx] === 'x' || cells[idx] === '*')) {
       twoYearExtension = true;
       idx++;
     }

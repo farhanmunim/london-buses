@@ -8,8 +8,21 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source 
 
 ## Upcoming
 
-- Analytics page reading from the Supabase historical store (fleet-age trend, electrification, operator share, EWT/OTP movement around tender events, operator churn).
+- Analytics page reading from the Supabase historical store — charts and trends across the network (fleet-age trend, electrification, operator share, fleet capacity, operator churn).
 - **30 Oct 2026 — Supabase Data API grant change.** Supabase is removing the implicit Data API grant on `public`-schema tables. All existing tables in this project keep their grants. Any new table or view added on or after that date must include explicit `GRANT` statements + RLS — `db/migrations/_template.sql` is the new starting point. See `agent.md` for the procedure.
+
+---
+
+## v2.10 — Tranche on the route card, programme parser fix
+
+_2026-05-11_
+
+- **NEW** Tranche reference on every route card (Tender · Current contract). Shows the LBSL programme batch a route's upcoming tender sits in (e.g. `913`). Coverage 712/747 routes. Also added to the XLSX Routes sheet.
+- **FIX** Tender programme parser was silently dropping every continuation row whose route number was a plain 3-digit value (424, 485, 95…) — `looksLikeRouteId` rejected anything tranche-shaped, and tranche-vs-route was decided by shape rather than position. Now disambiguated positionally (a leading number is a tranche only when the next cell is route-shaped). Programme entries jumped 512 → 1,265.
+- **FIX** Tranche refs with a trailing letter (e.g. `972a`) are now preserved — the regex previously matched digits only.
+- **DATA** Tender programme now sourced from `content.tfl.gov.uk` and extended to 11 financial years through 2027/28 (TfL dropped the `lbsl-` segment from the 2027/28 filename).
+- **UX** Route card Tender section reordered; "Mileage standard" and the mislabeled "Contract no." rows removed (TfL publishes no per-route contract reference). "Contracted miles/yr" renamed "Contracted miles".
+- **DOCS** Roadmap: Analytics scope broadened (charts, trends, fleet capacity) and EWT/OTP references dropped; "TfL zone map overlay" removed. Paul Tran added to contributors.
 
 ---
 
