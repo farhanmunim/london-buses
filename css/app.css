@@ -2060,3 +2060,16 @@ a.tb-ver:hover{background:var(--surf2);color:var(--tx2)}
   from{transform:rotate(0)}
   to  {transform:rotate(180deg)}
 }
+
+/* ══════════════════════════════════════ REDUCED MOTION ══ */
+/* Honour the OS "reduce motion" setting (WCAG 2.3.3): collapse every
+   transition/animation to near-instant and stop the looping live-pip blink,
+   without removing the end state. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
