@@ -268,7 +268,7 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
   const rows = [];
 
   // ── Historical awards ───────────────────────────────────────────────────
-  for (const [btId, t] of Object.entries(tendersJson?.tenders ?? {})) {
+  for (const [, t] of Object.entries(tendersJson?.tenders ?? {})) {
     if (!t?.route_id) continue;
     // route_id may be combined ("341/N341"); emit one row per id IF the id
     // is in the visible set.
@@ -309,9 +309,6 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
         vehicle_specification:  '',
         two_year_extension:     '',
         route_description:      '',
-        // Provenance
-        tfl_tender_id:          parseInt(btId, 10),
-        source_url:             str(t.source_url),
       });
     }
   }
@@ -353,8 +350,6 @@ function buildTenderRows(tendersJson, programmeJson, visibleIds) {
           vehicle_specification:  str(e.vehicle_type),
           two_year_extension:     yesNo(!!e.two_year_extension),
           route_description:      str(e.route_description),
-          tfl_tender_id:          '',
-          source_url:             str(e.source_url),
         });
       }
     }

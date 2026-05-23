@@ -31,6 +31,9 @@ desktop.ini
 .claude/
 screenshots/
 reference/
+# Internal AI/dev framework docs — kept local only, never in the repo.
+agent.md
+audit.md
 
 # ── Garage-capacity source captures (heavy reference only) ─────────────────
 # The DVSA licence-page screenshots / crops are reference material for the

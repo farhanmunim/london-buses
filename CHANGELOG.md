@@ -2,14 +2,14 @@
 
 All notable changes to **London Buses**, summarised by release.
 
-Tags: **NEW** new feature · **FIX** bug fix · **DATA** pipeline / data source change · **UX** user-facing improvement.
+Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX** user-facing improvement.
 
 ---
 
 ## Upcoming
 
-- Analytics page reading from the Supabase historical store — charts and trends across the network (fleet-age trend, electrification, operator share, fleet capacity, operator churn).
-- **30 Oct 2026 — Supabase Data API grant change.** Supabase is removing the implicit Data API grant on `public`-schema tables. All existing tables in this project keep their grants. Any new table or view added on or after that date must include explicit `GRANT` statements + RLS — `db/migrations/_template.sql` is the new starting point. See `agent.md` for the procedure.
+- Analytics page reading from the historical store — charts and trends across the network (fleet-age trend, electrification, operator share, fleet capacity, operator churn).
+- **30 Oct 2026 — historical-store Data API grant change.** The hosted Postgres provider is removing the implicit Data API grant on `public`-schema tables. All existing tables in this project keep their grants. Any new table or view added on or after that date must include explicit `GRANT` statements + RLS — `db/migrations/_template.sql` is the new starting point. See the internal data notes for the procedure.
 
 ---
 
@@ -19,6 +19,7 @@ _2026-05-22_
 
 - **NEW** Garage filter in the sidebar — a multi-select dropdown of garages grouped by operator. Pick one or more (even across operators) to narrow the network to their routes. It's a stackable filter like the others, so it combines with Operator, Route Type, Propulsion, etc. (and matches the garage drawer's "View all routes operated here").
 - **NEW** The Routes panel now lists every route matching your active filters (bus stop, operator, type, propulsion, deck, frequency) — not just coloured lines on the map. Click any route to open its full card.
+- **DATA** Contract lengths corrected across 400+ routes — now read directly from a public reference (with reduction/extension notes applied) and cross-checked against a second source, replacing the old estimate-from-award-gaps heuristic (e.g. an implausible 10-year term dropped to 5). Coverage 725/747.
 
 ---
 
@@ -26,7 +27,7 @@ _2026-05-22_
 
 _2026-05-11_
 
-- **NEW** Tranche reference on every route card (Tender · Current contract). Shows the LBSL programme batch a route's upcoming tender sits in (e.g. `913`). Coverage 712/747 routes. Also added to the XLSX Routes sheet.
+- **NEW** Tranche reference on every route card (Tender · Current contract). Shows the tendering-programme batch a route's upcoming tender sits in (e.g. `913`). Coverage 712/747 routes. Also added to the XLSX Routes sheet.
 
 ---
 
@@ -35,8 +36,8 @@ _2026-05-11_
 _2026-05-11_
 
 - **FIX** Average fleet age was being skewed by reserve vehicles of the wrong drivetrain briefly covering a route — a 14-year diesel on an electric route would add a year or two. Now only vehicles matching the route's dominant propulsion count. Route 339 went from 4.8 y to 2.9 y on this fix alone.
-- **FIX** Garages were duplicated by code (BN/BT/UX) and the list included out-of-London placeholder depots with no TfL code and zero PVR. Deduped and filtered — a cleaner 81 garages.
-- **FIX** TfL tender form occasionally pastes the full annual bid into the cost-per-mile cell (route 290 2006, route 265 2022 etc.) producing £4M/mile headlines. Cost-per-mile is now clamped to a sane range.
+- **FIX** Garages were duplicated by code (BN/BT/UX) and the list included out-of-London placeholder depots with no network code and zero PVR. Deduped and filtered — a cleaner 81 garages.
+- **FIX** Tender records occasionally carry the full annual bid in the cost-per-mile cell (route 290 2006, route 265 2022 etc.) producing £4M/mile headlines. Cost-per-mile is now clamped to a sane range.
 - **FIX** School routes default to single-deck diesel when every upstream source returned null (London school services are uniformly single-deck diesel minibuses/coaches).
 
 ---
@@ -45,7 +46,7 @@ _2026-05-11_
 
 _2026-05-01_
 
-- **NEW** Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. A new "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.
+- **NEW** Contractual EWT / OTP / Mileage standards per route, from official per-route performance reports. A new "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.
 - **NEW** Contract start date on the route card (~700 / 747 routes covered).
 - **NEW** Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream. Rows filter to the search-pinned routes when set.
 - **NEW** Search pills in the topbar now drive the export — typing `25, 30, 100` and pressing Export emits a workbook restricted to those routes (every sheet follows the same selection).
@@ -62,7 +63,7 @@ _2026-04-30_
 
 - **NEW** Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.
 - **NEW** Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.
-- **DATA** ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly.
+- **DATA** ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme data refreshed weekly.
 
 ---
 
@@ -104,11 +105,11 @@ _2026-04-21_
 
 ---
 
-## v2.2 — TfL-first data pipeline
+## v2.2 — API-first data pipeline
 
 _2026-04-17_
 
-- **DATA** TfL Unified API as primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.
+- **DATA** An official transport API as the primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.
 - **NEW** Per-route HTML grid fallback for frequency when the API is silent.
 - **FIX** Multiple correctness improvements to operator and garage attribution.
 
@@ -137,5 +138,5 @@ The initial v1.0 → v1.8 series established the core map, data pipeline and rou
 - **NEW** Multi-route selection via pill-based input; export filtered routes to CSV.
 - **NEW** Per-operator statistics panel (Routes %, PVR %, EV %).
 - **NEW** Manual override system (`data/route-overrides.json`) — any field can be hand-edited and wins over data.
-- **DATA** Weekly automated GitHub Actions pipeline; auto-deploys to Cloudflare Pages.
+- **DATA** Weekly automated build pipeline; auto-deploys to a static host.
 - **DATA** API key moved to environment variables; modular module architecture.

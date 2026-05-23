@@ -50,13 +50,6 @@
         </section>
 
         <section class="modal-section">
-          <span class="modal-section-tag">Source</span>
-          <ul class="credits-list credits-list--inline">
-            <li><a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">github.com/farhanmunim/london-buses</a><span class="credits-note">data sources, attributions, disclaimers and licence — see the repo</span></li>
-          </ul>
-        </section>
-
-        <section class="modal-section">
           <span class="modal-section-tag">Contributors</span>
           <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran</p>
         </section>
@@ -64,7 +57,7 @@
         <section class="modal-section modal-support">
           <span class="modal-section-tag">Support</span>
           <p class="modal-support__copy">
-            Support the development of this open source project.
+            Support the development of this project.
           </p>
           <a class="modal-support__link" href="https://buymeacoffee.com/farhan.app" target="_blank" rel="noopener">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M10 3v2M13 3v2"/></svg>

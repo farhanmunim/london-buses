@@ -71,7 +71,7 @@
             <span class="cl-eyebrow">Release notes</span>
             <h1 class="cl-title">Changelog</h1>
             <p class="cl-sub">
-              Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route classifications and garage locations update automatically every Monday at 09:00 UTC.
+              Everything new in London Buses — from the v2 redesign to weekly data refreshes. Route and garage data updates automatically each week.
             </p>
           </header>
 
@@ -88,6 +88,7 @@
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Garage filter in the sidebar — a multi-select dropdown of garages grouped by operator. Pick one or more (even across operators) to narrow the network to their routes. It's a stackable filter like the others, so it combines with Operator, Route Type, Propulsion, etc. (and matches the garage drawer's "View all routes operated here").</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> The Routes panel now lists every route matching your active filters (bus stop, operator, type, propulsion, deck, frequency) — not just coloured lines on the map. Click any route to open its full card.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Contract lengths corrected across 400+ routes — now read directly from a public reference and cross-checked against a second source, replacing the old estimate (e.g. an implausible 10-year term dropped to 5). Coverage 725/747.</li>
             </ul>
           </article>
 
@@ -95,7 +96,7 @@
             <div class="cl-date"><span class="cl-version">v2.10</span> May 11, 2026</div>
             <a href="#v2_10" class="cl-entry-title">Tranche on the route card</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Tranche reference on every route card — the LBSL programme batch a route's upcoming tender sits in (e.g. <code>913</code>). Coverage 712/747 routes; also added to the XLSX Routes sheet.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Tranche reference on every route card — the tendering-programme batch a route's upcoming tender sits in (e.g. <code>913</code>). Coverage 712/747 routes; also added to the XLSX Routes sheet.</li>
             </ul>
           </article>
 
@@ -105,7 +106,7 @@
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--fix">FIX</span> Average fleet age was being skewed by reserve vehicles of the wrong drivetrain briefly covering a route — a 14-year diesel on an electric route would add a year or two. Now only vehicles matching the route's main propulsion count (route 339: 4.8 y → 2.9 y).</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> Garage list had duplicate rows and out-of-London placeholder depots. Deduped and filtered — a cleaner 81 garages.</li>
-              <li><span class="cl-tag cl-tag--fix">FIX</span> A handful of tender cards showed absurd cost-per-mile figures (e.g. £4M/mile) where TfL's form pasted the full annual bid into the per-mile cell. Now clamped to a sane range.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> A handful of tender cards showed absurd cost-per-mile figures (e.g. £4M/mile) where the source records carried the full annual bid in the per-mile cell. Now clamped to a sane range.</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> School routes now default to single-deck diesel when no fleet data is available (London school services are uniformly single-deck diesel minibuses / coaches).</li>
             </ul>
           </article>
@@ -114,7 +115,7 @@
             <div class="cl-date"><span class="cl-version">v2.8</span> May 1, 2026</div>
             <a href="#v2_8" class="cl-entry-title">MPS standards &amp; contract start dates</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, from TfL's per-route QSI PDFs. A new "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Contractual EWT / OTP / Mileage standards per route, from official per-route performance reports. A new "MPS" KPI tile sits next to the actual EWT / OTP so contract-vs-actual reads at a glance.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Contract start date on the route card (~700 / 747 routes covered).</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Combined Tenders sheet in the XLSX export — historical awards (~2,500 since 2003) + upcoming programme entries in one stream.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Search pills in the topbar now drive the export — typing <code>25, 30, 100</code> + Export emits a workbook restricted to those routes (every sheet follows the same selection).</li>
@@ -131,7 +132,7 @@
             <ul class="cl-list">
               <li><span class="cl-tag cl-tag--new">NEW</span> Tender history surfaces on every route card: previous operator, awarded vehicle, cost per mile, contract length, total awards, bids received, joint bid flag.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Card restructured into Route / Fleet / Tender · Current / Tender · Previous sections.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme PDFs refreshed weekly.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> ~2,500 historical tender awards (back to 2003) and 10 years of upcoming-tender programme data refreshed weekly.</li>
             </ul>
           </article>
 
@@ -175,9 +176,9 @@
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.2</span> Apr 17, 2026</div>
-            <a href="#v2_2" class="cl-entry-title">TfL-first data pipeline</a>
+            <a href="#v2_2" class="cl-entry-title">API-first data pipeline</a>
             <ul class="cl-list">
-              <li><span class="cl-tag cl-tag--data">DATA</span> TfL Unified API as primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> An official transport API as the primary source for routes, destinations, timetables and stops. Fallbacks engage only when the API is sparse.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Per-route HTML grid fallback for frequency when the API is silent.</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> Multiple correctness improvements to operator and garage attribution.</li>
             </ul>
@@ -205,7 +206,7 @@
               <li><span class="cl-tag cl-tag--new">NEW</span> Multi-route selection via pill-based input; export filtered routes to CSV.</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Per-operator statistics panel (Routes %, PVR %, EV %).</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Manual override system (<code>data/route-overrides.json</code>) — any field can be hand-edited and wins over data.</li>
-              <li><span class="cl-tag cl-tag--data">DATA</span> Weekly automated GitHub Actions pipeline; auto-deploys to Cloudflare Pages.</li>
+              <li><span class="cl-tag cl-tag--data">DATA</span> Weekly automated build pipeline; auto-deploys to a static host.</li>
               <li><span class="cl-tag cl-tag--data">DATA</span> API key moved to environment variables; modular module architecture.</li>
             </ul>
           </article>
@@ -213,7 +214,7 @@
           <!-- Support CTA — tasteful, at the end of the release history -->
           <aside class="cl-support" aria-labelledby="cl-support-title">
             <h2 id="cl-support-title" class="cl-support__title">Enjoying London Buses?</h2>
-            <p class="cl-support__copy">Support the development of this open source project.</p>
+            <p class="cl-support__copy">Support the development of this project.</p>
             <a class="modal-support__link" href="https://buymeacoffee.com/farhan.app" target="_blank" rel="noopener">
               <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2 2 0 0 1 0 4h-2"/><path d="M7 3v2M10 3v2M13 3v2"/></svg>
               Buy me a coffee

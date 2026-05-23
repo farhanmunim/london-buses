@@ -31,36 +31,36 @@ const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid'
 // (EWT vs OTP) and are wired separately in buildCard's reliability block.
 const TIPS = {
   // Route KPI tiles
-  pvr:             'Peak Vehicle Requirement, from londonbusroutes.net',
-  stops:           'Stop count, from TfL StopPoint API',
-  freq:            'Frequency band, from TfL Timetable API. H = 5 or more buses per hour, L = fewer',
+  pvr:             'Peak Vehicle Requirement — buses needed to run the peak service',
+  stops:           'Number of stops on the route',
+  freq:            'Frequency band — H = 5 or more buses per hour, L = fewer',
   // Route detail rows
-  garage:          'Operating garage, from londonbusroutes.net',
+  garage:          'Operating garage for the route',
   // Fleet rows
-  deck:            'Deck type, from londonbusroutes.net',
-  propulsion:      'Propulsion type, from DVLA Vehicle Enquiry Service cross-referenced with TfL iBus',
-  'vehicle-make':  'Manufacturer, from DVLA Vehicle Enquiry Service',
-  'vehicle-model': 'Vehicle model (chassis and body), from londonbusroutes.net',
-  age:             'Mean age of buses observed on the route, from DVLA first-registration dates',
+  deck:            'Deck type',
+  propulsion:      'Propulsion type',
+  'vehicle-make':  'Vehicle manufacturer',
+  'vehicle-model': 'Vehicle model (chassis and body)',
+  age:             'Mean age of buses observed on the route',
   // Tender · Current contract rows
-  tranche:         'Programme batch this route’s upcoming tender sits in, from the TfL tendering programme',
-  'last-award':    'Award date of the current contract, from TfL tender results',
-  term:            'Contract length, from tender notes where stated, otherwise inferred from historical award gaps',
-  'contract-start':'Date the current contract began service, from the TfL tendering programme',
-  bids:            'Number of operators that bid for the current contract, from TfL tender results',
-  joint:           'Whether the current contract was tendered as part of a joint bid, from TfL tender results',
-  'awarded-veh':   'Vehicle specification required by the contract, parsed from TfL tender notes',
-  value:           'Cost per live mile of the accepted bid, from TfL tender results',
-  'annual-miles':  'Annual contracted live miles, derived from the accepted bid ÷ cost per mile',
+  tranche:         'Programme batch this route’s upcoming tender sits in',
+  'last-award':    'Award date of the current contract',
+  term:            'Contract length in years',
+  'contract-start':'Date the current contract began service',
+  bids:            'Number of operators that bid for the current contract',
+  joint:           'Whether the current contract was tendered as part of a joint bid',
+  'awarded-veh':   'Vehicle specification required by the contract',
+  value:           'Cost per live mile of the accepted bid',
+  'annual-miles':  'Annual contracted live miles',
   // Tender · Previous operator rows
-  previous:        'Operator before the current incumbent, derived from TfL tender history',
-  'prev-award':    'Award date of the previous contract, from TfL tender results',
-  'prev-term':     'Length of the previous contract, measured between its award and the next award on file',
-  'prev-joint':    'Whether the previous contract was tendered as part of a joint bid, from TfL tender results',
-  'prev-cpm':      'Cost per live mile of the previous contract’s accepted bid, from TfL tender results',
-  'prev-miles':    'Annual contracted live miles of the previous contract, derived from its accepted bid ÷ cost per mile',
-  'prev-veh':      'Vehicle specification required by the previous contract, parsed from TfL tender notes',
-  'prev-bids':     'Number of operators that bid for the previous contract, from TfL tender results',
+  previous:        'Operator before the current incumbent',
+  'prev-award':    'Award date of the previous contract',
+  'prev-term':     'Length of the previous contract',
+  'prev-joint':    'Whether the previous contract was tendered as part of a joint bid',
+  'prev-cpm':      'Cost per live mile of the previous contract’s accepted bid',
+  'prev-miles':    'Annual contracted live miles of the previous contract',
+  'prev-veh':      'Vehicle specification required by the previous contract',
+  'prev-bids':     'Number of operators that bid for the previous contract',
 };
 
 // Walk the TIPS map and attach `data-tip` attributes to each row's label.
@@ -290,10 +290,10 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // Tile 1 = actual measurement (EWT / OTP). Tile 2 = the contractual
   // Minimum Performance Standard for the same metric. Labels and tooltips
   // both swap together so the metric is unambiguous regardless of class.
-  const TIP_EWT     = 'Excess Wait Time in minutes, from TfL QSI report';
-  const TIP_OTP     = 'On-Time Performance, from TfL QSI report';
-  const TIP_EWT_MPS = 'Contractual EWT minimum, from TfL per-route QSI report';
-  const TIP_OTP_MPS = 'Contractual OTP minimum, from TfL per-route QSI report';
+  const TIP_EWT     = 'Excess Wait Time in minutes';
+  const TIP_OTP     = 'On-Time Performance';
+  const TIP_EWT_MPS = 'Contractual EWT minimum';
+  const TIP_OTP_MPS = 'Contractual OTP minimum';
   if (sc === 'high-frequency') {
     if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
     if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }

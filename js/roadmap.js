@@ -103,8 +103,8 @@
         </table>
 
         <p class="modal-note">
-          Have a suggestion? Open an issue on
-          <a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">GitHub</a>.
+          Have a suggestion? Get in touch via
+          <a href="https://farhan.app" target="_blank" rel="noopener">farhan.app</a>.
         </p>
 
         <section class="modal-section modal-support">

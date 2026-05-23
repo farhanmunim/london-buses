@@ -605,7 +605,7 @@ export function renderGarages(garages, garageRoutes = {}) {
     // file for this garage.
     const capacity = Number.isFinite(g.capacity) ? g.capacity : null;
     const capRow = capacity
-      ? `<div><dt data-tip="Authorised vehicles at this operating centre, from the DVSA operator licence">Capacity</dt><dd>${capacity}</dd></div>`
+      ? `<div><dt data-tip="Authorised vehicles at this operating centre">Capacity</dt><dd>${capacity}</dd></div>`
       : '';
 
     // Source hovers on every label — mirrors the route-card tooltips. The
@@ -614,11 +614,11 @@ export function renderGarages(garages, garageRoutes = {}) {
     marker.bindPopup(
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
-        `<div><dt data-tip="Operator group, from londonbusroutes.net">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
-        `<div><dt data-tip="Peak Vehicle Requirement — garage total, from londonbusroutes.net">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Operator group">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Peak Vehicle Requirement — garage total">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
         capRow +
         `<div><dt data-tip="Share of the garage's PVR run by battery-electric routes">Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
-        `<div><dt data-tip="Number of TfL routes operated from this garage">Routes operated</dt><dd>${count}</dd></div>` +
+        `<div><dt data-tip="Number of routes operated from this garage">Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>` +
       chipsHtml,
       { closeButton: true, maxWidth: 320 }

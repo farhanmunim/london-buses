@@ -457,7 +457,7 @@ function renderContractsStub() {
   dContracts.innerHTML = `
     <div class="rc-tender" style="cursor:default">
       <div class="rc-tr"><span class="rc-tr-l">Contract data</span><span class="bdg b-amber">XXX</span></div>
-      <div class="rc-tr"><span class="rc-tr-l" style="font-size:11px">Coming soon — pending TfL tender feed</span><span class="rc-tr-v"></span></div>
+      <div class="rc-tr"><span class="rc-tr-l" style="font-size:11px">Coming soon — pending tender data</span><span class="rc-tr-v"></span></div>
     </div>`;
 }
 
