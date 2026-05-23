@@ -1,173 +1,95 @@
 /**
  * garage-filter.js — Sidebar "Garage" filter.
  *
- * A stackable, intersecting filter modelled on the bus-stop filter: it sets
- * `state.selectedGarage` (carrying the garage's route ids) and re-runs the
- * shared filter pipeline, so it combines with Operator / Route Type /
- * Propulsion / Frequency / Deck and narrows the "routes shown" count just
- * like every other left-panel filter.
+ * A stackable, intersecting filter (modelled on the bus-stop filter) presented
+ * as a native <select> dropdown: garages are grouped under their operator
+ * (<optgroup> labels), with operators and garages both in alphabetical order.
+ * Picking one sets `state.selectedGarage` (carrying the garage's route ids) and
+ * re-runs `applyFilters()`, so it combines with Operator / Route Type /
+ * Propulsion / Frequency / Deck and narrows the routes-shown count like every
+ * other left-panel filter. The "All garages" option clears it.
  *
  * Two entry points, one selection state:
- *   1. Dropdown picker — a searchable combobox listing every garage that
- *      operates ≥1 route, grouped by operator.
- *   2. Drawer CTA — the garage drawer's "View all routes operated here" button
- *      dispatches `app:garageselected` (with route ids) and triggers a filter
- *      pass via `app:filterschanged`.
+ *   1. The dropdown here.
+ *   2. The garage drawer's "View all routes operated here" CTA — stats.js sets
+ *      state.selectedGarage + dispatches `app:garageselected` (we mirror it onto
+ *      the <select>) and triggers a filter pass via `app:filterschanged`.
  *
- * Both render the same selected-garage pill. Clearing — via the pill ×, the
- * scoped Clear button (`app:garagecleared`), or global `app:resetall` —
- * funnels through the same path and re-filters.
+ * Clearing — "All garages", the scoped Clear button (`app:garagecleared`), or
+ * global `app:resetall` — funnels through the same path and re-filters.
  */
 
 import { state } from './state.js';
-import { opColor } from './map.js';
 import { applyFilters } from './filters.js';
 
-const section   = document.getElementById('garage-sec');
-const pill      = document.getElementById('garage-selected');
-const box       = document.getElementById('garage-filter-box');
-const input     = document.getElementById('garage-filter-input');
-const clearBtn  = document.getElementById('garage-filter-clear');
-const list      = document.getElementById('garage-filter-list');
+const select = document.getElementById('garage-filter-select');
 
-// Display order mirrors the Operator filter pills; anything unlisted falls to
-// the end alphabetically. Long marketing names collapse to the short label.
-const OP_ORDER = ['Arriva', 'First', 'Go-Ahead', 'Metroline', 'Stagecoach London', 'Transport UK', 'Uno'];
 const SHORT_OP = { 'Stagecoach London': 'Stagecoach' };
 const shortOp  = o => SHORT_OP[o] ?? o ?? 'Other';
 
-// Garage options grouped by operator: [{ operator, garages: [{code,name,routeIds}] }]
-let _groups = [];
+// code → garage record (incl. routeIds), for O(1) lookup on change.
+const _byCode = new Map();
 
 /**
  * Hand the garage records + per-garage route lists in from ui.js. Builds the
- * operator-grouped option list, keeping only garages that operate ≥1 route
- * (a garage with none is useless as a route filter).
+ * grouped <option> list, keeping only garages that operate ≥1 route (a garage
+ * with none is useless as a route filter).
  */
 export function setGarageOptions(garages, garageRoutes) {
+  _byCode.clear();
   const byOp = new Map();
   for (const g of garages ?? []) {
     const routes = garageRoutes?.[g.code] ?? [];
     if (!routes.length) continue;
+    const rec = { code: g.code, name: g.name || g.code, operator: g.operator || null, routeIds: routes.map(r => r.routeId) };
+    _byCode.set(g.code, rec);
     const op = g.operator || 'Other';
     if (!byOp.has(op)) byOp.set(op, []);
-    byOp.get(op).push({
-      code:     g.code,
-      name:     g.name || g.code,
-      operator: g.operator || null,
-      routeIds: routes.map(r => r.routeId),
-    });
+    byOp.get(op).push(rec);
   }
-  _groups = [...byOp.entries()]
-    .map(([operator, gs]) => ({
-      operator,
-      garages: gs.sort((a, b) => a.name.localeCompare(b.name)),
-    }))
-    .sort((a, b) => {
-      const ia = OP_ORDER.indexOf(a.operator), ib = OP_ORDER.indexOf(b.operator);
-      if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-      return a.operator.localeCompare(b.operator);
-    });
+  // Operators alphabetical (by display label); garages alphabetical within each.
+  const groups = [...byOp.entries()]
+    .map(([operator, gs]) => ({ label: shortOp(operator), garages: gs.sort((a, b) => a.name.localeCompare(b.name)) }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  renderOptions(groups);
 }
 
-// ── Dropdown list ─────────────────────────────────────────────────────────────
-
-let _acIndex = -1; // keyboard highlight across the flat option list
-
-function closeList() {
-  if (!list) return;
-  list.hidden = true;
-  list.innerHTML = '';
-  _acIndex = -1;
-}
-
-function renderList(query) {
-  if (!list) return;
-  const q = (query ?? '').trim().toLowerCase();
-  let html = '';
-  for (const grp of _groups) {
-    const hits = q
-      ? grp.garages.filter(g => g.name.toLowerCase().includes(q) || g.code.toLowerCase().includes(q))
-      : grp.garages;
-    if (!hits.length) continue;
-    html += `<li class="gf-group" role="presentation"><span class="op-dot" style="background:${opColor(grp.operator)}"></span>${escapeHtml(shortOp(grp.operator))}</li>`;
-    for (const g of hits) {
-      const n = g.routeIds.length;
-      html += `<li role="option" aria-selected="false" data-code="${escapeHtml(g.code)}" tabindex="-1">
-        <span class="gf-name">${escapeHtml(g.name)}</span>
-        <span class="ac-dest">${n} route${n === 1 ? '' : 's'}</span>
-      </li>`;
-    }
+function renderOptions(groups) {
+  if (!select) return;
+  const html = ['<option value="">All garages</option>'];
+  for (const grp of groups) {
+    html.push(`<optgroup label="${escapeHtml(grp.label)}">`);
+    for (const g of grp.garages) html.push(`<option value="${escapeHtml(g.code)}">${escapeHtml(g.name)}</option>`);
+    html.push('</optgroup>');
   }
-  if (!html) { closeList(); return; }
-  list.innerHTML = html;
-  list.querySelectorAll('li[role="option"]').forEach(li => {
-    li.addEventListener('mousedown', e => { e.preventDefault(); selectGarage(li.dataset.code); });
-  });
-  _acIndex = -1;
-  list.hidden = false;
-}
-
-function moveHighlight(delta) {
-  if (!list || list.hidden) return;
-  const items = [...list.querySelectorAll('li[role="option"]')];
-  if (!items.length) return;
-  _acIndex = Math.max(0, Math.min(items.length - 1, (_acIndex === -1 && delta > 0 ? -1 : _acIndex) + delta));
-  items.forEach((li, i) => li.setAttribute('aria-selected', String(i === _acIndex)));
-  items[_acIndex]?.scrollIntoView({ block: 'nearest' });
+  select.innerHTML = html.join('');
+  syncToState();
 }
 
 // ── Selection ─────────────────────────────────────────────────────────────────
 
-function findGarage(code) {
-  for (const grp of _groups) {
-    const g = grp.garages.find(x => x.code === code);
-    if (g) return g;
-  }
-  return null;
-}
-
-function selectGarage(code) {
-  const g = findGarage(code);
-  if (!g) return;
+function onChange() {
+  const g = _byCode.get(select.value);
+  if (!g) { clearSelection(); return; }
   // routeIds ride along on the selection so the filter pipeline can intersect
   // without re-deriving them (mirrors how the stop filter carries its routes).
   state.selectedGarage = { code: g.code, name: g.name, operator: g.operator, routeIds: g.routeIds };
-  if (input) input.value = '';
-  closeList();
-  render();
   applyFilters(); // intersect with any other active filters
 }
 
 function clearSelection() {
-  if (input) input.value = '';
-  if (clearBtn) clearBtn.hidden = true;
-  closeList();
-  if (!state.selectedGarage) { render(); return; }
+  if (!state.selectedGarage) { syncToState(); return; }
   state.selectedGarage = null;
-  render();
+  syncToState();
   applyFilters(); // scoped clear — leaves other filters untouched
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
-// When a garage is selected we swap the search box for the selection pill;
-// clearing brings the box back. The section itself is always visible.
-
-function render() {
-  if (!section || !pill) return;
-  const g = state.selectedGarage;
-  const selected = !!g;
-  if (box)  box.hidden  = selected;
-  if (pill) pill.hidden = !selected;
-  if (!selected) { pill.innerHTML = ''; return; }
-
-  const sub = g.operator ? `<span style="opacity:.65;font-weight:500;margin-left:6px">${escapeHtml(shortOp(g.operator))}</span>` : '';
-  pill.innerHTML = `
-    <span class="sb-selected-pill-label">${escapeHtml(g.name)}${sub}</span>
-    <button type="button" class="sb-selected-pill-x" aria-label="Clear garage selection">
-      <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    </button>`;
-  pill.querySelector('.sb-selected-pill-x').addEventListener('click', clearSelection);
+// Keep the <select> showing whatever is in state — covers the drawer-CTA path,
+// the scoped Clear button, and global reset, all of which mutate the state.
+function syncToState() {
+  if (!select) return;
+  const want = state.selectedGarage?.code ?? '';
+  if (select.value !== want) select.value = want;
 }
 
 function escapeHtml(s) {
@@ -176,40 +98,12 @@ function escapeHtml(s) {
 
 // ── Event wiring ─────────────────────────────────────────────────────────────
 
-input?.addEventListener('focus', () => renderList(input.value));
-input?.addEventListener('input', () => {
-  if (clearBtn) clearBtn.hidden = !input.value;
-  renderList(input.value);
-});
-input?.addEventListener('keydown', e => {
-  if (e.key === 'ArrowDown')      { e.preventDefault(); if (list?.hidden) renderList(input.value); else moveHighlight(1); }
-  else if (e.key === 'ArrowUp')   { e.preventDefault(); moveHighlight(-1); }
-  else if (e.key === 'Enter') {
-    const sel = list?.querySelector('[aria-selected="true"]');
-    if (sel) { e.preventDefault(); selectGarage(sel.dataset.code); }
-  } else if (e.key === 'Escape')  { closeList(); input.blur(); }
-});
-clearBtn?.addEventListener('click', () => { clearSelection(); input?.focus(); });
+select?.addEventListener('change', onChange);
 
-// Close the list on an outside click (mirrors stop-search).
-document.addEventListener('click', e => {
-  if (!e.target.closest('#garage-filter-box, #garage-filter-list')) closeList();
-});
-
-// Drawer CTA path — stats.js sets state.selectedGarage (with routeIds) then
-// dispatches this; filters re-run via its own app:filterschanged.
-document.addEventListener('app:garageselected', render);
+// Drawer CTA path — stats.js sets state.selectedGarage (with routeIds) and
+// dispatches this; filters re-run via its own app:filterschanged. We only
+// mirror the selection onto the <select>.
+document.addEventListener('app:garageselected', syncToState);
 // Scoped clear from the sidebar Clear button — state already nulled by filters.js.
-document.addEventListener('app:garagecleared', () => {
-  if (input) input.value = '';
-  if (clearBtn) clearBtn.hidden = true;
-  closeList();
-  render();
-});
-document.addEventListener('app:resetall', () => {
-  state.selectedGarage = null;
-  if (input) input.value = '';
-  if (clearBtn) clearBtn.hidden = true;
-  closeList();
-  render();
-});
+document.addEventListener('app:garagecleared', syncToState);
+document.addEventListener('app:resetall', () => { state.selectedGarage = null; syncToState(); });

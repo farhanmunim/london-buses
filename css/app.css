@@ -689,15 +689,21 @@ a{color:inherit;text-decoration:none}
 .ac-id mark{background:var(--acc-bg);color:var(--acc);padding:0 1px;border-radius:3px}
 .ac-dest{color:var(--mu);font-size:11px;text-align:right;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* Garage picker — operator group headers + garage rows in the dropdown list. */
-.sb-autocomplete li.gf-group{
-  display:flex;align-items:center;justify-content:flex-start;gap:6px;
-  padding:7px 10px 3px;cursor:default;
-  font-size:9.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);
+/* Garage filter — native grouped dropdown (operators as optgroup labels). */
+.sb-select-wrap{position:relative}
+.sb-select{
+  -webkit-appearance:none;-moz-appearance:none;appearance:none;
+  width:100%;min-height:32px;
+  background:var(--surf2);border:1px solid var(--bd);border-radius:20px;
+  padding:6px 32px 6px 14px;
+  font-size:13px;font-family:inherit;color:var(--tx);cursor:pointer;
+  transition:border-color .2s,box-shadow .2s,background .2s;
 }
-.sb-autocomplete li.gf-group:hover{background:none}
-#garage-filter-list li[role="option"]{padding-left:18px}
-.gf-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-select:hover{border-color:var(--bd2)}
+.sb-select:focus{outline:none;border-color:var(--acc-bd);box-shadow:0 0 0 3px var(--acc-bg);background:var(--surf-s)}
+.sb-select-chev{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--mu)}
+.sb-select optgroup{font-weight:700;color:var(--tx);background:var(--surf-s)}
+.sb-select option{font-weight:400;color:var(--tx);background:var(--surf-s)}
 
 .sb-selected-pill{
   display:inline-flex;align-items:center;gap:6px;margin-top:8px;

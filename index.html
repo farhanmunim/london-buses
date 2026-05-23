@@ -152,17 +152,14 @@
               <span class="sb-sec-lbl">Garage</span>
               <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-            <div class="sb-sec-bd" style="max-height:260px">
-              <div class="sb-input" id="garage-filter-box">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"/></svg>
-                <label for="garage-filter-input" class="sr-only">Filter routes by garage</label>
-                <input id="garage-filter-input" placeholder="Select a garage…" autocomplete="off" spellcheck="false" />
-                <button type="button" id="garage-filter-clear" class="sb-input-x" aria-label="Clear garage search" hidden>
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                </button>
+            <div class="sb-sec-bd" style="max-height:80px">
+              <div class="sb-select-wrap">
+                <label for="garage-filter-select" class="sr-only">Filter routes by garage</label>
+                <select id="garage-filter-select" class="sb-select">
+                  <option value="">All garages</option>
+                </select>
+                <svg class="sb-select-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
               </div>
-              <ul id="garage-filter-list" class="sb-autocomplete" role="listbox" hidden></ul>
-              <div id="garage-selected" class="sb-selected-pill" hidden></div>
             </div>
           </section>
 
