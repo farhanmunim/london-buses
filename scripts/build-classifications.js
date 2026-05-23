@@ -622,6 +622,10 @@ for (const file of routeFiles) {
     // rows in LBR show "See <day-route>" without their own date — the
     // alias chain falls through to the daytime route's value.
     contractStart: self?.contractStart ?? alias?.contractStart ?? null,
+    // Contract length in years, decoded from details.htm's "TQ 7"-style spec
+    // (+ "reduced/extended to N years" notes). Same alias fall-through for
+    // N-routes that share their day route's contract.
+    contractTermYears: self?.contractTermYears ?? alias?.contractTermYears ?? null,
   };
   const vehicleType = details.vehicleType;
   // Fall back to the manual vehicle lookup for deck/propulsion when the
@@ -878,12 +882,16 @@ for (const file of routeFiles) {
                     ?? (programmeLoaded ? currentContractStart : null)
                     ?? (lastRec.contractStartDate ?? null),
     contractTermYears: override.contractTermYears ?? (
-      // Tier 1: explicit term in tender notes (rare, authoritative).
+      // Tier 1: explicit term decoded from londonbusroutes.net details.htm
+      // (the "TQ 7"-style spec + any "reduced/extended to N years" note).
+      // Authoritative and reduction-aware, so it leads over the heuristics.
+      details.contractTermYears ??
+      // Tier 2: explicit term in tender notes (rare, authoritative).
       (tendersLoaded ? deriveContractTermFromNotes(lastTender?.notes) : null) ??
-      // Tier 2: gap between this award and the upcoming programme contract
+      // Tier 3: gap between this award and the upcoming programme contract
       // start (only when both are known).
       (tendersLoaded && programmeLoaded ? deriveContractTermFromDates(lastTender?.award_announced_date, nextProgramme?.contract_start_date) : null) ??
-      // Tier 3: median inter-award gap from the route's own history
+      // Tier 4: median inter-award gap from the route's own history
       // (~99% coverage; strong signal since each route's tenders have
       // historically re-cycled at consistent intervals).
       (tendersLoaded ? deriveContractTermFromHistory(tenderHistory) : null) ??
@@ -949,6 +957,25 @@ fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(output)), 'utf8');
 console.log(`Written: ${OUT_PATH}`);
 console.log('  Routes:', output.count);
 console.log('  Types:', counts);
+
+// ── Contract-term cross-check ───────────────────────────────────────────────
+// Surface routes whose contract length changed since last run (almost always
+// details.htm picking up a fresh TfL award, an exercised extension, or a
+// "reduced to N years" annotation). Makes the weekly diff legible so a wrong
+// scrape is caught before it ships, and confirms the cross-check actually ran.
+{
+  const withTerm = Object.values(classifications).filter(c => Number.isFinite(c.contractTermYears)).length;
+  const changes = [];
+  for (const [id, r] of Object.entries(classifications)) {
+    const before = lastGood[id]?.contractTermYears ?? null;
+    const after  = r.contractTermYears ?? null;
+    if (before !== after) changes.push({ id, before, after });
+  }
+  console.log(`  Contract term: ${withTerm}/${output.count} routes have a length; ${changes.length} changed since last run`);
+  for (const c of changes.slice(0, 25)) console.log(`    ${id_pad(c.id)} ${c.before ?? '—'} → ${c.after ?? '—'} yrs`);
+  if (changes.length > 25) console.log(`    …and ${changes.length - 25} more`);
+}
+function id_pad(s) { return String(s).padEnd(5); }
 
 // ── Make / model alignment audit ────────────────────────────────────────────
 // Cross-check the DVLA-observed `make` against the vehicle-lookup's chassis

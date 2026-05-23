@@ -38,6 +38,7 @@ const DATA_DIR  = path.join(ROOT, 'data');
 const OUT_PATH  = path.join(DATA_DIR, 'source', 'route_details.json');
 const GARAGES_PATH = path.join(DATA_DIR, 'garages.geojson');
 const DETAILS_URL  = 'http://www.londonbusroutes.net/details.htm';
+const CHANGES_URL  = 'http://www.londonbusroutes.net/changes.htm';
 const SCRIPT       = 'route-details';
 
 // ── Normalise operators to parent brands ──────────────────────────────────────
@@ -209,6 +210,27 @@ function parseDetailsText(html) {
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
+  // Contract length (years) from the "specification" column. Per the page's own
+  // legend the cell reads `<type><basis> <duration> <start-date>`, e.g.:
+  //   "TQ 7 30/09/23"  — Tendered, Quality-incentive, 7-year term
+  //   "TQ 5+29/06/19"  — base 5 yrs, extended to 7 (the + = extension exercised)
+  //   "TQ 5X …"        — extension refused/unavailable → stays 5
+  //   "TG 3 …"         — Tendered, Gross-cost, 3-year term
+  //   "TQ T …"         — temporary short-term contract (no fixed term → null)
+  // type ∈ {T,N,C,A}, basis ∈ {G,Q,A,P}. Returns the effective term in years
+  // (a trailing `+` adds the 2-year extension), or null when none/temporary.
+  // A "Contract reduced/extended to N years" note on a following line overrides
+  // this — handled in the row loop, not here.
+  function extractContractTerm(line) {
+    const m = /\b([TNCA][GQAP])\s+(\d+|T)(\+)?(X)?\s*\d{2}\/\d{2}\/\d{2}\b/.exec(line);
+    if (!m) return null;
+    if (m[2] === 'T') return null;                    // temporary, no fixed term
+    let years = parseInt(m[2], 10);
+    if (!Number.isFinite(years) || years < 1 || years > 15) return null;
+    if (m[3]) years += 2;                             // "+" = 5→7 extension exercised
+    return years;
+  }
+
   // Representative weekday headway for a row. Daytime routes carry it directly
   // in the Mon-Sat / Sunday / evening fixed-width columns. Night routes leave
   // those columns empty and put the night headways just before the date — fall
@@ -231,6 +253,7 @@ function parseDetailsText(html) {
   }
 
   const byRoute = {};
+  let lastRid = null;   // most recent route row, so continuation notes attach to it
 
   for (const block of preBlocks) {
     const rawLines = block.split(/\r?\n/);
@@ -238,6 +261,20 @@ function parseDetailsText(html) {
       const line = stripInlineTags(raw);
       if (!line.trim()) continue;
       if (/^\s*(Rte|nr\.|Route|Vehicle|Number|---)/i.test(line)) continue;
+
+      // A "Contract reduced/extended to N years" note sits on its own line
+      // below the route row and overrides the column figure (e.g. W5 shows
+      // "TQ 7" but is annotated "Contract reduced to 4 years"). Must run before
+      // the generic "Contract"-prefix skip below. The "(?)" uncertainty marker
+      // some notes carry is tolerated; those rare ones can be hand-overridden.
+      const noteM = /\bcontract\s+(?:reduced|extended)\s+to\s+(\d+)\s*(?:\(\?\)\s*)?years?\b/i.exec(line);
+      if (noteM) {
+        const y = parseInt(noteM[1], 10);
+        if (lastRid && byRoute[lastRid] && Number.isFinite(y) && y >= 1 && y <= 15) {
+          byRoute[lastRid].contractTermFromDetails = y;
+        }
+        continue;
+      }
       if (/^\s*\*/.test(line)) continue;                 // footnote
       if (/^\s*Contract/i.test(line)) continue;
 
@@ -246,7 +283,7 @@ function parseDetailsText(html) {
       if (!routeCol) continue;
       if (!/^[A-Z]{0,3}\d{1,3}[A-Z]?$|^[A-Z]{2,4}$/.test(routeCol)) continue;
       const rid = routeCol.toUpperCase();
-      if (byRoute[rid]) continue; // first occurrence wins
+      if (byRoute[rid]) { lastRid = rid; continue; } // first occurrence wins; still track for notes
 
       const vehicleRaw = slice(line, COLS.vehicle);
       const garageRaw  = slice(line, COLS.garage).replace(/\*+$/, '').toUpperCase();
@@ -258,8 +295,49 @@ function parseDetailsText(html) {
         pvrFromDetails: Number.isFinite(pvrNum) ? pvrNum : null,
         headwayMinFromDetails: representativeHeadway(line),
         contractStartFromDetails: extractContractStart(line),
+        contractTermFromDetails:  extractContractTerm(line),
       };
+      lastRid = rid;
     }
+  }
+  return byRoute;
+}
+
+// ── changes.htm — contract changes (cross-check / most-recent wins) ──────────
+// changes.htm lists contract awards/retentions as table rows
+// [route, details, expected-date]. A contract row reads e.g.
+//   "Contract retained by Metroline with new electric double deckers. (7 years) (261225)"
+// with the effective date in the third cell ("20 Jun 26"). We keep, per route,
+// the most recent change that is ALREADY in effect (effective ≤ today) — that
+// is the current contract per this page — as { termYears, startIso }. Routes
+// whose contract changed more recently here than details.htm's table shows
+// (the daily table can lag a live change by a day or two) get corrected.
+function parseChangesContracts(html, todayIso) {
+  const strip = s => String(s).replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  const MONTHS = { jan:1, feb:2, mar:3, apr:4, may:5, jun:6, jul:7, aug:8, sep:9, oct:10, nov:11, dec:12 };
+  const parseExpected = s => {
+    const m = /(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2})/.exec(s);
+    if (!m) return null;
+    const mo = MONTHS[m[2].toLowerCase()];
+    if (!mo) return null;
+    return `${2000 + parseInt(m[3], 10)}-${String(mo).padStart(2, '0')}-${String(parseInt(m[1], 10)).padStart(2, '0')}`;
+  };
+  const rowRe = /<TR>\s*<TD>([\s\S]*?)<\/TD>\s*<TD>([\s\S]*?)<\/TD>\s*<TD[^>]*>([\s\S]*?)<\/TD>\s*<\/TR>/gi;
+  const byRoute = {};
+  let m;
+  while ((m = rowRe.exec(html)) !== null) {
+    const rid = strip(m[1]).toUpperCase();
+    if (!/^[A-Z]{0,3}\d{1,3}[A-Z]?$|^[A-Z]{2,4}$/.test(rid)) continue;
+    const details = strip(m[2]);
+    if (!/contract\s+(?:retained|awarded|novated)/i.test(details)) continue;
+    const ym = /\((\d+)\s*years?\)/i.exec(details);
+    if (!ym) continue;
+    const termYears = parseInt(ym[1], 10);
+    if (!(termYears >= 1 && termYears <= 15)) continue;
+    const startIso = parseExpected(strip(m[3]));
+    if (!startIso || startIso > todayIso) continue;       // only changes already in effect
+    const prev = byRoute[rid];
+    if (!prev || startIso > prev.startIso) byRoute[rid] = { termYears, startIso };
   }
   return byRoute;
 }
@@ -347,6 +425,20 @@ async function main() {
   const vehicleByRoute = detailsHtml ? parseDetailsText(detailsHtml) : {};
   console.log(`  Parsed vehicle info for ${Object.keys(vehicleByRoute).length} routes`);
 
+  // Cross-check contract length against changes.htm (the forthcoming/recent
+  // service-changes log). Its in-effect contract rows let us catch a contract
+  // change before details.htm's daily table reflects it — "most recent wins".
+  const today = new Date().toISOString().slice(0, 10);
+  let changesContracts = {};
+  try {
+    const changesHtml = await fetchText(CHANGES_URL);
+    changesContracts = parseChangesContracts(changesHtml, today);
+    console.log(`  Parsed ${Object.keys(changesContracts).length} in-effect contract changes from changes.htm`);
+  } catch (err) {
+    console.warn(`  changes.htm unavailable (${err.message}) — contract cross-check skipped`);
+  }
+  let chgApplied = 0, chgConfirmed = 0;
+
   const aliases = await fetchAliases();
   console.log(`  Parsed ${Object.keys(aliases).length} night→day aliases`);
 
@@ -375,6 +467,20 @@ async function main() {
         garageName = g.garageName;
       }
     }
+    // Contract start + length come from details.htm's table by default, but a
+    // more recent in-effect change on changes.htm wins ("most recent change").
+    let contractStart     = v?.contractStartFromDetails ?? null;
+    let contractTermYears = v?.contractTermFromDetails ?? null;
+    const chg = changesContracts[id];
+    if (chg && (!contractStart || chg.startIso > contractStart)) {
+      // changes.htm knows a contract that started on/after details.htm's — take it.
+      if (contractTermYears != null && contractTermYears !== chg.termYears) chgApplied++;
+      contractStart     = chg.startIso;
+      contractTermYears = chg.termYears;
+    } else if (chg && contractTermYears === chg.termYears) {
+      chgConfirmed++;
+    }
+
     routes[id] = {
       deck:        deriveDeck(rawVehicle),
       vehicleType: cleanVeh,
@@ -386,15 +492,24 @@ async function main() {
       headwayMin:  v?.headwayMinFromDetails ?? null,
       // Contract start date as ISO yyyy-mm-dd. LBR's details.htm publishes
       // the current contract's start in the last column of every route row,
-      // covering routes the LBSL programme PDFs miss (~470 of 747).
-      contractStart: v?.contractStartFromDetails ?? null,
+      // covering routes the LBSL programme PDFs miss (~470 of 747). Overridden
+      // by a more recent in-effect change from changes.htm.
+      contractStart,
+      // Contract length in years, decoded from details.htm's "TQ 7"-style spec
+      // (+ any "reduced/extended to N years" note), cross-checked against
+      // changes.htm. More authoritative than the tender date-gap heuristic, so
+      // build-classifications prefers it.
+      contractTermYears,
     };
     if (operator) operatorByRoute[id] = operator;
+  }
+  if (Object.keys(changesContracts).length) {
+    console.log(`  changes.htm cross-check: ${chgApplied} contract length(s) updated, ${chgConfirmed} confirmed`);
   }
 
   const output = {
     generatedAt: new Date().toISOString(),
-    source: 'garages.geojson + londonbusroutes.net/details.htm',
+    source: 'garages.geojson + londonbusroutes.net/details.htm + changes.htm',
     routeCount: Object.keys(routes).length,
     routes,
     aliases,
