@@ -37,7 +37,7 @@ const routeNoResultEl = document.getElementById('routeNoResult');
 let _listActive = false;
 
 function anyFilterActive() {
-  if (state.selectedStop || state.selectedGarage) return true;
+  if (state.selectedStop || state.selectedGarages.length) return true;
   return ROUTE_FILTER_KEYS.some(k => document.querySelector(`.pill.on[data-filter="${k}"]`));
 }
 

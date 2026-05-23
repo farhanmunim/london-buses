@@ -15,7 +15,7 @@ export const state = {
   destinations:    {},
   classifications: {},
   selectedStop:    null,   // { id, name } | null — active bus-stop filter
-  selectedGarage:  null,   // { code, name, operator } | null — active garage-scope filter
+  selectedGarages: [],     // [{ code, name, operator, routeIds }] — active garage filter (multi-select; routes are unioned)
 };
 
 // Topbar

@@ -40,10 +40,11 @@ async function stopRouteIds(stopId) {
 export async function applyFilters() {
   const stopIds = state.selectedStop ? await stopRouteIds(state.selectedStop.id) : null;
   // Garage filter intersects the same way as the stop filter, but its route
-  // list is already known (carried on state.selectedGarage by garage-filter.js
-  // / the garage drawer) so no async lookup is needed.
-  const garageIds = state.selectedGarage?.routeIds
-    ? new Set(state.selectedGarage.routeIds.map(r => String(r).toUpperCase()))
+  // list is already known (carried on state.selectedGarages by garage-filter.js
+  // / the garage drawer) so no async lookup is needed. Multiple garages are
+  // OR'd together (union of their routes), then AND'd with the other filters.
+  const garageIds = state.selectedGarages?.length
+    ? new Set(state.selectedGarages.flatMap(g => g.routeIds ?? []).map(r => String(r).toUpperCase()))
     : null;
 
   const filters = {
@@ -96,7 +97,7 @@ function anyRouteActive() {
   for (const k of ROUTE_FILTER_KEYS) {
     if (document.querySelector(`.pill.on[data-filter="${k}"]`)) return true;
   }
-  return !!state.selectedStop || !!state.selectedGarage;
+  return !!state.selectedStop || state.selectedGarages.length > 0;
 }
 function anyGarageActive() {
   return !!document.querySelector(`.pill.on[data-filter="garageoperator"]`);
@@ -145,8 +146,8 @@ clearRouteFiltersBtn?.addEventListener('click', () => {
     state.selectedStop = null;
     document.dispatchEvent(new CustomEvent('app:stopcleared'));
   }
-  if (state.selectedGarage) {
-    state.selectedGarage = null;
+  if (state.selectedGarages.length) {
+    state.selectedGarages = [];
     document.dispatchEvent(new CustomEvent('app:garagecleared'));
   }
   applyFilters();

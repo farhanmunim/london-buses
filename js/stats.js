@@ -365,8 +365,8 @@ export function openGarageDrawer(code) {
       // mechanism as the left-panel garage dropdown, so the drawer shortcut
       // and the filter stay in lockstep. The pill gives context for *why* the
       // network is narrowed; app:filterschanged re-runs the shared pipeline.
-      state.selectedGarage = { code, name: garage.name ?? code, operator: garage.operator ?? null, routeIds };
-      document.dispatchEvent(new CustomEvent('app:garageselected', { detail: state.selectedGarage }));
+      state.selectedGarages = [{ code, name: garage.name ?? code, operator: garage.operator ?? null, routeIds }];
+      document.dispatchEvent(new CustomEvent('app:garageselected', { detail: state.selectedGarages }));
       document.dispatchEvent(new CustomEvent('app:filterschanged'));
       opDrawer.classList.remove('open');
       opDrawer.setAttribute('aria-hidden', 'true');

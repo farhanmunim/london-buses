@@ -109,7 +109,7 @@
       <aside class="sidebar" aria-label="Filters">
         <div class="sb-tabs" role="tablist">
           <button type="button" class="sb-tab on" role="tab" aria-selected="true" data-stab="filters">Filters</button>
-          <button type="button" class="sb-tab" role="tab" aria-selected="false" data-stab="garages">Garages</button>
+          <button type="button" class="sb-tab" role="tab" aria-selected="false" data-stab="garages">Garage markers</button>
         </div>
 
         <div class="sb-live" id="sb-live" aria-live="polite">
@@ -152,13 +152,14 @@
               <span class="sb-sec-lbl">Garage</span>
               <svg class="chev open" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </div>
-            <div class="sb-sec-bd" style="max-height:80px">
-              <div class="sb-select-wrap">
-                <label for="garage-filter-select" class="sr-only">Filter routes by garage</label>
-                <select id="garage-filter-select" class="sb-select">
-                  <option value="">All garages</option>
-                </select>
-                <svg class="sb-select-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            <div class="sb-sec-bd" style="max-height:400px">
+              <div class="sb-ms" id="garage-ms">
+                <button type="button" class="sb-ms-btn" id="garage-ms-btn" aria-haspopup="true" aria-expanded="false">
+                  <span class="sb-ms-label sb-ms-label--placeholder" id="garage-ms-label">All garages</span>
+                  <svg class="sb-ms-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="sb-ms-chips" id="garage-ms-chips" hidden></div>
+                <div class="sb-ms-panel" id="garage-ms-panel" role="group" aria-label="Garages" hidden></div>
               </div>
             </div>
           </section>
