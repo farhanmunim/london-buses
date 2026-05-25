@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-05-18T11:51:03Z",
+  "generated_at_utc": "2026-05-25T12:53:32Z",
   "route_count": 676,
   "routes": {
     "1": [
@@ -32,10 +32,6 @@
         "towards": "Camden Town"
       },
       {
-        "id": "490000077B",
-        "towards": "Aldwych"
-      },
-      {
         "id": "490000112M",
         "towards": "Waterloo Or Trafalgar Square"
       },
@@ -46,10 +42,6 @@
       {
         "id": "490000152F",
         "towards": "Chalk Farm Or Holloway"
-      },
-      {
-        "id": "490000152G",
-        "towards": "Euston"
       },
       {
         "id": "490000200H",
@@ -76,16 +68,16 @@
         "towards": "Holborn, Russell Square Or Euston"
       },
       {
+        "id": "490001276S",
+        "towards": "Farringdon, Holborn Circus Or Angel"
+      },
+      {
         "id": "490002364ZH",
         "towards": "Euston"
       },
       {
         "id": "490003174N",
         "towards": "Camden Town"
-      },
-      {
-        "id": "490003174S",
-        "towards": "Euston Or Aldwych"
       },
       {
         "id": "490003191F",
@@ -206,6 +198,10 @@
         "towards": "Surrey Quays"
       },
       {
+        "id": "490009498W",
+        "towards": "Tottenham Court Road, Russell Square Or Baker St"
+      },
+      {
         "id": "490011168S1",
         "towards": "Euston Or Kings Cross"
       },
@@ -240,6 +236,10 @@
       {
         "id": "490011723P",
         "towards": "Canada Water"
+      },
+      {
+        "id": "490011756E",
+        "towards": "Kings Cross"
       },
       {
         "id": "490011760C",
@@ -357,6 +357,10 @@
         "towards": "Euston Or Kings Cross"
       },
       {
+        "id": "490016573S",
+        "towards": "Angel Or Holborn"
+      },
+      {
         "id": "490019703Z",
         "towards": "Waterloo"
       },
@@ -421,6 +425,9 @@
         "id": "490G00009482"
       },
       {
+        "id": "490G00009498"
+      },
+      {
         "id": "490G00011168"
       },
       {
@@ -437,6 +444,9 @@
       },
       {
         "id": "490G00011723"
+      },
+      {
+        "id": "490G00011756"
       },
       {
         "id": "490G00012353"
@@ -470,6 +480,9 @@
       },
       {
         "id": "490G00015255"
+      },
+      {
+        "id": "490G00016573"
       },
       {
         "id": "490G00019012"
@@ -9199,12 +9212,6 @@
       },
       {
         "id": "490G000934"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "22": [
@@ -19502,12 +19509,6 @@
       },
       {
         "id": "490G000970"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "44": [
@@ -72427,12 +72428,6 @@
       },
       {
         "id": "490G000863"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "154": [
@@ -112185,22 +112180,6 @@
         "id": "490000083H"
       },
       {
-        "id": "490001044N",
-        "towards": "Liverpool Street Or Old Street"
-      },
-      {
-        "id": "490001044O",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490001081P",
-        "towards": "Stoke Newington Or Clapton Pond"
-      },
-      {
-        "id": "490001081R",
-        "towards": "Shoreditch Or Hoxton"
-      },
-      {
         "id": "490003053N",
         "towards": "Finsbury Park"
       },
@@ -112219,14 +112198,6 @@
       {
         "id": "490003222E",
         "towards": "Hackney Wick, Leyton Or Stratford"
-      },
-      {
-        "id": "490003314R",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490003487S",
-        "towards": "Liverpool Street Or Old Street"
       },
       {
         "id": "490003915E",
@@ -112261,14 +112232,6 @@
         "towards": "Hackney Central"
       },
       {
-        "id": "490005512R",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490005737N",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
         "id": "490005831N",
         "towards": "Homerton Hospital"
       },
@@ -112285,32 +112248,8 @@
         "towards": "Highbury Corner, Angel Or London Fields"
       },
       {
-        "id": "490005945L",
-        "towards": "Stoke Newington Or Shacklewell"
-      },
-      {
-        "id": "490005945M",
-        "towards": "Shoreditch Or Hoxton"
-      },
-      {
         "id": "490006082A",
         "towards": "Clapton Pond Or Hackney Central"
-      },
-      {
-        "id": "490006170N1",
-        "towards": "Stoke Newington Or Hackney Central"
-      },
-      {
-        "id": "490006170S",
-        "towards": "Old Street"
-      },
-      {
-        "id": "490006726N",
-        "towards": "Dalston Junction"
-      },
-      {
-        "id": "490006726S",
-        "towards": "Old Street, Aldgate Or Liverpool Street"
       },
       {
         "id": "490006795C",
@@ -112319,22 +112258,6 @@
       {
         "id": "490006847N",
         "towards": "Highbury Cnr, Newington Green Or Stoke Newington"
-      },
-      {
-        "id": "490006929C",
-        "towards": "Stoke Newington Or Hackney Central"
-      },
-      {
-        "id": "490006929D",
-        "towards": "Hoxton Or Shoreditch"
-      },
-      {
-        "id": "490007154S",
-        "towards": "Aldgate, Old St, Angel Or Liverpool St."
-      },
-      {
-        "id": "490007155N",
-        "towards": "London Fields"
       },
       {
         "id": "490007178X",
@@ -112363,18 +112286,6 @@
       {
         "id": "490007622M",
         "towards": "Hackney Central Or Clapton Pond"
-      },
-      {
-        "id": "490007624S",
-        "towards": "Shoreditch, Mile End Or Whitechapel"
-      },
-      {
-        "id": "490007625T",
-        "towards": "Old Street, Aldgate Or Liverpool Street"
-      },
-      {
-        "id": "490007625V",
-        "towards": "Dalston Junction"
       },
       {
         "id": "490008145E",
@@ -112429,10 +112340,6 @@
         "towards": "Homerton Hospital"
       },
       {
-        "id": "490008893S",
-        "towards": "Old Street, Aldgate Or Liverpool Street"
-      },
-      {
         "id": "490008999N",
         "towards": "Newington Green"
       },
@@ -112465,48 +112372,8 @@
         "towards": "Finsbury Park"
       },
       {
-        "id": "490009859N",
-        "towards": "Stoke Newington Or Hackney Central"
-      },
-      {
-        "id": "490009859S",
-        "towards": "Shoreditch"
-      },
-      {
         "id": "490009986V",
         "towards": "Finsbury Park"
-      },
-      {
-        "id": "490010230W",
-        "towards": "Liverpool Street Or Old Street"
-      },
-      {
-        "id": "490010985N",
-        "towards": "Stoke Newington Or Hackney Central"
-      },
-      {
-        "id": "490011243E",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490011243W",
-        "towards": "Liverpool Street Or Old Street"
-      },
-      {
-        "id": "490011306E",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490011306W",
-        "towards": "Liverpool Street Or Old Street"
-      },
-      {
-        "id": "490011325E",
-        "towards": "Hackney Central Or Hackney Wick"
-      },
-      {
-        "id": "490011325W",
-        "towards": "Liverpool Street Or Old Street"
       },
       {
         "id": "490011511E",
@@ -112555,14 +112422,6 @@
       {
         "id": "490012442N",
         "towards": "Hackney Central, Hackney Wick Or Homerton"
-      },
-      {
-        "id": "490012445N",
-        "towards": "Stoke Newington Or Hackney Central"
-      },
-      {
-        "id": "490012445S",
-        "towards": "Liverpool Street,  Aldgate Or Old Street"
       },
       {
         "id": "490012462N",
@@ -112621,22 +112480,11 @@
         "towards": "Finsbury Park"
       },
       {
-        "id": "490015851S",
-        "towards": "Stoke Newington"
-      },
-      {
-        "id": "490015851T",
-        "towards": "Shoreditch Or Hoxton"
-      },
-      {
         "id": "490016641S"
       },
       {
         "id": "490016757N",
         "towards": "Hackney Central, Clapton Pond Or Clapton Pk"
-      },
-      {
-        "id": "490G00002447"
       },
       {
         "id": "490G00003053"
@@ -112649,9 +112497,6 @@
       },
       {
         "id": "490G00003222"
-      },
-      {
-        "id": "490G00003314"
       },
       {
         "id": "490G00003915"
@@ -112669,9 +112514,6 @@
         "id": "490G00005405"
       },
       {
-        "id": "490G00005512"
-      },
-      {
         "id": "490G00005831"
       },
       {
@@ -112681,22 +112523,10 @@
         "id": "490G00006082"
       },
       {
-        "id": "490G00006170"
-      },
-      {
-        "id": "490G00006726"
-      },
-      {
         "id": "490G00006795"
       },
       {
         "id": "490G00006847"
-      },
-      {
-        "id": "490G00006948"
-      },
-      {
-        "id": "490G00007155"
       },
       {
         "id": "490G00007618"
@@ -112706,9 +112536,6 @@
       },
       {
         "id": "490G00007622"
-      },
-      {
-        "id": "490G00007625"
       },
       {
         "id": "490G00008145"
@@ -112724,9 +112551,6 @@
       },
       {
         "id": "490G00008803"
-      },
-      {
-        "id": "490G00008893"
       },
       {
         "id": "490G00008999"
@@ -112747,22 +112571,10 @@
         "id": "490G00009718"
       },
       {
-        "id": "490G00009859"
-      },
-      {
         "id": "490G00009986"
       },
       {
         "id": "490G00010039"
-      },
-      {
-        "id": "490G00011243"
-      },
-      {
-        "id": "490G00011306"
-      },
-      {
-        "id": "490G00011325"
       },
       {
         "id": "490G00011511"
@@ -112786,9 +112598,6 @@
         "id": "490G00012022"
       },
       {
-        "id": "490G00012445"
-      },
-      {
         "id": "490G00013780"
       },
       {
@@ -112807,16 +112616,10 @@
         "id": "490G00015699"
       },
       {
-        "id": "490G00015851"
-      },
-      {
         "id": "490G00016641"
       },
       {
         "id": "490G00016762"
-      },
-      {
-        "id": "490G00019062"
       },
       {
         "id": "490G00019143"
@@ -112840,9 +112643,6 @@
         "id": "490G00019898"
       },
       {
-        "id": "490G000509"
-      },
-      {
         "id": "490G000516"
       },
       {
@@ -112862,9 +112662,6 @@
       },
       {
         "id": "910GCNNB"
-      },
-      {
-        "id": "910GDALS"
       }
     ],
     "237": [
@@ -116597,6 +116394,9 @@
       {
         "id": "2400A034770A",
         "towards": "Biggin Hill"
+      },
+      {
+        "id": "2400A070700A"
       },
       {
         "id": "2400HALL0001",
@@ -125022,12 +124822,6 @@
       },
       {
         "id": "490G000932"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "264": [
@@ -146609,8 +146403,8 @@
         "id": "490002132HAR"
       },
       {
-        "id": "490002376BR",
-        "towards": "Springfield University Hospital"
+        "id": "490002427MR",
+        "towards": "Tooting Bec"
       },
       {
         "id": "490003439Z"
@@ -146779,7 +146573,7 @@
         "id": "490019612ZZ"
       },
       {
-        "id": "490G00002376"
+        "id": "490G00002427"
       },
       {
         "id": "490G00003439"
@@ -173162,6 +172956,10 @@
         "towards": "Hackney Wick Or Leyton"
       },
       {
+        "id": "490002442CZ",
+        "towards": "Stratford City Bus Station"
+      },
+      {
         "id": "490003314R",
         "towards": "Hackney Central Or Hackney Wick"
       },
@@ -173325,10 +173123,6 @@
       },
       {
         "id": "490019954L"
-      },
-      {
-        "id": "490020130S",
-        "towards": "Stratford City Bus Station"
       },
       {
         "id": "490020137N"
@@ -174523,12 +174317,6 @@
       },
       {
         "id": "490G000633"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "394": [
@@ -268877,12 +268665,6 @@
       },
       {
         "id": "490G000932"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "N266": [
@@ -278397,12 +278179,6 @@
       },
       {
         "id": "490G000932"
-      },
-      {
-        "id": "490G00114U"
-      },
-      {
-        "id": "940GZZLUHWY"
       }
     ],
     "N44": [
@@ -279757,6 +279533,10 @@
       {
         "id": "490000054CA",
         "towards": "Kingsbury Or Colindale Asda"
+      },
+      {
+        "id": "490000054CB",
+        "towards": "Finchley Central Or Grahame Park"
       },
       {
         "id": "490000070D",

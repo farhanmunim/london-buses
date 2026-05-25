@@ -1,11 +1,38 @@
 {
-  "generatedAt": "2026-05-22T14:05:06.895Z",
+  "generatedAt": "2026-05-25T13:03:52.241Z",
   "summary": {
     "critical": 0,
-    "warn": 0,
+    "warn": 3,
     "info": 5
   },
   "issues": [
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "75",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.13",
+      "note": "fleetSize=47 pvr=15"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "301",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.30",
+      "note": "fleetSize=33 pvr=10"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "430",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.36",
+      "note": "fleetSize=37 pvr=11"
+    },
     {
       "severity": "INFO",
       "scope": "rc",
@@ -32,20 +59,20 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "total": 9401,
-        "validVrm": 9401,
+        "total": 9422,
+        "validVrm": 9422,
         "invalidVrm": 0,
-        "dvla200": 9374,
+        "dvla200": 9395,
         "dvla404": 27,
         "dvla400": 0,
         "dvlaOther": 0,
         "neverChecked": 0,
-        "ageOK": 9374,
+        "ageOK": 9395,
         "ageMissing": 27,
         "ageImplausible": 0,
         "propByFuel": {
-          "diesel": 5991,
-          "electric": 3382,
+          "diesel": 5992,
+          "electric": 3402,
           "gas": 1
         }
       },
@@ -69,7 +96,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 10759,
+        "totalObs": 11867,
         "missingFleet": 0
       },
       "note": ""

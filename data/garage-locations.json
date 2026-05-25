@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-22T14:24:03.703Z",
+  "generatedAt": "2026-05-25T13:03:52.047Z",
   "count": 76,
   "garages": {
     "A": {
@@ -59,7 +59,7 @@
       "address": "High Street, London, SW19 1DN",
       "lat": 51.416567,
       "lon": -0.181662,
-      "pvr": 130,
+      "pvr": 129,
       "capacity": 217
     },
     "AO": {
@@ -109,7 +109,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 165,
+      "pvr": 151,
       "capacity": 201
     },
     "BK": {
@@ -329,7 +329,7 @@
       "address": "151 Ruckholt Road, Leyton, London, E10 5PB",
       "lat": 51.555687,
       "lon": -0.014839,
-      "pvr": 139,
+      "pvr": 150,
       "capacity": 250
     },
     "HT": {
@@ -439,7 +439,7 @@
       "address": "Pettman Crescent, Plumstead, London, SE28 0BJ",
       "lat": 51.491193,
       "lon": 0.083469,
-      "pvr": 137,
+      "pvr": 139,
       "capacity": 210
     },
     "PM": {
@@ -479,7 +479,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 210,
+      "pvr": 208,
       "capacity": 245
     },
     "RA": {
@@ -649,7 +649,7 @@
       "address": "180 Bromley Road, Catford, London, SE6 2XA",
       "lat": 51.433618,
       "lon": -0.018598,
-      "pvr": 129,
+      "pvr": 133,
       "capacity": 180
     },
     "TV": {
