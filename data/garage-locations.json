@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T13:03:52.047Z",
+  "generatedAt": "2026-06-01T15:31:20.796Z",
   "count": 76,
   "garages": {
     "A": {
@@ -269,7 +269,7 @@
       "address": "Council Depot, Greenford Road, Greenford UB6 9AR",
       "lat": 51.523809,
       "lon": -0.35306,
-      "pvr": 90,
+      "pvr": 91,
       "capacity": 151
     },
     "GM": {
@@ -289,7 +289,7 @@
       "address": "Great Western Industrial Park, Armstrong Way, Southall, UB2 4SD",
       "lat": 51.506315,
       "lon": -0.358547,
-      "pvr": 114,
+      "pvr": 116,
       "capacity": 135
     },
     "GY": {
@@ -479,7 +479,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 208,
+      "pvr": 207,
       "capacity": 245
     },
     "RA": {

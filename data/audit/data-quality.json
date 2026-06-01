@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-05-25T13:03:52.241Z",
+  "generatedAt": "2026-06-01T15:31:20.982Z",
   "summary": {
     "critical": 0,
-    "warn": 3,
+    "warn": 24,
     "info": 5
   },
   "issues": [
@@ -12,13 +12,121 @@
       "id": "75",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
+      "actual": "3.53",
+      "note": "fleetSize=53 pvr=15"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "120",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.24",
+      "note": "fleetSize=55 pvr=17"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "154",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
       "actual": "3.13",
-      "note": "fleetSize=47 pvr=15"
+      "note": "fleetSize=50 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "156",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.20",
+      "note": "fleetSize=48 pvr=15"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "161",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.50",
+      "note": "fleetSize=56 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "186",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.13",
+      "note": "fleetSize=50 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "213",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.43",
+      "note": "fleetSize=48 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "245",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.33",
+      "note": "fleetSize=40 pvr=12"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "249",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.29",
+      "note": "fleetSize=46 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "252",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.15",
+      "note": "fleetSize=41 pvr=13"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "292",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.6,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
       "scope": "rc",
       "id": "301",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.80",
+      "note": "fleetSize=38 pvr=10"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "304",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.10",
+      "note": "fleetSize=31 pvr=10"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "306",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
       "actual": "3.30",
@@ -27,7 +135,88 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "337",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.27",
+      "note": "fleetSize=36 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "371",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.45",
+      "note": "fleetSize=38 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "422",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.29",
+      "note": "fleetSize=56 pvr=17"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "430",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.73",
+      "note": "fleetSize=41 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "436",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.23",
+      "note": "fleetSize=42 pvr=13"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "460",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.20",
+      "note": "fleetSize=32 pvr=10"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "533",
+      "field": "otpMps",
+      "expected": "present for low-frequency",
+      "actual": null,
+      "note": ""
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "E2",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.13",
+      "note": "fleetSize=47 pvr=15"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "E8",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.47",
+      "note": "fleetSize=52 pvr=15"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "U3",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
       "actual": "3.36",
@@ -46,9 +235,9 @@
         "vt": 732,
         "prop": 734,
         "deck": 731,
-        "ewtOrOtp": 662,
-        "mileageMps": 660,
-        "age": 574
+        "ewtOrOtp": 665,
+        "mileageMps": 662,
+        "age": 593
       },
       "note": "of 747"
     },
@@ -96,7 +285,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 11867,
+        "totalObs": 13207,
         "missingFleet": 0
       },
       "note": ""
@@ -108,7 +297,7 @@
       "field": "coherence",
       "expected": "—",
       "actual": {
-        "coherent": 662,
+        "coherent": 664,
         "mismatch": 0
       },
       "note": ""
