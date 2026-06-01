@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-06-01T15:31:20.982Z",
+  "generatedAt": "2026-06-01T15:51:52.650Z",
   "summary": {
     "critical": 0,
-    "warn": 24,
+    "warn": 25,
     "info": 5
   },
   "issues": [
@@ -18,11 +18,20 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "83",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.07",
+      "note": "fleetSize=43 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "120",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.24",
-      "note": "fleetSize=55 pvr=17"
+      "actual": "3.29",
+      "note": "fleetSize=56 pvr=17"
     },
     {
       "severity": "WARN",
@@ -30,8 +39,8 @@
       "id": "154",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.13",
-      "note": "fleetSize=50 pvr=16"
+      "actual": "3.19",
+      "note": "fleetSize=51 pvr=16"
     },
     {
       "severity": "WARN",
@@ -156,8 +165,8 @@
       "id": "422",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.29",
-      "note": "fleetSize=56 pvr=17"
+      "actual": "3.35",
+      "note": "fleetSize=57 pvr=17"
     },
     {
       "severity": "WARN",
@@ -183,8 +192,8 @@
       "id": "460",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.20",
-      "note": "fleetSize=32 pvr=10"
+      "actual": "3.30",
+      "note": "fleetSize=33 pvr=10"
     },
     {
       "severity": "WARN",
@@ -201,8 +210,8 @@
       "id": "E2",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.13",
-      "note": "fleetSize=47 pvr=15"
+      "actual": "3.20",
+      "note": "fleetSize=48 pvr=15"
     },
     {
       "severity": "WARN",
@@ -285,7 +294,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 13207,
+        "totalObs": 13291,
         "missingFleet": 0
       },
       "note": ""
