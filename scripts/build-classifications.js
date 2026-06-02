@@ -692,8 +692,15 @@ for (const file of routeFiles) {
   // work. When details.htm and the vehicle-lookup both produced null (typical
   // for 600-series routes where details.htm just records "?"), fall back to
   // 'single' rather than null so school routes still carry a deck verdict.
-  const deck        = details.deck
-                   ?? fallback?.deck
+  // Hand-curated vehicle-lookup wins over the regex-derived `details.deck`
+  // (fetch-route-details' deriveDeck used to read door-count markers like
+  // "2D" as deck markers — wrong: per the page legend 2D=dual door, not
+  // double deck, so an Enviro200 MMC single-decker was being labelled DD).
+  // We still keep `details.deck` as a fallback for vehicle strings not yet
+  // in the lookup; for school routes (uniformly single-deck minibuses /
+  // coaches in London) default to 'single' last.
+  const deck        = fallback?.deck
+                   ?? details.deck
                    ?? (type === 'school' ? 'single' : null);
 
   // ── Propulsion precedence ───────────────────────────────────────────────

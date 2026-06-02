@@ -343,17 +343,34 @@ function parseChangesContracts(html, todayIso) {
 }
 
 // ── Vehicle-string → deck / propulsion heuristics ────────────────────────────
+// Heuristic from the chassis/body names in LBR's vehicle-type string. The
+// previous version mis-treated the trailing 1D/2D/3D markers as deck count,
+// but per the page's own legend those mean door count (1D=single-door,
+// 2D=dual-door, 3D=triple-door). The chassis name is the authoritative
+// signal. data/vehicle-lookup.json is consulted FIRST by build-classifications
+// — this only runs for new vehicle strings not yet curated there.
 function deriveDeck(s) {
   if (!s) return null;
   const t = s.toUpperCase();
-  if (/\b3D\b/.test(t) || /\b2D\b/.test(t)) return 'double';
-  if (/\b1D\b/.test(t)) return 'single';
-  if (/NEW BUS FOR LONDON/.test(t) || /E40H/.test(t) || /ENVIRO400/.test(t) ||
-      /B5LH/.test(t) || /B5TH/.test(t) || /GEMINI/.test(t) || /EVOSETI/.test(t) ||
-      /METRODECKER/.test(t) || /STREETDECK/.test(t)) return 'double';
-  if (/ENVIRO200/.test(t) || /\bE200\b/.test(t) || /CITARO/.test(t) ||
-      /SOLO/.test(t) || /VERSA/.test(t) || /STREETLITE/.test(t) ||
-      /YUTONG/.test(t) || /VOLVO B[78]RLE/.test(t) || /\bE10\b|\bE12\b/.test(t)) return 'single';
+  // Double-deck chassis / body families
+  if (/NEW BUS FOR LONDON|NB4L/.test(t) ||
+      /E40H|E40D|ENVIRO400/.test(t) ||
+      /\bB5LH\b|\bB5TH\b|\bB9TL\b|\bB7TL\b|\bDB300\b|\bN230UD\b/.test(t) ||
+      /GEMINI|EVOSETI|SRM/.test(t) ||
+      /METRODECKER|STREETDECK/.test(t) ||
+      /\bDD\b|\bE400EV\b|ENVIRO400EV/.test(t) ||
+      /BZL \(DD\)/.test(t) ||
+      /TRIDENT/.test(t)) return 'double';
+  // Single-deck chassis / body families
+  if (/ENVIRO200|\bE200\b|\bE20D\b|E100EV|ENVIRO100|E200DART/.test(t) ||
+      /\bD[89]UR\b|\bK8SR\b|\bB[1-9]{1,2}E0[1-9]\b/.test(t) ||  // BYD single-deck chassis
+      /CITARO/.test(t) ||
+      /SOLO|VERSA|STREETLITE|STREETAIR/.test(t) ||
+      /YUTONG|\bE1[02]\b/.test(t) ||
+      /VOLVO B[78]RLE/.test(t) ||
+      /KITE ELECTROLINER/.test(t) ||                              // Wright Kite (SD)
+      /METROCITY|E\.CITY GOLD/.test(t) ||
+      /BZL \(SD\)/.test(t)) return 'single';
   return null;
 }
 function derivePropulsion(s) {
