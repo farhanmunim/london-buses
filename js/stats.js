@@ -22,7 +22,7 @@ import {
   opDrawer, drawerBack, drawerName, drawerSub, drawerSwatch,
   dGarages, dContracts,
 } from './state.js';
-import { opColor } from './map.js';
+import { opColor, highlightGarageByCode } from './map.js';
 
 // Populate a drawer KPI slot. Slots 1-4 are always visible; the optional
 // slot 5 (capacity) carries a `data-dkpi-slot` wrapper that we hide when
@@ -370,6 +370,7 @@ export function openGarageDrawer(code) {
       document.dispatchEvent(new CustomEvent('app:filterschanged'));
       opDrawer.classList.remove('open');
       opDrawer.setAttribute('aria-hidden', 'true');
+      highlightGarageByCode(code);
     };
   }
 

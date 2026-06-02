@@ -654,6 +654,7 @@ export function renderGarages(garages, garageRoutes = {}) {
             document.dispatchEvent(new CustomEvent('app:garageselected', { detail: state.selectedGarages }));
             document.dispatchEvent(new CustomEvent('app:filterschanged'));
             marker.closePopup();
+            highlightGarageByCode(g.code);
           });
         }
       }, 0);
@@ -673,6 +674,33 @@ export function highlightGaragesForRoute(routeId) {
   if (!_allGarages.length) return;
   for (const entry of _allGarages) {
     const active = routeId != null && entry.routeIds.has(routeId);
+    if (active) {
+      if (!entry.marker.getTooltip()) {
+        entry.marker.bindTooltip('Operating from here', {
+          permanent: true,
+          direction: 'top',
+          offset: [0, -14],
+          className: 'garage-route-tooltip',
+        });
+      }
+      entry.marker.openTooltip();
+    } else if (entry.marker.getTooltip()) {
+      entry.marker.unbindTooltip();
+    }
+  }
+}
+
+/**
+ * Show the "Operating from here" tooltip on a single garage by code, clearing
+ * any others. Used by the "View all routes operated here" CTA in both the
+ * map popup and the drawer — the user filters the network to one garage's
+ * routes, so the same visual marker that fires when a single route is focused
+ * should fire for the chosen garage. Passing null clears the highlight.
+ */
+export function highlightGarageByCode(code) {
+  if (!_allGarages.length) return;
+  for (const entry of _allGarages) {
+    const active = code != null && entry.garage.code === code;
     if (active) {
       if (!entry.marker.getTooltip()) {
         entry.marker.bindTooltip('Operating from here', {
