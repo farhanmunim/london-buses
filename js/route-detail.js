@@ -598,6 +598,6 @@ const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 function formatHumanDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
   if (!m) return iso;
-  const mon = MONTHS_SHORT[parseIntip(m[2], 10) - 1] ?? m[2];
-  return `${parseIntip(m[3], 10)} ${mon} ${m[1]}`;
+  const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
+  return `${parseInt(m[3], 10)} ${mon} ${m[1]}`;
 }
