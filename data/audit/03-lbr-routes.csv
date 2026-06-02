@@ -25,7 +25,7 @@ route_id,vehicle_string,garage_code,pvr
 121,DB300/Gemini 2,E,22
 122,E40H/Enviro400H,PD,19
 123,?,AR,20
-124,E20D/Enviro200,TL,15
+124,E20D/Enviro200,TL,17
 125,DD/Enviro400EV City,BT,18
 126,E20D/Enviro200,SM,11
 127,Trident/Enviro400,C,17
@@ -38,7 +38,7 @@ route_id,vehicle_string,garage_code,pvr
 133,Streetdeck Electroliner 10.5m,QB,24
 134,MetroDecker EV 10.5m,PB,20
 135,B5LH/Gemini 3,HO,15
-136,E40D/Enviro400,TL,20
+136,E40D/Enviro400,TL,22
 137,New Bus for London,BN,28
 138,E20D/Enviro200 1D ?,TL,3
 139,B5LH/Eclipse Gemini,W,18
@@ -79,10 +79,10 @@ route_id,vehicle_string,garage_code,pvr
 171,E40H/Enviro400H MMC,NX,15
 172,E40H/Enviro400H MMC,NX,14
 173,DD/Enviro400EV City,BK,16
-174,DD/Enviro400EV City,RM,25
+174,DD/Enviro400EV City,RM,26
 175,DB300/Gemini 2,DX,14
 176,New Bus for London,Q,22
-177,B5LH/Enviro400H MMC,PD,19
+177,B5LH/Enviro400H MMC,PD,21
 178,E40D/Enviro400,MG,7
 179,E40D/Enviro400,BK,13
 18,B5LH/Gemini 3,X,37
@@ -91,7 +91,7 @@ route_id,vehicle_string,garage_code,pvr
 182,B5LH/Gemini 3,HD,23
 183,DD/Enviro400EV City,SO,19
 184,D8UR/Enviro200MMC EV,NP,18
-185,E40H/Enviro400H MMC,Q,23
+185,E40H/Enviro400H MMC,Q,24
 186,B5LH/Gemini 2,HD,16
 187,BZL (sd)/MCV,WJ,11
 188,BYD B11E02 10.9m,Q,22
@@ -109,7 +109,7 @@ route_id,vehicle_string,garage_code,pvr
 199,Streetdeck Electroliner 10.5m,TL,12
 2,B5LH/Gemini 3,N,20
 20,E40H/Enviro400H City,T,10
-200,MetroDecker EV 10.5m,AL,15
+200,MetroDecker EV 10.5m,AL,14
 201,E20D/Enviro200,BC,11
 202,E40H/Enviro400H MMC,N,16
 203,B5LH/Gemini 3,AV,7
@@ -169,7 +169,7 @@ route_id,vehicle_string,garage_code,pvr
 253,New Bus for London,CT,19
 254,New Bus for London,SF,23
 255,Kite Electroliner 10.3m,TH,9
-256,E40D/Enviro400,NS,11
+256,E40D/Enviro400,RM,11
 257,Streetdeck Electroliner 10.5m,T,16
 258,B9TL/Gemini 2,HD,12
 259,New Bus for London,AR,16
@@ -184,7 +184,7 @@ route_id,vehicle_string,garage_code,pvr
 267,New Bus for London,TF,17
 268,Kite Electroliner 10.3m,W,6
 269,Streetdeck Electroliner 10.5m,BX,13
-27,New Bus for London,QB,18
+27,New Bus for London,QB,17
 270,Streetdeck Electroliner 10.5m,BC,15
 272,E20D/Enviro200 MMC,V,10
 273,E20D/Enviro200 MMC,TL,9
@@ -337,7 +337,7 @@ route_id,vehicle_string,garage_code,pvr
 43,DD/Enviro400EV City,HT,26
 430,B5LH/Gemini 3,AF,11
 432,B5LH/Gemini 2,N,10
-433,e.City Gold 10.7m,BC,8
+433,e.City Gold 10.7m,BC,9
 434,E20D/Enviro200,C,4
 436,B5LH/Eclipse Gemini,NX,13
 439,D8UR/Enviro200 MMC EV,C,3
@@ -386,7 +386,7 @@ route_id,vehicle_string,garage_code,pvr
 52,B5LH/Eclipse Gemini,AC,17
 53,E40H/Enviro400H MMC,PD,27
 533,E20D/Enviro200 MMC,SW,5
-54,E40D/Enviro400 MMC,TL,17
+54,E40D/Enviro400 MMC,TL,16
 55,New Bus for London,T,29
 56,E40H/Enviro400H,T,18
 57,DD/Enviro400EV City,AL,19
@@ -461,10 +461,10 @@ route_id,vehicle_string,garage_code,pvr
 684,E40D/Enviro400,TB,2
 685,BYD B11E02 10.9m,TC,1
 686,E40H/Enviro400H,RR,2
-687,E40H/Enviro400H,RR,1
+687,?,WH,1
 688,?,UB,5
 689,Streetdeck Electroliner 10.5m,TH,1
-69,DD/Enviro400EV City,DS,18
+69,DD/Enviro400EV City,DS,15
 690,B5LH/Gemini3,SW,2
 695,B5LH/SRM,AV,3
 696,E40D/Enviro400,AV,2
@@ -532,7 +532,7 @@ E9,Trident/Enviro400,G,8
 EL1,New Bus for London,RR,18
 EL2,New Bus for London,RR,12
 EL3,New Bus for London,RR,14
-G1,E100EV/Enviro100EV 8.5m,QB,11
+G1,E100EV/Enviro100EV 8.5m,QB,12
 H10,D8UR/Enviro200MMC EV,SO,9
 H11,E20D/Enviro200 MMC,BT,7
 H12,E40H/Enviro400H MMC,BT,14

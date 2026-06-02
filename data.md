@@ -207,7 +207,13 @@ npm run audit-data            # fail only on CRITICAL
 npm run audit-data-strict     # fail on WARN too
 ```
 
-The audit currently passes clean (0 CRITICAL / 0 WARN) post the bug-fix sweep; the WARNs the user would meaningfully act on (a new ghost route appearing, an MPS value drifting outside the published TfL range, a make/propulsion mismatch growing) will surface here automatically rather than waiting to be spotted by eye.
+**Current standing (2026-06-02 audit):** 0 CRITICAL · 25 WARN · 5 INFO. The 25 WARNs split into:
+- **22 fleetSize/PVR ratios > 3** (75, 83, 120, 154, 156, 161, 186, 213, 245, 249, 252, 301, 304, 306, 337, 371, 422, 430, 436, 460, E2, E8, U3). Expected ~1.3 (operational fleet + spares). Likely cause: the per-route DVLA aggregator is attributing too many vehicles to a single route when those vehicles operate across multiple lines from the same garage. **Action:** narrow the aggregator's match window in `scripts/build-classifications.js` so a vehicle has to appear N times on a route before it counts toward `fleetSize`.
+- **1 vehicleAgeYears = 13.6 on an electric route (292)** — the LBR reference says electric, but the DVLA fleet includes ≥2015 hybrids that were inherited at handover. **Action:** investigate whether the route is mid-conversion (fleet snapshot pre-cutover) vs LBR mis-classified.
+- **1 missing otpMps on route 533** (a low-frequency route). **Action:** check whether 533 is in the published MPS PDF; if so, the parser missed a row.
+- **1 single-deck/double-deck reconciliation** flagged separately.
+
+Beyond the data-quality audit, `scripts/audit-summary.js` cross-checks our propulsion against bustimes.org for the routes where they're scrapeable (193/747 covered): **43 disagreements** (16 ours=diesel/theirs=hybrid, 5 ours=diesel/theirs=electric, 13 ours=hybrid/theirs=electric, 9 ours=electric/theirs=other). Most look like vehicle-lookup blind spots — e.g. `Wright StreetDeck Electroliner` (electric), `BYD BD11` (electric), `Volvo BZL` (electric), `Volvo B5LH …` (hybrid). These reach the route card via the LBR vehicle-type string. **Action:** expand `data/vehicle-lookup.json` to cover the missing chassis/body strings, then regenerate `route_classifications.json`. Tracked separately so a single weekly refresh doesn't bundle a behaviour change.
 
 ---
 
