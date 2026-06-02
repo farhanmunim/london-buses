@@ -29,48 +29,64 @@ const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid'
 // Keyed by the value element's data-rc-* attribute (without the prefix).
 // The dynamic perf / MPS tiles flip their tip text alongside their label
 // (EWT vs OTP) and are wired separately in buildCard's reliability block.
+// Tooltip text — "what · source · freshness". Mirrors the Data sources table
+// in the About modal so users can answer "what is this, where does it come
+// from, how current is it?" without leaving the route card. Shown via the
+// custom hover popup wired by js/tooltip.js. The ⓘ pseudo-element CSS on the
+// labels advertises that a tooltip is available.
+const SRC = {
+  TFL_API:      'TfL Open Data API · as at last weekly refresh',
+  TFL_IBUS:     'TfL iBus open data · as at last weekly refresh',
+  DVLA:         'DVLA Vehicle Enquiry Service · per-vehicle 90-day cache; refreshed weekly',
+  LBR:          'londonbusroutes.net · as at last weekly refresh',
+  QSI:          'TfL Bus Performance (QSI) report · TfL publishes every ~4 weeks',
+  QSI_ROUTE:    'TfL per-route QSI reports · set per tender contract',
+  TENDER:       'TfL tender records · refreshed weekly',
+  PROG:         'TfL tendering programme · refreshed weekly',
+  LOOKUP:       'curated vehicle lookup over LBR chassis strings · refreshed weekly',
+  DERIVED:      'derived from accepted bid ÷ cost per mile · refreshed weekly',
+};
 const TIPS = {
   // Route KPI tiles
-  pvr:             'Peak Vehicle Requirement — buses needed to run the peak service',
-  stops:           'Number of stops on the route',
-  freq:            'Frequency band — H = 5 or more buses per hour, L = fewer',
+  pvr:             `Peak Vehicle Requirement — buses needed at peak · ${SRC.LBR}`,
+  stops:           `Number of stops on the route · ${SRC.TFL_API}`,
+  freq:            `Frequency band — H = 5+ buses/hour, L = fewer · ${SRC.TFL_API}`,
   // Route detail rows
-  garage:          'Operating garage for the route',
+  garage:          `Operating garage · ${SRC.LBR}`,
   // Fleet rows
-  deck:            'Deck type',
-  propulsion:      'Propulsion type',
-  'vehicle-make':  'Vehicle manufacturer',
-  'vehicle-model': 'Vehicle model (chassis and body)',
-  age:             'Mean age of buses observed on the route',
-  // Tender · Current active contract rows
-  'current-op':    'Operator who won the originating tender for the in-service contract',
-  'current-award': 'Award date of the current in-service contract',
-  'contract-start':'Date the current contract began service',
-  term:            'Contract length in years',
-  'current-cpm':   'Cost per live mile of the current contract',
-  'current-miles': 'Annual contracted live miles of the current contract',
-  'current-veh':   'Vehicle specification required by the current contract',
-  'current-joint': 'Whether the current contract was tendered as part of a joint bid',
-  'current-bids':  'Number of operators that bid for the current contract',
-  // Tender · Next contract — awarded rows (shown only when a re-tender has
-  // been awarded for a contract that hasn't started yet)
-  'last-award':    'Award date of the latest tender — the contract about to take effect',
-  'next-start':    'Date the next contract begins service',
-  tranche:         'Programme batch this route’s upcoming tender sits in',
-  bids:            'Number of operators that bid for the latest tender',
-  joint:           'Whether the latest tender was a joint bid',
-  'awarded-veh':   'Vehicle specification required by the next contract',
-  value:           'Cost per live mile of the latest tender',
-  'annual-miles':  'Annual contracted live miles of the latest tender',
-  // Tender · Previous operator rows
-  previous:        'Operator before the current incumbent',
-  'prev-award':    'Award date of the previous contract',
-  'prev-term':     'Length of the previous contract',
-  'prev-joint':    'Whether the previous contract was tendered as part of a joint bid',
-  'prev-cpm':      'Cost per live mile of the previous contract’s accepted bid',
-  'prev-miles':    'Annual contracted live miles of the previous contract',
-  'prev-veh':      'Vehicle specification required by the previous contract',
-  'prev-bids':     'Number of operators that bid for the previous contract',
+  deck:            `Deck type · ${SRC.LOOKUP}`,
+  propulsion:      `Propulsion type · LBR chassis codes cross-checked with ${SRC.DVLA}`,
+  'vehicle-make':  `Vehicle manufacturer · ${SRC.DVLA}`,
+  'vehicle-model': `Vehicle model (chassis and body) · ${SRC.LBR}`,
+  age:             `Mean age of buses observed on the route · ${SRC.DVLA}`,
+  // Tender · Current active contract
+  'current-op':    `Operator who won the originating tender · ${SRC.TENDER}`,
+  'current-award': `Award date of the current in-service contract · ${SRC.TENDER}`,
+  'contract-start':`Date the current contract began service · ${SRC.LBR}`,
+  term:            `Contract length in years (TQ N spec + reduction/extension notes) · ${SRC.LBR}`,
+  'current-cpm':   `Cost per live mile of the current contract · ${SRC.TENDER}`,
+  'current-miles': `Annual contracted live miles · ${SRC.DERIVED}`,
+  'current-veh':   `Vehicle specification required by the current contract · ${SRC.TENDER}`,
+  'current-joint': `Whether the current contract was tendered as part of a joint bid · ${SRC.TENDER}`,
+  'current-bids':  `Number of operators that bid for the current contract · ${SRC.TENDER}`,
+  // Tender · Next contract — awarded
+  'last-award':    `Award date of the latest tender — the contract about to take effect · ${SRC.TENDER}`,
+  'next-start':    `Date the next contract begins service · ${SRC.PROG}`,
+  tranche:         `Programme batch this route’s upcoming tender sits in · ${SRC.PROG}`,
+  value:           `Cost per live mile of the latest tender · ${SRC.TENDER}`,
+  'annual-miles':  `Annual contracted live miles of the latest tender · ${SRC.DERIVED}`,
+  'awarded-veh':   `Vehicle specification required by the next contract · ${SRC.TENDER}`,
+  joint:           `Whether the latest tender was a joint bid · ${SRC.TENDER}`,
+  bids:            `Number of operators that bid for the latest tender · ${SRC.TENDER}`,
+  // Tender · Previous operator
+  previous:        `Operator before the current incumbent · ${SRC.TENDER}`,
+  'prev-award':    `Award date of the previous contract · ${SRC.TENDER}`,
+  'prev-term':     `Length of the previous contract · derived from gap to next award · ${SRC.TENDER}`,
+  'prev-cpm':      `Cost per live mile of the previous contract · ${SRC.TENDER}`,
+  'prev-miles':    `Annual contracted live miles of the previous contract · ${SRC.DERIVED}`,
+  'prev-veh':      `Vehicle specification required by the previous contract · ${SRC.TENDER}`,
+  'prev-joint':    `Whether the previous contract was tendered as part of a joint bid · ${SRC.TENDER}`,
+  'prev-bids':     `Number of operators that bid for the previous contract · ${SRC.TENDER}`,
 };
 
 // Walk the TIPS map and attach `data-tip` attributes to each row's label.
