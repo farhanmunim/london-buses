@@ -440,11 +440,16 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // Awarded operator on the next contract. Flag inline when it doesn't match
   // the incumbent at the top of the card — otherwise a user reading the
   // section would assume the new contract is going to the same operator.
+  // RATP Dev sold its London bus operations to FirstGroup in Feb 2025
+  // (~83 routes), so legacy "London United" / "RATP Dev" awards are now
+  // First Bus London — treat them as the same entity for the flag, while
+  // preserving the historical RATP name in `previousOperator`.
+  const sameOperator = (a, b) => a === b || ((a === 'First' || a === 'RATP') && (b === 'First' || b === 'RATP'));
   const nextOp = classification?.lastAwardedOperator;
   const nextOpDisplay = nextOp ? (OPERATOR_SHORT[nextOp] ?? nextOp) : null;
   set('[data-rc-next-op]', nextOpDisplay ?? '—');
   const opChangeEl = node.querySelector('[data-rc-op-change]');
-  if (opChangeEl) opChangeEl.hidden = !(showNext && nextOpDisplay && nextOpDisplay !== currentOpDisplay);
+  if (opChangeEl) opChangeEl.hidden = !(showNext && nextOpDisplay && !sameOperator(nextOpDisplay, currentOpDisplay));
 
   // Contract start of the just-awarded contract.
   const nextStartIso = classification?.nextTenderStart;
