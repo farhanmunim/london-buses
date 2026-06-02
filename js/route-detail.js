@@ -207,7 +207,7 @@ function normaliseTenderOperator(name) {
 export function renderRouteCards(entries, { direction = '1' } = {}) {
   if (!routeResults || !routeCardTpl) return;
   clearCards();
-  if (!entries.length) { showNoResultip(); return; }
+  if (!entries.length) { showNoResult(); return; }
 
   routeResults.hidden = false;
   if (routeNoResult) routeNoResult.hidden = true;
@@ -217,7 +217,7 @@ export function renderRouteCards(entries, { direction = '1' } = {}) {
   for (const entry of entries) routeResults.appendChild(buildCard(entry, { single, direction }));
 }
 
-export function showNoResultip() {
+export function showNoResult() {
   clearCards();
   if (!routeResults) return;
   routeResults.hidden = false;
@@ -225,7 +225,7 @@ export function showNoResultip() {
   if (routePrompt)   routePrompt.style.display = 'none';
 }
 
-export function showRoutePromptip() {
+export function showRoutePrompt() {
   clearCards();
   if (routePrompt)   routePrompt.style.display = '';
   if (routeResults)  routeResults.hidden = true;
