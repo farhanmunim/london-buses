@@ -60,6 +60,29 @@ const GHOST_ROUTES = new Set([
   'UL13', 'UL19', 'UL26', 'UL30', 'UL40', 'UL61',
 ]);
 
+// make ↔ model consistency. `make` is the DVLA-registered manufacturer of the
+// route's observed fleet; `vehicleType` is a "chassis/body" model string. These
+// come from different sources, so they can disagree when the fleet aggregator
+// gets contaminated by a vehicle that doesn't belong to the route (see data.md
+// §2). We only assert on models a SINGLE manufacturer builds complete (chassis
+// + body): for those the make must be that manufacturer. Chassis/body products
+// (Enviro, Gemini, EvoSeti, Streetdeck…) are deliberately excluded — their make
+// is the chassis maker while the model names the body, so they legitimately
+// differ (e.g. make VOLVO + "B5LH/Gemini 3", make BYD + "D8UR/Enviro200").
+const COMPLETE_VEHICLE_MAKERS = [
+  { re: /\b(metrocity|metrodecker|solo|versa)\b/i, makers: ['SWITCH', 'OPTARE'] },
+  { re: /\bcitaro\b/i,                              makers: ['MERCEDES', 'EVOBUS'] },
+  { re: /\byutong\b/i,                              makers: ['YUTONG'] },
+];
+function makeModelMismatch(make, vehicleType) {
+  if (!make || !vehicleType) return null;
+  const M = String(make).toUpperCase();
+  for (const { re, makers } of COMPLETE_VEHICLE_MAKERS) {
+    if (re.test(vehicleType) && !makers.some(k => M.includes(k))) return makers[0];
+  }
+  return null;
+}
+
 const NOW = Date.now();
 const YEAR_MS = 365.25 * 86_400_000;
 const CURRENT_YEAR = new Date().getUTCFullYear();
@@ -187,6 +210,18 @@ function auditClassifications(rc, vf, ov, gar) {
         add('WARN', 'rc', id, 'vehicleAgeYears', '<=12 for electric',
             r.vehicleAgeYears, 'electric London fleets are post-2015');
     }
+
+    // make ↔ model consistency. The make is built from observed vehicles; when
+    // it names a manufacturer that cannot have built a manufacturer-complete
+    // model the route shows (e.g. ADL make on a Switch "Metrocity EV"), the
+    // fleet make was contaminated by a vehicle that doesn't belong to the route.
+    // WARN for now while the core-fleet filter (build-classifications.js) drains
+    // these forward over weekly cycles; promote to CRITICAL once they're gone so
+    // a contradiction can never reach the app. data.md §5a tracks the standing.
+    const expMaker = makeModelMismatch(r.make, r.vehicleType);
+    if (expMaker)
+      add('WARN', 'rc', id, 'make↔model', `${expMaker} for "${r.vehicleType}"`, r.make,
+          'make contradicts a manufacturer-complete model — fleet make likely contaminated');
 
     // Performance values
     if (r.ewtMinutes != null && !inRange(r.ewtMinutes, 0, 20))

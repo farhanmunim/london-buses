@@ -548,25 +548,46 @@ function aggregateRouteFleet(routeId) {
         if (y >= 0 && y < 40) ageYears = y;
       }
     }
-    samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears });
+    // sightings/days quantify how often this reg actually ran the route (added
+    // to route-vehicles.json from this release). Legacy entries without them
+    // default to a single sighting so behaviour is unchanged until counts grow.
+    const sightings = Number.isFinite(entry?.sightings) ? entry.sightings : 1;
+    const days      = Number.isFinite(entry?.days)      ? entry.days      : 1;
+    samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears, sightings, days });
   }
   if (!samples.length) return null;
 
-  // Modal propulsion across all observations (this is what the route "is").
+  // ── Core-fleet filter ──────────────────────────────────────────────────
+  // Drop one-off cover/reserve buses so an emergency vehicle that ran the route
+  // once doesn't define its make or skew its age. A reg is "core" when it
+  // recurs: seen on ≥2 distinct days AND with sightings ≥20% of the route's
+  // most-frequently-seen vehicle (relative floor, so a heavily-sampled route
+  // doesn't over-include occasional visitors). Until enough weekly samples
+  // accumulate — cold start, or right after the sightings field ships — every
+  // reg has sightings=1/days=1 and the filter would empty the set; in that case
+  // we fall back to all observations and mark the verdict low-confidence.
+  const maxSightings = samples.reduce((mx, s) => Math.max(mx, s.sightings), 0);
+  const coreSamples  = samples.filter(s => s.days >= 2 && s.sightings >= 0.2 * maxSightings);
+  const useSamples   = coreSamples.length ? coreSamples : samples;
+  const fleetConfidence = coreSamples.length ? 'high' : 'low';
+
+  // Modal propulsion across the core fleet, weighted by how often each vehicle
+  // was actually seen (a daily regular counts more than an occasional one).
   const propCounts = {};
-  for (const s of samples) if (s.propulsion) propCounts[s.propulsion] = (propCounts[s.propulsion] ?? 0) + 1;
+  for (const s of useSamples) if (s.propulsion) propCounts[s.propulsion] = (propCounts[s.propulsion] ?? 0) + s.sightings;
   const dominantProp = modeOf(propCounts);
 
-  // Headline make/fleetSize/age computed only over vehicles matching the
+  // Headline make/fleetSize/age computed only over core vehicles matching the
   // dominant propulsion. Reserves with a different drivetrain are dropped —
   // they're not part of the route's actual fleet. If propulsion is null on
   // every sample (no DVLA data at all) we fall back to averaging everything
-  // so the route still gets numbers.
-  const fleetSamples = dominantProp ? samples.filter(s => s.propulsion === dominantProp) : samples;
+  // so the route still gets numbers. make is sighting-weighted for the same
+  // reason as propulsion; age is a plain mean over the (already de-noised) core.
+  const fleetSamples = dominantProp ? useSamples.filter(s => s.propulsion === dominantProp) : useSamples;
   const makes = {};
   let ageSum = 0, ageN = 0;
   for (const s of fleetSamples) {
-    if (s.make) makes[s.make] = (makes[s.make] ?? 0) + 1;
+    if (s.make) makes[s.make] = (makes[s.make] ?? 0) + s.sightings;
     if (s.ageYears != null) { ageSum += s.ageYears; ageN++; }
   }
 
@@ -575,6 +596,7 @@ function aggregateRouteFleet(routeId) {
     propulsion:      dominantProp,
     vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
     fleetSize:       fleetSamples.length,
+    fleetConfidence,
   };
 }
 
@@ -837,6 +859,10 @@ for (const file of routeFiles) {
     make:            override.make            ?? fleetAgg?.make            ?? fallback?.make            ?? lastRec.make            ?? null,
     vehicleAgeYears: override.vehicleAgeYears ?? fleetAgg?.vehicleAgeYears ?? lastRec.vehicleAgeYears ?? null,
     fleetSize:       override.fleetSize       ?? fleetAgg?.fleetSize       ?? lastRec.fleetSize       ?? null,
+    // 'high' when the make/age/fleetSize above were computed from the recurring
+    // core fleet; 'low' when sighting data was too sparse to filter one-offs and
+    // we fell back to all observations. Lets the UI soften an unverified claim.
+    fleetConfidence: fleetAgg?.fleetConfidence ?? lastRec.fleetConfidence ?? null,
     // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
     // populated depending on serviceClass. perfPeriod tells the UI which TfL
     // reporting period the figure covers.

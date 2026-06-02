@@ -18,11 +18,19 @@ import { sanitizeRecord } from './_lib/sanitize.js';
  *     generatedAt, observationTtlDays,
  *     routes: {
  *       [routeId]: [
- *         { reg: "LK20FNZ", lastSeenAt: "2026-04-28T09:00:00Z" },
+ *         { reg: "LK20FNZ", firstSeenAt, lastSeenAt, sightings: 7, days: 7 },
  *         …
  *       ]
  *     }
  *   }
+ *
+ * `sightings` is the running count of runs this reg appeared on the route;
+ * `days` is the number of distinct calendar dates it was seen on. The fleet
+ * aggregator (build-classifications.js) uses these to tell a route's recurring
+ * core fleet from one-off cover/reserve buses that ran it once — a single
+ * emergency vehicle no longer defines a route's make, age, or fleet size.
+ * Legacy entries that only carried `lastSeenAt` are back-filled as a single
+ * sighting on load, so counts rebuild forward from the first run after this.
  *
  * Run: npm run fetch-route-vehicles
  */
@@ -85,10 +93,13 @@ async function main() {
   const existing = loadExisting();
   const cutoff = Date.now() - OBSERVATION_TTL_DAYS * 86_400_000;
 
-  const observations = {};   // { routeId: Map(reg → lastSeenAt) }
+  const observations = {};   // { routeId: Map(reg → {firstSeenAt,lastSeenAt,sightings,days}) }
   const sampledAt = new Date().toISOString();
+  const sampledDay = sampledAt.slice(0, 10);
 
-  // Seed with previously-observed regs that haven't expired
+  // Seed with previously-observed regs that haven't expired. Carry forward the
+  // accumulated sighting/day counts; back-fill legacy entries (which stored only
+  // a single `lastSeenAt`) as one sighting on one day so counts grow from here.
   for (const [rid, list] of Object.entries(existing.routes)) {
     const m = new Map();
     for (const entry of (list ?? [])) {
@@ -96,7 +107,13 @@ async function main() {
       const seen = typeof entry === 'object' ? entry?.lastSeenAt : null;
       if (!reg) continue;
       const seenMs = seen ? new Date(seen).getTime() : 0;
-      if (seenMs >= cutoff) m.set(reg.toUpperCase(), seen);
+      if (seenMs < cutoff) continue;
+      m.set(reg.toUpperCase(), {
+        firstSeenAt: (typeof entry === 'object' && entry?.firstSeenAt) || seen,
+        lastSeenAt:  seen,
+        sightings:   Number.isFinite(entry?.sightings) ? entry.sightings : 1,
+        days:        Number.isFinite(entry?.days)      ? entry.days      : 1,
+      });
     }
     if (m.size) observations[rid] = m;
   }
@@ -127,7 +144,19 @@ async function main() {
         }
         if (regs.size) {
           if (!observations[id]) observations[id] = new Map();
-          for (const r of regs) observations[id].set(r, sampledAt);
+          const m = observations[id];
+          for (const r of regs) {
+            const prev = m.get(r);
+            if (prev) {
+              prev.sightings += 1;
+              // Only bump the distinct-day count when this run lands on a new
+              // calendar date, so a manual same-day re-run can't inflate it.
+              if (prev.lastSeenAt.slice(0, 10) !== sampledDay) prev.days += 1;
+              prev.lastSeenAt = sampledAt;
+            } else {
+              m.set(r, { firstSeenAt: sampledAt, lastSeenAt: sampledAt, sightings: 1, days: 1 });
+            }
+          }
           withObs++;
         }
       }
@@ -138,12 +167,18 @@ async function main() {
   }
   await Promise.all(Array.from({ length: CONC }, worker));
 
-  // Serialise back as { reg, lastSeenAt }
+  // Serialise back as { reg, firstSeenAt, lastSeenAt, sightings, days }
   const routesOut = {};
   for (const id of Object.keys(observations).sort()) {
     routesOut[id] = [...observations[id].entries()]
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([reg, lastSeenAt]) => ({ reg, lastSeenAt }));
+      .map(([reg, rec]) => ({
+        reg,
+        firstSeenAt: rec.firstSeenAt,
+        lastSeenAt:  rec.lastSeenAt,
+        sightings:   rec.sightings,
+        days:        rec.days,
+      }));
   }
 
   const output = {
