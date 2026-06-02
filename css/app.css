@@ -916,6 +916,25 @@ a{color:inherit;text-decoration:none}
 
 .modal-section{margin-top:22px}
 
+/* About-modal "Data sources" table — Source | Data points | Freshness. */
+.modal-data-table{
+  width:100%; border-collapse:collapse; margin-top:10px;
+  font-size:12px; color:var(--tx); table-layout:fixed;
+}
+.modal-data-table th, .modal-data-table td{
+  text-align:left; padding:8px 10px; vertical-align:top;
+  border-bottom:1px solid var(--bd); line-height:1.45;
+}
+.modal-data-table th{
+  font-size:10.5px; font-weight:700; letter-spacing:.5px;
+  text-transform:uppercase; color:var(--mu);
+  background:var(--surf2);
+}
+.modal-data-table tbody tr:last-child td{border-bottom:none}
+.modal-data-table td:nth-child(1){width:24%; font-weight:600}
+.modal-data-table td:nth-child(2){width:46%}
+.modal-data-table td:nth-child(3){width:30%; color:var(--mu)}
+
 .modal-support{
   margin-block-start:18px;padding:18px 20px;
   background:var(--surf2);border:1px solid var(--bd);border-radius:10px;

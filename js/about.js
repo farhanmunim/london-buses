@@ -36,6 +36,27 @@
         </div>
 
         <section class="modal-section">
+          <span class="modal-section-tag">Data sources</span>
+          <table class="modal-data-table">
+            <thead>
+              <tr><th>Source</th><th>Data points</th><th>Freshness</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>TfL Open Data API</td><td>Route geometry, destinations, stops</td><td>As at each weekly refresh</td></tr>
+              <tr><td>TfL iBus open data</td><td>Live fleet — which registration is running which route under which operator</td><td>As at each weekly refresh (TfL re-publishes fortnightly)</td></tr>
+              <tr><td>DVLA Vehicle Enquiry Service</td><td>Manufacturer, fuel type, year of first registration → propulsion + average fleet age</td><td>Per-vehicle 90-day cache; refreshed each weekly run</td></tr>
+              <tr><td>londonbusroutes.net</td><td>Operator, garage, PVR, vehicle type, contract start date, contract length</td><td>As at each weekly refresh</td></tr>
+              <tr><td>TfL Bus Performance (QSI) report</td><td>Excess Wait Time (EWT) and On-Time Performance (OTP)</td><td>TfL publishes every ~4 weeks; we re-read each weekly run</td></tr>
+              <tr><td>TfL per-route QSI reports</td><td>Minimum Performance Standards (MPS) — contractual EWT / OTP / mileage benchmarks</td><td>Set per tender contract; re-read each weekly run</td></tr>
+              <tr><td>TfL tender records</td><td>Tender history — operator, cost per mile, accepted bid, bids received, joint-bid flag, awarded vehicle</td><td>Immutable once published; new awards picked up each weekly run</td></tr>
+              <tr><td>TfL tendering programme</td><td>Upcoming tender schedule — tranche, contract start, vehicle spec</td><td>TfL re-publishes ~monthly in the planning year; re-read each weekly run</td></tr>
+              <tr><td>postcodes.io</td><td>Garage coordinates (latitude / longitude)</td><td>Cached; rarely changes</td></tr>
+              <tr><td>DVSA operator licensing</td><td>Garage capacity (authorised vehicles per operating centre)</td><td>Manually curated; updates at licence variation (~yearly)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="modal-section">
           <span class="modal-section-tag">Privacy</span>
           <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
             Aggregate page-view stats only via <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Analytics</a>. No accounts, no personal data, no advertising cookies.
