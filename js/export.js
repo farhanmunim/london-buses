@@ -181,9 +181,24 @@ function buildRouteRows(routes, stopCounts) {
         mileage_mps_percent:       num(cls.mileageMps),
         performance_period:        str(cls.perfPeriod),
 
-        // ── Tender — last (current) contract ──
+        // ── Tender — current active contract (in-service) ──
+        // Sourced from the *originating* tender award (the one that produced
+        // the in-service contract). May differ from `last_*` below during a
+        // re-tender transition window (~10% of routes at any time).
+        contract_start_date:                str(cls.contractStartDate),
+        contract_term_years:                num(cls.contractTermYears),
+        current_contract_award_date:        str(cls.currentContractAwardDate),
+        current_contract_cost_per_mile_gbp: num(cls.currentContractCostPerMile),
+        current_contract_accepted_bid_gbp:  num(cls.currentContractAcceptedBid),
+        current_contracted_annual_miles:    num(cls.currentContractedAnnualMiles),
+        current_contract_bids_received:     num(cls.currentContractNumberOfTenderers),
+        current_contract_was_joint_bid:     yesNo(cls.currentContractWasJointBid),
+        current_contract_awarded_propulsion: str(cls.currentContractAwardedPropulsion),
+        current_contract_awarded_deck:       str(cls.currentContractAwardedDeck),
+
+        // ── Tender — latest award (may be the same as current, or the
+        //     just-awarded next contract if we're in the transition window) ──
         last_award_date:           str(cls.lastAwardDate),
-        contract_start_date:       str(cls.contractStartDate),
         awards_on_record:          num(cls.tenderAwardCount),
         bids_received:             num(cls.numberOfTenderers),
         was_joint_bid:             yesNo(cls.wasJointBid),
@@ -192,7 +207,6 @@ function buildRouteRows(routes, stopCounts) {
         cost_per_mile_gbp:         num(cls.lastCostPerMile),
         accepted_bid_gbp:          num(cls.lastAcceptedBid),
         contracted_annual_miles:   num(cls.contractedAnnualMiles),
-        contract_term_years:       num(cls.contractTermYears),
 
         // ── Tender — previous (changed-hands) operator ──
         previous_operator:                str(cls.previousOperator),

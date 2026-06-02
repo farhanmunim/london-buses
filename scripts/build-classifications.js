@@ -319,6 +319,31 @@ function pickCurrentContractStart(list, lastAwardIso) {
     .sort((a, b) => a.contract_start_date.localeCompare(b.contract_start_date));
   return candidates[0]?.contract_start_date ?? null;
 }
+
+// Pick the tender award that originated the CURRENT in-service contract:
+// the most recent award whose announcement date is on or before the in-service
+// contract's start. In the steady state this equals lastTender (the most recent
+// award is the one that's currently running). In the *transition window* —
+// when a re-tender for the next contract has already been awarded but the old
+// one is still in service (~10% of routes at any time) — this returns the
+// award before lastTender (the originating one), so the route card's "Current
+// active contract" section reads consistently with `contractStartDate` /
+// `contractTermYears`. Falls back to lastTender when contractStartIso is
+// unknown or no eligible award is on file.
+function pickCurrentContractTender(history, contractStartIso, lastTender) {
+  if (!Array.isArray(history) || !history.length) return null;
+  if (!contractStartIso) return lastTender ?? null;
+  const startMs = Date.parse(contractStartIso);
+  if (!Number.isFinite(startMs)) return lastTender ?? null;
+  // History is sorted most-recent-first, so the first eligible entry IS the
+  // latest award not later than the current contract start — exactly the
+  // originating award.
+  for (const t of history) {
+    const d = Date.parse(String(t?.award_announced_date ?? ''));
+    if (Number.isFinite(d) && d <= startMs) return t;
+  }
+  return lastTender ?? null;
+}
 if (Object.keys(programmeByRoute).length) {
   console.log(`Loaded tender programme for ${Object.keys(programmeByRoute).length} routes`);
 }
@@ -760,6 +785,18 @@ for (const file of routeFiles) {
 
   const override = routeOverrides[routeId] ?? {};
   const lastRec  = lastGood[routeId] ?? {};
+  // Resolve contractStartDate (current in-service contract start) up front so
+  // we can find the originating tender — the award that produced this contract.
+  // Same precedence chain as the `contractStartDate` field below.
+  const contractStartIso = override.contractStartDate
+                        ?? details.contractStart
+                        ?? (programmeLoaded ? currentContractStart : null)
+                        ?? (lastRec.contractStartDate ?? null);
+  // The award that originated the in-service contract. In steady-state this is
+  // lastTender; in the transition window it's the award before lastTender.
+  const cct = pickCurrentContractTender(tenderHistory, contractStartIso, lastTender);
+  const cctJoint = cct ? deriveJointBid(cct.notes, cct.joint_bids).wasJointBid : null;
+
   classifications[routeId] = {
     type:        override.type        ?? type,
     isPrefix:    override.isPrefix    ?? isPrefix,
@@ -877,10 +914,7 @@ for (const file of routeFiles) {
     //      and fills any gaps LBR misses).
     // The TfL tender form 13796.aspx itself has no contract-start column
     // so neither source is the tender-result page.
-    contractStartDate: override.contractStartDate
-                    ?? details.contractStart
-                    ?? (programmeLoaded ? currentContractStart : null)
-                    ?? (lastRec.contractStartDate ?? null),
+    contractStartDate: contractStartIso,
     contractTermYears: override.contractTermYears ?? (
       // Tier 1: explicit term decoded from londonbusroutes.net details.htm
       // (the "TQ 7"-style spec + any "reduced/extended to N years" note).
@@ -903,6 +937,30 @@ for (const file of routeFiles) {
     // actual=hybrid until the new buses arrive.
     awardedPropulsion: override.awardedPropulsion ?? (tendersLoaded ? deriveAwardedPropulsion(lastTender?.notes, lastTender?.joint_bids) : (lastRec.awardedPropulsion ?? null)),
     awardedDeck:       override.awardedDeck       ?? (tendersLoaded ? deriveAwardedDeck(lastTender?.notes)                                : (lastRec.awardedDeck       ?? null)),
+    // ── Current active contract (originating tender) ─────────────────────────
+    // The `last*` cluster above describes the **most recent** tender award.
+    // In the steady state that IS the current contract, but during the
+    // transition window (~10% of routes at any time) it describes the
+    // not-yet-started NEXT contract instead, leaving the route card's
+    // "current contract" section mixed. These `currentContract*` fields
+    // describe the award that *actually* originated the in-service contract
+    // (found via `pickCurrentContractTender` against `contractStartDate`), so
+    // the card can show "current" and "next" separately without conflict.
+    // Steady-state routes will see identical values to `last*` — that's fine.
+    currentContractAwardDate:        override.currentContractAwardDate        ?? (tendersLoaded ? (cct?.award_announced_date ?? null) : (lastRec.currentContractAwardDate ?? null)),
+    currentContractCostPerMile:      override.currentContractCostPerMile      ?? (tendersLoaded ? (cct?.cost_per_mile        ?? null) : (lastRec.currentContractCostPerMile ?? null)),
+    currentContractAcceptedBid:      override.currentContractAcceptedBid      ?? (tendersLoaded ? (cct?.accepted_bid         ?? null) : (lastRec.currentContractAcceptedBid ?? null)),
+    currentContractedAnnualMiles: (() => {
+      if (override.currentContractedAnnualMiles != null) return override.currentContractedAnnualMiles;
+      const bid = cct?.accepted_bid;
+      const cpm = cct?.cost_per_mile;
+      if (tendersLoaded && Number.isFinite(bid) && Number.isFinite(cpm) && cpm > 0) return Math.round(bid / cpm);
+      return tendersLoaded ? null : (lastRec.currentContractedAnnualMiles ?? null);
+    })(),
+    currentContractNumberOfTenderers: override.currentContractNumberOfTenderers ?? (tendersLoaded ? ((Number.isFinite(cct?.number_of_tenderers) && cct.number_of_tenderers > 0 && cct.number_of_tenderers <= 12) ? cct.number_of_tenderers : null) : (lastRec.currentContractNumberOfTenderers ?? null)),
+    currentContractWasJointBid:       override.currentContractWasJointBid       ?? (tendersLoaded ? cctJoint                          : (lastRec.currentContractWasJointBid ?? null)),
+    currentContractAwardedPropulsion: override.currentContractAwardedPropulsion ?? (tendersLoaded ? (cct ? deriveAwardedPropulsion(cct.notes, cct.joint_bids) : null) : (lastRec.currentContractAwardedPropulsion ?? null)),
+    currentContractAwardedDeck:       override.currentContractAwardedDeck       ?? (tendersLoaded ? (cct ? deriveAwardedDeck(cct.notes)                       : null) : (lastRec.currentContractAwardedDeck       ?? null)),
     // Previous-tender vehicle spec — derived from the same changed-hands
     // award as `previousOperator` (not tenderHistory[1], which can be a
     // same-operator re-award), so the whole "Previous operator" section

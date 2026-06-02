@@ -42,16 +42,25 @@ const TIPS = {
   'vehicle-make':  'Vehicle manufacturer',
   'vehicle-model': 'Vehicle model (chassis and body)',
   age:             'Mean age of buses observed on the route',
-  // Tender · Current contract rows
-  tranche:         'Programme batch this route’s upcoming tender sits in',
-  'last-award':    'Award date of the current contract',
-  term:            'Contract length in years',
+  // Tender · Current active contract rows
   'contract-start':'Date the current contract began service',
-  bids:            'Number of operators that bid for the current contract',
-  joint:           'Whether the current contract was tendered as part of a joint bid',
-  'awarded-veh':   'Vehicle specification required by the contract',
-  value:           'Cost per live mile of the accepted bid',
-  'annual-miles':  'Annual contracted live miles',
+  term:            'Contract length in years',
+  'current-award': 'Award date of the current in-service contract',
+  'current-cpm':   'Cost per live mile of the current contract',
+  'current-miles': 'Annual contracted live miles of the current contract',
+  'current-veh':   'Vehicle specification required by the current contract',
+  'current-joint': 'Whether the current contract was tendered as part of a joint bid',
+  'current-bids':  'Number of operators that bid for the current contract',
+  // Tender · Next contract — awarded rows (shown only when a re-tender has
+  // been awarded for a contract that hasn't started yet)
+  'last-award':    'Award date of the latest tender — the contract about to take effect',
+  'next-effect':   'Date the next contract begins service',
+  tranche:         'Programme batch this route’s upcoming tender sits in',
+  bids:            'Number of operators that bid for the latest tender',
+  joint:           'Whether the latest tender was a joint bid',
+  'awarded-veh':   'Vehicle specification required by the next contract',
+  value:           'Cost per live mile of the latest tender',
+  'annual-miles':  'Annual contracted live miles of the latest tender',
   // Tender · Previous operator rows
   previous:        'Operator before the current incumbent',
   'prev-award':    'Award date of the previous contract',
@@ -351,6 +360,53 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const start = classification?.contractStartDate;
   toggleRow(node, 'contract-start', !!start);
   if (start) set('[data-rc-contract-start]', formatHumanDate(start));
+
+  // ── Current active contract block ──────────────────────────────────────────
+  // Populated from the *originating* tender award (the one that produced the
+  // in-service contract) — distinct from the latest tender, which describes
+  // whatever's most recently been awarded. For most routes the two coincide;
+  // for ~10% in the transition window they don't (a re-tender has been
+  // awarded but the previous contract is still running). Each row hides when
+  // its value isn't on file rather than rendering "—".
+  const cAward = classification?.currentContractAwardDate;
+  toggleRow(node, 'current-award', !!cAward);
+  if (cAward) set('[data-rc-current-award]', formatHumanDate(cAward));
+
+  const cCpm = classification?.currentContractCostPerMile;
+  toggleRow(node, 'current-cpm', Number.isFinite(cCpm));
+  if (Number.isFinite(cCpm)) set('[data-rc-current-cpm]', `£${cCpm.toFixed(2)}`);
+
+  const cMiles = classification?.currentContractedAnnualMiles;
+  toggleRow(node, 'current-miles', Number.isFinite(cMiles) && cMiles > 0);
+  if (Number.isFinite(cMiles) && cMiles > 0) set('[data-rc-current-miles]', cMiles.toLocaleString());
+
+  const cVeh = formatAwardedVehicle(classification?.currentContractAwardedPropulsion, classification?.currentContractAwardedDeck);
+  const cVehValid = cVeh && cVeh !== 'XXX';
+  toggleRow(node, 'current-veh', !!cVehValid);
+  if (cVehValid) set('[data-rc-current-veh]', cVeh);
+
+  const cJoint = classification?.currentContractWasJointBid;
+  toggleRow(node, 'current-joint', cJoint != null);
+  if (cJoint != null) set('[data-rc-current-joint]', cJoint ? 'Yes' : 'No');
+
+  const cBids = classification?.currentContractNumberOfTenderers;
+  toggleRow(node, 'current-bids', Number.isFinite(cBids) && cBids > 0);
+  if (Number.isFinite(cBids) && cBids > 0) set('[data-rc-current-bids]', `${cBids}${cBids === 1 ? ' bid' : ' bids'}`);
+
+  // ── "Next contract — awarded" section toggle ───────────────────────────────
+  // Show only when a re-tender has been awarded for a not-yet-started contract
+  // (i.e., the latest tender post-dates the originating one). Steady-state
+  // routes hide this section entirely so the card doesn't show two boxes
+  // describing the same contract.
+  const lastAwdIso = classification?.lastAwardDate ?? null;
+  const showNext   = lastAwdIso && cAward && lastAwdIso !== cAward;
+  const nextSec    = node.querySelector('[data-rc-section="next-contract"]');
+  if (nextSec) nextSec.hidden = !showNext;
+
+  // Takes-effect date for the just-awarded contract (when known).
+  const nextEffectIso = classification?.nextTenderStart;
+  toggleRow(node, 'next-effect', !!(showNext && nextEffectIso));
+  if (showNext && nextEffectIso) set('[data-rc-next-effect]', formatHumanDate(nextEffectIso));
 
   // Previous operator — derived from tender history (most recent earlier
   // award whose operator differs from the current incumbent). Subsidiary
