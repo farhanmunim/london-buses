@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.12</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.13</a>
 
       <div style="flex:1"></div>
 
@@ -81,6 +81,17 @@
             <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.13</span> Jun 02, 2026</div>
+            <a href="#v2_13" class="cl-entry-title">Garage popup parity &amp; small UX touches</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Clicking a garage marker now exposes the same <strong>View all routes operated here</strong> CTA that's been on the side drawer — same wording, same shape, same downstream behaviour. Filters the network to that garage's routes in one click without opening the drawer.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Both CTAs also flash the "Operating from here" tooltip above the chosen garage marker — the same visual that fires when a single route is focused now fires for a garage too, so the user can immediately see <em>which</em> garage they narrowed to.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Colour swatches on the Route Type filter pills, but only when colouring routes by type — so the legend connection between pill and line is direct (red Regular, violet Night, cyan 24 Hour, green School, mustard Prefix). In operator paint mode the dots stay hidden so they don't read as noise.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Route 339's tender section showed Tower Transit as the awarded operator next to Stagecoach London as the current operator — both correct historically but confusing side-by-side. Stagecoach acquired Tower Transit's Lea Interchange (East London) operations in 2024 and inherited the contract; the tender section now folds to "Stagecoach" so the two read as one operator. Same handling already applied to RATP Dev → First (Feb 2025 acquisition).</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.12</span> Jun 02, 2026</div>

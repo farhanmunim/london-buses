@@ -13,6 +13,17 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.13 — Garage popup parity & small UX touches
+
+_2026-06-02_
+
+- **NEW** Clicking a garage marker exposes the same **View all routes operated here** CTA that's been on the side drawer — same shape, same downstream behaviour. Filters the network to that garage's routes without opening the drawer.
+- **NEW** Both CTAs also flash the "Operating from here" tooltip above the chosen garage marker — the same visual that fires when a single route is focused now fires for a garage. New `highlightGarageByCode(code)` helper in `js/map.js` keeps the two entry points (popup + drawer) in lockstep.
+- **NEW** Colour swatches on the Route Type filter pills — only when colouring routes by type — so the legend connection between pill and line is direct. `paint-mode.js` toggles `html.paint-by-type`; CSS reveals the dots only when that class is on.
+- **FIX** Route 339's tender block showed Tower Transit as the awarded operator next to Stagecoach London as the current operator — both correct historically, confusing together. Stagecoach acquired Tower Transit's Lea Interchange operations in 2024 and inherited the contract; the awarded-operator display now folds to "Stagecoach". Same handling already applied to RATP Dev → First (Feb 2025). `OPERATOR_ACQUISITION_PAIRS` in `js/route-detail.js` lists the parent links; `data/operator-aliases.json` is the canonical record.
+
+---
+
 ## v2.12 — Tender split into three sections & sharper map
 
 _2026-06-02_
