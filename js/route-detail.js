@@ -29,64 +29,67 @@ const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid'
 // Keyed by the value element's data-rc-* attribute (without the prefix).
 // The dynamic perf / MPS tiles flip their tip text alongside their label
 // (EWT vs OTP) and are wired separately in buildCard's reliability block.
-// Tooltip text — "what · source · freshness". Mirrors the Data sources table
-// in the About modal so users can answer "what is this, where does it come
-// from, how current is it?" without leaving the route card. Shown via the
-// custom hover popup wired by js/tooltip.js. The ⓘ pseudo-element CSS on the
-// labels advertises that a tooltip is available.
-const SRC = {
-  TFL_API:      'TfL Open Data API · as at last weekly refresh',
-  TFL_IBUS:     'TfL iBus open data · as at last weekly refresh',
-  DVLA:         'DVLA Vehicle Enquiry Service · per-vehicle 90-day cache; refreshed weekly',
-  LBR:          'londonbusroutes.net · as at last weekly refresh',
-  QSI:          'TfL Bus Performance (QSI) report · TfL publishes every ~4 weeks',
-  QSI_ROUTE:    'TfL per-route QSI reports · set per tender contract',
-  TENDER:       'TfL tender records · refreshed weekly',
-  PROG:         'TfL tendering programme · refreshed weekly',
-  LOOKUP:       'curated vehicle lookup over LBR chassis strings · refreshed weekly',
-  DERIVED:      'derived from accepted bid ÷ cost per mile · refreshed weekly',
+// Tooltip text. Format: "[short description.] Source: X. Freshness: Y." The
+// description is dropped when the label itself is self-explanatory.
+const tip = (desc, source, freshness) =>
+  (desc ? desc + '. ' : '') + 'Source: ' + source + '. Freshness: ' + freshness + '.';
+const SOURCE = {
+  TFL_API:   'TfL Open Data API',
+  TFL_IBUS:  'TfL iBus open data',
+  DVLA:      'DVLA Vehicle Enquiry Service',
+  LBR:       'londonbusroutes.net',
+  QSI:       'TfL Bus Performance (QSI) report',
+  QSI_ROUTE: 'TfL per-route QSI reports',
+  TENDER:    'TfL tender records',
+  PROG:      'TfL tendering programme',
+  LOOKUP:    'curated vehicle lookup over LBR chassis strings',
+  DERIVED:   'derived (accepted bid ÷ cost per mile)',
 };
+const WEEKLY      = 'as at last weekly refresh';
+const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed weekly';
+const QSI_FRESH   = 'TfL publishes every ~4 weeks';
+const PER_TENDER  = 'set per tender contract';
 const TIPS = {
   // Route KPI tiles
-  pvr:             `Peak Vehicle Requirement — buses needed at peak · ${SRC.LBR}`,
-  stops:           `Number of stops on the route · ${SRC.TFL_API}`,
-  freq:            `Frequency band — H = 5+ buses/hour, L = fewer · ${SRC.TFL_API}`,
+  pvr:             tip('Peak Vehicle Requirement — buses needed at peak',     SOURCE.LBR,     WEEKLY),
+  stops:           tip('',                                                    SOURCE.TFL_API, WEEKLY),
+  freq:            tip('H = 5+ buses/hour, L = fewer',                        SOURCE.TFL_API, WEEKLY),
   // Route detail rows
-  garage:          `Operating garage · ${SRC.LBR}`,
+  garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
   // Fleet rows
-  deck:            `Deck type · ${SRC.LOOKUP}`,
-  propulsion:      `Propulsion type · LBR chassis codes cross-checked with ${SRC.DVLA}`,
-  'vehicle-make':  `Vehicle manufacturer · ${SRC.DVLA}`,
-  'vehicle-model': `Vehicle model (chassis and body) · ${SRC.LBR}`,
-  age:             `Mean age of buses observed on the route · ${SRC.DVLA}`,
+  deck:            tip('',                                                    SOURCE.LOOKUP,  WEEKLY),
+  propulsion:      tip('LBR chassis codes cross-checked with DVLA',           SOURCE.LBR + ' + ' + SOURCE.DVLA, WEEKLY),
+  'vehicle-make':  tip('Manufacturer',                                        SOURCE.DVLA,    WEEKLY_DVLA),
+  'vehicle-model': tip('Chassis and body',                                    SOURCE.LBR,     WEEKLY),
+  age:             tip('Mean age of buses observed on the route',             SOURCE.DVLA,    WEEKLY_DVLA),
   // Tender · Current active contract
-  'current-op':    `Operator who won the originating tender · ${SRC.TENDER}`,
-  'current-award': `Award date of the current in-service contract · ${SRC.TENDER}`,
-  'contract-start':`Date the current contract began service · ${SRC.LBR}`,
-  term:            `Contract length in years (TQ N spec + reduction/extension notes) · ${SRC.LBR}`,
-  'current-cpm':   `Cost per live mile of the current contract · ${SRC.TENDER}`,
-  'current-miles': `Annual contracted live miles · ${SRC.DERIVED}`,
-  'current-veh':   `Vehicle specification required by the current contract · ${SRC.TENDER}`,
-  'current-joint': `Whether the current contract was tendered as part of a joint bid · ${SRC.TENDER}`,
-  'current-bids':  `Number of operators that bid for the current contract · ${SRC.TENDER}`,
+  'current-op':    tip('Operator who won the originating tender',             SOURCE.TENDER,  WEEKLY),
+  'current-award': tip('Award date of the current in-service contract',      SOURCE.TENDER,  WEEKLY),
+  'contract-start':tip('Date the current contract began service',             SOURCE.LBR,     WEEKLY),
+  term:            tip('TQ N spec with reduction / extension notes',          SOURCE.LBR,     WEEKLY),
+  'current-cpm':   tip('Cost per live mile of the current contract',          SOURCE.TENDER,  WEEKLY),
+  'current-miles': tip('Annual contracted live miles',                        SOURCE.DERIVED, WEEKLY),
+  'current-veh':   tip('Vehicle specification required by the current contract', SOURCE.TENDER, WEEKLY),
+  'current-joint': tip('Whether tendered as part of a joint bid',             SOURCE.TENDER,  WEEKLY),
+  'current-bids':  tip('Number of operators that bid',                        SOURCE.TENDER,  WEEKLY),
   // Tender · Next contract — awarded
-  'last-award':    `Award date of the latest tender — the contract about to take effect · ${SRC.TENDER}`,
-  'next-start':    `Date the next contract begins service · ${SRC.PROG}`,
-  tranche:         `Programme batch this route’s upcoming tender sits in · ${SRC.PROG}`,
-  value:           `Cost per live mile of the latest tender · ${SRC.TENDER}`,
-  'annual-miles':  `Annual contracted live miles of the latest tender · ${SRC.DERIVED}`,
-  'awarded-veh':   `Vehicle specification required by the next contract · ${SRC.TENDER}`,
-  joint:           `Whether the latest tender was a joint bid · ${SRC.TENDER}`,
-  bids:            `Number of operators that bid for the latest tender · ${SRC.TENDER}`,
+  'last-award':    tip('Award date of the latest tender',                     SOURCE.TENDER,  WEEKLY),
+  'next-start':    tip('Date the next contract begins service',               SOURCE.PROG,    WEEKLY),
+  tranche:         tip('Programme batch this route’s upcoming tender sits in', SOURCE.PROG,   WEEKLY),
+  value:           tip('Cost per live mile of the latest tender',             SOURCE.TENDER,  WEEKLY),
+  'annual-miles':  tip('Annual contracted live miles of the latest tender',   SOURCE.DERIVED, WEEKLY),
+  'awarded-veh':   tip('Vehicle specification required by the next contract', SOURCE.TENDER,  WEEKLY),
+  joint:           tip('Whether the latest tender was a joint bid',           SOURCE.TENDER,  WEEKLY),
+  bids:            tip('Number of operators that bid',                        SOURCE.TENDER,  WEEKLY),
   // Tender · Previous operator
-  previous:        `Operator before the current incumbent · ${SRC.TENDER}`,
-  'prev-award':    `Award date of the previous contract · ${SRC.TENDER}`,
-  'prev-term':     `Length of the previous contract · derived from gap to next award · ${SRC.TENDER}`,
-  'prev-cpm':      `Cost per live mile of the previous contract · ${SRC.TENDER}`,
-  'prev-miles':    `Annual contracted live miles of the previous contract · ${SRC.DERIVED}`,
-  'prev-veh':      `Vehicle specification required by the previous contract · ${SRC.TENDER}`,
-  'prev-joint':    `Whether the previous contract was tendered as part of a joint bid · ${SRC.TENDER}`,
-  'prev-bids':     `Number of operators that bid for the previous contract · ${SRC.TENDER}`,
+  previous:        tip('Operator before the current incumbent',               SOURCE.TENDER,  WEEKLY),
+  'prev-award':    tip('Award date of the previous contract',                 SOURCE.TENDER,  WEEKLY),
+  'prev-term':     tip('Length of the previous contract (gap to next award)', SOURCE.TENDER,  WEEKLY),
+  'prev-cpm':      tip('Cost per live mile of the previous contract',         SOURCE.TENDER,  WEEKLY),
+  'prev-miles':    tip('Annual contracted live miles of the previous contract', SOURCE.DERIVED, WEEKLY),
+  'prev-veh':      tip('Vehicle specification required by the previous contract', SOURCE.TENDER, WEEKLY),
+  'prev-joint':    tip('Whether the previous contract was a joint bid',       SOURCE.TENDER,  WEEKLY),
+  'prev-bids':     tip('Number of operators that bid for the previous contract', SOURCE.TENDER, WEEKLY),
 };
 
 // Walk the TIPS map and attach `data-tip` attributes to each row's label.
@@ -204,7 +207,7 @@ function normaliseTenderOperator(name) {
 export function renderRouteCards(entries, { direction = '1' } = {}) {
   if (!routeResults || !routeCardTpl) return;
   clearCards();
-  if (!entries.length) { showNoResult(); return; }
+  if (!entries.length) { showNoResultip(); return; }
 
   routeResults.hidden = false;
   if (routeNoResult) routeNoResult.hidden = true;
@@ -214,7 +217,7 @@ export function renderRouteCards(entries, { direction = '1' } = {}) {
   for (const entry of entries) routeResults.appendChild(buildCard(entry, { single, direction }));
 }
 
-export function showNoResult() {
+export function showNoResultip() {
   clearCards();
   if (!routeResults) return;
   routeResults.hidden = false;
@@ -222,7 +225,7 @@ export function showNoResult() {
   if (routePrompt)   routePrompt.style.display = 'none';
 }
 
-export function showRoutePrompt() {
+export function showRoutePromptip() {
   clearCards();
   if (routePrompt)   routePrompt.style.display = '';
   if (routeResults)  routeResults.hidden = true;
@@ -590,6 +593,6 @@ const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct
 function formatHumanDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
   if (!m) return iso;
-  const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
-  return `${parseInt(m[3], 10)} ${mon} ${m[1]}`;
+  const mon = MONTHS_SHORT[parseIntip(m[2], 10) - 1] ?? m[2];
+  return `${parseIntip(m[3], 10)} ${mon} ${m[1]}`;
 }

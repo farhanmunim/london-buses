@@ -605,7 +605,7 @@ export function renderGarages(garages, garageRoutes = {}) {
     // file for this garage.
     const capacity = Number.isFinite(g.capacity) ? g.capacity : null;
     const capRow = capacity
-      ? `<div><dt data-tip="Authorised vehicles at this operating centre · DVSA operator licence · curated, updates at licence variation (~yearly)">Capacity</dt><dd>${capacity}</dd></div>`
+      ? `<div><dt data-tip="Authorised vehicles at this operating centre. Source: DVSA operator licence. Freshness: curated, updates at licence variation (~yearly).">Capacity</dt><dd>${capacity}</dd></div>`
       : '';
 
     // Source hovers on every label — mirrors the route-card tooltips. The
@@ -614,11 +614,11 @@ export function renderGarages(garages, garageRoutes = {}) {
     marker.bindPopup(
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
-        `<div><dt data-tip="Operator group · londonbusroutes.net · as at last weekly refresh">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
-        `<div><dt data-tip="Peak Vehicle Requirement (garage total) · londonbusroutes.net · as at last weekly refresh">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Operator group. Source: londonbusroutes.net. Freshness: as at last weekly refresh.">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Peak Vehicle Requirement (garage total). Source: londonbusroutes.net. Freshness: as at last weekly refresh.">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
         capRow +
-        `<div><dt data-tip="Share of the garage's PVR run by battery-electric routes · derived from per-route propulsion · refreshed weekly">Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
-        `<div><dt data-tip="Number of routes operated from this garage · londonbusroutes.net · as at last weekly refresh">Routes operated</dt><dd>${count}</dd></div>` +
+        `<div><dt data-tip="Share of the garage's PVR run by battery-electric routes. Source: derived from per-route propulsion. Freshness: refreshed weekly.">Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
+        `<div><dt data-tip="Number of routes operated from this garage. Source: londonbusroutes.net. Freshness: as at last weekly refresh.">Routes operated</dt><dd>${count}</dd></div>` +
       `</dl>` +
       chipsHtml,
       { closeButton: true, maxWidth: 320 }
