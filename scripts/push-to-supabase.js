@@ -209,6 +209,33 @@ async function pushRouteSnapshots() {
     extension_eligible:       (typeof r.extensionEligible === 'boolean') ? r.extensionEligible : null,
     next_award_propulsion:    r.nextAwardPropulsion ?? null,
     next_award_deck:          r.nextAwardDeck ?? null,
+    next_tender_tranche:      r.nextTenderTranche != null && String(r.nextTenderTranche).trim() !== '' ? String(r.nextTenderTranche) : null,
+    // Current active contract — the originating award, distinct from the
+    // latest tender. Distinguished from `last_*` so a snapshot row carries
+    // both 'what's running today' (current_*) and 'what's most recently
+    // been awarded' (last_*) without a multi-table JOIN at query time.
+    current_contract_award_date:           r.currentContractAwardDate ?? null,
+    current_contract_cost_per_mile:        Number.isFinite(r.currentContractCostPerMile)        ? r.currentContractCostPerMile        : null,
+    current_contract_accepted_bid:         Number.isFinite(r.currentContractAcceptedBid)        ? r.currentContractAcceptedBid        : null,
+    current_contracted_annual_miles:       Number.isFinite(r.currentContractedAnnualMiles)      ? r.currentContractedAnnualMiles      : null,
+    current_contract_number_of_tenderers:  Number.isFinite(r.currentContractNumberOfTenderers)  ? r.currentContractNumberOfTenderers  : null,
+    current_contract_was_joint_bid:        (typeof r.currentContractWasJointBid === 'boolean')  ? r.currentContractWasJointBid        : null,
+    current_contract_awarded_propulsion:   r.currentContractAwardedPropulsion ?? null,
+    current_contract_awarded_deck:         r.currentContractAwardedDeck ?? null,
+    current_contract_awarded_operator:     r.currentContractAwardedOperator ?? null,
+    // Latest-tender operator — companion to last_award_date. Distinct from
+    // previous_operator (which is the predecessor, not the latest awardee).
+    last_awarded_operator:                 r.lastAwardedOperator ?? null,
+    // Previous-operator contract detail — full like-for-like row with the
+    // current and latest blocks. previous_operator + previous_award_date
+    // already existed; the rest of the row is new in 0012.
+    previous_award_date:                   r.previousAwardDate ?? null,
+    previous_cost_per_mile:                Number.isFinite(r.previousCostPerMile)               ? r.previousCostPerMile               : null,
+    previous_accepted_bid:                 Number.isFinite(r.previousAcceptedBid)               ? r.previousAcceptedBid               : null,
+    previous_contracted_annual_miles:      Number.isFinite(r.previousContractedAnnualMiles)     ? r.previousContractedAnnualMiles     : null,
+    previous_contract_term_years:          Number.isFinite(r.previousContractTermYears)         ? r.previousContractTermYears         : null,
+    previous_number_of_tenderers:          Number.isFinite(r.previousNumberOfTenderers)         ? r.previousNumberOfTenderers         : null,
+    previous_was_joint_bid:                (typeof r.previousWasJointBid === 'boolean')         ? r.previousWasJointBid               : null,
   }));
   await upsertInBatches('route_snapshots', rows, 'route_id,snapshot_date');
 }
