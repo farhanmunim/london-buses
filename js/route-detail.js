@@ -344,10 +344,10 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // Tile 1 = actual measurement (EWT / OTP). Tile 2 = the contractual
   // Minimum Performance Standard for the same metric. Labels and tooltips
   // both swap together so the metric is unambiguous regardless of class.
-  const TIP_EWT     = 'Excess Wait Time in minutes';
-  const TIP_OTP     = 'On-Time Performance';
-  const TIP_EWT_MPS = 'Contractual EWT minimum';
-  const TIP_OTP_MPS = 'Contractual OTP minimum';
+  const TIP_EWT     = tip('Excess Wait Time in minutes',  SOURCE.QSI_ROUTE, QSI_FRESH);
+  const TIP_OTP     = tip('On-Time Performance',          SOURCE.QSI_ROUTE, QSI_FRESH);
+  const TIP_EWT_MPS = tip('Contractual EWT minimum',      SOURCE.TENDER,    PER_TENDER);
+  const TIP_OTP_MPS = tip('Contractual OTP minimum',      SOURCE.TENDER,    PER_TENDER);
   if (sc === 'high-frequency') {
     if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
     if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
