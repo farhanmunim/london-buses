@@ -606,6 +606,22 @@ a{color:inherit;text-decoration:none}
   text-transform:uppercase;color:var(--mu);margin-bottom:4px;
 }
 
+/* "View all routes operated here" CTA inside the garage popup — mirrors
+   the drawer's #dShowRoutes (.d-cta-full) so the two entry points feel
+   identical. Sits below the route chips. */
+.map-popup__cta{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;margin-top:10px;padding:9px 12px;
+  font-family:inherit;font-size:12px;font-weight:600;
+  color:var(--acc);background:transparent;
+  border:1px solid var(--bd);border-radius:8px;
+  cursor:pointer;transition:background .15s, border-color .15s;
+}
+.map-popup__cta:hover{background:var(--acc-bg);border-color:var(--acc)}
+.map-popup__cta:active{transform:scale(.98)}
+.map-popup__cta svg{opacity:.75;transition:transform .15s}
+.map-popup__cta:hover svg{transform:translateX(2px);opacity:1}
+
 /* Garage pin */
 .garage-marker{background:none!important;border:none!important}
 /* Garage marker — port of the original farhan.app/london-buses design.

@@ -2,6 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
+import { state } from './state.js';
+
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
 
@@ -599,7 +601,11 @@ export function renderGarages(garages, garageRoutes = {}) {
          <div class="map-id-popup__chips map-popup__route-chips">${routes.map(r => {
           const col = OPERATOR_COLORS[r.operator] ?? OPERATOR_FALLBACK_COLOR;
           return `<span class="map-id-popup__chip" data-route="${r.routeId}" style="--chip-col:${col}">${r.routeId}</span>`;
-        }).join('')}</div>`
+        }).join('')}</div>
+        <button type="button" class="map-popup__cta" data-garage-view-all>
+          <span>View all routes operated here</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+        </button>`
       : '';
 
     // Operating-centre capacity (DVSA operator licence), shown only when on
@@ -636,6 +642,20 @@ export function renderGarages(garages, garageRoutes = {}) {
             document.dispatchEvent(new CustomEvent('map:routeclick', { detail: chip.dataset.route }));
           });
         });
+        // Mirror the drawer "View all routes operated here" CTA — sets the
+        // sidebar garage filter so the network narrows to this garage's
+        // routes. Same selectedGarages shape + same events as
+        // js/stats.js → #dShowRoutes; keeps the popup and drawer in lockstep.
+        const cta = root.querySelector('[data-garage-view-all]');
+        if (cta) {
+          cta.addEventListener('click', () => {
+            const routeIds = routes.map(r => r.routeId);
+            state.selectedGarages = [{ code: g.code, name: g.name ?? g.code, operator: g.operator ?? null, routeIds }];
+            document.dispatchEvent(new CustomEvent('app:garageselected', { detail: state.selectedGarages }));
+            document.dispatchEvent(new CustomEvent('app:filterschanged'));
+            marker.closePopup();
+          });
+        }
       }, 0);
     });
 
