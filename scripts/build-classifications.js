@@ -371,6 +371,10 @@ const TENDER_OP_GROUP = {
 const TENDER_OP_PREFIXES = [
   ['Arriva ', 'Arriva'], ['Abellio ', 'Abellio'], ['Stagecoach ', 'Stagecoach'],
   ['First ', 'First'], ['Metroline ', 'Metroline'], ['Go-Ahead ', 'Go-Ahead'],
+  // The Tower-Transit-acquired Hotspur Lane operations rebranded to
+  // "Transport UK London" / "Transport UK West London" on the tender form
+  // while garages.geojson uses the parent "Transport UK".
+  ['Transport UK ', 'Transport UK'],
 ];
 function tenderOpParent(name) {
   if (!name) return null;
@@ -937,6 +941,11 @@ for (const file of routeFiles) {
     // actual=hybrid until the new buses arrive.
     awardedPropulsion: override.awardedPropulsion ?? (tendersLoaded ? deriveAwardedPropulsion(lastTender?.notes, lastTender?.joint_bids) : (lastRec.awardedPropulsion ?? null)),
     awardedDeck:       override.awardedDeck       ?? (tendersLoaded ? deriveAwardedDeck(lastTender?.notes)                                : (lastRec.awardedDeck       ?? null)),
+    // Awarded operator — who won the most recent tender (parent brand). The
+    // route card uses this to flag an upcoming operator change when the latest
+    // award went to someone other than the current incumbent at the top of
+    // the card.
+    lastAwardedOperator: override.lastAwardedOperator ?? (tendersLoaded ? (tenderOpParent(lastTender?.awarded_operator) ?? null) : (lastRec.lastAwardedOperator ?? null)),
     // ── Current active contract (originating tender) ─────────────────────────
     // The `last*` cluster above describes the **most recent** tender award.
     // In the steady state that IS the current contract, but during the
@@ -961,6 +970,7 @@ for (const file of routeFiles) {
     currentContractWasJointBid:       override.currentContractWasJointBid       ?? (tendersLoaded ? cctJoint                          : (lastRec.currentContractWasJointBid ?? null)),
     currentContractAwardedPropulsion: override.currentContractAwardedPropulsion ?? (tendersLoaded ? (cct ? deriveAwardedPropulsion(cct.notes, cct.joint_bids) : null) : (lastRec.currentContractAwardedPropulsion ?? null)),
     currentContractAwardedDeck:       override.currentContractAwardedDeck       ?? (tendersLoaded ? (cct ? deriveAwardedDeck(cct.notes)                       : null) : (lastRec.currentContractAwardedDeck       ?? null)),
+    currentContractAwardedOperator:   override.currentContractAwardedOperator   ?? (tendersLoaded ? (tenderOpParent(cct?.awarded_operator) ?? null) : (lastRec.currentContractAwardedOperator ?? null)),
     // Previous-tender vehicle spec — derived from the same changed-hands
     // award as `previousOperator` (not tenderHistory[1], which can be a
     // same-operator re-award), so the whole "Previous operator" section

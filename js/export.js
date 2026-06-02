@@ -188,6 +188,7 @@ function buildRouteRows(routes, stopCounts) {
         contract_start_date:                str(cls.contractStartDate),
         contract_term_years:                num(cls.contractTermYears),
         current_contract_award_date:        str(cls.currentContractAwardDate),
+        current_contract_awarded_operator:  str(cls.currentContractAwardedOperator),
         current_contract_cost_per_mile_gbp: num(cls.currentContractCostPerMile),
         current_contract_accepted_bid_gbp:  num(cls.currentContractAcceptedBid),
         current_contracted_annual_miles:    num(cls.currentContractedAnnualMiles),
@@ -199,6 +200,7 @@ function buildRouteRows(routes, stopCounts) {
         // ── Tender — latest award (may be the same as current, or the
         //     just-awarded next contract if we're in the transition window) ──
         last_award_date:           str(cls.lastAwardDate),
+        last_awarded_operator:     str(cls.lastAwardedOperator),
         awards_on_record:          num(cls.tenderAwardCount),
         bids_received:             num(cls.numberOfTenderers),
         was_joint_bid:             yesNo(cls.wasJointBid),

@@ -400,6 +400,15 @@ a{color:inherit;text-decoration:none}
 /* "(no change)" / "first award" placeholder vocabulary — quieter than the
    real data values, distinct from the bare "—" we use for missing data. */
 .rc-tr-v.rc-tr-v--muted{color:var(--mu);font-style:italic;font-weight:400}
+/* Small badge next to the Next-contract operator name when the awarded
+   operator differs from the current incumbent at the top of the card. */
+.rc-op-change{
+  display:inline-block; padding:1px 6px; border-radius:8px;
+  font-size:9.5px; font-weight:700; letter-spacing:.6px; text-transform:uppercase;
+  background:var(--amber-bg, rgba(217,119,6,.18));
+  color:var(--amber-tx, #c2810c);
+  border:1px solid var(--amber-bd, rgba(217,119,6,.45));
+}
 
 /* Tooltip-available labels — a faint dashed underline (standard "more
    info on hover" convention) signals availability without taking up any

@@ -43,9 +43,10 @@ const TIPS = {
   'vehicle-model': 'Vehicle model (chassis and body)',
   age:             'Mean age of buses observed on the route',
   // Tender · Current active contract rows
+  'current-op':    'Operator who won the originating tender for the in-service contract',
+  'current-award': 'Award date of the current in-service contract',
   'contract-start':'Date the current contract began service',
   term:            'Contract length in years',
-  'current-award': 'Award date of the current in-service contract',
   'current-cpm':   'Cost per live mile of the current contract',
   'current-miles': 'Annual contracted live miles of the current contract',
   'current-veh':   'Vehicle specification required by the current contract',
@@ -54,7 +55,7 @@ const TIPS = {
   // Tender · Next contract — awarded rows (shown only when a re-tender has
   // been awarded for a contract that hasn't started yet)
   'last-award':    'Award date of the latest tender — the contract about to take effect',
-  'next-effect':   'Date the next contract begins service',
+  'next-start':    'Date the next contract begins service',
   tranche:         'Programme batch this route’s upcoming tender sits in',
   bids:            'Number of operators that bid for the latest tender',
   joint:           'Whether the latest tender was a joint bid',
@@ -103,12 +104,17 @@ const TYPE_CHIP = {
 
 // Short labels for the route-card operator pill (Stagecoach London → Stagecoach).
 const OPERATOR_SHORT = {
-  'Arriva London':     'Arriva',
-  'First London':      'First',
-  'Go-Ahead London':   'Go-Ahead',
-  'Stagecoach London': 'Stagecoach',
-  'Uno Buses':         'Uno',
-  'RATP Dev':          'RATP',
+  'Arriva London':           'Arriva',
+  'First London':            'First',
+  'Go-Ahead London':         'Go-Ahead',
+  'Stagecoach London':       'Stagecoach',
+  'Uno Buses':               'Uno',
+  'RATP Dev':                'RATP',
+  // Belt-and-braces — these are normalised at build time in
+  // `tenderOpParent`, but keep them here so any future flow that lands a raw
+  // tender-form name in the UI still renders consistently.
+  'Transport UK London':     'Transport UK',
+  'Transport UK West London':'Transport UK',
 };
 
 // Tender-history operator → parent group rollup. The TfL tender form
@@ -368,6 +374,15 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // for ~10% in the transition window they don't (a re-tender has been
   // awarded but the previous contract is still running). Each row hides when
   // its value isn't on file rather than rendering "—".
+
+  // Operator who won the originating tender. Usually equals the incumbent at
+  // the top of the card; differs only for novated contracts (rare).
+  const currentOpDisplay = OPERATOR_SHORT[op] ?? op;
+  const cAwardedOp = classification?.currentContractAwardedOperator;
+  const cAwardedOpDisplay = cAwardedOp ? (OPERATOR_SHORT[cAwardedOp] ?? cAwardedOp) : null;
+  toggleRow(node, 'current-op', !!cAwardedOpDisplay);
+  if (cAwardedOpDisplay) set('[data-rc-current-op]', cAwardedOpDisplay);
+
   const cAward = classification?.currentContractAwardDate;
   toggleRow(node, 'current-award', !!cAward);
   if (cAward) set('[data-rc-current-award]', formatHumanDate(cAward));
@@ -403,10 +418,19 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const nextSec    = node.querySelector('[data-rc-section="next-contract"]');
   if (nextSec) nextSec.hidden = !showNext;
 
-  // Takes-effect date for the just-awarded contract (when known).
-  const nextEffectIso = classification?.nextTenderStart;
-  toggleRow(node, 'next-effect', !!(showNext && nextEffectIso));
-  if (showNext && nextEffectIso) set('[data-rc-next-effect]', formatHumanDate(nextEffectIso));
+  // Awarded operator on the next contract. Flag inline when it doesn't match
+  // the incumbent at the top of the card — otherwise a user reading the
+  // section would assume the new contract is going to the same operator.
+  const nextOp = classification?.lastAwardedOperator;
+  const nextOpDisplay = nextOp ? (OPERATOR_SHORT[nextOp] ?? nextOp) : null;
+  set('[data-rc-next-op]', nextOpDisplay ?? '—');
+  const opChangeEl = node.querySelector('[data-rc-op-change]');
+  if (opChangeEl) opChangeEl.hidden = !(showNext && nextOpDisplay && nextOpDisplay !== currentOpDisplay);
+
+  // Contract start of the just-awarded contract.
+  const nextStartIso = classification?.nextTenderStart;
+  toggleRow(node, 'next-start', !!(showNext && nextStartIso));
+  if (showNext && nextStartIso) set('[data-rc-next-start]', formatHumanDate(nextStartIso));
 
   // Previous operator — derived from tender history (most recent earlier
   // award whose operator differs from the current incumbent). Subsidiary
