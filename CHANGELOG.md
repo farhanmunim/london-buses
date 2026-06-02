@@ -13,6 +13,20 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.12 — Tender split into three sections & sharper map
+
+_2026-06-02_
+
+- **NEW** Tender block on the route card splits into three sections: **Current active contract** (the originating award — the one a route is actually running on today), **Next contract — awarded** (only when a re-tender has landed for a not-yet-started contract), and **Previous operator** (the last genuine change of hands). Rows in each section follow the same order — Operator, Tranche, Awarded on, Contract start, Length, Cost/mile, Contracted miles, Awarded vehicle, Joint bid, Bids received — so the three boxes read like-for-like. Resolves the long-standing case where a route in the transition window (e.g. 100) showed "Awarded Feb 2026" next to "Contract start Sep 2019".
+- **NEW** Operator pill in every tender section, with an inline `change` flag when the next-contract awarded operator differs from the current incumbent. FirstGroup / RATP Dev (Feb 2025 acquisition) treated as the same operator on the flag, so ~10 affected routes don't show a false change. Curated lookup: `data/operator-aliases.json`.
+- **NEW** Hover tooltips on every route-card label expose source + freshness in a consistent `Source: X. Freshness: Y.` format.
+- **NEW** Data Sources table inside the About modal — every source, the data points it feeds, freshness.
+- **UX** Map tiles serve at 2× on hi-DPI displays via `detectRetina: true` — road names and labels stay crisp at larger window sizes.
+- **FIX** Deck type corrected on **141 routes** mis-labelled DD. Cause: `deriveDeck()` regex read door-count markers (`2D` = dual door) as deck markers. Curated vehicle lookup now takes precedence over the regex, so Enviro200 / BYD D8UR / Streetlite always render SD.
+- **FIX** Two regressions from a refactor mishap that broke the route-card panel — restored.
+
+---
+
 ## v2.11 — Garage filter & filtered-route list
 
 _2026-05-22_
