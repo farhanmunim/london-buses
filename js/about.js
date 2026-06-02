@@ -36,6 +36,13 @@
         </div>
 
         <section class="modal-section">
+          <span class="modal-section-tag">Privacy</span>
+          <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
+            Aggregate page-view stats only via <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Analytics</a>. No accounts, no personal data, no advertising cookies.
+          </p>
+        </section>
+
+        <section class="modal-section">
           <span class="modal-section-tag">Data sources</span>
           <table class="modal-data-table">
             <thead>
@@ -54,13 +61,6 @@
               <tr><td>DVSA operator licensing</td><td>Garage capacity (authorised vehicles per operating centre)</td><td>Manually curated; updates at licence variation (~yearly)</td></tr>
             </tbody>
           </table>
-        </section>
-
-        <section class="modal-section">
-          <span class="modal-section-tag">Privacy</span>
-          <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
-            Aggregate page-view stats only via <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Analytics</a>. No accounts, no personal data, no advertising cookies.
-          </p>
         </section>
 
         <section class="modal-section">
