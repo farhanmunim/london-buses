@@ -239,6 +239,26 @@ function clearCards() {
   [...routeResults.querySelectorAll('.route-card')].forEach(el => el.remove());
 }
 
+// Acquisition links between brands — pairs of names that are the same
+// operating entity under modern ownership. Used to align the awarded-
+// operator display with the current incumbent on routes where a contract
+// transferred via acquisition rather than re-tender:
+//   • Tower Transit's Lea Interchange (East London) routes → Stagecoach (2024)
+//   • RATP Dev London → First Bus London (Feb 2025, ~83 routes)
+// `previousOperator` is untouched — those records reflect genuine prior
+// awards (re-tenders), which remain historically accurate.
+const OPERATOR_ACQUISITION_PAIRS = [
+  ['First',      'RATP'],
+  ['Stagecoach', 'Tower Transit'],
+];
+function sameOperator(a, b) {
+  if (a === b) return true;
+  for (const [x, y] of OPERATOR_ACQUISITION_PAIRS) {
+    if ((a === x && b === y) || (a === y && b === x)) return true;
+  }
+  return false;
+}
+
 function buildCard({ id, classification, destinations, stopCount }, { single = false, direction = '1' } = {}) {
   const node = routeCardTpl.content.firstElementChild.cloneNode(true);
   const set  = (sel, text) => { const el = node.querySelector(sel); if (el) el.textContent = text; };
@@ -395,10 +415,20 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // its value isn't on file rather than rendering "—".
 
   // Operator who won the originating tender. Usually equals the incumbent at
-  // the top of the card; differs only for novated contracts (rare).
+  // the top of the card; differs only for novated contracts (rare) and for
+  // acquisitions — where an operator absorbed the contract along with its
+  // depot (Stagecoach took over Tower Transit's Lea Interchange operations
+  // in 2024; FirstGroup acquired RATP Dev London in Feb 2025). The tender
+  // record correctly carries the original awardee, but the display should
+  // align with the current incumbent so the user doesn't read two operators
+  // for one contract. `sameOperator` (defined below) encodes those parent
+  // links.
   const currentOpDisplay = OPERATOR_SHORT[op] ?? op;
-  const cAwardedOp = classification?.currentContractAwardedOperator;
-  const cAwardedOpDisplay = cAwardedOp ? (OPERATOR_SHORT[cAwardedOp] ?? cAwardedOp) : null;
+  const cAwardedOp        = classification?.currentContractAwardedOperator;
+  const cAwardedShort     = cAwardedOp ? (OPERATOR_SHORT[cAwardedOp] ?? cAwardedOp) : null;
+  const cAwardedOpDisplay = cAwardedShort && sameOperator(currentOpDisplay, cAwardedShort)
+    ? currentOpDisplay
+    : cAwardedShort;
   toggleRow(node, 'current-op', !!cAwardedOpDisplay);
   if (cAwardedOpDisplay) set('[data-rc-current-op]', cAwardedOpDisplay);
 
@@ -440,13 +470,13 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // Awarded operator on the next contract. Flag inline when it doesn't match
   // the incumbent at the top of the card — otherwise a user reading the
   // section would assume the new contract is going to the same operator.
-  // RATP Dev sold its London bus operations to FirstGroup in Feb 2025
-  // (~83 routes), so legacy "London United" / "RATP Dev" awards are now
-  // First Bus London — treat them as the same entity for the flag, while
-  // preserving the historical RATP name in `previousOperator`.
-  const sameOperator = (a, b) => a === b || ((a === 'First' || a === 'RATP') && (b === 'First' || b === 'RATP'));
+  // `sameOperator` is hoisted above to also normalise the current-contract
+  // awarded-operator display.
   const nextOp = classification?.lastAwardedOperator;
-  const nextOpDisplay = nextOp ? (OPERATOR_SHORT[nextOp] ?? nextOp) : null;
+  const nextOpShort = nextOp ? (OPERATOR_SHORT[nextOp] ?? nextOp) : null;
+  const nextOpDisplay = nextOpShort && sameOperator(currentOpDisplay, nextOpShort)
+    ? currentOpDisplay
+    : nextOpShort;
   set('[data-rc-next-op]', nextOpDisplay ?? '—');
   const opChangeEl = node.querySelector('[data-rc-op-change]');
   if (opChangeEl) opChangeEl.hidden = !(showNext && nextOpDisplay && !sameOperator(nextOpDisplay, currentOpDisplay));
