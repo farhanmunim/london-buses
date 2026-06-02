@@ -20,6 +20,10 @@ function apply(mode) {
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
   });
+  // Surface the active paint mode at the document root so the route-type
+  // filter pills can reveal their colour dots only when colouring-by-type
+  // is on (parallel to the always-visible operator-pill dots).
+  document.documentElement.classList.toggle('paint-by-type', mode === 'type');
 }
 
 apply(initial);
