@@ -175,6 +175,7 @@ export function initMap() {
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> © <a href="https://carto.com/" target="_blank">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
+    detectRetina: true,
   }).addTo(_map);
 
   _map.on('click', e => {
