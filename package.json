@@ -13,6 +13,8 @@
     "fetch-route-details": "node scripts/fetch-route-details.js",
     "fetch-vehicle-fleet": "node scripts/fetch-vehicle-fleet.js",
     "fetch-route-vehicles": "node scripts/fetch-route-vehicles.js",
+    "sample-vehicles": "node scripts/sample-vehicles.js",
+    "backfill-route-vehicle-sightings": "node scripts/backfill-route-vehicle-sightings.js",
     "fetch-route-performance": "node scripts/fetch-route-performance.js",
     "fetch-route-mps": "node scripts/fetch-route-mps.js",
     "fetch-tenders": "node scripts/fetch-tenders.js",

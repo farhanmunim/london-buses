@@ -12,11 +12,15 @@
  *   data/source/vehicle-fleet.json  — per-registration DVLA make / fuelType / age (fleet aggregator)
  *   data/source/route-vehicles.json — per-route observed registrations from TfL arrivals
  *
- * Fleet-derived fields (per route):
- *   make             — DVLA-reported manufacturer (mode across observed regs)
+ * Fleet-derived fields (per route) — all computed over the route's CORE fleet
+ * (regs seen on >= MIN_CORE_DAYS distinct days; one-off cover/reserve buses are
+ * filtered out — see aggregateRouteFleet):
+ *   make             — DVLA-reported manufacturer (mode across the core fleet)
  *   propulsion       — DVLA fuelType, mapped — overrides LBR-string heuristic
  *   vehicleAgeYears  — mean age computed from monthOfFirstRegistration
- *   fleetSize        — count of unique observed registrations matched against fleet
+ *   fleetSize        — count of unique core registrations matched against fleet
+ *   fleetConfidence  — 'high' when the core filter had data; 'low' on fallback
+ *   fleetComposition — per-make breakdown of the core fleet
  *
  * Output:
  *   data/route_classifications.json — routeId → { type, isPrefix, lengthBand }
@@ -521,17 +525,21 @@ function modeOf(counts) {
   return best;
 }
 
+// A registration must run the route on at least this many distinct days to
+// count as part of its core fleet. 2 is the minimum that excludes a single
+// one-off cover appearance; raise it once daily sampling makes `days` denser.
+const MIN_CORE_DAYS = 2;
+
 function aggregateRouteFleet(routeId) {
   const obs = routeVehicles[routeId] ?? routeVehicles[routeId?.toUpperCase()] ?? [];
   if (!obs.length) return null;
 
-  // First pass: per-observation triplet (make, propulsion, ageYears). We need
-  // each separately so the second pass can filter outliers — a route's
-  // route-vehicles cache often picks up a reserve vehicle that briefly ran
-  // the route once during peak hour, and that reserve commonly has a
-  // different drivetrain (e.g. a 14-year-old diesel ADL on an electric
-  // route). One outlier in 10 observations skews the displayed avg age by
-  // 1-2 years, which the user notices.
+  // First pass: one record per observed reg with the fields the core-fleet
+  // filter and the headline aggregates need (make, propulsion, ageYears, days).
+  // Keeping `days` per reg is what lets the next pass drop one-off cover buses
+  // — a route's arrivals cache routinely picks up a reserve that ran the route
+  // once during peak, often on a different drivetrain (e.g. a 14-year-old
+  // diesel ADL on an electric route), which would otherwise skew make and age.
   const nowMs = Date.now();
   const samples = [];
   for (const entry of obs) {
@@ -548,48 +556,59 @@ function aggregateRouteFleet(routeId) {
         if (y >= 0 && y < 40) ageYears = y;
       }
     }
-    // sightings/days quantify how often this reg actually ran the route (added
-    // to route-vehicles.json from this release). Legacy entries without them
-    // default to a single sighting so behaviour is unchanged until counts grow.
-    const sightings = Number.isFinite(entry?.sightings) ? entry.sightings : 1;
-    const days      = Number.isFinite(entry?.days)      ? entry.days      : 1;
-    samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears, sightings, days });
+    // `days` = distinct calendar dates this reg was seen running the route
+    // (from route-vehicles.json; fed by the weekly snapshot + the daily
+    // Supabase sampler via the backfill step). It's the recurrence signal the
+    // core-fleet filter keys on. Legacy entries without it default to 1 so
+    // behaviour is unchanged until counts accumulate.
+    const days = Number.isFinite(entry?.days) ? entry.days : 1;
+    samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears, days });
   }
   if (!samples.length) return null;
 
   // ── Core-fleet filter ──────────────────────────────────────────────────
-  // Drop one-off cover/reserve buses so an emergency vehicle that ran the route
-  // once doesn't define its make or skew its age. A reg is "core" when it
-  // recurs: seen on ≥2 distinct days AND with sightings ≥20% of the route's
-  // most-frequently-seen vehicle (relative floor, so a heavily-sampled route
-  // doesn't over-include occasional visitors). Until enough weekly samples
-  // accumulate — cold start, or right after the sightings field ships — every
-  // reg has sightings=1/days=1 and the filter would empty the set; in that case
-  // we fall back to all observations and mark the verdict low-confidence.
-  const maxSightings = samples.reduce((mx, s) => Math.max(mx, s.sightings), 0);
-  const coreSamples  = samples.filter(s => s.days >= 2 && s.sightings >= 0.2 * maxSightings);
-  const useSamples   = coreSamples.length ? coreSamples : samples;
+  // Keep only the route's *recurring* vehicles. A one-off cover/reserve bus
+  // runs the route on a single occasion, so requiring ≥2 distinct days drops
+  // it cleanly while keeping every bus that's part of the regular rotation.
+  // We deliberately use an ABSOLUTE day floor rather than a share-of-max:
+  // TfL /Arrivals only catches buses running at the snapshot instant, so even
+  // a daily regular isn't seen every run — a relative threshold would punish
+  // genuine regulars on sparsely-sampled routes and is unbounded as counts
+  // grow. Until enough samples accumulate (cold start, or right after the
+  // `days` field shipped) every reg has days=1 and the filter would empty the
+  // set; in that case we fall back to all observations and mark the verdict
+  // low-confidence so the UI can soften the claim.
+  const coreSamples = samples.filter(s => s.days >= MIN_CORE_DAYS);
+  const useSamples  = coreSamples.length ? coreSamples : samples;
   const fleetConfidence = coreSamples.length ? 'high' : 'low';
 
-  // Modal propulsion across the core fleet, weighted by how often each vehicle
-  // was actually seen (a daily regular counts more than an occasional one).
+  // Dominant propulsion across the core fleet (this is what the route "is").
+  // Each core reg counts once — the filter has already removed the noise, so
+  // an unweighted mode is both simpler and more robust than weighting by a
+  // sighting count that grows unbounded with how long a bus has served.
   const propCounts = {};
-  for (const s of useSamples) if (s.propulsion) propCounts[s.propulsion] = (propCounts[s.propulsion] ?? 0) + s.sightings;
+  for (const s of useSamples) if (s.propulsion) propCounts[s.propulsion] = (propCounts[s.propulsion] ?? 0) + 1;
   const dominantProp = modeOf(propCounts);
 
   // Headline make/fleetSize/age computed only over core vehicles matching the
   // dominant propulsion. Reserves with a different drivetrain are dropped —
   // they're not part of the route's actual fleet. If propulsion is null on
-  // every sample (no DVLA data at all) we fall back to averaging everything
-  // so the route still gets numbers. make is sighting-weighted for the same
-  // reason as propulsion; age is a plain mean over the (already de-noised) core.
+  // every sample (no DVLA data at all) we fall back to all core vehicles so
+  // the route still gets numbers.
   const fleetSamples = dominantProp ? useSamples.filter(s => s.propulsion === dominantProp) : useSamples;
   const makes = {};
   let ageSum = 0, ageN = 0;
   for (const s of fleetSamples) {
-    if (s.make) makes[s.make] = (makes[s.make] ?? 0) + s.sightings;
+    if (s.make) makes[s.make] = (makes[s.make] ?? 0) + 1;
     if (s.ageYears != null) { ageSum += s.ageYears; ageN++; }
   }
+
+  // Full make breakdown so a genuinely mixed-fleet route can be shown honestly
+  // ("mostly X, some Y") instead of forcing a single winner. Sorted desc.
+  const total = fleetSamples.length;
+  const fleetComposition = Object.entries(makes)
+    .sort((a, b) => b[1] - a[1])
+    .map(([make, count]) => ({ make, count, share: Math.round((count / total) * 100) / 100 }));
 
   return {
     make:            modeOf(makes),
@@ -597,6 +616,7 @@ function aggregateRouteFleet(routeId) {
     vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
     fleetSize:       fleetSamples.length,
     fleetConfidence,
+    fleetComposition: fleetComposition.length ? fleetComposition : null,
   };
 }
 
@@ -863,6 +883,9 @@ for (const file of routeFiles) {
     // core fleet; 'low' when sighting data was too sparse to filter one-offs and
     // we fell back to all observations. Lets the UI soften an unverified claim.
     fleetConfidence: fleetAgg?.fleetConfidence ?? lastRec.fleetConfidence ?? null,
+    // Per-make breakdown of the core fleet ([{make, count, share}], desc) so a
+    // mixed route can be shown honestly rather than collapsed to one make.
+    fleetComposition: fleetAgg?.fleetComposition ?? lastRec.fleetComposition ?? null,
     // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
     // populated depending on serviceClass. perfPeriod tells the UI which TfL
     // reporting period the figure covers.

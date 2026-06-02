@@ -40,6 +40,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadEnv } from './_lib/env.js';
 import { fetchWithTimeout, userAgentHeaders } from './_lib/http.js';
+import { extractRegs } from './_lib/arrivals.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT      = path.resolve(__dirname, '..');
@@ -134,14 +135,9 @@ async function main() {
       const id = ids[i];
       const arr = await fetchJson(apiUrl(`/Line/${encodeURIComponent(id)}/Arrivals`));
       if (Array.isArray(arr)) {
-        const regs = new Set();
-        for (const p of arr) {
-          // TfL exposes the registration as `vehicleId`. Filter to plate-shaped
-          // strings — buses use UK reg plates, so we drop any blank, numeric
-          // train ids, or unexpected formats.
-          const v = String(p?.vehicleId ?? '').toUpperCase().replace(/\s+/g, '');
-          if (/^[A-Z]{1,3}\d{1,3}[A-Z]{0,3}$|^[A-Z]{2}\d{2}[A-Z]{3}$/.test(v)) regs.add(v);
-        }
+        // Plate-shaped `vehicleId`s only — shared with sample-vehicles.js so
+        // both collectors accept exactly the same set (see _lib/arrivals.js).
+        const regs = new Set(extractRegs(arr));
         if (regs.size) {
           if (!observations[id]) observations[id] = new Map();
           const m = observations[id];
