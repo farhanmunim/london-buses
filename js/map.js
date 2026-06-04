@@ -589,6 +589,7 @@ export function renderGarages(garages, garageRoutes = {}) {
         className: 'garage-marker',
         html: `<span class="garage-marker-pin" style="--garage-col:${color}" title="${g.name} — ${g.operator ?? ''}">
                  <span class="garage-marker-op">${short}</span>
+                 ${g.code ? `<span class="garage-marker-code">(${g.code})</span>` : ''}
                </span>`,
         iconSize:   [32, 32],
         iconAnchor: [16, 16],

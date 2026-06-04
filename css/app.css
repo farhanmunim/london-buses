@@ -630,7 +630,7 @@ a{color:inherit;text-decoration:none}
 .garage-marker-pin{
   position:relative;
   width:32px;height:32px;
-  display:inline-flex;align-items:center;justify-content:center;
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
   background:var(--garage-col,hsl(240 10% 12%));
   color:#fff;
   border:2px solid #fff;
@@ -645,13 +645,21 @@ a{color:inherit;text-decoration:none}
 }
 .garage-marker-op{
   font-family:var(--font-sans);
-  font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1;
+  font-size:11px;font-weight:700;letter-spacing:.02em;line-height:1.05;
+}
+/* Garage code, e.g. (RM), under the operator code. Smaller + slightly muted
+   so the operator initials stay the dominant read. */
+.garage-marker-code{
+  font-family:var(--font-sans);
+  font-size:7.5px;font-weight:600;letter-spacing:.01em;line-height:1.05;
+  opacity:.85;
 }
 [data-theme="dark"] .garage-marker-pin{border-color:hsl(240 6% 20%)}
 
 @media (max-width:640px){
   .garage-marker-pin{width:28px;height:28px}
   .garage-marker-op{font-size:10px}
+  .garage-marker-code{font-size:7px}
 }
 
 /* Multi-route end label */
