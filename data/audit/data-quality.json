@@ -1,109 +1,37 @@
 {
-  "generatedAt": "2026-06-02T09:58:39.890Z",
+  "generatedAt": "2026-06-08T14:04:57.512Z",
   "summary": {
     "critical": 0,
-    "warn": 25,
+    "warn": 7,
     "info": 5
   },
   "issues": [
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "75",
+      "id": "5",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.53",
-      "note": "fleetSize=53 pvr=15"
+      "actual": "0.17",
+      "note": "fleetSize=5 pvr=30"
     },
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "83",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.07",
-      "note": "fleetSize=43 pvr=14"
+      "id": "60",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 14.8,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "120",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.29",
-      "note": "fleetSize=56 pvr=17"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "154",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.19",
-      "note": "fleetSize=51 pvr=16"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "156",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.20",
-      "note": "fleetSize=48 pvr=15"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "161",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.50",
-      "note": "fleetSize=56 pvr=16"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "186",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.13",
-      "note": "fleetSize=50 pvr=16"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "213",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.43",
-      "note": "fleetSize=48 pvr=14"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "245",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.33",
-      "note": "fleetSize=40 pvr=12"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "249",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.29",
-      "note": "fleetSize=46 pvr=14"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "252",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.15",
-      "note": "fleetSize=41 pvr=13"
+      "id": "134",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
+      "actual": "WRIGHTBUS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
     },
     {
       "severity": "WARN",
@@ -111,89 +39,17 @@
       "id": "292",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 13.6,
+      "actual": 13.9,
       "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "301",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.80",
-      "note": "fleetSize=38 pvr=10"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "304",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.10",
-      "note": "fleetSize=31 pvr=10"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "306",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.30",
-      "note": "fleetSize=33 pvr=10"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "337",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.27",
-      "note": "fleetSize=36 pvr=11"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "371",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.45",
-      "note": "fleetSize=38 pvr=11"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "422",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.35",
-      "note": "fleetSize=57 pvr=17"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "430",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.73",
-      "note": "fleetSize=41 pvr=11"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "436",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.23",
-      "note": "fleetSize=42 pvr=13"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "460",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.30",
-      "note": "fleetSize=33 pvr=10"
+      "id": "379",
+      "field": "make↔model",
+      "expected": "SWITCH for \"Metrocity EV 8.7m\"",
+      "actual": "ALEXANDER DENNIS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
     },
     {
       "severity": "WARN",
@@ -207,29 +63,11 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "E2",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.20",
-      "note": "fleetSize=48 pvr=15"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "E8",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.47",
-      "note": "fleetSize=52 pvr=15"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "U3",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "3.36",
-      "note": "fleetSize=37 pvr=11"
+      "id": "H20",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroCity EV 8.7m\"",
+      "actual": "ALEXANDER DENNIS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
     },
     {
       "severity": "INFO",
@@ -246,7 +84,7 @@
         "deck": 731,
         "ewtOrOtp": 665,
         "mileageMps": 662,
-        "age": 593
+        "age": 601
       },
       "note": "of 747"
     },
@@ -257,20 +95,20 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "total": 9422,
-        "validVrm": 9422,
+        "total": 9423,
+        "validVrm": 9423,
         "invalidVrm": 0,
-        "dvla200": 9395,
+        "dvla200": 9396,
         "dvla404": 27,
         "dvla400": 0,
         "dvlaOther": 0,
         "neverChecked": 0,
-        "ageOK": 9395,
+        "ageOK": 9396,
         "ageMissing": 27,
         "ageImplausible": 0,
         "propByFuel": {
           "diesel": 5992,
-          "electric": 3402,
+          "electric": 3403,
           "gas": 1
         }
       },
@@ -294,7 +132,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 13291,
+        "totalObs": 14275,
         "missingFleet": 0
       },
       "note": ""
