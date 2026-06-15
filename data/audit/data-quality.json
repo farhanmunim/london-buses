@@ -1,20 +1,11 @@
 {
-  "generatedAt": "2026-06-08T14:04:57.512Z",
+  "generatedAt": "2026-06-15T15:51:41.960Z",
   "summary": {
     "critical": 0,
-    "warn": 7,
+    "warn": 5,
     "info": 5
   },
   "issues": [
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "5",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "0.17",
-      "note": "fleetSize=5 pvr=30"
-    },
     {
       "severity": "WARN",
       "scope": "rc",
@@ -32,15 +23,6 @@
       "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
       "actual": "WRIGHTBUS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "292",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 13.9,
-      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -83,8 +65,8 @@
         "prop": 734,
         "deck": 731,
         "ewtOrOtp": 665,
-        "mileageMps": 662,
-        "age": 601
+        "mileageMps": 664,
+        "age": 602
       },
       "note": "of 747"
     },
@@ -132,7 +114,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14275,
+        "totalObs": 15123,
         "missingFleet": 0
       },
       "note": ""
