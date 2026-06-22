@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-15T15:51:41.960Z",
+  "generatedAt": "2026-06-22T15:22:52.838Z",
   "summary": {
     "critical": 0,
     "warn": 5,
@@ -66,7 +66,7 @@
         "deck": 731,
         "ewtOrOtp": 665,
         "mileageMps": 664,
-        "age": 602
+        "age": 609
       },
       "note": "of 747"
     },
@@ -114,7 +114,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 15123,
+        "totalObs": 15857,
         "missingFleet": 0
       },
       "note": ""
