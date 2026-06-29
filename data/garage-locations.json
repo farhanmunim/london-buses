@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T15:22:52.641Z",
+  "generatedAt": "2026-06-29T14:03:13.536Z",
   "count": 76,
   "garages": {
     "A": {
@@ -459,7 +459,7 @@
       "address": "Alperton Lane, Western Avenue, Greenford, Middlesex, UB6 8DW",
       "lat": 51.533792,
       "lon": -0.318859,
-      "pvr": 77,
+      "pvr": 76,
       "capacity": 95
     },
     "Q": {
@@ -559,7 +559,7 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AQ",
       "lat": 51.426275,
       "lon": -0.035919,
-      "pvr": 58,
+      "pvr": 57,
       "capacity": 97
     },
     "SO": {
@@ -759,7 +759,7 @@
       "address": "Great Western Road, London, W9 3NW",
       "lat": 51.523365,
       "lon": -0.201514,
-      "pvr": 132,
+      "pvr": 151,
       "capacity": 173
     }
   }
