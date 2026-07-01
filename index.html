@@ -312,6 +312,13 @@
             <div class="ov-kpi"><div class="ov-kpi-n" id="hero-pvr">—</div><div class="ov-kpi-l">PVR</div></div>
           </div>
 
+          <!-- Network live status — Atlas API line-status snapshot; hidden
+               until data arrives (and when the API is unreachable). -->
+          <div class="ov-live" id="ov-live" hidden>
+            <span class="ov-live-dot" aria-hidden="true"></span>
+            <span id="ov-live-text">—</span>
+          </div>
+
           <div class="ov-sec">
             <table class="ov-ops" aria-label="Operator breakdown">
               <thead>
@@ -463,6 +470,14 @@
                   </div>
                   <div class="rc-op" data-rc-op>—</div>
                 </div>
+                <!-- Live service status — Atlas API line-status snapshot
+                     (~5 min fresh). Hidden for routes the feed doesn't cover
+                     (school routes) and when the API is unreachable. -->
+                <div class="rc-status" data-rc-status hidden>
+                  <span class="rc-status-dot" aria-hidden="true"></span>
+                  <span class="rc-status-text" data-rc-status-text>—</span>
+                </div>
+                <div class="rc-status-reason" data-rc-status-reason hidden></div>
                 <div class="rc-section">
                   <div class="rc-section-tag">Route</div>
                   <div class="rc-kpis rc-kpis--five">
@@ -485,6 +500,18 @@
                     <div class="rc-tr"><span class="rc-tr-l">Make</span><span class="rc-tr-v" data-rc-vehicle-make>XXX</span></div>
                     <div class="rc-tr"><span class="rc-tr-l">Model</span><span class="rc-tr-v" data-rc-vehicle-model>XXX</span></div>
                     <div class="rc-tr"><span class="rc-tr-l">Avg fleet age</span><span class="rc-tr-v" data-rc-age>XXX</span></div>
+                  </div>
+                </div>
+
+                <!-- Crowding — TfL BUSTO demand data via the Atlas API.
+                     Hidden for routes without BUSTO coverage and when the
+                     API is unreachable. -->
+                <div class="rc-section" data-rc-section="crowding" hidden>
+                  <div class="rc-section-tag">Crowding</div>
+                  <div class="rc-tender">
+                    <div class="rc-tr"><span class="rc-tr-l">Peak load</span><span class="rc-tr-v" data-rc-crowd-peak>—</span></div>
+                    <div class="rc-tr" data-rc-row="crowd-where" hidden><span class="rc-tr-l">Busiest at</span><span class="rc-tr-v" data-rc-crowd-where>—</span></div>
+                    <div class="rc-tr" data-rc-row="crowd-days" hidden><span class="rc-tr-l">By day</span><span class="rc-tr-v" data-rc-crowd-days>—</span></div>
                   </div>
                 </div>
 

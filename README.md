@@ -10,6 +10,7 @@ Interactive map of every London bus route. Search routes; filter by operator, ga
 
 - Renders the entire London bus network as a colour-coded overview layer
 - Full route detail on click — geometry, stops, direction toggle, operator, vehicle make/model, propulsion, average fleet age, frequency, reliability, previous operator, contract value, contract length, next-tender batch
+- Live service status per route (Good Service / disruption + TfL's reason) and a network-wide summary on the Overview panel; per-route crowding (peak load vs capacity, busiest stop/day/time) — both from the Atlas API
 - Stackable filters (operator, garage, route type, propulsion, frequency, deck, bus stop) that intersect — matching routes are listed in the side panel and highlighted on the map
 - Multi-route comparison mode, per-operator statistics, and an XLSX export of the current view
 
@@ -17,7 +18,7 @@ Interactive map of every London bus route. Search routes; filter by operator, ga
 
 Static site — no backend, no deploy-time build. A scheduled job refreshes the data from public sources each week and commits the resulting JSON/GeoJSON back to the repo; the host auto-deploys from the default branch.
 
-The frontend data layer (`js/api.js`) is API-first against the [Atlas public API](https://atlas.farhan.app/api/v1) for the datasets it serves — garage locations (merged join-safely with the committed record) and tender-award history — and falls back to the committed files automatically when the API is unreachable. Everything else (per-route geometry, classifications, stops, destinations, the overview layer) loads from the committed weekly-refresh data, which the API does not yet cover at the fidelity the UI needs.
+The frontend data layer (`js/api.js`) is API-first against the [Atlas public API](https://atlas.farhan.app/api/v1) for the datasets it serves — garage locations (merged join-safely with the committed record), tender-award history, live line status, crowding, and the freshness manifest — and falls back to the committed files automatically when the API is unreachable (API-only datasets simply hide their UI). Everything else (per-route geometry, classifications, stops, destinations, the overview layer) loads from the committed weekly-refresh data, which the API does not yet cover at the fidelity the UI needs.
 
 Internal architecture, data handling, and pipeline notes live in [data.md](data.md).
 

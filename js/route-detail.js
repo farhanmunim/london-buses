@@ -13,6 +13,7 @@
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
 import { opColor } from './map.js';
+import { fetchLineStatus, fetchCrowding } from './api.js';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -44,11 +45,13 @@ const SOURCE = {
   PROG:      'TfL tendering programme',
   LOOKUP:    'curated vehicle lookup over LBR chassis strings',
   DERIVED:   'derived (accepted bid ÷ cost per mile)',
+  BUSTO:     'TfL BUSTO demand data, via the Atlas API',
 };
 const WEEKLY      = 'as at last weekly refresh';
 const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed weekly';
 const QSI_FRESH   = 'TfL publishes every ~4 weeks';
 const PER_TENDER  = 'set per tender contract';
+const ANNUAL_BUSTO = 'TfL publishes annually';
 const TIPS = {
   // Route KPI tiles
   pvr:             tip('Peak Vehicle Requirement — buses needed at peak',     SOURCE.LBR,     WEEKLY),
@@ -56,6 +59,10 @@ const TIPS = {
   freq:            tip('H = 5+ buses/hour, L = fewer',                        SOURCE.TFL_API, WEEKLY),
   // Route detail rows
   garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
+  // Crowding rows (Atlas API)
+  'crowd-peak':    tip('Peak vehicle load ÷ capacity at the max-demand hour', SOURCE.BUSTO,   ANNUAL_BUSTO),
+  'crowd-where':   tip('Stop, day type and time of the peak load',            SOURCE.BUSTO,   ANNUAL_BUSTO),
+  'crowd-days':    tip('Peak load ÷ capacity per day type',                   SOURCE.BUSTO,   ANNUAL_BUSTO),
   // Fleet rows
   deck:            tip('',                                                    SOURCE.LOOKUP,  WEEKLY),
   propulsion:      tip('LBR chassis codes cross-checked with DVLA',           SOURCE.LBR + ' + ' + SOURCE.DVLA, WEEKLY),
@@ -595,7 +602,89 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // tooltip is available; the browser shows the `title` text on hover.
   attachTooltips(node);
 
+  // Live status + crowding arrive asynchronously from the Atlas API once the
+  // card is in the DOM — they must never block or break the card itself.
+  hydrateAtlasExtras(node, id);
+
   return node;
+}
+
+// ── Atlas API extras — live status + crowding ────────────────────────────────
+// Both datasets have no bundled equivalent (the weekly pipeline never carried
+// them) and are session-cached in api.js, so re-renders on every filter change
+// cost nothing after the first fetch. When the API is unreachable, or the
+// route isn't covered (school routes; BUSTO covers ~606 routes), the elements
+// simply stay hidden.
+function hydrateAtlasExtras(node, id) {
+  const routeId = String(id).toUpperCase();
+
+  fetchLineStatus().then(ls => {
+    const rec = ls?.byRoute?.[routeId];
+    const strip  = node.querySelector('[data-rc-status]');
+    const text   = node.querySelector('[data-rc-status-text]');
+    const reason = node.querySelector('[data-rc-status-reason]');
+    if (!rec || !strip || !text) return;
+    const good = rec.severity === 10;
+    strip.classList.toggle('rc-status--good', good);
+    strip.classList.toggle('rc-status--bad', !good);
+    text.textContent = rec.status ?? (good ? 'Good Service' : 'Disruption');
+    const asOf = formatTimeShort(ls.capturedAt);
+    text.dataset.tip = 'Live service status. Source: TfL, via the Atlas API.'
+      + (asOf ? ` As of ${asOf}.` : '');
+    if (reason) {
+      // TfL reason texts run to whole paragraphs — clamped by CSS, full text
+      // on hover.
+      const show = !good && !!rec.reason;
+      reason.hidden = !show;
+      if (show) { reason.textContent = rec.reason; reason.dataset.tip = rec.reason; }
+    }
+    strip.hidden = false;
+  }).catch(() => {});
+
+  fetchCrowding().then(cr => {
+    const rec = cr?.byRoute?.[routeId];
+    const sec = node.querySelector('[data-rc-section="crowding"]');
+    if (!rec || !Number.isFinite(rec.peakVC) || !sec) return;
+    const pct = v => `${Math.round(v * 100)}%`;
+
+    const bandLabel = cr.bands?.find(b => b.key === rec.band)?.label
+      ?? (rec.band ? toTitleCase(rec.band) : null);
+    const peakEl = sec.querySelector('[data-rc-crowd-peak]');
+    if (peakEl) {
+      peakEl.textContent = bandLabel
+        ? `${bandLabel} · ${pct(rec.peakVC)} of capacity`
+        : `${pct(rec.peakVC)} of capacity`;
+    }
+
+    const whereBits = [];
+    if (rec.stopname) whereBits.push(toTitleCase(rec.stopname));
+    const when = [rec.dayType, formatTimeShort(rec.time)].filter(Boolean).join(' ');
+    if (when) whereBits.push(when);
+    toggleRow(node, 'crowd-where', whereBits.length > 0);
+    const whereEl = sec.querySelector('[data-rc-crowd-where]');
+    if (whereEl && whereBits.length) whereEl.textContent = whereBits.join(' · ');
+
+    const byDay = rec.byDay ?? {};
+    const dayBits = [['Weekday', 'Mon–Fri'], ['Saturday', 'Sat'], ['Sunday', 'Sun']]
+      .filter(([k]) => Number.isFinite(byDay[k]?.vc))
+      .map(([k, label]) => `${label} ${pct(byDay[k].vc)}`);
+    toggleRow(node, 'crowd-days', dayBits.length > 0);
+    const daysEl = sec.querySelector('[data-rc-crowd-days]');
+    if (daysEl && dayBits.length) daysEl.textContent = dayBits.join(' · ');
+
+    sec.hidden = false;
+  }).catch(() => {});
+}
+
+// "08:15:00" (BUSTO timeband) or an ISO timestamp → "08:15". ISO renders in
+// the viewer's local time — it labels a live snapshot, not a schedule.
+function formatTimeShort(s) {
+  if (!s) return null;
+  const t = /^(\d{2}):(\d{2})/.exec(String(s));
+  if (t) return `${t[1]}:${t[2]}`;
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return null;
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
 // Show or hide a conditional row by its `data-rc-row` key. Rows ship with

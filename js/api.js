@@ -164,6 +164,7 @@ export async function fetchGarageLocations() {
         operator: base?.operator
                     ?? (clsOps && Object.entries(clsOps).sort((a, b) => b[1] - a[1])[0][0])
                     ?? g.operator ?? null,
+        company:  g.company ?? null, // legal operating entity — API-only field
         address:  base?.address || g.postcode || '',
         lat:      g.lat ?? base?.lat ?? null,
         lon:      g.lng ?? base?.lon ?? null,
@@ -321,4 +322,66 @@ export async function fetchTenders() {
 export async function fetchTenderProgramme() {
   try { return await loadJson(`${BASE}/source/tender-programme.json`); }
   catch { return null; }
+}
+
+// ── API-only datasets ────────────────────────────────────────────────────────
+// No bundled equivalent exists for these — the weekly pipeline never carried
+// them. Each resolves null when the API is unreachable and callers simply
+// hide the UI they power.
+
+/** Cached wrapper over loadApi — one fetch per endpoint per session. */
+async function loadApiCached(path) {
+  const key = `api:${path}`;
+  if (_cache.has(key)) return _cache.get(key);
+  const data = await loadApi(path);
+  if (data !== null) _cache.set(key, data);
+  return data;
+}
+
+/**
+ * Live line-status snapshot (~5 min fresh at the edge). Adapted to
+ * { capturedAt, summary: { total, good, disrupted }, byRoute } with
+ * uppercase route keys; byRoute values are { status, reason, severity }
+ * (severity 10 = Good Service). Routes the feed doesn't carry (school
+ * routes) are simply absent.
+ */
+export async function fetchLineStatus() {
+  const key = 'adapted:/line-status';
+  if (_cache.has(key)) return _cache.get(key);
+  const raw = await loadApiCached('/line-status');
+  if (!raw) return null;
+  const byRoute = {};
+  for (const r of raw.rows ?? []) {
+    if (!r?.route) continue;
+    byRoute[String(r.route).toUpperCase()] = {
+      status:   r.status ?? null,
+      reason:   r.reason ?? null,
+      severity: r.severity ?? null,
+    };
+  }
+  const data = { capturedAt: raw.capturedAt ?? null, summary: raw.summary ?? null, byRoute };
+  _cache.set(key, data);
+  return data;
+}
+
+/**
+ * Bus crowding per route (TfL BUSTO, annual). Returns { year, bands,
+ * byRoute } with uppercase route keys; byRoute values carry peakVC, band,
+ * stopname/dayType/time of the peak, and per-day-type peaks in byDay.
+ */
+export async function fetchCrowding() {
+  const key = 'adapted:/crowding';
+  if (_cache.has(key)) return _cache.get(key);
+  const raw = await loadApiCached('/crowding');
+  if (!raw) return null;
+  const byRoute = {};
+  for (const [id, rec] of Object.entries(raw.routes ?? {})) byRoute[id.toUpperCase()] = rec;
+  const data = { year: raw.year ?? null, bands: raw.bands ?? [], byRoute };
+  _cache.set(key, data);
+  return data;
+}
+
+/** The API's pipeline-run manifest — per-dataset fetchedAt + cadence. */
+export async function fetchManifest() {
+  return loadApiCached('/manifest');
 }

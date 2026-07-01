@@ -271,6 +271,7 @@ export function openOperatorDrawer(operator, agg) {
   if (!opDrawer) return;
   drawerName.textContent        = DISPLAY_NAME[operator] ?? operator;
   drawerSub.textContent         = '';              // route count under the name is in the KPIs now
+  delete drawerSub.dataset.tip;                    // garage-mode company tip must not linger
   drawerSwatch.style.background = opColor(operator);
 
   const opGarages = garagesFor(operator);
@@ -330,6 +331,10 @@ export function openGarageDrawer(code) {
   drawerSwatch.style.background = opColor(garage.operator);
   // Subtitle is just the operator — route count is in the KPIs.
   drawerSub.textContent         = DISPLAY_NAME[garage.operator] ?? garage.operator ?? '—';
+  // Legal operating company (Atlas API field) — hover tip on the subtitle;
+  // the customer-facing brand stays the headline.
+  if (garage.company) drawerSub.dataset.tip = garage.company;
+  else                delete drawerSub.dataset.tip;
 
   // Network totals come from the last renderOperatorStats pass; fall back to
   // the full classifications map on first open so the percentages are never

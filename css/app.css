@@ -410,6 +410,28 @@ a{color:inherit;text-decoration:none}
   border:1px solid var(--amber-bd, rgba(217,119,6,.45));
 }
 
+/* Live service status strip — populated from the Atlas API line-status
+   snapshot. Green = Good Service; amber = any disruption, with the TfL
+   reason text underneath (clamped so a long diversion notice doesn't
+   swallow the card — full text on hover via data-tip). The strip is hidden
+   entirely for routes the feed doesn't cover. */
+.rc-status{
+  display:inline-flex;align-items:center;gap:6px;width:fit-content;
+  margin:0 0 8px;padding:3px 9px;border-radius:var(--r-pill);
+  font-size:10.5px;font-weight:600;border:1px solid var(--bd);background:var(--surf-s);
+}
+.rc-status[hidden]{display:none}
+.rc-status-dot{width:6px;height:6px;border-radius:50%;background:var(--mu);flex-shrink:0}
+.rc-status--good{color:var(--green);background:var(--gbg);border-color:transparent}
+.rc-status--good .rc-status-dot{background:var(--green)}
+.rc-status--bad{color:var(--amber);background:var(--abg);border-color:transparent}
+.rc-status--bad .rc-status-dot{background:var(--amber)}
+.rc-status-reason{
+  font-size:10.5px;line-height:1.45;color:var(--mu);margin:-2px 0 8px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.rc-status-reason[hidden]{display:none}
+
 /* Tooltip-available labels — a faint dashed underline (standard "more
    info on hover" convention) signals availability without taking up any
    horizontal space the way a glyph would. text-underline-offset keeps
@@ -810,6 +832,14 @@ html.paint-by-type .pill[data-filter="routetype"] .op-dot{display:inline-block}
 /* KPI cards at the top of Overview — 2×2 default, override with .ov-kpis-4 */
 .ov-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
 .ov-kpis-4{grid-template-columns:repeat(2,1fr)}
+
+/* Network live-status line under the Overview KPIs — Atlas API snapshot.
+   Sits in the gap the KPI grid already leaves, borrowing some of that
+   margin rather than adding its own. */
+.ov-live{display:flex;align-items:center;gap:7px;margin:-12px 0 20px;font-size:11px;color:var(--mu)}
+.ov-live[hidden]{display:none}
+.ov-live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.ov-live--bad .ov-live-dot{background:var(--amber)}
 .ov-kpi{
   background:var(--surf2);border:1px solid var(--bd);border-radius:12px;
   padding:14px 10px;text-align:center;
