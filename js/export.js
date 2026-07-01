@@ -22,7 +22,7 @@
 
 import { getVisibleRouteProps, getVisibleGarages } from './map.js';
 import { state, exportBtn } from './state.js';
-import { fetchRouteStopCount } from './api.js';
+import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js';
 import { getPinnedRouteIds } from './search.js';
 
 // Threshold above which we warn the user before assembling a full-network
@@ -110,15 +110,16 @@ async function runExport(routes) {
   // calls are O(1). Using Promise.all keeps the click → file gap under a
   // second on a warm cache and ~1-2 s on a cold one.
   const stopCounts = new Map();
-  // Lazy-load tender + programme JSON in parallel with stop counts. Cached
-  // by the browser after the first export so subsequent clicks are instant.
+  // Lazy-load tender + programme data in parallel with stop counts (tenders
+  // are API-first with the bundled snapshot as fallback — see api.js). Cached
+  // in the data layer after the first export so subsequent clicks are instant.
   const [_, tendersJson, programmeJson] = await Promise.all([
     Promise.all([...routes.keys()].map(async (id) => {
       try { stopCounts.set(id, await fetchRouteStopCount(id)); }
       catch { stopCounts.set(id, null); }
     })),
-    fetch('./data/source/tenders.json').then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch('./data/source/tender-programme.json').then(r => r.ok ? r.json() : null).catch(() => null),
+    fetchTenders().catch(() => null),
+    fetchTenderProgramme(),
   ]);
 
   const visibleIds = new Set([...routes.keys()].map(s => String(s).toUpperCase()));

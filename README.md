@@ -17,6 +17,8 @@ Interactive map of every London bus route. Search routes; filter by operator, ga
 
 Static site — no backend, no deploy-time build. A scheduled job refreshes the data from public sources each week and commits the resulting JSON/GeoJSON back to the repo; the host auto-deploys from the default branch.
 
+The frontend data layer (`js/api.js`) is API-first against the [Atlas public API](https://atlas.farhan.app/api/v1) for the datasets it serves — garage locations (merged join-safely with the committed record) and tender-award history — and falls back to the committed files automatically when the API is unreachable. Everything else (per-route geometry, classifications, stops, destinations, the overview layer) loads from the committed weekly-refresh data, which the API does not yet cover at the fidelity the UI needs.
+
 Internal architecture, data handling, and pipeline notes live in [data.md](data.md).
 
 ## Local development
