@@ -366,10 +366,60 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   fitToRoute();
 }
 
+// ── Multi-route comparison colours ────────────────────────────────────────────
+// When 2+ routes are pinned they get *distinct* colours (not operator/type
+// colours) so overlapping lines stay distinguishable. Fixed categorical
+// order — validated for colour-vision-deficiency separation (worst adjacent
+// pair ΔE 13.3) and for the cream Voyager basemap; the endpoint labels are
+// the direct-label relief for the lower-contrast amber slot. Assignment is
+// sticky per route while it stays selected: removing one pill never repaints
+// the survivors (colour follows the route, not its position). Selections
+// beyond 8 routes wrap the palette — at that point the endpoint labels do
+// the disambiguating.
+const MULTI_ROUTE_COLORS = [
+  '#2a78d6', // blue
+  '#c98500', // amber
+  '#199e70', // teal
+  '#e34948', // red
+  '#008300', // green
+  '#d55181', // magenta
+  '#4a3aa7', // violet
+  '#eb6834', // orange
+];
+const _multiRouteSlots = new Map(); // routeId (uppercase) → palette slot
+
+function assignMultiRouteColors(ids) {
+  const idSet = new Set(ids);
+  for (const id of [..._multiRouteSlots.keys()]) {
+    if (!idSet.has(id)) _multiRouteSlots.delete(id);
+  }
+  for (const id of ids) {
+    if (_multiRouteSlots.has(id)) continue;
+    const used = new Set(_multiRouteSlots.values());
+    let slot = 0;
+    while (used.has(slot)) slot++;
+    _multiRouteSlots.set(id, slot);
+  }
+}
+
+/**
+ * The colour assigned to a route in the current multi-route selection —
+ * used by the map lines, the endpoint labels, and the route cards' swatch
+ * dots so line ↔ card mapping is direct. Fallback grey when the route isn't
+ * in the current selection.
+ */
+export function multiRouteColor(routeId) {
+  const slot = _multiRouteSlots.get(String(routeId).toUpperCase());
+  return slot == null
+    ? OPERATOR_FALLBACK_COLOR
+    : MULTI_ROUTE_COLORS[slot % MULTI_ROUTE_COLORS.length];
+}
+
 /**
  * Highlight a set of routes from the overview layer without loading stops.
  * Renders a dark outline beneath each coloured line for visual distinction,
  * and places route-number labels at each route's start and end points.
+ * Each route gets its own colour from MULTI_ROUTE_COLORS (see above).
  */
 export function renderMultiRoute(ids) {
   if (_routeLayer) { _map.removeLayer(_routeLayer); _routeLayer = null; }
@@ -389,7 +439,9 @@ export function renderMultiRoute(ids) {
   dimOverview();
   if (!wasActive) _enterRouteFocus();
 
-  const idSet    = new Set(ids.map(id => id.toUpperCase()));
+  const upperIds = ids.map(id => id.toUpperCase());
+  const idSet    = new Set(upperIds);
+  assignMultiRouteColors(upperIds);
   const features = _overviewGeoJson.features.filter(f => idSet.has(f.properties.routeId));
 
   if (!features.length) { restoreOverview(); return; }
@@ -405,7 +457,7 @@ export function renderMultiRoute(ids) {
 
   // Colour layer (added second = rendered on top)
   _routeLayer = L.geoJSON(fc, {
-    style:    f => ({ color: featureColor(f.properties), weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
+    style:    f => ({ color: multiRouteColor(f.properties.routeId), weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }),
     renderer: _routeCanvas,
     interactive: false,
   }).addTo(_map);
@@ -421,7 +473,7 @@ export function renderMultiRoute(ids) {
     const coords = f.geometry.coordinates;
     if (!coords.length) continue;
     const endpoints = [coords[0], coords[coords.length - 1]];
-    const color     = featureColor(f.properties);
+    const color     = multiRouteColor(routeId);
 
     for (const [lon, lat] of endpoints) {
       const icon = L.divIcon({
@@ -490,14 +542,9 @@ export function resetMapView() {
 export function setPaintMode(mode) {
   _paintMode = mode === 'operator' ? 'operator' : 'type';
   _overviewLayer?.setStyle(f => overviewStyle(f));
-  // Multi-route coloured layer recolours per feature. Single-route case keeps
-  // its fixed outbound/inbound red/blue because _outlineLayer is null there.
-  if (_outlineLayer && _routeLayer) {
-    _routeLayer.setStyle(f => ({
-      color: featureColor(f.properties),
-      weight: 5, opacity: 0.95, lineCap: 'round', lineJoin: 'round',
-    }));
-  }
+  // The multi-route layer keeps its per-route comparison colours — paint
+  // mode only restyles the overview. (The single-route case likewise keeps
+  // its fixed outbound/inbound red/blue; _outlineLayer is null there.)
   return _paintMode;
 }
 

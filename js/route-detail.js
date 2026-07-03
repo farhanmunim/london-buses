@@ -12,7 +12,7 @@
  */
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
-import { opColor } from './map.js';
+import { opColor, multiRouteColor } from './map.js';
 import { fetchLineStatus, fetchCrowding } from './api.js';
 
 // Frequency label — the underlying classification is binary high/low, but
@@ -274,6 +274,17 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const inbound  = destinations?.inbound?.destination;
 
   set('[data-rc-num]', id);
+
+  // Comparison swatch — multi-route mode gives every selected route its own
+  // line colour on the map (they'd be indistinguishable where same-operator
+  // routes overlap); the dot ties this card to its line. Single-route mode
+  // keeps the dot hidden — the line uses the fixed direction colours there.
+  const lineDot = node.querySelector('[data-rc-line-dot]');
+  if (lineDot && !single) {
+    lineDot.style.background = multiRouteColor(id);
+    lineDot.dataset.tip = 'This route’s line colour on the map';
+    lineDot.hidden = false;
+  }
 
   // Route name shows the direction-specific "origin → destination" pair.
   // For single-route with both directions, the swap button flips this text

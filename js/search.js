@@ -20,7 +20,7 @@ import {
   fetchRouteStopCount,
 } from './api.js';
 import {
-  renderRoute, renderMultiRoute, clearRoute, resetMapView, highlightGaragesForRoute,
+  renderRoute, renderMultiRoute, multiRouteColor, clearRoute, resetMapView, highlightGaragesForRoute,
 } from './map.js';
 import { renderRouteCards, showNoResult, showRoutePrompt } from './route-detail.js';
 import { showRpTab } from './panels.js';
@@ -97,6 +97,9 @@ async function applySelection() {
     state.routeId = null;
     clearRoute();
     renderMultiRoute(ids);
+    // Re-render pills now that renderMultiRoute has assigned each route its
+    // comparison colour — the pill dots read from that assignment.
+    renderPills();
     highlightGaragesForRoute(null);
     await renderMultiCards(ids);
   }
@@ -198,7 +201,12 @@ function renderPills() {
   for (const id of visible) {
     const pill = document.createElement('span');
     pill.className = 'search-pill';
-    pill.innerHTML = `<span>${escapeHtml(id)}</span>
+    // In multi-route mode each pill carries its route's comparison colour —
+    // the same one the map line, endpoint labels, and card swatch use.
+    const dot = ids.length > 1
+      ? `<span class="search-pill-dot" style="background:${multiRouteColor(id)}" aria-hidden="true"></span>`
+      : '';
+    pill.innerHTML = `${dot}<span>${escapeHtml(id)}</span>
       <button type="button" class="search-pill-x" aria-label="Remove ${escapeHtml(id)}">
         <svg width="8" height="8" viewBox="0 0 8 8" fill="none" aria-hidden="true"><path d="M1 1l6 6M7 1L1 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
       </button>`;
