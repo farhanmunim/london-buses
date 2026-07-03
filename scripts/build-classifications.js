@@ -557,10 +557,10 @@ function aggregateRouteFleet(routeId) {
       }
     }
     // `days` = distinct calendar dates this reg was seen running the route
-    // (from route-vehicles.json; fed by the weekly snapshot + the daily
-    // Supabase sampler via the backfill step). It's the recurrence signal the
-    // core-fleet filter keys on. Legacy entries without it default to 1 so
-    // behaviour is unchanged until counts accumulate.
+    // (from route-vehicles.json's rolling weekly accumulator). It's the
+    // recurrence signal the core-fleet filter keys on. Legacy entries
+    // without it default to 1 so behaviour is unchanged until counts
+    // accumulate.
     const days = Number.isFinite(entry?.days) ? entry.days : 1;
     samples.push({ make: f.make ?? null, propulsion: f.fuelType ?? null, ageYears, days });
   }

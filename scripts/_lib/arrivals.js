@@ -2,13 +2,11 @@
  * _lib/arrivals.js — shared helpers for reading the active fleet from TfL
  * `/Line/<id>/Arrivals`.
  *
- * Both fetch-route-vehicles.js (weekly snapshot → route-vehicles.json) and
- * sample-vehicles.js (daily snapshot → Supabase) need to turn an Arrivals
- * payload into a set of valid UK registration plates. The validation regex is
- * the one piece that MUST stay identical between them — a divergence would let
- * one collector accept bonnet numbers / train ids the other rejects, which
- * would silently corrupt the sighting counts. It lives here so there is exactly
- * one definition.
+ * fetch-route-vehicles.js (weekly snapshot → route-vehicles.json) uses this
+ * to turn an Arrivals payload into a set of valid UK registration plates.
+ * Kept as a shared module so any future collector reuses the exact same
+ * validation regex — a divergence would let one collector accept bonnet
+ * numbers / train ids another rejects, silently corrupting sighting counts.
  */
 
 // TfL exposes the bus registration as `vehicleId` on each prediction. London

@@ -178,10 +178,10 @@ async function main() {
   }
 
   const output = {
-    // generatedAt MUST equal sampledAt — push-to-supabase.js identifies "this
-    // run's fresh observations" by `lastSeenAt === generatedAt`. If we use
-    // `new Date().toISOString()` here we get a timestamp 2-3 minutes after
-    // sampledAt (the worker pool finish time) and the filter never matches.
+    // generatedAt equals sampledAt: "this run's fresh observations" are the
+    // records with `lastSeenAt === generatedAt`. Using `new Date()` here
+    // would stamp 2-3 minutes after sampledAt (the worker pool finish time)
+    // and that equality would never match.
     generatedAt:        sampledAt,
     observationTtlDays: OBSERVATION_TTL_DAYS,
     routeCount:         Object.keys(routesOut).length,

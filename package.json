@@ -1,7 +1,7 @@
 {
   "name": "tfl-bus-map",
   "version": "2.13.0",
-  "description": "Interactive London bus route map — farhan.app",
+  "description": "Interactive London bus route map \u2014 farhan.app",
   "type": "module",
   "scripts": {
     "refresh": "node scripts/refresh.js",
@@ -13,8 +13,6 @@
     "fetch-route-details": "node scripts/fetch-route-details.js",
     "fetch-vehicle-fleet": "node scripts/fetch-vehicle-fleet.js",
     "fetch-route-vehicles": "node scripts/fetch-route-vehicles.js",
-    "sample-vehicles": "node scripts/sample-vehicles.js",
-    "backfill-route-vehicle-sightings": "node scripts/backfill-route-vehicle-sightings.js",
     "fetch-route-performance": "node scripts/fetch-route-performance.js",
     "fetch-route-mps": "node scripts/fetch-route-mps.js",
     "fetch-tenders": "node scripts/fetch-tenders.js",
@@ -24,7 +22,6 @@
     "build-garage-locations": "node scripts/build-garage-locations.js",
     "build-garage-capacity": "node scripts/build-garage-capacity.js",
     "update-vehicle-lookup": "node scripts/update-vehicle-lookup.js",
-    "push-to-supabase": "node scripts/push-to-supabase.js",
     "audit-data": "node scripts/audit-data.js",
     "audit-data-strict": "node scripts/audit-data.js --strict",
     "audit-vehicle-data": "node scripts/audit-vehicle-data.js",
@@ -34,7 +31,6 @@
     "node": ">=18"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.45.0",
     "adm-zip": "^0.5.16",
     "fast-xml-parser": "^4.5.3",
     "pdfjs-dist": "^4.7.76"

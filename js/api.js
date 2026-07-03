@@ -5,10 +5,12 @@
  *   • The Atlas public API (atlas.farhan.app/api/v1 — same author, same
  *     upstream warehouse; CORS-open, read-only, no key) is the primary
  *     source for the datasets it serves: garages (merged join-safely with
- *     the bundled record — see fetchGarageLocations) and tender awards.
- *     Responses are adapted to the bundled-file shapes so nothing
- *     downstream changes, and the committed /data files remain the
- *     automatic fallback when the API is unreachable.
+ *     the bundled record — see fetchGarageLocations), tender awards, and
+ *     the per-route reliability block (overlaid onto the classifications —
+ *     see fetchRouteClassifications). Responses are adapted to the
+ *     bundled-file shapes so nothing downstream changes, and the committed
+ *     /data files remain the automatic fallback when the API is
+ *     unreachable.
  *   • Everything else — per-route geometry (full-res, per direction),
  *     classifications, stops (indicator/`towards`, school routes),
  *     destinations, overview paint properties — loads from the static
@@ -84,22 +86,56 @@ export async function fetchAllDestinations() {
 }
 
 /**
- * Returns the route classifications map.
+ * Returns the route classifications map — the master per-route record built
+ * by the weekly pipeline — with the reliability fields (serviceClass, EWT /
+ * OTP actuals and the MPS standards) overlaid from the API's
+ * /route-performance dataset for every route it carries. Both sides parse
+ * the same TfL QSI publications, but the API re-checks daily, so the
+ * overlay is never staler than the committed build. When the API is
+ * unreachable the committed values stand.
  * @returns {Promise<object>}
  */
 export async function fetchRouteClassifications() {
-  const data = await loadJson(`${BASE}/route_classifications.json`);
-  return data.routes ?? {};
+  const key = 'adapted:classifications';
+  if (_cache.has(key)) return _cache.get(key);
+
+  const [data, perf] = await Promise.all([
+    loadJson(`${BASE}/route_classifications.json`),
+    loadApiCached('/route-performance'),
+  ]);
+
+  const routes = { ...(data.routes ?? {}) };
+  for (const [id, p] of Object.entries(perf?.routes ?? {})) {
+    const routeId = id.toUpperCase();
+    const rec = routes[routeId];
+    // Take the API's reliability block whole (nulls included) so the
+    // class/metric pairing stays coherent — the build nulls the wrong-class
+    // metric deliberately, and a field-by-field merge could resurrect it.
+    if (!rec || !p?.serviceClass) continue;
+    routes[routeId] = {
+      ...rec,
+      serviceClass:  p.serviceClass,
+      ewtMinutes:    p.ewtMinutes    ?? null,
+      onTimePercent: p.onTimePercent ?? null,
+      ewtMps:        p.ewtMps        ?? null,
+      otpMps:        p.otpMps        ?? null,
+      mileageMps:    p.mileageMps    ?? null,
+    };
+  }
+
+  _cache.set(key, routes);
+  return routes;
 }
 
 /**
- * Returns classification info for a single route.
+ * Returns classification info for a single route (from the same merged map
+ * as fetchRouteClassifications, so the reliability overlay applies here too).
  * @param {string} routeId
  * @returns {Promise<object|null>}
  */
 export async function fetchRouteClassification(routeId) {
-  const data = await loadJson(`${BASE}/route_classifications.json`);
-  return data.routes?.[routeId.toUpperCase()] ?? null;
+  const routes = await fetchRouteClassifications();
+  return routes[routeId.toUpperCase()] ?? null;
 }
 
 /**

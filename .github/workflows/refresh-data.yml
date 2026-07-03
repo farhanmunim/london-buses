@@ -54,8 +54,6 @@ jobs:
         env:
           BUS_API_KEY:               ${{ secrets.BUS_API_KEY }}
           DVLA_API_KEY:              ${{ secrets.DVLA_API_KEY }}
-          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: npm run refresh
 
       # Read the new geometry ZIP date

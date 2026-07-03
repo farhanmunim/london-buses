@@ -325,8 +325,8 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   set('[data-rc-vehicle-make]', make ? toTitleCase(make) : 'XXX');
 
   // Vehicle model — chassis+body string from LBR ("B5LH/Gemini 3", "Enviro400 MMC").
-  // The underlying field is still called `vehicleType` for compatibility with
-  // the Supabase schema; the UI calls it "Vehicle model".
+  // The underlying field keeps its legacy name `vehicleType`; the UI calls
+  // it "Vehicle model".
   set('[data-rc-vehicle-model]', classification?.vehicleType ?? 'XXX');
 
   // Avg fleet age in years — mean of (today − monthOfFirstRegistration) across
