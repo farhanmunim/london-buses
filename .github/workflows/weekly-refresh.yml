@@ -17,22 +17,6 @@ name: Weekly Data Refresh
 on:
   schedule:
     - cron: "23 9 * * 1"
-    # TEMPORARY catch-up slot — remove after the first run lands. The
-    # workflow re-registered at 09:36 UTC on 2026-07-27 (13 min after the
-    # weekly slot) after four missed weeks; workflow_dispatch isn't
-    # available to the automation that restored it, and GitHub's scheduler
-    # skipped both a 10:07 one-shot and the 10:37 hourly slot — newly
-    # registered workflow schedules can lag by an hour or more. The
-    # commit-and-push step is a no-op when nothing changed, so an extra
-    # fire before cleanup is harmless.
-    - cron: "37 * * * 1"
-  # TEMPORARY deterministic trigger for the same catch-up: fires on any push
-  # that touches this file — including the push that added this block — so
-  # the run doesn't depend on the scheduler at all. Remove with the slot
-  # above once the catch-up lands (the removal push fires one final no-op).
-  push:
-    paths:
-      - ".github/workflows/weekly-refresh.yml"
   workflow_dispatch:
 
 permissions:
