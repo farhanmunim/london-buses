@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.13</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.14</a>
 
       <div style="flex:1"></div>
 
@@ -81,6 +81,19 @@
             <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.14</span> Jul 27, 2026</div>
+            <a href="#v2_14" class="cl-entry-title">Atlas API-first data layer</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--data">DATA</span> The frontend now reads the <strong>Atlas public API</strong> (atlas.farhan.app) first for every dataset it serves at full fidelity — garage locations, tender-award history, route reliability (EWT/OTP + MPS), daily route meta (garage, PVR) and fleet stats — falling back to the committed weekly data automatically whenever the API is unreachable. The Supabase historical store is gone; history lives in the Atlas warehouse.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Live service status on every route card and a network-wide summary on the Overview panel ("643 of 676 routes on good service"), ~5-minutes fresh from TfL via Atlas.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Crowding on the route card — peak load vs capacity with comfort band, busiest stop / day / time (TfL BUSTO via Atlas).</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> Multi-route comparison colours — each pinned route gets its own colour so overlapping same-operator routes stay distinguishable.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> The footer freshness pill now tracks the newest of the site build and the six Atlas datasets the app consumes, with a per-dataset breakdown on hover; "Next" follows Atlas's daily ~03:17 UTC pipeline.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Weekly data refresh schedule restored after being switched off on 4 Jul during the Supabase decommission — geometry, stops, destinations and the classification base still ship from the weekly build.</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.13</span> Jun 02, 2026</div>

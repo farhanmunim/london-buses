@@ -6,6 +6,14 @@ name: Weekly Data Refresh
 # peak running so TfL `/Line/<id>/Arrivals` returns a representative sample
 # of the active fleet (used by fetch-route-vehicles.js). Can also be
 # triggered manually from the GitHub Actions tab.
+#
+# Lives at weekly-refresh.yml: the previous path (refresh-data.yml) was
+# manually disabled in the Actions UI on 2026-07-04 during the Supabase
+# decommission, and GitHub pins the disabled state to the workflow's file
+# path. This path registers as a new, enabled workflow. Still required
+# post-Atlas: geometry, stops, destinations, overview and the
+# classifications base all ship as committed files (see js/api.js header
+# for the fidelity gaps that keep them bundled).
 on:
   schedule:
     - cron: "23 9 * * 1"

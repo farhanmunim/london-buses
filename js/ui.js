@@ -144,8 +144,9 @@ updateNetworkLiveStatus();
 // ── Footer: last / next refresh ──────────────────────────────────────────────
 // "Refreshed" is the freshest reference data the site consumes — the newest
 // of the local weekly build and the Atlas API datasets it reads (garages,
-// tenders, crowding; live status is excluded, it's stamped where it's
-// shown). "Next" mirrors the Atlas warehouse cadence: its pipeline runs
+// tenders, crowding, performance, route-meta, fleet; live status is
+// excluded, it's stamped where it's shown). "Next" mirrors the Atlas
+// warehouse cadence: its pipeline runs
 // daily at ~03:17 UTC, though per-dataset TTLs gate what actually re-pulls.
 // The hover tip breaks the sources down. Falls back to the local build date
 // + weekly Monday schedule when the API is unreachable.
@@ -159,7 +160,7 @@ function updateFooterDates() {
 
     const buildTs   = parse(meta?.routeOverview?.updatedAt);
     const atlas     = manifest?.datasets ?? {};
-    const atlasSets = ['garages', 'tenders', 'crowding'];
+    const atlasSets = ['garages', 'tenders', 'crowding', 'performance', 'route-meta', 'fleet'];
     const newest    = [buildTs, ...atlasSets.map(k => parse(atlas[k]?.fetchedAt))]
       .filter(Boolean).sort((a, b) => b - a)[0];
     if (!newest) return;

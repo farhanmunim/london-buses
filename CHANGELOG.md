@@ -6,8 +6,13 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
-## Upcoming
+## v2.14 — Atlas API-first data layer
 
+_2026-07-27_
+
+- **DATA** Classifications now also overlay the Atlas API's `/route-meta` (daily londonbusroutes.net re-parse: garage code + name and PVR take the API value; operator, vehicle model, propulsion fill bundled blanks only, because the build normalises those vocabularies) and `/fleet` (today's DVLA-enriched arrivals sample fills make / age / size / composition / propulsion for routes the accumulated weekly build has no answer for, marked `fleetConfidence: low`).
+- **UX** Footer freshness pill now tracks all six Atlas datasets the app consumes (garages, tenders, crowding, performance, route-meta, fleet).
+- **FIX** Weekly refresh schedule restored — the workflow moved to `.github/workflows/weekly-refresh.yml` because the old path's Actions entry was manually disabled on 2026-07-04 during the Supabase decommission and GitHub pins the disabled state to the file path. Four missed weeks (06–27 July) are caught up by the first run.
 - **NEW** Multi-route comparison colours — when 2+ routes are pinned, each gets its own line colour (a fixed 8-colour categorical palette, ordering validated for colour-vision-deficiency separation) instead of the operator/type colour, so overlapping same-operator routes stay distinguishable. The colour follows the route everywhere: map line, endpoint labels, a swatch dot on its route card, and a dot in its search pill. Assignment is sticky — removing one pill never repaints the others; a freed colour goes to the next route added. Single-route mode keeps the fixed outbound/inbound direction colours, and paint modes still only restyle the network overview.
 - **NEW** Live service status on every route card — a Good Service / disruption chip under the route header, with TfL's diversion/closure reason underneath (clamped; full text on hover) — from the Atlas API `line-status` snapshot (~5 min fresh). The Overview panel gets a matching network line ("634 of 676 routes on good service · 42 disrupted"). Hidden for routes the feed doesn't cover (school routes) and whenever the API is unreachable.
 - **NEW** Crowding section on the route card — peak load ÷ capacity with its comfort band ("Busy · 76% of capacity"), the busiest stop / day / time, and per-day-type peaks (Mon–Fri / Sat / Sun) — from the Atlas API `crowding` dataset (TfL BUSTO, ~606 routes). Rows hide when a route has no BUSTO coverage.

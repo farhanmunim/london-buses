@@ -4,18 +4,30 @@
  * Two sources, one shape:
  *   • The Atlas public API (atlas.farhan.app/api/v1 — same author, same
  *     upstream warehouse; CORS-open, read-only, no key) is the primary
- *     source for the datasets it serves: garages (merged join-safely with
- *     the bundled record — see fetchGarageLocations), tender awards, and
- *     the per-route reliability block (overlaid onto the classifications —
- *     see fetchRouteClassifications). Responses are adapted to the
+ *     source for every dataset it serves at UI fidelity: garages (merged
+ *     join-safely with the bundled record — see fetchGarageLocations),
+ *     tender awards, and the per-route reliability, route-meta and fleet
+ *     blocks (overlaid onto the classifications — see
+ *     fetchRouteClassifications). Responses are adapted to the
  *     bundled-file shapes so nothing downstream changes, and the committed
  *     /data files remain the automatic fallback when the API is
  *     unreachable.
- *   • Everything else — per-route geometry (full-res, per direction),
- *     classifications, stops (indicator/`towards`, school routes),
- *     destinations, overview paint properties — loads from the static
- *     GeoJSON/JSON committed by the weekly refresh; the API does not yet
- *     serve those at the fidelity the UI needs.
+ *   • The rest still loads from the static GeoJSON/JSON committed by the
+ *     weekly refresh, because the API does not yet serve it at the
+ *     fidelity the UI needs (verified 2026-07-27):
+ *       – per-route geometry: /routes/{id}/geometry answers with the route
+ *         list (catch-all), and the warehouse's route_geometry table is
+ *         only published inside transit.db;
+ *       – overview layer: /routes-overview features lack the paint/filter
+ *         properties (operator, propulsion, deck, frequency, lengthBand,
+ *         isPrefix);
+ *       – stops: /route-stops has no `indicator`, no `towards`, and each
+ *         stop's `lines` lists only the queried route, not all routes
+ *         serving the stop;
+ *       – destinations: no endpoint;
+ *       – deck / frequency / lengthBand / next-tender programme: absent
+ *         from every endpoint.
+ *     Each of those moves API-first as soon as Atlas closes the gap.
  * All responses are cached in memory for the session.
  */
 
@@ -87,24 +99,47 @@ export async function fetchAllDestinations() {
 
 /**
  * Returns the route classifications map — the master per-route record built
- * by the weekly pipeline — with the reliability fields (serviceClass, EWT /
- * OTP actuals and the MPS standards) overlaid from the API's
- * /route-performance dataset for every route it carries. Both sides parse
- * the same TfL QSI publications, but the API re-checks daily, so the
- * overlay is never staler than the committed build. When the API is
- * unreachable the committed values stand.
+ * by the weekly pipeline — with three Atlas overlays applied per route:
+ *
+ *   /route-performance — the reliability block (serviceClass, EWT / OTP
+ *   actuals, MPS standards). Both sides parse the same TfL QSI
+ *   publications, but the API re-checks daily, so the overlay is never
+ *   staler than the committed build.
+ *
+ *   /route-meta — daily re-parse of the same londonbusroutes.net source
+ *   the weekly build reads. Shared-vocabulary fields (garage code + name,
+ *   PVR) take the API value when present. Fields the build normalises —
+ *   operator (parent-brand vocabulary that stats.js / garage-filter.js
+ *   join on), vehicleType (fleet-string cleanup), contract dates (format
+ *   differs) — and DVLA-derived propulsion only fill bundled nulls:
+ *   overlaying the API's raw strings would break those joins.
+ *
+ *   /fleet — today's arrivals sample enriched via DVLA. The bundled
+ *   aggregates come from weeks of accumulated, recurrence-filtered
+ *   observations, so a one-day sample only fills routes the build has no
+ *   answer for (make, age, size, composition, propulsion), and marks them
+ *   fleetConfidence 'low'.
+ *
+ * When the API is unreachable the committed values stand.
  * @returns {Promise<object>}
  */
 export async function fetchRouteClassifications() {
   const key = 'adapted:classifications';
   if (_cache.has(key)) return _cache.get(key);
 
-  const [data, perf] = await Promise.all([
+  const [data, perf, meta, fleet] = await Promise.all([
     loadJson(`${BASE}/route_classifications.json`),
     loadApiCached('/route-performance'),
+    loadApiCached('/route-meta'),
+    loadApiCached('/fleet'),
   ]);
 
-  const routes = { ...(data.routes ?? {}) };
+  // Per-record clones: the overlays below write into the records, and the
+  // originals are shared via loadJson's cache with direct readers of the
+  // bundled file (fetchGarageLocations).
+  const routes = Object.fromEntries(
+    Object.entries(data.routes ?? {}).map(([k, v]) => [k, { ...v }]),
+  );
   for (const [id, p] of Object.entries(perf?.routes ?? {})) {
     const routeId = id.toUpperCase();
     const rec = routes[routeId];
@@ -121,6 +156,50 @@ export async function fetchRouteClassifications() {
       otpMps:        p.otpMps        ?? null,
       mileageMps:    p.mileageMps    ?? null,
     };
+  }
+
+  for (const [id, m] of Object.entries(meta?.routes ?? {})) {
+    const rec = routes[id.toUpperCase()];
+    if (!rec || typeof m !== 'object' || m === null) continue;
+    if (m.garage)                 { rec.garageCode = m.garage; rec.garageName = m.garageName ?? rec.garageName; }
+    if (Number.isFinite(m.pvr))     rec.pvr = m.pvr;
+    if (rec.operator    == null && m.operator)    rec.operator    = m.operator;
+    if (rec.vehicleType == null && m.fleet)       rec.vehicleType = m.fleet;
+    if (rec.propulsion  == null && m.propulsion)  rec.propulsion  = m.propulsion;
+  }
+
+  for (const [id, f] of Object.entries(fleet?.byRoute ?? {})) {
+    const rec = routes[id.toUpperCase()];
+    if (!rec || !(f?.enriched > 0)) continue;
+    let filled = false;
+    if (rec.make == null && f.makes?.[0]?.make) {
+      rec.make = f.makes[0].make.toUpperCase();
+      filled = true;
+    }
+    if (rec.vehicleAgeYears == null && Number.isFinite(f.avgAgeYears)) {
+      rec.vehicleAgeYears = f.avgAgeYears;
+      filled = true;
+    }
+    if (rec.fleetSize == null && Number.isFinite(f.count) && f.count > 0) {
+      rec.fleetSize = f.count;
+      filled = true;
+    }
+    if (rec.fleetComposition == null && f.makes?.length) {
+      const total = f.makes.reduce((n, x) => n + (x.n ?? 0), 0);
+      if (total > 0) {
+        rec.fleetComposition = f.makes.map(x => ({
+          make:  String(x.make ?? '').toUpperCase(),
+          count: x.n ?? 0,
+          share: (x.n ?? 0) / total,
+        }));
+        filled = true;
+      }
+    }
+    if (rec.propulsion == null && f.propulsion) {
+      const top = Object.entries(f.propulsion).sort((a, b) => b[1] - a[1])[0];
+      if (top && top[1] > 0) { rec.propulsion = top[0]; filled = true; }
+    }
+    if (filled && rec.fleetConfidence == null) rec.fleetConfidence = 'low';
   }
 
   _cache.set(key, routes);
