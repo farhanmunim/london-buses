@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T14:03:13.536Z",
+  "generatedAt": "2026-07-27T11:18:15.986Z",
   "count": 76,
   "garages": {
     "A": {
@@ -59,7 +59,7 @@
       "address": "High Street, London, SW19 1DN",
       "lat": 51.416567,
       "lon": -0.181662,
-      "pvr": 129,
+      "pvr": 143,
       "capacity": 217
     },
     "AO": {
@@ -69,7 +69,7 @@
       "address": "Unit 1-3, Capital Business Centre Athlon Road, Wembley, HA0 1YU",
       "lat": 51.537651,
       "lon": -0.302711,
-      "pvr": 34,
+      "pvr": 33,
       "capacity": 38
     },
     "AR": {
@@ -79,7 +79,7 @@
       "address": "Philip Lane, Tottenham, London, N15 4JB",
       "lat": 51.588722,
       "lon": -0.072359,
-      "pvr": 124,
+      "pvr": 139,
       "capacity": 200
     },
     "AV": {
@@ -209,7 +209,7 @@
       "address": "Central Road, Dartford, Kent, DA1 5BG",
       "lat": 51.450192,
       "lon": 0.220779,
-      "pvr": 75,
+      "pvr": 65,
       "capacity": 123
     },
     "DX": {
@@ -219,7 +219,7 @@
       "address": "638 Ripple Road, Barking, IG11 0SR",
       "lat": 51.532318,
       "lon": 0.113116,
-      "pvr": 44,
+      "pvr": 29,
       "capacity": 100
     },
     "E": {
@@ -279,7 +279,7 @@
       "address": "Goat Road, CR4 4HU",
       "lat": 51.38872,
       "lon": -0.159942,
-      "pvr": 26,
+      "pvr": 12,
       "capacity": 37
     },
     "GW": {
@@ -309,7 +309,7 @@
       "address": "467 High Road, Harrow Weald, Middlesex, HA3 6EJ",
       "lat": 51.605644,
       "lon": -0.340525,
-      "pvr": 72,
+      "pvr": 74,
       "capacity": 73
     },
     "HK": {
@@ -329,7 +329,7 @@
       "address": "151 Ruckholt Road, Leyton, London, E10 5PB",
       "lat": 51.555687,
       "lon": -0.014839,
-      "pvr": 150,
+      "pvr": 139,
       "capacity": 250
     },
     "HT": {
@@ -339,7 +339,7 @@
       "address": "37A Pemberton Gardens, London, N19 5RR",
       "lat": 51.56265,
       "lon": -0.131605,
-      "pvr": 157,
+      "pvr": 158,
       "capacity": 228
     },
     "KB": {
@@ -369,7 +369,7 @@
       "address": "Oak Farm, Farnborough Hill, Green Street Green, Orpington, Kent, BR6 6DA",
       "lat": 51.356558,
       "lon": 0.087681,
-      "pvr": 104,
+      "pvr": 88,
       "capacity": 228
     },
     "MG": {
@@ -379,7 +379,7 @@
       "address": "Morden Wharf Road, Greenwich, London, SE10 0NU",
       "lat": 51.493448,
       "lon": 0.003631,
-      "pvr": 113,
+      "pvr": 110,
       "capacity": 150
     },
     "N": {
@@ -439,7 +439,7 @@
       "address": "Pettman Crescent, Plumstead, London, SE28 0BJ",
       "lat": 51.491193,
       "lon": 0.083469,
-      "pvr": 139,
+      "pvr": 149,
       "capacity": 210
     },
     "PM": {
@@ -459,7 +459,7 @@
       "address": "Alperton Lane, Western Avenue, Greenford, Middlesex, UB6 8DW",
       "lat": 51.533792,
       "lon": -0.318859,
-      "pvr": 76,
+      "pvr": 77,
       "capacity": 95
     },
     "Q": {
@@ -539,7 +539,7 @@
       "address": "27A Spring Grove Rd, Hounslow TW3 4BE",
       "lat": 51.476457,
       "lon": -0.361549,
-      "pvr": 44,
+      "pvr": 55,
       "capacity": 50
     },
     "SI": {
@@ -649,7 +649,7 @@
       "address": "180 Bromley Road, Catford, London, SE6 2XA",
       "lat": 51.433618,
       "lon": -0.018598,
-      "pvr": 133,
+      "pvr": 150,
       "capacity": 180
     },
     "TV": {
@@ -759,7 +759,7 @@
       "address": "Great Western Road, London, W9 3NW",
       "lat": 51.523365,
       "lon": -0.201514,
-      "pvr": 151,
+      "pvr": 132,
       "capacity": 173
     }
   }

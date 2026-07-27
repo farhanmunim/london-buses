@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T14:03:13.769Z",
+  "generatedAt": "2026-07-27T11:18:16.201Z",
   "summary": {
     "critical": 0,
     "warn": 7,
@@ -48,8 +48,8 @@
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.27",
-      "note": "fleetSize=47 pvr=11"
+      "actual": "4.17",
+      "note": "fleetSize=50 pvr=12"
     },
     {
       "severity": "WARN",
@@ -95,20 +95,20 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "total": 9423,
-        "validVrm": 9423,
+        "total": 9441,
+        "validVrm": 9441,
         "invalidVrm": 0,
-        "dvla200": 9396,
+        "dvla200": 9414,
         "dvla404": 27,
         "dvla400": 0,
         "dvlaOther": 0,
         "neverChecked": 0,
-        "ageOK": 9396,
+        "ageOK": 9414,
         "ageMissing": 27,
         "ageImplausible": 0,
         "propByFuel": {
           "diesel": 5992,
-          "electric": 3403,
+          "electric": 3421,
           "gas": 1
         }
       },
@@ -132,7 +132,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 15799,
+        "totalObs": 14601,
         "missingFleet": 0
       },
       "note": ""
