@@ -149,12 +149,14 @@ export async function fetchRouteClassifications() {
     if (!rec || !p?.serviceClass) continue;
     routes[routeId] = {
       ...rec,
-      serviceClass:  p.serviceClass,
-      ewtMinutes:    p.ewtMinutes    ?? null,
-      onTimePercent: p.onTimePercent ?? null,
-      ewtMps:        p.ewtMps        ?? null,
-      otpMps:        p.otpMps        ?? null,
-      mileageMps:    p.mileageMps    ?? null,
+      serviceClass:   p.serviceClass,
+      ewtMinutes:     p.ewtMinutes     ?? null,
+      onTimePercent:  p.onTimePercent  ?? null,
+      ewtMps:         p.ewtMps         ?? null,
+      otpMps:         p.otpMps         ?? null,
+      mileageMps:     p.mileageMps     ?? null,
+      // API-only — the weekly build never carried operated-mileage actuals.
+      mileagePercent: p.mileagePercent ?? null,
     };
   }
 
@@ -163,6 +165,7 @@ export async function fetchRouteClassifications() {
     if (!rec || typeof m !== 'object' || m === null) continue;
     if (m.garage)                 { rec.garageCode = m.garage; rec.garageName = m.garageName ?? rec.garageName; }
     if (Number.isFinite(m.pvr))     rec.pvr = m.pvr;
+    if (Number.isFinite(m.lengthKm)) rec.lengthKm = m.lengthKm; // API-only — build stores lengthBand, not km
     if (rec.operator    == null && m.operator)    rec.operator    = m.operator;
     if (rec.vehicleType == null && m.fleet)       rec.vehicleType = m.fleet;
     if (rec.propulsion  == null && m.propulsion)  rec.propulsion  = m.propulsion;
@@ -494,6 +497,42 @@ export async function fetchCrowding() {
   const data = { year: raw.year ?? null, bands: raw.bands ?? [], byRoute };
   _cache.set(key, data);
   return data;
+}
+
+/**
+ * Stop-by-stop load profile for the peak direction of each route (TfL BUSTO,
+ * annual). Returns { year, byRoute } with uppercase route keys; byRoute
+ * values are { profileDir, loadProfile: [{ seq, name, vc }] } — V/C ratio at
+ * each stop in sequence. ~600 routes covered.
+ */
+export async function fetchCrowdingProfile() {
+  const key = 'adapted:/crowding-profile';
+  if (_cache.has(key)) return _cache.get(key);
+  const raw = await loadApiCached('/crowding-profile');
+  if (!raw) return null;
+  const byRoute = {};
+  for (const [id, rec] of Object.entries(raw.routes ?? {})) byRoute[id.toUpperCase()] = rec;
+  const data = { year: raw.year ?? null, byRoute };
+  _cache.set(key, data);
+  return data;
+}
+
+/**
+ * Published quarterly performance for one route (TfL QSI, via the Atlas
+ * history API). Returns rows sorted oldest → newest: { period_label,
+ * period_start, service_class, ewt_minutes, on_time_percent, ... }.
+ * Resolves [] when the API is unreachable or the route has no history.
+ */
+export async function fetchPerformanceHistory(routeId) {
+  const id  = String(routeId).toUpperCase();
+  const key = `api:/history/performance-history:${id}`;
+  if (_cache.has(key)) return _cache.get(key);
+  const raw  = await loadApi(`/history/performance-history?route=${encodeURIComponent(id)}&limit=24`);
+  const rows = (raw?.rows ?? [])
+    .filter(r => r?.period_start)
+    .sort((a, b) => String(a.period_start).localeCompare(String(b.period_start)));
+  _cache.set(key, rows);
+  return rows;
 }
 
 /** The API's pipeline-run manifest — per-dataset fetchedAt + cadence. */

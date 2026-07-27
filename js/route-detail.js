@@ -13,7 +13,7 @@
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
 import { opColor, multiRouteColor } from './map.js';
-import { fetchLineStatus, fetchCrowding } from './api.js';
+import { fetchLineStatus, fetchCrowding, fetchCrowdingProfile, fetchPerformanceHistory } from './api.js';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -46,6 +46,7 @@ const SOURCE = {
   LOOKUP:    'curated vehicle lookup over LBR chassis strings',
   DERIVED:   'derived (accepted bid ÷ cost per mile)',
   BUSTO:     'TfL BUSTO demand data, via the Atlas API',
+  ATLAS_QSI: 'TfL QSI reports, via the Atlas API',
 };
 const WEEKLY      = 'as at last weekly refresh';
 const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed weekly';
@@ -59,10 +60,14 @@ const TIPS = {
   freq:            tip('H = 5+ buses/hour, L = fewer',                        SOURCE.TFL_API, WEEKLY),
   // Route detail rows
   garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
+  length:          tip('One-way route length',                                SOURCE.LBR + ', via the Atlas API', 'refreshed daily'),
+  mileage:         tip('Scheduled mileage actually operated last quarter, against the contractual standard', SOURCE.ATLAS_QSI, QSI_FRESH),
+  'perf-trend':    tip('Published reliability across recent quarters',        SOURCE.ATLAS_QSI, QSI_FRESH),
   // Crowding rows (Atlas API)
   'crowd-peak':    tip('Peak vehicle load ÷ capacity at the max-demand hour', SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-where':   tip('Stop, day type and time of the peak load',            SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-days':    tip('Peak load ÷ capacity per day type',                   SOURCE.BUSTO,   ANNUAL_BUSTO),
+  'crowd-profile': tip('Peak-direction load ÷ capacity at each stop — where the route actually fills up', SOURCE.BUSTO, ANNUAL_BUSTO),
   // Fleet rows
   deck:            tip('',                                                    SOURCE.LOOKUP,  WEEKLY),
   propulsion:      tip('LBR chassis codes cross-checked with DVLA',           SOURCE.LBR + ' + ' + SOURCE.DVLA, WEEKLY),
@@ -329,6 +334,22 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const gn = classification?.garageName;
   const gc = classification?.garageCode;
   set('[data-rc-garage]', gn && gc ? `${gn} (${gc})` : (gn ?? gc ?? 'XXX'));
+
+  // One-way length in km — Atlas route-meta only, so the row hides when the
+  // API was unreachable and the record carries just the bundled lengthBand.
+  const lenKm = classification?.lengthKm;
+  toggleRow(node, 'length', Number.isFinite(lenKm));
+  if (Number.isFinite(lenKm)) set('[data-rc-length]', `${lenKm} km`);
+
+  // Operated mileage vs the contractual standard — Atlas /route-performance
+  // only (the weekly build never carried the actuals).
+  const milePct = classification?.mileagePercent;
+  const mileMps = classification?.mileageMps;
+  toggleRow(node, 'mileage', Number.isFinite(milePct));
+  if (Number.isFinite(milePct)) {
+    set('[data-rc-mileage]', `${milePct.toFixed(1)}%`
+      + (Number.isFinite(mileMps) && mileMps > 0 ? ` · standard ${mileMps}%` : ''));
+  }
 
   // Vehicle make — DVLA returns the manufacturer in upper-case ("VOLVO").
   // Title-case it so it reads naturally ("Volvo").
@@ -685,6 +706,76 @@ function hydrateAtlasExtras(node, id) {
 
     sec.hidden = false;
   }).catch(() => {});
+
+  fetchCrowdingProfile().then(cp => {
+    const rec = cp?.byRoute?.[routeId];
+    const profile = (rec?.loadProfile ?? []).filter(p => Number.isFinite(p?.vc));
+    const host = node.querySelector('[data-rc-crowd-profile]');
+    // Under ~8 stops a bar profile reads as noise, not shape.
+    if (!host || profile.length < 8) return;
+    host.replaceChildren(buildLoadProfileSvg(profile));
+    toggleRow(node, 'crowd-profile', true);
+    // The crowding section itself is revealed by the fetchCrowding handler;
+    // profile-only coverage doesn't exist upstream (profile ⊂ crowding), so
+    // no extra unhide is needed here.
+  }).catch(() => {});
+
+  fetchPerformanceHistory(routeId).then(rows => {
+    // Metric follows the route's QSI class: EWT (lower = better) for
+    // high-frequency, on-time % (higher = better) for low-frequency.
+    const ewts = rows.filter(r => Number.isFinite(r.ewt_minutes));
+    const otps = rows.filter(r => Number.isFinite(r.on_time_percent));
+    const useEwt = ewts.length >= otps.length;
+    const series = (useEwt ? ewts : otps).slice(-4);
+    if (series.length < 2) return; // a single period is already on the KPI tile
+
+    const val   = r => useEwt ? r.ewt_minutes : r.on_time_percent;
+    const fmt   = v => useEwt ? v.toFixed(1) : `${Math.round(v)}%`;
+    const first = val(series[0]);
+    const last  = val(series[series.length - 1]);
+    // For EWT a fall is an improvement; for on-time % a rise is.
+    const delta     = useEwt ? first - last : last - first;
+    const word      = Math.abs(delta) < (useEwt ? 0.05 : 0.5) ? 'steady'
+                    : delta > 0 ? 'improving' : 'worsening';
+
+    const el = node.querySelector('[data-rc-perf-trend]');
+    if (!el) return;
+    el.textContent = `${series.map(r => fmt(val(r))).join(' → ')} · ${word}`;
+    el.classList.toggle('rc-trend--good', word === 'improving');
+    el.classList.toggle('rc-trend--bad',  word === 'worsening');
+    el.dataset.tip = series
+      .map(r => `${r.period_label ?? r.period_start}: ${fmt(val(r))}`)
+      .join(' · ') + (useEwt ? ' (EWT, lower is better)' : ' (on-time %, higher is better)');
+    toggleRow(node, 'perf-trend', true);
+  }).catch(() => {});
+}
+
+// Inline SVG bar profile: V/C ratio per stop along the peak direction.
+// Bars colour-step at the BUSTO comfort thresholds (0.5 busy, 0.8 crowded).
+function buildLoadProfileSvg(profile) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 260, H = 34, GAP = 1;
+  const maxVc = Math.max(0.8, ...profile.map(p => p.vc));
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.classList.add('rc-crowd-profile-svg');
+  const bw = (W - GAP * (profile.length - 1)) / profile.length;
+  profile.forEach((p, i) => {
+    const h = Math.max(1.5, (p.vc / maxVc) * H);
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', (i * (bw + GAP)).toFixed(2));
+    rect.setAttribute('y', (H - h).toFixed(2));
+    rect.setAttribute('width', bw.toFixed(2));
+    rect.setAttribute('height', h.toFixed(2));
+    rect.setAttribute('class',
+      p.vc >= 0.8 ? 'rc-cpbar--crowded' : p.vc >= 0.5 ? 'rc-cpbar--busy' : 'rc-cpbar');
+    const title = document.createElementNS(NS, 'title');
+    title.textContent = `${toTitleCase(p.name ?? `Stop ${p.seq}`)} — ${Math.round(p.vc * 100)}% of capacity`;
+    rect.appendChild(title);
+    svg.appendChild(rect);
+  });
+  return svg;
 }
 
 // "08:15:00" (BUSTO timeband) or an ISO timestamp → "08:15". ISO renders in
