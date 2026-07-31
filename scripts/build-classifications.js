@@ -93,17 +93,26 @@ function haversineKm([lon1, lat1], [lon2, lat2]) {
 }
 
 function routeLengthKm(geojson) {
-  let totalKm = 0;
+  // Sum per direction, then take the SHORTEST direction with geometry. TfL's
+  // ZIP sometimes packs a doubled/looped trace into one direction's entry
+  // (e.g. route 3: direction 1 sums to 25.3 km, direction 2 to 13.1 km — the
+  // real one-way distance), which measured-direction-1-only banded ~18
+  // routes a size too big. The minimum is robust: the inflated direction is
+  // always the anomaly, and single-direction (circular) routes still measure
+  // their only trace.
+  const perDir = {};
   for (const feature of (geojson.features ?? [])) {
-    // Only measure one direction to avoid double-counting
-    if (String(feature.properties?.direction) !== '1') continue;
+    const dir = String(feature.properties?.direction ?? '1');
     const { type, coordinates } = feature.geometry;
     const segments = type === 'MultiLineString' ? coordinates : [coordinates];
+    let km = 0;
     for (const seg of segments) {
-      for (let i = 0; i < seg.length - 1; i++) totalKm += haversineKm(seg[i], seg[i + 1]);
+      for (let i = 0; i < seg.length - 1; i++) km += haversineKm(seg[i], seg[i + 1]);
     }
+    perDir[dir] = (perDir[dir] ?? 0) + km;
   }
-  return totalKm;
+  const lengths = Object.values(perDir).filter(km => km > 0);
+  return lengths.length ? Math.min(...lengths) : 0;
 }
 
 function deriveLengthBand(km) {

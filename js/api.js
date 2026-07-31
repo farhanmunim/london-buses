@@ -107,12 +107,14 @@ export async function fetchAllDestinations() {
  *   staler than the committed build.
  *
  *   /route-meta — daily re-parse of the same londonbusroutes.net source
- *   the weekly build reads. Shared-vocabulary fields (garage code + name,
- *   PVR) take the API value when present. Fields the build normalises —
+ *   the weekly build reads. Only PVR (a plain number, no join) takes the
+ *   API value when present. Everything else fills bundled nulls only:
  *   operator (parent-brand vocabulary that stats.js / garage-filter.js
- *   join on), vehicleType (fleet-string cleanup), contract dates (format
- *   differs) — and DVLA-derived propulsion only fill bundled nulls:
- *   overlaying the API's raw strings would break those joins.
+ *   join on), garage code + name (the API's code vocabulary diverges —
+ *   e.g. Lea Interchange is HO in the build but LI in the API, and an
+ *   overlay would split one garage's routes across two codes, breaking
+ *   marker/drawer counts), vehicleType (fleet-string cleanup), and
+ *   DVLA-derived propulsion.
  *
  *   /fleet — today's arrivals sample enriched via DVLA. The bundled
  *   aggregates come from weeks of accumulated, recurrence-filtered
@@ -163,8 +165,11 @@ export async function fetchRouteClassifications() {
   for (const [id, m] of Object.entries(meta?.routes ?? {})) {
     const rec = routes[id.toUpperCase()];
     if (!rec || typeof m !== 'object' || m === null) continue;
-    if (m.garage)                 { rec.garageCode = m.garage; rec.garageName = m.garageName ?? rec.garageName; }
-    if (Number.isFinite(m.pvr))     rec.pvr = m.pvr;
+    if (rec.garageCode == null && m.garage) {
+      rec.garageCode = m.garage;
+      rec.garageName = m.garageName ?? rec.garageName;
+    }
+    if (Number.isFinite(m.pvr) && m.pvr > 0) rec.pvr = m.pvr; // API parses blank PVR as 0
     if (Number.isFinite(m.lengthKm)) rec.lengthKm = m.lengthKm; // API-only — build stores lengthBand, not km
     if (rec.operator    == null && m.operator)    rec.operator    = m.operator;
     if (rec.vehicleType == null && m.fleet)       rec.vehicleType = m.fleet;

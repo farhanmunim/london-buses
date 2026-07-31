@@ -1,6 +1,18 @@
 {
   "description": "Manual per-route overrides. Any field set here wins over scraped/derived data. Route IDs are case-insensitive (use `N128` not `n128`). Entries whose key starts with an underscore (e.g. `_example`) are ignored — use them for documentation. Rebuild with `npm run build-classifications && npm run build-overview` to apply.",
   "routes": {
+    "166": {
+      "lengthBand": "medium"
+    },
+    "192": {
+      "lengthBand": "medium"
+    },
+    "308": {
+      "lengthBand": "medium"
+    },
+    "699": {
+      "lengthBand": "medium"
+    },
     "_example": {
       "deck": "double",
       "propulsion": "electric",
@@ -21,10 +33,33 @@
       "pvr": 18,
       "frequency": "high"
     },
-
     "_N128_note": "N128 is the night branding of the 128 (24-hour service per londonbusroutes.net). Pipeline now auto-inherits via routes.htm href-share detection, but this explicit entry pins the operator in case the scrape fails.",
-    "N128": { "operator": "Stagecoach London" },
-
-    "SL7": { "frequency": "high" }
+    "N128": {
+      "operator": "Stagecoach London"
+    },
+    "SL7": {
+      "frequency": "high"
+    },
+    "_lengthband_geometry_doubles": {
+      "_note": "lengthBand overrides below (166 192 308 699 SL4 EL3 E7 R5 R10 U9): TfL geometry ZIP carries doubled/looped traces in BOTH direction entries for these routes, so even the min-direction Haversine measure lands a band too big (or, for the R5/R10 circulars and U9, too small). Bands set from londonbusroutes.net one-way km (cross-checked via the Atlas API route-meta), 2026-07-27. Re-check if TfL republishes geometry."
+    },
+    "SL4": {
+      "lengthBand": "medium"
+    },
+    "EL3": {
+      "lengthBand": "medium"
+    },
+    "E7": {
+      "lengthBand": "medium"
+    },
+    "R5": {
+      "lengthBand": "medium"
+    },
+    "R10": {
+      "lengthBand": "medium"
+    },
+    "U9": {
+      "lengthBand": "medium"
+    }
   }
 }

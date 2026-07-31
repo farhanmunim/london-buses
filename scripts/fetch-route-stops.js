@@ -134,6 +134,36 @@ async function main() {
     if (done % 50 === 0) console.log(`  ${done}/${routeIds.length}`);
   }, 4, 300);
 
+  // Last-known-good merge: a route whose /StopPoints call failed (or came
+  // back empty) keeps its previous entry rather than vanishing from the
+  // output — on 2026-07-27 a burst of TfL 429s silently dropped 8 routes
+  // (18, 177–183) and their stops from both files. Only routes still in
+  // TfL's line list are restored (`failed`), so a genuinely withdrawn
+  // route still drops out. Registry entries merge back the same way.
+  try {
+    const prevRS = JSON.parse(fs.readFileSync(ROUTE_STOPS_PATH, 'utf8'))?.routes ?? {};
+    const prevST = JSON.parse(fs.readFileSync(STOPS_PATH, 'utf8'))?.stops ?? {};
+    const failedSet = new Set(failed);
+    const restored = [];
+    for (const [id, entries] of Object.entries(prevRS)) {
+      if (!failedSet.has(id)) continue;
+      if (routeStops[id] || !Array.isArray(entries) || !entries.length) continue;
+      routeStops[id] = entries;
+      restored.push(id);
+      for (const e of entries) {
+        const os = prevST[e?.id];
+        if (!os) continue;
+        let reg = stopRegistry.get(e.id);
+        if (!reg) {
+          reg = { name: os.name, indicator: os.indicator ?? null, lat: os.lat, lon: os.lon, routes: new Set() };
+          stopRegistry.set(e.id, reg);
+        }
+        reg.routes.add(id);
+      }
+    }
+    if (restored.length) console.warn(`  kept last-known-good stops for ${restored.length} routes: ${restored.join(', ')}`);
+  } catch { /* no previous files (cold start) — nothing to merge */ }
+
   // Sort routes + stops for deterministic output
   const sortedRoutes = {};
   for (const k of Object.keys(routeStops).sort()) sortedRoutes[k] = routeStops[k];
