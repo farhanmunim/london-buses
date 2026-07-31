@@ -409,6 +409,8 @@ a{color:inherit;text-decoration:none}
 /* Reliability-trend verdict colouring */
 .rc-trend--good{color:var(--green)}
 .rc-trend--bad{color:var(--amber)}
+/* Daily-reliability bars — neutral (indicative estimate, no thresholds) */
+.rc-rdbar{fill:var(--tx);opacity:0.3}
 .rc-tr-l{color:var(--mu)}
 .rc-tr-v{font-weight:500;color:var(--tx);display:inline-flex;align-items:center;gap:6px;text-align:right}
 /* "(no change)" / "first award" placeholder vocabulary — quieter than the

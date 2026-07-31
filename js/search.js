@@ -21,6 +21,7 @@ import {
 } from './api.js';
 import {
   renderRoute, renderMultiRoute, multiRouteColor, clearRoute, resetMapView, highlightGaragesForRoute,
+  startLiveVehicles,
 } from './map.js';
 import { renderRouteCards, showNoResult, showRoutePrompt } from './route-detail.js';
 import { showRpTab } from './panels.js';
@@ -123,6 +124,7 @@ async function renderSingle(id) {
     state.stopsFeatures = stops ?? [];
     state.direction     = '1';
     renderRoute(geojson, stops ?? [], '1');
+    startLiveVehicles(id); // single-route focus only — comparison mode stays clean
     highlightGaragesForRoute(id);
     const stopCount = Array.isArray(stops) ? stops.length : 0;
     const entry = { id, classification, destinations, stopCount };
@@ -378,6 +380,7 @@ document.addEventListener('click', e => {
   const next = state.direction === '1' ? '2' : '1';
   state.direction = next;
   renderRoute(state.routeGeoJson, state.stopsFeatures ?? [], next);
+  if (state.routeId) startLiveVehicles(state.routeId); // renderRoute→clearRoute stops the poll
 
   // Patch the rc-name text in place.
   const card   = btn.closest('.route-card');

@@ -3,6 +3,7 @@
  */
 
 import { state } from './state.js';
+import { fetchLiveVehicles } from './api.js';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -278,6 +279,7 @@ export function restoreOverview() { _overviewLayer?.setStyle(f => overviewStyle(
 // ── Selected route ────────────────────────────────────────────────────────────
 
 export function clearRoute() {
+  stopLiveVehicles();
   if (_outlineLayer)  { _map.removeLayer(_outlineLayer); _outlineLayer  = null; }
   if (_routeLayer)    { _map.removeLayer(_routeLayer);   _routeLayer    = null; }
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
@@ -364,6 +366,59 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   if (!_stopsPref)    setStopsVisible(false);
   if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
   fitToRoute();
+}
+
+// ── Live vehicle positions (Atlas live feed) ─────────────────────────────────
+// While a single route is focused, its buses' real-time GPS positions (BODS
+// SIRI-VM via Atlas, ~10 s fresh) are drawn as solid direction-coloured dots
+// — the visual inverse of the white stop rings, so buses and stops read as
+// different things at a glance. Polled every 15 s; markers rebuilt in place.
+// The layer dies with the route: clearRoute() stops the poll, and a poll
+// response for a stale route is discarded.
+let _vehiclesLayer   = null;
+let _vehiclesTimer   = null;
+let _vehiclesRouteId = null;
+
+const VEHICLE_POLL_MS = 15_000;
+
+export function startLiveVehicles(routeId) {
+  stopLiveVehicles();
+  _vehiclesRouteId = String(routeId).toUpperCase();
+  const poll = async () => {
+    const id = _vehiclesRouteId;
+    if (!id) return;
+    const vehicles = await fetchLiveVehicles(id);
+    if (_vehiclesRouteId !== id || !_routeActive) return; // route changed mid-flight
+    renderVehicles(vehicles ?? []);
+  };
+  poll();
+  _vehiclesTimer = setInterval(poll, VEHICLE_POLL_MS);
+}
+
+export function stopLiveVehicles() {
+  if (_vehiclesTimer) { clearInterval(_vehiclesTimer); _vehiclesTimer = null; }
+  if (_vehiclesLayer) { _map?.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
+  _vehiclesRouteId = null;
+}
+
+function renderVehicles(vehicles) {
+  if (_vehiclesLayer) { _map.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
+  if (!vehicles.length) return;
+  _vehiclesLayer = L.layerGroup();
+  for (const v of vehicles) {
+    const color = v.direction === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
+    const marker = L.circleMarker([v.lat, v.lng], {
+      radius: 6, fillColor: color, fillOpacity: 1, color: '#fff', weight: 2, opacity: 1,
+    });
+    marker.bindPopup(
+      `<span class="map-popup__name">${v.reg ?? 'Bus'}</span>` +
+      `${v.destination ? `<span class="map-popup__id" style="color:var(--t2)">→ ${v.destination}</span>` : ''}` +
+      `<span class="map-popup__id">Live position · updates every 15 s</span>`,
+      { closeButton: true, maxWidth: 240 }
+    );
+    _vehiclesLayer.addLayer(marker);
+  }
+  _vehiclesLayer.addTo(_map);
 }
 
 // ── Multi-route comparison colours ────────────────────────────────────────────

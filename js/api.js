@@ -36,6 +36,9 @@ const BASE    = './data';
 // Remote data API. Override via `globalThis.LB_API_BASE` before module load
 // (e.g. to point a preview build at a staging API).
 const API_BASE = globalThis.LB_API_BASE ?? 'https://atlas.farhan.app/api/v1';
+// The live vehicle-positions feed lives one level up from /v1 (Atlas serves
+// it at /api/live/vehicles — volatile, 10 s edge cache, not versioned).
+const LIVE_VEHICLES_BASE = API_BASE.replace(/\/v1$/, '') + '/live';
 
 // In-memory cache
 const _cache = new Map();
@@ -157,8 +160,11 @@ export async function fetchRouteClassifications() {
       ewtMps:         p.ewtMps         ?? null,
       otpMps:         p.otpMps         ?? null,
       mileageMps:     p.mileageMps     ?? null,
-      // API-only — the weekly build never carried operated-mileage actuals.
+      // API-only — the weekly build never carried operated-mileage actuals
+      // or the scheduled/actual wait pair behind the EWT.
       mileagePercent: p.mileagePercent ?? null,
+      swtMinutes:     p.swtMinutes     ?? null,
+      awtMinutes:     p.awtMinutes     ?? null,
     };
   }
 
@@ -171,6 +177,7 @@ export async function fetchRouteClassifications() {
     }
     if (Number.isFinite(m.pvr) && m.pvr > 0) rec.pvr = m.pvr; // API parses blank PVR as 0
     if (Number.isFinite(m.lengthKm)) rec.lengthKm = m.lengthKm; // API-only — build stores lengthBand, not km
+    if (m.contractEnd) rec.contractEndDate = m.contractEnd;     // API-only — "YYYY-MM"
     if (rec.operator    == null && m.operator)    rec.operator    = m.operator;
     if (rec.vehicleType == null && m.fleet)       rec.vehicleType = m.fleet;
     if (rec.propulsion  == null && m.propulsion)  rec.propulsion  = m.propulsion;
@@ -536,6 +543,87 @@ export async function fetchPerformanceHistory(routeId) {
   const rows = (raw?.rows ?? [])
     .filter(r => r?.period_start)
     .sort((a, b) => String(a.period_start).localeCompare(String(b.period_start)));
+  _cache.set(key, rows);
+  return rows;
+}
+
+/**
+ * Live GPS positions of the buses on one route (BODS SIRI-VM via the Atlas
+ * live feed, ~10 s fresh). Returns [{ reg, direction, lat, lng, bearing,
+ * destination }] or null when the feed is unreachable. Never cached —
+ * callers poll.
+ */
+export async function fetchLiveVehicles(routeId) {
+  let raw = null;
+  try {
+    const res = await fetch(`${LIVE_VEHICLES_BASE}/vehicles?line=${encodeURIComponent(String(routeId).toUpperCase())}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    raw = await res.json();
+  } catch (err) {
+    console.warn(`live vehicles unavailable (${err.message})`);
+  }
+  if (!raw?.vehicles) return null;
+  return raw.vehicles
+    .filter(v => Number.isFinite(v?.lat) && Number.isFinite(v?.lng))
+    .map(v => ({
+      reg:         v.reg ?? null,
+      direction:   String(v.direction ?? '1'),
+      lat:         v.lat,
+      lng:         v.lng,
+      bearing:     Number.isFinite(v.bearing) ? v.bearing : null,
+      destination: v.destination ?? null,
+    }));
+}
+
+/**
+ * Live TfL service status for one route (Atlas /live/status — seconds
+ * fresh, unlike the /line-status snapshot the warehouse captures daily).
+ * Adapted to the snapshot's per-route shape: { status, reason, severity,
+ * capturedAt }. Resolves null when unreachable — callers fall back to
+ * fetchLineStatus().
+ */
+export async function fetchLiveStatus(routeId) {
+  const raw = await loadApi(`/live/status?route=${encodeURIComponent(String(routeId).toUpperCase())}`);
+  const ls = raw?.data?.[0]?.lineStatuses?.[0];
+  if (!ls) return null;
+  return {
+    status:     ls.statusSeverityDescription ?? null,
+    reason:     ls.reason ?? null,
+    severity:   ls.statusSeverity ?? null,
+    capturedAt: raw.capturedAt ?? null,
+  };
+}
+
+/**
+ * Current scheduled-service record for one route (Atlas history API):
+ * { headway_min, swt_minutes, scheduled_trips, scheduled_km, ... } or null.
+ */
+export async function fetchSchedule(routeId) {
+  const id  = String(routeId).toUpperCase();
+  const key = `api:/history/schedule:${id}`;
+  if (_cache.has(key)) return _cache.get(key);
+  const raw = await loadApi(`/history/schedule?route=${encodeURIComponent(id)}&limit=1`);
+  const row = raw?.rows?.[0] ?? null;
+  if (row) _cache.set(key, row);
+  return row;
+}
+
+/**
+ * Atlas's own daily reliability estimates for one route, oldest → newest:
+ * [{ day, service_class, ewt_minutes, otd_percent, sample_count, ... }].
+ * The current (partial) day is excluded — its figures are mid-flight
+ * artifacts until the day's sampling completes. Resolves [] when
+ * unreachable.
+ */
+export async function fetchReliabilityDaily(routeId) {
+  const id  = String(routeId).toUpperCase();
+  const key = `api:/history/reliability-daily:${id}`;
+  if (_cache.has(key)) return _cache.get(key);
+  const raw   = await loadApi(`/history/reliability-daily?route=${encodeURIComponent(id)}&limit=40`);
+  const today = new Date().toISOString().slice(0, 10);
+  const rows  = (raw?.rows ?? [])
+    .filter(r => r?.day && r.day < today)
+    .sort((a, b) => String(a.day).localeCompare(String(b.day)));
   _cache.set(key, rows);
   return rows;
 }

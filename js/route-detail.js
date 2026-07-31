@@ -13,7 +13,10 @@
 
 import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js';
 import { opColor, multiRouteColor } from './map.js';
-import { fetchLineStatus, fetchCrowding, fetchCrowdingProfile, fetchPerformanceHistory } from './api.js';
+import {
+  fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
+  fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
+} from './api.js';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -61,8 +64,12 @@ const TIPS = {
   // Route detail rows
   garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
   length:          tip('One-way route length',                                SOURCE.LBR + ', via the Atlas API', 'refreshed daily'),
+  headway:         tip('Typical scheduled gap between buses',                  'TfL timetable, via the Atlas API', 'refreshed daily'),
+  'avg-wait':      tip('Average wait passengers actually experienced vs the scheduled wait (their difference is the EWT)', SOURCE.ATLAS_QSI, QSI_FRESH),
   mileage:         tip('Scheduled mileage actually operated last quarter, against the contractual standard', SOURCE.ATLAS_QSI, QSI_FRESH),
   'perf-trend':    tip('Published reliability across recent quarters',        SOURCE.ATLAS_QSI, QSI_FRESH),
+  'rel-daily':     tip('Atlas’s own daily reliability estimate from live arrivals sampling — indicative, not TfL-published', 'Atlas arrivals sampling', 'daily'),
+  'contract-end':  tip('Scheduled end of the current contract',               SOURCE.LBR + ', via the Atlas API', 'refreshed daily'),
   // Crowding rows (Atlas API)
   'crowd-peak':    tip('Peak vehicle load ÷ capacity at the max-demand hour', SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-where':   tip('Stop, day type and time of the peak load',            SOURCE.BUSTO,   ANNUAL_BUSTO),
@@ -351,6 +358,15 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
       + (Number.isFinite(mileMps) && mileMps > 0 ? ` · standard ${mileMps}%` : ''));
   }
 
+  // Actual vs scheduled wait — the pair behind the EWT figure, so it only
+  // makes sense for high-frequency (EWT-graded) routes. Atlas API only.
+  const awt = classification?.awtMinutes;
+  const swt = classification?.swtMinutes;
+  const showWait = classification?.serviceClass === 'high-frequency'
+    && Number.isFinite(awt) && Number.isFinite(swt);
+  toggleRow(node, 'avg-wait', showWait);
+  if (showWait) set('[data-rc-avg-wait]', `${awt.toFixed(1)} min · scheduled ${swt.toFixed(1)}`);
+
   // Vehicle make — DVLA returns the manufacturer in upper-case ("VOLVO").
   // Title-case it so it reads naturally ("Volvo").
   const make = classification?.make;
@@ -444,6 +460,11 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const start = classification?.contractStartDate;
   toggleRow(node, 'contract-start', !!start);
   if (start) set('[data-rc-contract-start]', formatHumanDate(start));
+
+  // Contract end — Atlas route-meta only, month precision ("2026-11").
+  const end = classification?.contractEndDate;
+  toggleRow(node, 'contract-end', !!end);
+  if (end) set('[data-rc-contract-end]', formatMonthYear(end));
 
   // ── Current active contract block ──────────────────────────────────────────
   // Populated from the *originating* tender award (the one that produced the
@@ -650,28 +671,36 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
 function hydrateAtlasExtras(node, id) {
   const routeId = String(id).toUpperCase();
 
-  fetchLineStatus().then(ls => {
-    const rec = ls?.byRoute?.[routeId];
-    const strip  = node.querySelector('[data-rc-status]');
-    const text   = node.querySelector('[data-rc-status-text]');
-    const reason = node.querySelector('[data-rc-status-reason]');
-    if (!rec || !strip || !text) return;
-    const good = rec.severity === 10;
-    strip.classList.toggle('rc-status--good', good);
-    strip.classList.toggle('rc-status--bad', !good);
-    text.textContent = rec.status ?? (good ? 'Good Service' : 'Disruption');
-    const asOf = formatTimeShort(ls.capturedAt);
-    text.dataset.tip = 'Live service status. Source: TfL, via the Atlas API.'
-      + (asOf ? ` As of ${asOf}.` : '');
-    if (reason) {
-      // TfL reason texts run to whole paragraphs — clamped by CSS, full text
-      // on hover.
-      const show = !good && !!rec.reason;
-      reason.hidden = !show;
-      if (show) { reason.textContent = rec.reason; reason.dataset.tip = rec.reason; }
-    }
-    strip.hidden = false;
-  }).catch(() => {});
+  // Live per-route status first (seconds fresh); the warehouse's daily
+  // /line-status snapshot is the fallback so the chip still shows when the
+  // live feed is down.
+  fetchLiveStatus(routeId)
+    .then(live => live ?? fetchLineStatus().then(ls => ({
+      ...ls?.byRoute?.[routeId],
+      capturedAt: ls?.capturedAt ?? null,
+      _snapshot: true,
+    })))
+    .then(rec => {
+      const strip  = node.querySelector('[data-rc-status]');
+      const text   = node.querySelector('[data-rc-status-text]');
+      const reason = node.querySelector('[data-rc-status-reason]');
+      if (!rec || rec.severity == null || !strip || !text) return;
+      const good = rec.severity === 10;
+      strip.classList.toggle('rc-status--good', good);
+      strip.classList.toggle('rc-status--bad', !good);
+      text.textContent = rec.status ?? (good ? 'Good Service' : 'Disruption');
+      const asOf = formatTimeShort(rec.capturedAt);
+      text.dataset.tip = 'Live service status. Source: TfL, via the Atlas API.'
+        + (asOf ? ` As of ${asOf}${rec._snapshot ? ' (daily snapshot — live feed unavailable)' : ''}.` : '');
+      if (reason) {
+        // TfL reason texts run to whole paragraphs — clamped by CSS, full text
+        // on hover.
+        const show = !good && !!rec.reason;
+        reason.hidden = !show;
+        if (show) { reason.textContent = rec.reason; reason.dataset.tip = rec.reason; }
+      }
+      strip.hidden = false;
+    }).catch(() => {});
 
   fetchCrowding().then(cr => {
     const rec = cr?.byRoute?.[routeId];
@@ -714,6 +743,12 @@ function hydrateAtlasExtras(node, id) {
     // Under ~8 stops a bar profile reads as noise, not shape.
     if (!host || profile.length < 8) return;
     host.replaceChildren(buildLoadProfileSvg(profile));
+    // Say which direction the profile depicts.
+    const dirWord = rec.profileDir === '2' ? 'inbound' : rec.profileDir === '1' ? 'outbound' : null;
+    if (dirWord) {
+      const label = host.closest('[data-rc-row]')?.querySelector('.rc-tr-l');
+      if (label) label.textContent = `Load along the route · ${dirWord}`;
+    }
     toggleRow(node, 'crowd-profile', true);
     // The crowding section itself is revealed by the fetchCrowding handler;
     // profile-only coverage doesn't exist upstream (profile ⊂ crowding), so
@@ -748,6 +783,63 @@ function hydrateAtlasExtras(node, id) {
       .join(' · ') + (useEwt ? ' (EWT, lower is better)' : ' (on-time %, higher is better)');
     toggleRow(node, 'perf-trend', true);
   }).catch(() => {});
+
+  fetchSchedule(routeId).then(sched => {
+    const hw = sched?.headway_min;
+    if (!Number.isFinite(hw) || hw <= 0) return;
+    const el = node.querySelector('[data-rc-headway]');
+    if (!el) return;
+    el.textContent = `every ~${Math.round(hw)} min`;
+    toggleRow(node, 'headway', true);
+  }).catch(() => {});
+
+  fetchReliabilityDaily(routeId).then(rows => {
+    // Metric mirrors the KPI tile: EWT for high-frequency days, on-time-
+    // departure % otherwise — whichever the route's days actually carry.
+    const ewts = rows.filter(r => Number.isFinite(r.ewt_minutes));
+    const otds = rows.filter(r => Number.isFinite(r.otd_percent));
+    const useEwt = ewts.length >= otds.length;
+    const series = (useEwt ? ewts : otds).slice(-30);
+    if (series.length < 7) return; // too sparse to read as a trend
+    const host = node.querySelector('[data-rc-rel-daily]');
+    if (!host) return;
+    const val = r => useEwt ? r.ewt_minutes : r.otd_percent;
+    const fmt = v => useEwt ? `${v.toFixed(1)} min EWT` : `${Math.round(v)}% on time`;
+    host.replaceChildren(buildDailySvg(series, val, fmt));
+    const label = host.closest('[data-rc-row]')?.querySelector('.rc-tr-l');
+    if (label) label.textContent = `Daily ${useEwt ? 'EWT' : 'on-time'} · last ${series.length} days`;
+    toggleRow(node, 'rel-daily', true);
+  }).catch(() => {});
+}
+
+// Inline SVG bars: one per sampled day. Same visual grammar as the crowding
+// profile; neutral fill (no thresholds — Atlas's estimate is indicative).
+function buildDailySvg(series, val, fmt) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 260, H = 30, GAP = 1;
+  const values = series.map(val);
+  const max = Math.max(...values), min = Math.min(...values);
+  const span = max - min || 1;
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.classList.add('rc-crowd-profile-svg');
+  const bw = (W - GAP * (series.length - 1)) / series.length;
+  series.forEach((r, i) => {
+    // Bars scale within the observed range so day-to-day shape is readable.
+    const h = 4 + ((val(r) - min) / span) * (H - 4);
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', (i * (bw + GAP)).toFixed(2));
+    rect.setAttribute('y', (H - h).toFixed(2));
+    rect.setAttribute('width', bw.toFixed(2));
+    rect.setAttribute('height', h.toFixed(2));
+    rect.setAttribute('class', 'rc-rdbar');
+    const title = document.createElementNS(NS, 'title');
+    title.textContent = `${r.day}: ${fmt(val(r))}`;
+    rect.appendChild(title);
+    svg.appendChild(rect);
+  });
+  return svg;
 }
 
 // Inline SVG bar profile: V/C ratio per stop along the peak direction.
@@ -821,4 +913,12 @@ function formatHumanDate(iso) {
   if (!m) return iso;
   const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
   return `${parseInt(m[3], 10)} ${mon} ${m[1]}`;
+}
+
+// "2026-11" (month-precision contract dates from the Atlas route-meta) → "Nov 2026".
+function formatMonthYear(ym) {
+  const m = /^(\d{4})-(\d{2})/.exec(String(ym));
+  if (!m) return ym;
+  const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
+  return `${mon} ${m[1]}`;
 }

@@ -6,6 +6,19 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.15 — Live buses & deeper Atlas data
+
+_2026-07-31_
+
+- **NEW** Live bus positions — selecting a route draws its buses' real-time GPS positions (BODS SIRI-VM via the Atlas live feed, ~10 s fresh) as solid direction-coloured dots, the visual inverse of the white stop rings. Updates every 15 s while the route stays focused; click a bus for its registration and destination. Single-route view only — comparison mode stays clean.
+- **NEW** The route card's status chip is now genuinely live — it reads Atlas's live per-route status feed (seconds fresh) instead of the warehouse's daily 03:20 snapshot, falling back to the snapshot (and saying so in the tooltip) when the live feed is down.
+- **NEW** Headway row — "every ~12 min" from TfL's timetable via the Atlas history API, alongside the coarse H/L frequency band.
+- **NEW** Daily reliability chart — the last ≤30 days of Atlas's own EWT / on-time estimates from live arrivals sampling, as a bar strip matching the crowding chart's grammar. Indicative (not TfL-published); the current partial day is excluded.
+- **NEW** Average wait row — actual vs scheduled wait (AWT/SWT, whose difference is the EWT) for high-frequency routes, and a Contract end row (Atlas route-meta, where published).
+- **UX** The load-along-the-route chart now says which direction it depicts ("· inbound").
+
+---
+
 ## v2.14 — Atlas API-first data layer
 
 _2026-07-27_
