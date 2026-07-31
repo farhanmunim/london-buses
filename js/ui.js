@@ -14,25 +14,25 @@
  *   4. Garages (independent — unblocks route markers on the map).
  */
 
-import './panels.js';        // sidebar tabs, right-panel tabs, section collapse
-import './filters.js';       // pill-based filter engine
-import './paint-mode.js';    // colour-routes-by toggle (both copies synced)
-import './toggles.js';       // map-area route/garage visibility controls
-import './search.js';        // topbar + routes-tab search (multi-route pills)
-import './stop-search.js';   // bus-stop filter in sidebar
-import './garage-filter.js'; // garage-selection pill in sidebar (parity with stop filter)
-import './route-detail.js';  // route-card renderer (imported for side-effect-free exports)
-import './filtered-routes.js'; // lists filter-matched routes in the Routes tab
-import './mobile-nav.js';    // pull-up sheet + bottom nav
-import './export.js';        // XLSX export
-import './tooltip.js';       // custom [data-tip] hover tooltip used by route-card labels
+import './panels.js?v=2.15.1';        // sidebar tabs, right-panel tabs, section collapse
+import './filters.js?v=2.15.1';       // pill-based filter engine
+import './paint-mode.js?v=2.15.1';    // colour-routes-by toggle (both copies synced)
+import './toggles.js?v=2.15.1';       // map-area route/garage visibility controls
+import './search.js?v=2.15.1';        // topbar + routes-tab search (multi-route pills)
+import './stop-search.js?v=2.15.1';   // bus-stop filter in sidebar
+import './garage-filter.js?v=2.15.1'; // garage-selection pill in sidebar (parity with stop filter)
+import './route-detail.js?v=2.15.1';  // route-card renderer (imported for side-effect-free exports)
+import './filtered-routes.js?v=2.15.1'; // lists filter-matched routes in the Routes tab
+import './mobile-nav.js?v=2.15.1';    // pull-up sheet + bottom nav
+import './export.js?v=2.15.1';        // XLSX export
+import './tooltip.js?v=2.15.1';       // custom [data-tip] hover tooltip used by route-card labels
 
-import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js';
-import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js';
-import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js';
-import { renderOperatorStats, setGarageData } from './stats.js';
-import { setGarageOptions } from './garage-filter.js';
-import { applyFilters } from './filters.js';
+import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.15.1';
+import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.15.1';
+import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.15.1';
+import { renderOperatorStats, setGarageData } from './stats.js?v=2.15.1';
+import { setGarageOptions } from './garage-filter.js?v=2.15.1';
+import { applyFilters } from './filters.js?v=2.15.1';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 function setTheme(t) {

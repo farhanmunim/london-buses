@@ -18,17 +18,17 @@ import {
   fetchRouteGeoJson, fetchStopsForRoute,
   fetchRouteDestinations, fetchRouteClassification,
   fetchRouteStopCount,
-} from './api.js';
+} from './api.js?v=2.15.1';
 import {
   renderRoute, renderMultiRoute, multiRouteColor, clearRoute, resetMapView, highlightGaragesForRoute,
   startLiveVehicles,
-} from './map.js';
-import { renderRouteCards, showNoResult, showRoutePrompt } from './route-detail.js';
-import { showRpTab } from './panels.js';
+} from './map.js?v=2.15.1';
+import { renderRouteCards, showNoResult, showRoutePrompt } from './route-detail.js?v=2.15.1';
+import { showRpTab } from './panels.js?v=2.15.1';
 import {
   state, globalInput, routeSearchInput,
   searchPills, searchClear,
-} from './state.js';
+} from './state.js?v=2.15.1';
 
 /** Ordered set of route IDs in multi-route mode. */
 const pillIds = new Set();
