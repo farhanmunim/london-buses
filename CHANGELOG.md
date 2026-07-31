@@ -16,6 +16,7 @@ _2026-07-31_
 - **NEW** Daily reliability chart — the last ≤30 days of Atlas's own EWT / on-time estimates from live arrivals sampling, as a bar strip matching the crowding chart's grammar. Indicative (not TfL-published); the current partial day is excluded.
 - **NEW** Average wait row — actual vs scheduled wait (AWT/SWT, whose difference is the EWT) for high-frequency routes, and a Contract end row (Atlas route-meta, where published).
 - **UX** The load-along-the-route chart now says which direction it depicts ("· inbound").
+- **UX** "Live buses" pill in the map controls (next to Stops) — appears while a single route is focused, ON by default, pauses/resumes the GPS poll. Hidden in comparison mode, which never tracks.
 
 ---
 

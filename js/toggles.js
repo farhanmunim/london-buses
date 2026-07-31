@@ -8,8 +8,8 @@
  * without persisting that transient state.
  */
 
-import { setRoutesVisible, setGaragesVisible, setStopsPreference, isRouteActive } from './map.js';
-import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn } from './state.js';
+import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js';
+import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js';
 
 function wire(btn, { storageKey, apply, syncEvent, persistWhen }) {
   if (!btn) return;
@@ -75,6 +75,37 @@ if (toggleStopsBtn) {
       stopsOn = true;
       paint(stopsOn);
       setStopsPreference(stopsOn);
+    }
+  });
+}
+
+// Live-buses toggle: same lifecycle as Stops — visible only while a route
+// is focused, reset to ON per focus (the button pauses the GPS poll for
+// this focus, it isn't a sticky preference).
+if (toggleLiveBtn) {
+  toggleLiveBtn.hidden = true;
+  let liveOn = true;
+
+  const paint = (on) => {
+    toggleLiveBtn.classList.toggle('on', on);
+    toggleLiveBtn.setAttribute('aria-pressed', String(on));
+  };
+  paint(liveOn);
+
+  toggleLiveBtn.addEventListener('click', () => {
+    liveOn = !liveOn;
+    paint(liveOn);
+    setLiveVehiclesEnabled(liveOn);
+  });
+
+  // Driven by the vehicles lifecycle, not route focus — comparison mode
+  // focuses routes without live tracking, and the pill must not show there.
+  document.addEventListener('map:livevehiclesfocus', e => {
+    toggleLiveBtn.hidden = !e.detail;
+    if (e.detail && !liveOn) {
+      liveOn = true;
+      paint(liveOn);
+      setLiveVehiclesEnabled(liveOn);
     }
   });
 }

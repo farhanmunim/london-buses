@@ -45,6 +45,7 @@ export const routeCountEl    = document.getElementById('routeCount');
 export const toggleLinesBtn    = document.getElementById('toggleLines');
 export const toggleGaragesBtn  = document.getElementById('toggleGarages');
 export const toggleStopsBtn    = document.getElementById('toggleStops');
+export const toggleLiveBtn     = document.getElementById('toggleLive');
 
 // Right panel
 export const heroRoutes      = document.getElementById('hero-routes');

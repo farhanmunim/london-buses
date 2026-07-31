@@ -378,17 +378,23 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
 let _vehiclesLayer   = null;
 let _vehiclesTimer   = null;
 let _vehiclesRouteId = null;
+let _vehiclesEnabled = true;  // "Live buses" toggle — reset to ON per focus by toggles.js
 
 const VEHICLE_POLL_MS = 15_000;
 
 export function startLiveVehicles(routeId) {
   stopLiveVehicles();
   _vehiclesRouteId = String(routeId).toUpperCase();
+  // Announce that live tracking has a target — toggles.js shows the
+  // "Live buses" pill on this (single-route focus only; comparison mode
+  // never starts a poll, so the pill stays hidden there).
+  document.dispatchEvent(new CustomEvent('map:livevehiclesfocus', { detail: true }));
+  if (!_vehiclesEnabled) return; // remember the route; the toggle can start us later
   const poll = async () => {
     const id = _vehiclesRouteId;
     if (!id) return;
     const vehicles = await fetchLiveVehicles(id);
-    if (_vehiclesRouteId !== id || !_routeActive) return; // route changed mid-flight
+    if (_vehiclesRouteId !== id || !_routeActive || !_vehiclesEnabled) return; // stale response
     renderVehicles(vehicles ?? []);
   };
   poll();
@@ -398,7 +404,23 @@ export function startLiveVehicles(routeId) {
 export function stopLiveVehicles() {
   if (_vehiclesTimer) { clearInterval(_vehiclesTimer); _vehiclesTimer = null; }
   if (_vehiclesLayer) { _map?.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
-  _vehiclesRouteId = null;
+  if (_vehiclesRouteId) {
+    _vehiclesRouteId = null;
+    document.dispatchEvent(new CustomEvent('map:livevehiclesfocus', { detail: false }));
+  }
+}
+
+/** "Live buses" map toggle — pauses/resumes the poll for the focused route. */
+export function setLiveVehiclesEnabled(on) {
+  _vehiclesEnabled = !!on;
+  const id = _vehiclesRouteId;
+  if (!on) {
+    if (_vehiclesTimer) { clearInterval(_vehiclesTimer); _vehiclesTimer = null; }
+    if (_vehiclesLayer) { _map?.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
+    _vehiclesRouteId = id; // keep the focus so re-enabling restarts in place
+  } else if (id && _routeActive && !_vehiclesTimer) {
+    startLiveVehicles(id);
+  }
 }
 
 function renderVehicles(vehicles) {
