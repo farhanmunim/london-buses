@@ -5,19 +5,20 @@
 # two Cloudflare already sends explicit. No CSP: it adds maintenance + breakage
 # risk (Carto tiles, unpkg, SheetJS, GA, TfL API) for little gain on a static
 # read-only map.
+#
+# Scripts and styles must revalidate on every load, like the HTML and the
+# /data JSONs already do. Without an explicit rule, Pages' default gave them
+# max-age=14400 — so for up to 4 h after a deploy, returning browsers ran the
+# previous JS/CSS against the new HTML and silently missed features (observed
+# 2026-07-31). There are no fingerprinted filenames in this no-build setup, so
+# revalidation is the only safe policy; with ETags each check is a 304 and the
+# module graph loads consistently versioned. Rule blocks below stay
+# comment-free — the _headers parser only reliably tolerates comments up here.
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-
-# Scripts and styles must revalidate on every load, like the HTML and the
-# /data JSONs already do. Without this, Pages' default gave them
-# max-age=14400 — so for up to 4 h after a deploy, returning browsers ran
-# the previous JS/CSS against the new HTML and silently missed features
-# (observed 2026-07-31). There are no fingerprinted filenames in this
-# no-build setup, so revalidation is the only safe policy; with ETags each
-# check is a 304 and the module graph loads consistently versioned.
 /js/*
   Cache-Control: public, max-age=0, must-revalidate
 /css/*
