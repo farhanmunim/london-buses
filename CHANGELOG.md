@@ -6,6 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.15.2 — Live-feed CORS fix & orphan stops
+
+_2026-08-04_
+
+- **FIX** Live buses actually work now — the vehicles feed was fetched from Atlas's `/api/live/vehicles` alias, which serves the data without CORS headers, so browsers silently dropped every response and the map never showed a single bus. Switched to `/api/v1/live/vehicles` (same feed, CORS-open).
+- **FIX** Orphaned stops purged — TfL's `/Line/{id}/StopPoints` occasionally includes a wrong stop-area record (W13 and N55 both listed "Mulberry Circus", a Barking stop group ~9 km from either route; route 344 carried one 13.9 km off). Six such stops removed across W13, N55, 344, S1, S2 and P13, and the weekly fetch now drops any stop further than 2 km from its route's own geometry.
+
+---
+
 ## v2.15 — Live buses & deeper Atlas data
 
 _2026-07-31_

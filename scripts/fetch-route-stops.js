@@ -76,6 +76,13 @@ function round6(n) {
   return Math.round(n * 1e6) / 1e6;
 }
 
+function haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371e3, D = Math.PI / 180;
+  const a = Math.sin((lat2 - lat1) * D / 2) ** 2
+    + Math.cos(lat1 * D) * Math.cos(lat2 * D) * Math.sin((lon2 - lon1) * D / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('Fetching bus line list from TfL...');
@@ -163,6 +170,47 @@ async function main() {
     }
     if (restored.length) console.warn(`  kept last-known-good stops for ${restored.length} routes: ${restored.join(', ')}`);
   } catch { /* no previous files (cold start) — nothing to merge */ }
+
+  // Spatial sanity gate: drop any stop further than MAX_STOP_DIST_M from the
+  // route's own geometry. TfL's /Line/{id}/StopPoints occasionally includes a
+  // wrong stop-area record — e.g. W13 and N55 both list 490G000679 "Mulberry
+  // Circus" (Barking, ~9 km from either route), and route 344 carried a
+  // group 13.9 km off. A stop that far from every point of the line cannot
+  // be served by it. The 2 km threshold clears the real outlier class
+  // (2.4–13.9 km) while keeping the ~1.6 km tail of stops on freshly
+  // rerouted sections whose geometry ZIP hasn't caught up yet.
+  const MAX_STOP_DIST_M = 2000;
+  const dropped = [];
+  for (const [id, entries] of Object.entries(routeStops)) {
+    let pts = null;
+    try {
+      const gj = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'routes', `${id}.geojson`), 'utf8'));
+      pts = [];
+      for (const f of gj.features ?? []) {
+        const segs = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+        for (const seg of segs) for (let i = 0; i < seg.length; i += 3) pts.push(seg[i]);
+      }
+    } catch { /* no geometry for this route — keep all stops */ }
+    if (!pts || !pts.length) continue;
+
+    routeStops[id] = entries.filter(e => {
+      const s = stopRegistry.get(e.id);
+      if (!s) return true;
+      let min = Infinity;
+      for (const [lon, lat] of pts) {
+        const d = haversineM(s.lat, s.lon, lat, lon);
+        if (d < min) min = d;
+        if (min <= MAX_STOP_DIST_M) break;
+      }
+      if (min <= MAX_STOP_DIST_M) return true;
+      s.routes.delete(id);
+      dropped.push(`${id}:${e.id} ${s.name} (${Math.round(min)} m)`);
+      return false;
+    });
+  }
+  // Registry entries that lost their last route are gone too.
+  for (const [naptan, s] of stopRegistry) if (s.routes.size === 0) stopRegistry.delete(naptan);
+  if (dropped.length) console.warn(`  dropped ${dropped.length} stops >${MAX_STOP_DIST_M} m from their route: ${dropped.join(', ')}`);
 
   // Sort routes + stops for deterministic output
   const sortedRoutes = {};

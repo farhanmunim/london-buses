@@ -1,6 +1,6 @@
 {
   "generated_at_utc": "2026-08-03T12:44:48Z",
-  "stop_count": 30661,
+  "stop_count": 30657,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -105832,15 +105832,6 @@
       "lon": -0.40931,
       "routes": [
         "H13"
-      ]
-    },
-    "490008242E": {
-      "name": "Christchurch Road / Hillside Road",
-      "indicator": "->E",
-      "lat": 51.47663,
-      "lon": -0.10911,
-      "routes": [
-        "P13"
       ]
     },
     "490008242W": {
@@ -258606,15 +258597,6 @@
         "H13"
       ]
     },
-    "490G00008242": {
-      "name": "Christchurch Road / Hillside Road",
-      "indicator": null,
-      "lat": 51.47663,
-      "lon": -0.10911,
-      "routes": [
-        "P13"
-      ]
-    },
     "490G00008243": {
       "name": "Hillside School",
       "indicator": null,
@@ -298780,16 +298762,6 @@
         "N3"
       ]
     },
-    "490G00013611": {
-      "name": "Oakhill Road Sutton",
-      "indicator": null,
-      "lat": 51.40914,
-      "lon": -0.12319,
-      "routes": [
-        "S1",
-        "S2"
-      ]
-    },
     "490G00013612": {
       "name": "Third Avenue",
       "indicator": null,
@@ -328390,16 +328362,6 @@
         "404"
       ]
     },
-    "490G000679": {
-      "name": "Mulberry Circus",
-      "indicator": null,
-      "lat": 51.52295,
-      "lon": 0.12579,
-      "routes": [
-        "N55",
-        "W13"
-      ]
-    },
     "490G000680": {
       "name": "Tollers Lane / Drive Road",
       "indicator": null,
@@ -328845,9 +328807,7 @@
       "lat": 51.50996,
       "lon": -0.09336,
       "routes": [
-        "344",
-        "EL1",
-        "EL3"
+        "344"
       ]
     },
     "490G000720": {

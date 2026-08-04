@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/app.css?v=2.15.1" />
+    <link rel="stylesheet" href="css/app.css?v=2.15.2" />
     <script>
       (function () {
         try {
@@ -81,6 +81,15 @@
             <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.15.2</span> Aug 04, 2026</div>
+            <a href="#v2_15_2" class="cl-entry-title">Live-feed CORS fix &amp; orphan stops</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Live buses actually work now — the GPS feed was fetched from an Atlas endpoint alias that serves data without CORS headers, so browsers silently dropped every response. Switched to the CORS-open <code>/v1/live/vehicles</code> path.</li>
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Orphaned stops purged — TfL's stop lists occasionally include a wrong stop-area record (W13 showed "Mulberry Circus", ~9 km away in Barking). Six such stops removed, and the weekly fetch now drops any stop further than 2 km from its route's geometry.</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.15</span> Jul 31, 2026</div>
@@ -287,8 +296,8 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/about.js?v=2.15.1" defer></script>
-    <script src="js/roadmap.js?v=2.15.1" defer></script>
+    <script src="js/about.js?v=2.15.2" defer></script>
+    <script src="js/roadmap.js?v=2.15.2" defer></script>
     <!-- Inline theme toggle — keeps the changelog page self-contained while
          persisting to the same `app-theme` key the main app reads. -->
     <script>

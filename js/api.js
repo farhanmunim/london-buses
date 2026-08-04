@@ -36,9 +36,6 @@ const BASE    = './data';
 // Remote data API. Override via `globalThis.LB_API_BASE` before module load
 // (e.g. to point a preview build at a staging API).
 const API_BASE = globalThis.LB_API_BASE ?? 'https://atlas.farhan.app/api/v1';
-// The live vehicle-positions feed lives one level up from /v1 (Atlas serves
-// it at /api/live/vehicles — volatile, 10 s edge cache, not versioned).
-const LIVE_VEHICLES_BASE = API_BASE.replace(/\/v1$/, '') + '/live';
 
 // In-memory cache
 const _cache = new Map();
@@ -554,16 +551,13 @@ export async function fetchPerformanceHistory(routeId) {
  * callers poll.
  */
 export async function fetchLiveVehicles(routeId) {
-  let raw = null;
-  try {
-    const res = await fetch(`${LIVE_VEHICLES_BASE}/vehicles?line=${encodeURIComponent(String(routeId).toUpperCase())}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    raw = await res.json();
-  } catch (err) {
-    console.warn(`live vehicles unavailable (${err.message})`);
-  }
-  if (!raw?.vehicles) return null;
-  return raw.vehicles
+  // Deliberately the /v1/live path, NOT the shorter /api/live alias — the
+  // alias serves the same feed but without CORS headers, so browsers drop
+  // every response (found the hard way, 2026-08-04).
+  const raw = await loadApi(`/live/vehicles?line=${encodeURIComponent(String(routeId).toUpperCase())}`);
+  const rows = raw?.data ?? raw?.vehicles;
+  if (!rows) return null;
+  return rows
     .filter(v => Number.isFinite(v?.lat) && Number.isFinite(v?.lng))
     .map(v => ({
       reg:         v.reg ?? null,
