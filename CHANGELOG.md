@@ -6,6 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.15.8 — Who's out on the route
+
+_2026-08-04_
+
+- **NEW** "Out now" on the route card — how many buses are tracked on the route right now, plus every registration in a monospace list (live BODS snapshot at card open; the map layer keeps its own 15 s poll).
+- **NEW** Clicking a live bus now shows its vehicle record: registration, destination, make, year and age, propulsion, and fleet number — merged from the weekly DVLA fleet cache (~9,500 registrations) overlaid with Atlas's fresher per-reg sample.
+
+---
+
 ## v2.15.2 — Live-feed CORS fix & orphan stops
 
 _2026-08-04_

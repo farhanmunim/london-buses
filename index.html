@@ -25,7 +25,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 
-    <link rel="stylesheet" href="css/app.css?v=2.15.7" />
+    <link rel="stylesheet" href="css/app.css?v=2.15.8" />
 
     <script>
       (function () {
@@ -518,6 +518,11 @@
                     <div class="rc-tr"><span class="rc-tr-l">Make</span><span class="rc-tr-v" data-rc-vehicle-make>XXX</span></div>
                     <div class="rc-tr"><span class="rc-tr-l">Model</span><span class="rc-tr-v" data-rc-vehicle-model>XXX</span></div>
                     <div class="rc-tr"><span class="rc-tr-l">Avg fleet age</span><span class="rc-tr-v" data-rc-age>XXX</span></div>
+                    <div class="rc-tr" data-rc-row="out-now" hidden><span class="rc-tr-l">Out now</span><span class="rc-tr-v" data-rc-out-now>—</span></div>
+                    <div class="rc-tr rc-tr--stack" data-rc-row="out-now-regs" hidden>
+                      <span class="rc-tr-l">Registrations tracked</span>
+                      <div class="rc-regs" data-rc-out-now-regs></div>
+                    </div>
                   </div>
                 </div>
 
@@ -738,10 +743,10 @@
     </nav>
 
     <!-- Modal injectors (standalone, work on every page). -->
-    <script src="js/about.js?v=2.15.7" defer></script>
-    <script src="js/roadmap.js?v=2.15.7" defer></script>
+    <script src="js/about.js?v=2.15.8" defer></script>
+    <script src="js/roadmap.js?v=2.15.8" defer></script>
 
     <!-- Boot orchestrator — pulls in every interactive module. -->
-    <script type="module" src="js/ui.js?v=2.15.7"></script>
+    <script type="module" src="js/ui.js?v=2.15.8"></script>
   </body>
 </html>

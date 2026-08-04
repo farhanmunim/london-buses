@@ -413,6 +413,8 @@ a{color:inherit;text-decoration:none}
 .rc-trend--bad{color:var(--amber)}
 /* Daily-reliability bars — neutral (indicative estimate, no thresholds) */
 .rc-rdbar{fill:var(--tx);opacity:0.3}
+/* Live registrations list — mono, wraps; regs separated by double spaces */
+.rc-regs{font-family:var(--font-mono);font-size:10.5px;line-height:1.7;color:var(--tx);word-spacing:2px;overflow-wrap:break-word}
 /* Live bus markers — bearing-rotated wedge (same marker grammar as the Atlas
    site), direction-coloured via inline fill; white halo + shadow separate
    them from the route line and stop rings. Dot fallback when no bearing. */

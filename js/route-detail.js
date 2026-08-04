@@ -11,12 +11,13 @@
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.15.7';
-import { opColor, multiRouteColor } from './map.js?v=2.15.7';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.15.8';
+import { opColor, multiRouteColor } from './map.js?v=2.15.8';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
   fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
-} from './api.js?v=2.15.7';
+  fetchLiveVehicles,
+} from './api.js?v=2.15.8';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -81,6 +82,8 @@ const TIPS = {
   'vehicle-make':  tip('Manufacturer',                                        SOURCE.DVLA,    WEEKLY_DVLA),
   'vehicle-model': tip('Chassis and body',                                    SOURCE.LBR,     WEEKLY),
   age:             tip('Mean age of buses observed on the route',             SOURCE.DVLA,    WEEKLY_DVLA),
+  'out-now':       tip('Buses tracked on the route right now',                'BODS SIRI-VM, via the Atlas API', 'live snapshot at card open'),
+  'out-now-regs':  tip('Each registration currently tracked — click a bus on the map for its details', 'BODS SIRI-VM, via the Atlas API', 'live snapshot at card open'),
   // Tender · Current active contract
   'current-op':    tip('Operator who won the originating tender',             SOURCE.TENDER,  WEEKLY),
   'current-award': tip('Award date of the current in-service contract',      SOURCE.TENDER,  WEEKLY),
@@ -782,6 +785,23 @@ function hydrateAtlasExtras(node, id) {
       .map(r => `${r.period_label ?? r.period_start}: ${fmt(val(r))}`)
       .join(' · ') + (useEwt ? ' (EWT, lower is better)' : ' (on-time %, higher is better)');
     toggleRow(node, 'perf-trend', true);
+  }).catch(() => {});
+
+  // Which buses are out on the route right now — a one-shot snapshot at card
+  // open (the map's live layer keeps its own 15 s poll; the card doesn't).
+  fetchLiveVehicles(routeId).then(vehicles => {
+    const regs = [...new Set((vehicles ?? []).map(v => v.reg).filter(Boolean))].sort();
+    if (!regs.length) return;
+    const countEl = node.querySelector('[data-rc-out-now]');
+    const regsEl  = node.querySelector('[data-rc-out-now-regs]');
+    if (countEl) {
+      countEl.textContent = `${regs.length} ${regs.length === 1 ? 'bus' : 'buses'}`;
+      toggleRow(node, 'out-now', true);
+    }
+    if (regsEl) {
+      regsEl.textContent = regs.join('  ');
+      toggleRow(node, 'out-now-regs', true);
+    }
   }).catch(() => {});
 
   fetchSchedule(routeId).then(sched => {

@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.7';
-import { fetchLiveVehicles } from './api.js?v=2.15.7';
+import { state } from './state.js?v=2.15.8';
+import { fetchLiveVehicles, fetchVehicleRegistry } from './api.js?v=2.15.8';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -398,9 +398,12 @@ export function startLiveVehicles(routeId) {
   const poll = async () => {
     const id = _vehiclesRouteId;
     if (!id) return;
-    const vehicles = await fetchLiveVehicles(id);
+    const [vehicles, registry] = await Promise.all([
+      fetchLiveVehicles(id),
+      fetchVehicleRegistry(), // session-cached after the first poll
+    ]);
     if (_vehiclesRouteId !== id || !_routeActive || !_vehiclesEnabled) return; // stale response
-    renderVehicles(vehicles ?? []);
+    renderVehicles(vehicles ?? [], registry ?? {});
   };
   poll();
   _vehiclesTimer = setInterval(poll, VEHICLE_POLL_MS);
@@ -437,7 +440,7 @@ function liveBusIcon(v) {
   return L.divIcon({ className: 'live-bus', iconSize: [22, 22], iconAnchor: [11, 11], html });
 }
 
-function renderVehicles(vehicles) {
+function renderVehicles(vehicles, registry = {}) {
   if (_vehiclesLayer) { _map.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
   if (!vehicles.length) return;
   // Dedicated pane above the overlay pane (z 400, where the route + stop
@@ -447,15 +450,26 @@ function renderVehicles(vehicles) {
     _map.createPane('vehicles').style.zIndex = 450;
   }
   _vehiclesLayer = L.layerGroup();
+  const year = new Date().getFullYear();
   for (const v of vehicles) {
     const marker = L.marker([v.lat, v.lng], {
       icon: liveBusIcon(v), pane: 'vehicles', keyboard: false,
     });
+    // Vehicle details from the Atlas per-reg registry (make, year, fuel,
+    // operator — DVLA-enriched). Absent regs just show the live line.
+    const rec  = v.reg ? registry[String(v.reg).toUpperCase()] : null;
+    const bits = [];
+    // DVLA makes arrive upper-case ("ALEXANDER DENNIS") — title-case them.
+    if (rec?.make) bits.push(rec.make.toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase()));
+    if (Number.isFinite(rec?.year)) bits.push(`${rec.year} (${Math.max(0, year - rec.year)} y)`);
+    if (rec?.propulsion) bits.push(rec.propulsion.charAt(0).toUpperCase() + rec.propulsion.slice(1));
+    if (rec?.bonnet) bits.push(`No. ${rec.bonnet}`);
     marker.bindPopup(
       `<span class="map-popup__name">${v.reg ?? 'Bus'}</span>` +
       `${v.destination ? `<span class="map-popup__id" style="color:var(--t2)">→ ${v.destination}</span>` : ''}` +
+      `${bits.length ? `<span class="map-popup__id">${bits.join(' · ')}</span>` : ''}` +
       `<span class="map-popup__id">Live position · updates every 15 s</span>`,
-      { closeButton: true, maxWidth: 240 }
+      { closeButton: true, maxWidth: 260 }
     );
     _vehiclesLayer.addLayer(marker);
   }

@@ -622,6 +622,47 @@ export async function fetchReliabilityDaily(routeId) {
   return rows;
 }
 
+/**
+ * Per-registration vehicle registry: REG → { make, year, propulsion,
+ * operator, bonnet }. Two sources merged: the bundled weekly DVLA fleet
+ * cache (data/source/vehicle-fleet.json, ~9,500 regs accumulated over
+ * months — the coverage) overlaid with Atlas /vehicles (~670 regs from
+ * today's sample — the freshness). Loaded lazily on first use (the bundled
+ * file is ~2.6 MB raw; only live-vehicle popups need it) and session-cached.
+ * Resolves {} when both sources fail, so lookups simply miss.
+ */
+export async function fetchVehicleRegistry() {
+  const key = 'adapted:vehicle-registry';
+  if (_cache.has(key)) return _cache.get(key);
+  const [bundled, api] = await Promise.all([
+    loadJson(`${BASE}/source/vehicle-fleet.json`).catch(() => null),
+    loadApiCached('/vehicles'),
+  ]);
+  const byReg = {};
+  for (const [reg, r] of Object.entries(bundled?.vehicles ?? {})) {
+    byReg[reg.toUpperCase()] = {
+      make:       r.make ?? null,
+      year:       Number.isFinite(r.yearOfManufacture) ? r.yearOfManufacture : null,
+      propulsion: r.fuelType ?? null,
+      operator:   r.operator ?? null,
+      bonnet:     r.bonnetNo ?? null,
+    };
+  }
+  for (const [reg, r] of Object.entries(api?.byReg ?? {})) {
+    const k = reg.toUpperCase();
+    const base = byReg[k] ?? {};
+    byReg[k] = {
+      make:       r.make ?? base.make ?? null,
+      year:       Number.isFinite(r.year) ? r.year : (base.year ?? null),
+      propulsion: r.propulsion ?? base.propulsion ?? null,
+      operator:   r.operator ?? base.operator ?? null,
+      bonnet:     base.bonnet ?? null,
+    };
+  }
+  if (bundled || api) _cache.set(key, byReg);
+  return byReg;
+}
+
 /** The API's pipeline-run manifest — per-dataset fetchedAt + cadence. */
 export async function fetchManifest() {
   return loadApiCached('/manifest');

@@ -20,9 +20,9 @@
  * or global `app:resetall` — re-filters.
  */
 
-import { state } from './state.js?v=2.15.7';
-import { applyFilters } from './filters.js?v=2.15.7';
-import { opColor } from './map.js?v=2.15.7';
+import { state } from './state.js?v=2.15.8';
+import { applyFilters } from './filters.js?v=2.15.8';
+import { opColor } from './map.js?v=2.15.8';
 
 const wrap  = document.getElementById('garage-ms');
 const btn   = document.getElementById('garage-ms-btn');
