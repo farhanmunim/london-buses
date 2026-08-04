@@ -6,7 +6,7 @@
  * and keeps both copies in visual sync. Persists to localStorage.
  */
 
-import { setPaintMode } from './map.js?v=2.15.5';
+import { setPaintMode } from './map.js?v=2.15.6';
 
 const KEY = 'paint-mode';
 const stored  = localStorage.getItem(KEY);

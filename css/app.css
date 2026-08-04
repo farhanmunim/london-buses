@@ -44,6 +44,7 @@
   --green:     #22c55e; --gbg: rgba(34,197,94,0.12);
   --amber:     #f59e0b; --abg: rgba(245,158,11,0.12);
   --blue:      #60a5fa; --bbg: rgba(96,165,250,0.12);
+  --red:       #ef4444;
   --pill-bg:   rgba(255,255,255,0.05);
   --pill-bd:   rgba(255,255,255,0.09);
   --pill-hv:   rgba(255,255,255,0.10);
@@ -78,6 +79,7 @@
   --green:     #16a34a; --gbg: rgba(22,163,74,0.09);
   --amber:     #d97706; --abg: rgba(217,119,6,0.09);
   --blue:      #2563eb; --bbg: rgba(37,99,235,0.08);
+  --red:       #dc2626;
   --pill-bg:   rgba(0,0,0,0.04);
   --pill-bd:   rgba(0,0,0,0.09);
   --pill-hv:   rgba(0,0,0,0.07);
@@ -405,7 +407,7 @@ a{color:inherit;text-decoration:none}
 .rc-crowd-profile-svg{display:block;width:100%;height:34px;border-radius:3px}
 .rc-cpbar{fill:var(--green);opacity:0.55}
 .rc-cpbar--busy{fill:var(--amber);opacity:0.75}
-.rc-cpbar--crowded{fill:#dc2626;opacity:0.85}
+.rc-cpbar--crowded{fill:var(--red);opacity:0.85}
 /* Reliability-trend verdict colouring */
 .rc-trend--good{color:var(--green)}
 .rc-trend--bad{color:var(--amber)}

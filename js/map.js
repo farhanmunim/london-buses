@@ -2,14 +2,20 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.5';
-import { fetchLiveVehicles } from './api.js?v=2.15.5';
+import { state } from './state.js?v=2.15.6';
+import { fetchLiveVehicles } from './api.js?v=2.15.6';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
 
 const COLOR_OUTBOUND = '#dc2626';
 const COLOR_INBOUND  = '#2563eb';
+// Live buses are one colour, not direction-coloured: the moving dots are a
+// single "live" signal, and reusing the direction pair made them read as
+// more stops. Blue (the existing inbound token) pops against the red
+// outbound line; on blue inbound lines the solid-fill + white ring (the
+// exact inverse of a stop marker) keeps them distinct.
+const COLOR_LIVE_BUS = COLOR_INBOUND;
 
 // Per-type colors — a deliberately high-contrast categorical palette. Each hue
 // sits in its own wheel zone (red / mustard / teal / violet / green) and is
@@ -438,9 +444,8 @@ function renderVehicles(vehicles) {
   }
   _vehiclesLayer = L.layerGroup();
   for (const v of vehicles) {
-    const color = v.direction === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
     const marker = L.circleMarker([v.lat, v.lng], {
-      radius: 6, fillColor: color, fillOpacity: 1, color: '#fff', weight: 2, opacity: 1,
+      radius: 6, fillColor: COLOR_LIVE_BUS, fillOpacity: 1, color: '#fff', weight: 2, opacity: 1,
       pane: 'vehicles', renderer: _vehiclesCanvas,
     });
     marker.bindPopup(

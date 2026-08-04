@@ -9,9 +9,9 @@
  * Registry lookup is cached in api.js so repeated searches are instant.
  */
 
-import { fetchStopsRegistry } from './api.js?v=2.15.5';
-import { state, stopSearchInput, stopSearchClear, stopAutocomplete, stopSelectedEl } from './state.js?v=2.15.5';
-import { applyFilters } from './filters.js?v=2.15.5';
+import { fetchStopsRegistry } from './api.js?v=2.15.6';
+import { state, stopSearchInput, stopSearchClear, stopAutocomplete, stopSelectedEl } from './state.js?v=2.15.6';
+import { applyFilters } from './filters.js?v=2.15.6';
 
 let _registry = null;
 let _acIndex  = -1;
