@@ -11,6 +11,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 _2026-08-04_
 
 - **FIX** Live buses actually work now — the vehicles feed was fetched from Atlas's `/api/live/vehicles` alias, which serves the data without CORS headers, so browsers silently dropped every response and the map never showed a single bus. Switched to `/api/v1/live/vehicles` (same feed, CORS-open).
+- **FIX** Live bus dots now draw above the route line and stop rings — they rendered underneath because they landed on the map's default canvas (created at init, so lowest in the stack); they get a dedicated pane between the overlays and the garage markers.
 - **FIX** Orphaned stops purged — TfL's `/Line/{id}/StopPoints` occasionally includes a wrong stop-area record (W13 and N55 both listed "Mulberry Circus", a Barking stop group ~9 km from either route; route 344 carried one 13.9 km off). Six such stops removed across W13, N55, 344, S1, S2 and P13, and the weekly fetch now drops any stop further than 2 km from its route's own geometry.
 
 ---

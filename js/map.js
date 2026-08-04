@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.4';
-import { fetchLiveVehicles } from './api.js?v=2.15.4';
+import { state } from './state.js?v=2.15.5';
+import { fetchLiveVehicles } from './api.js?v=2.15.5';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -423,14 +423,25 @@ export function setLiveVehiclesEnabled(on) {
   }
 }
 
+let _vehiclesCanvas = null;
+
 function renderVehicles(vehicles) {
   if (_vehiclesLayer) { _map.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
   if (!vehicles.length) return;
+  // Dedicated pane above the overlay pane (z 400, where the route + stop
+  // canvases live) but below garage markers (600) and popups (700) — without
+  // it the buses draw on the map's default canvas, which was created at init
+  // and therefore sits UNDER the route line and stops.
+  if (!_map.getPane('vehicles')) {
+    _map.createPane('vehicles').style.zIndex = 450;
+    _vehiclesCanvas = L.canvas({ pane: 'vehicles', padding: 0.5 });
+  }
   _vehiclesLayer = L.layerGroup();
   for (const v of vehicles) {
     const color = v.direction === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
     const marker = L.circleMarker([v.lat, v.lng], {
       radius: 6, fillColor: color, fillOpacity: 1, color: '#fff', weight: 2, opacity: 1,
+      pane: 'vehicles', renderer: _vehiclesCanvas,
     });
     marker.bindPopup(
       `<span class="map-popup__name">${v.reg ?? 'Bus'}</span>` +
