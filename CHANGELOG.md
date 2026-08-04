@@ -11,6 +11,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 _2026-08-04_
 
 - **NEW** "Out now" on the route card — how many buses are tracked on the route right now, plus every registration in a monospace list (live BODS snapshot at card open; the map layer keeps its own 15 s poll).
+- **UX** Outbound live buses are orange (orange-500) instead of red — red wedges disappeared into the red route line; orange separates cleanly while inbound keeps the canonical blue. Wedges nudged slightly larger with a stronger shadow.
 - **NEW** Clicking a live bus now shows its vehicle record: registration, destination, make, year and age, propulsion, and fleet number — merged from the weekly DVLA fleet cache (~9,500 registrations) overlaid with Atlas's fresher per-reg sample.
 
 ---

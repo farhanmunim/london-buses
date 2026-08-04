@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.8';
-import { fetchLiveVehicles, fetchVehicleRegistry } from './api.js?v=2.15.8';
+import { state } from './state.js?v=2.15.9';
+import { fetchLiveVehicles, fetchVehicleRegistry } from './api.js?v=2.15.9';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -11,10 +11,14 @@ const ZOOM   = 11;
 const COLOR_OUTBOUND = '#dc2626';
 const COLOR_INBOUND  = '#2563eb';
 // Live buses are bearing-rotated chevrons (same wedge grammar as the Atlas
-// site's vehicle markers), filled with the app's canonical direction pair so
-// bus colour matches the line colour of the direction it's travelling. The
-// wedge shape + white halo is what says "moving bus, not a stop"; a bus
-// with no bearing falls back to a dot.
+// site's vehicle markers). Direction pair: outbound buses are ORANGE
+// (orange-500) — the route line itself is red in outbound view (and most
+// operator liveries are red too), so red wedges vanished into it; a bright
+// orange separates cleanly from red-600 while staying unmistakably warm.
+// Inbound stays the canonical blue. The wedge shape + white halo is what
+// says "moving bus, not a stop"; no bearing → dot fallback.
+const COLOR_BUS_OUTBOUND = '#f97316';
+const COLOR_BUS_INBOUND  = COLOR_INBOUND;
 
 // Per-type colors — a deliberately high-contrast categorical palette. Each hue
 // sits in its own wheel zone (red / mustard / teal / violet / green) and is
@@ -432,7 +436,7 @@ export function setLiveVehiclesEnabled(on) {
 }
 
 function liveBusIcon(v) {
-  const color = v.direction === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
+  const color = v.direction === '2' ? COLOR_BUS_INBOUND : COLOR_BUS_OUTBOUND;
   const html = Number.isFinite(v.bearing)
     ? `<span class="lb-arrow" style="transform:rotate(${v.bearing}deg)">` +
       `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="${color}"/></svg></span>`

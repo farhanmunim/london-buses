@@ -420,7 +420,7 @@ a{color:inherit;text-decoration:none}
    them from the route line and stop rings. Dot fallback when no bearing. */
 .live-bus{display:grid;place-items:center;background:none;border:none}
 .live-bus .lb-arrow{display:grid;place-items:center;transition:transform .4s ease}
-.live-bus .lb-arrow svg{width:21px;height:21px;stroke:#fff;stroke-width:2.4;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.live-bus .lb-arrow svg{width:23px;height:23px;stroke:#fff;stroke-width:2.4;stroke-linejoin:round;paint-order:stroke;filter:drop-shadow(0 1px 2.5px rgba(0,0,0,.4))}
 .live-bus .lb-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.live-bus .lb-arrow{transition:none}}
 .rc-tr-l{color:var(--mu)}
