@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.2';
-import { fetchLiveVehicles } from './api.js?v=2.15.2';
+import { state } from './state.js?v=2.15.3';
+import { fetchLiveVehicles } from './api.js?v=2.15.3';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
