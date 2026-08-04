@@ -2,20 +2,19 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.6';
-import { fetchLiveVehicles } from './api.js?v=2.15.6';
+import { state } from './state.js?v=2.15.7';
+import { fetchLiveVehicles } from './api.js?v=2.15.7';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
 
 const COLOR_OUTBOUND = '#dc2626';
 const COLOR_INBOUND  = '#2563eb';
-// Live buses are one colour, not direction-coloured: the moving dots are a
-// single "live" signal, and reusing the direction pair made them read as
-// more stops. Blue (the existing inbound token) pops against the red
-// outbound line; on blue inbound lines the solid-fill + white ring (the
-// exact inverse of a stop marker) keeps them distinct.
-const COLOR_LIVE_BUS = COLOR_INBOUND;
+// Live buses are bearing-rotated chevrons (same wedge grammar as the Atlas
+// site's vehicle markers), filled with the app's canonical direction pair so
+// bus colour matches the line colour of the direction it's travelling. The
+// wedge shape + white halo is what says "moving bus, not a stop"; a bus
+// with no bearing falls back to a dot.
 
 // Per-type colors — a deliberately high-contrast categorical palette. Each hue
 // sits in its own wheel zone (red / mustard / teal / violet / green) and is
@@ -429,24 +428,28 @@ export function setLiveVehiclesEnabled(on) {
   }
 }
 
-let _vehiclesCanvas = null;
+function liveBusIcon(v) {
+  const color = v.direction === '2' ? COLOR_INBOUND : COLOR_OUTBOUND;
+  const html = Number.isFinite(v.bearing)
+    ? `<span class="lb-arrow" style="transform:rotate(${v.bearing}deg)">` +
+      `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 L19 21 L12 16 L5 21 Z" fill="${color}"/></svg></span>`
+    : `<span class="lb-dot" style="background:${color}"></span>`;
+  return L.divIcon({ className: 'live-bus', iconSize: [22, 22], iconAnchor: [11, 11], html });
+}
 
 function renderVehicles(vehicles) {
   if (_vehiclesLayer) { _map.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
   if (!vehicles.length) return;
   // Dedicated pane above the overlay pane (z 400, where the route + stop
   // canvases live) but below garage markers (600) and popups (700) — without
-  // it the buses draw on the map's default canvas, which was created at init
-  // and therefore sits UNDER the route line and stops.
+  // it the buses would sit UNDER the route line and stops.
   if (!_map.getPane('vehicles')) {
     _map.createPane('vehicles').style.zIndex = 450;
-    _vehiclesCanvas = L.canvas({ pane: 'vehicles', padding: 0.5 });
   }
   _vehiclesLayer = L.layerGroup();
   for (const v of vehicles) {
-    const marker = L.circleMarker([v.lat, v.lng], {
-      radius: 6, fillColor: COLOR_LIVE_BUS, fillOpacity: 1, color: '#fff', weight: 2, opacity: 1,
-      pane: 'vehicles', renderer: _vehiclesCanvas,
+    const marker = L.marker([v.lat, v.lng], {
+      icon: liveBusIcon(v), pane: 'vehicles', keyboard: false,
     });
     marker.bindPopup(
       `<span class="map-popup__name">${v.reg ?? 'Bus'}</span>` +
