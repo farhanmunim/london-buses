@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.15.10 — Diverted & rerouted sections on the map
+
+_2026-08-06_
+
+- **NEW** When a route's stop list serves streets its official TfL trace doesn't follow, those stops no longer float orphaned beside the line — consecutive off-trace stops are chained into a **dashed line** (bridged back to the drawn route at both ends) with a label: **"Diversion"** when TfL's live status confirms one, otherwise **"Rerouted section"**. The dashes are indicative straight segments between stops — TfL publishes no street-level geometry for these legs. First beneficiary: W12, whose trace hasn't caught up with its routing through Higham Hill, on top of its live Selborne Road diversion.
+
+---
+
 ## v2.15.8 — Who's out on the route
 
 _2026-08-04_

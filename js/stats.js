@@ -21,8 +21,8 @@ import {
   state,
   opDrawer, drawerBack, drawerName, drawerSub, drawerSwatch,
   dGarages, dContracts,
-} from './state.js?v=2.15.9';
-import { opColor, highlightGarageByCode } from './map.js?v=2.15.9';
+} from './state.js?v=2.15.10';
+import { opColor, highlightGarageByCode } from './map.js?v=2.15.10';
 
 // Populate a drawer KPI slot. Slots 1-4 are always visible; the optional
 // slot 5 (capacity) carries a `data-dkpi-slot` wrapper that we hide when

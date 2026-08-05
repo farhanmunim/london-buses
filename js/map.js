@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.9';
-import { fetchLiveVehicles, fetchVehicleRegistry } from './api.js?v=2.15.9';
+import { state } from './state.js?v=2.15.10';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchLiveStatus } from './api.js?v=2.15.10';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -114,6 +114,13 @@ const _routeCanvas = L.canvas({ padding: 0.5 });
 const _stopsCanvas = L.canvas({ padding: 0.5 });
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
+
+function _haversineM(lat1, lon1, lat2, lon2) {
+  const R = 6371e3, D = Math.PI / 180;
+  const a = Math.sin((lat2 - lat1) * D / 2) ** 2
+    + Math.cos(lat1 * D) * Math.cos(lat2 * D) * Math.sin((lon2 - lon1) * D / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 
 function ptSegDist(px, py, ax, ay, bx, by) {
   const dx = bx - ax, dy = by - ay;
@@ -289,6 +296,7 @@ export function restoreOverview() { _overviewLayer?.setStyle(f => overviewStyle(
 
 export function clearRoute() {
   stopLiveVehicles();
+  if (_offTraceLayer) { _map.removeLayer(_offTraceLayer); _offTraceLayer = null; }
   if (_outlineLayer)  { _map.removeLayer(_outlineLayer); _outlineLayer  = null; }
   if (_routeLayer)    { _map.removeLayer(_routeLayer);   _routeLayer    = null; }
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
@@ -374,7 +382,99 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   _stopsVisible = true;
   if (!_stopsPref)    setStopsVisible(false);
   if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
+  renderOffTraceChains(routeGeoJson, stopsFeatures, color);
   fitToRoute();
+}
+
+// ── Off-trace stop chains — diverted / rerouted sections ─────────────────────
+// A route's stop list sometimes serves streets its official TfL trace doesn't
+// follow (an active diversion, or a rerouting the trace hasn't caught up
+// with — e.g. W12 through Higham Hill). Those stops looked orphaned floating
+// beside the line. Runs of consecutive stops >250 m off the trace are chained
+// into a dashed polyline (bridged to the nearest trace points at both ends)
+// so the off-line service reads as a path, with a label on the longest chain:
+// "Diversion" when TfL's live status says the route is diverted, otherwise
+// "Rerouted section". Indicative straight segments between stops — we have no
+// street-level geometry for these legs, only the stops themselves.
+let _offTraceLayer = null;
+
+function renderOffTraceChains(routeGeoJson, stopsFeatures, color) {
+  if (_offTraceLayer) { _map.removeLayer(_offTraceLayer); _offTraceLayer = null; }
+  if (!Array.isArray(stopsFeatures) || stopsFeatures.length < 2) return;
+
+  // Trace points from BOTH directions — a stop belonging to the un-drawn
+  // direction must not read as off-route.
+  const trace = [];
+  for (const f of (routeGeoJson.features ?? [])) {
+    const segs = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+    for (const seg of segs) for (let i = 0; i < seg.length; i += 2) trace.push(seg[i]); // [lon, lat]
+  }
+  if (!trace.length) return;
+
+  const distM = (lat, lon) => {
+    let min = Infinity;
+    for (const [tlon, tlat] of trace) {
+      const d = _haversineM(lat, lon, tlat, tlon);
+      if (d < min) min = d;
+      if (min < 150) break;
+    }
+    return min;
+  };
+
+  // Off-trace stops in list order → chains of consecutive nearby stops.
+  const OFF_M = 250, LINK_M = 1200;
+  const chains = [];
+  let current = null;
+  for (const f of stopsFeatures) {
+    const [lon, lat] = f.geometry.coordinates;
+    if (distM(lat, lon) <= OFF_M) continue;
+    if (current) {
+      const last = current[current.length - 1];
+      if (_haversineM(last[0], last[1], lat, lon) <= LINK_M) { current.push([lat, lon]); continue; }
+      if (current.length >= 2) chains.push(current);
+    }
+    current = [[lat, lon]];
+  }
+  if (current && current.length >= 2) chains.push(current);
+  if (!chains.length) return;
+
+  // Bridge each chain's ends to the nearest trace vertex so it visually
+  // rejoins the drawn line.
+  const nearestOnTrace = ([lat, lon]) => {
+    let best = null, min = Infinity;
+    for (const [tlon, tlat] of trace) {
+      const d = _haversineM(lat, lon, tlat, tlon);
+      if (d < min) { min = d; best = [tlat, tlon]; }
+    }
+    return best;
+  };
+
+  _offTraceLayer = L.layerGroup();
+  const longest = chains.reduce((a, b) => (b.length > a.length ? b : a), chains[0]);
+  for (const chain of chains) {
+    const path = [nearestOnTrace(chain[0]), ...chain, nearestOnTrace(chain[chain.length - 1])].filter(Boolean);
+    const line = L.polyline(path, {
+      color, weight: 4, opacity: 0.85, dashArray: '5 12',
+      lineCap: 'round', lineJoin: 'round', renderer: _routeCanvas,
+    });
+    if (chain === longest) {
+      line.bindTooltip('Rerouted section', {
+        permanent: true, direction: 'top', className: 'garage-route-tooltip',
+      });
+    }
+    _offTraceLayer.addLayer(line);
+  }
+  _offTraceLayer.addTo(_map);
+
+  // Upgrade the label to "Diversion" when TfL's live status confirms one.
+  const routeId = state.routeId;
+  if (routeId) {
+    fetchLiveStatus(routeId).then(s => {
+      if (!/divert/i.test(s?.reason ?? '')) return;
+      if (!_offTraceLayer || state.routeId !== routeId) return; // route changed meanwhile
+      _offTraceLayer.eachLayer(l => { if (l.getTooltip()) l.setTooltipContent('Diversion'); });
+    }).catch(() => {});
+  }
 }
 
 // ── Live vehicle positions (Atlas live feed) ─────────────────────────────────

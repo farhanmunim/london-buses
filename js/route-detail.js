@@ -11,13 +11,13 @@
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.15.9';
-import { opColor, multiRouteColor } from './map.js?v=2.15.9';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.15.10';
+import { opColor, multiRouteColor } from './map.js?v=2.15.10';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
   fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
   fetchLiveVehicles,
-} from './api.js?v=2.15.9';
+} from './api.js?v=2.15.10';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
