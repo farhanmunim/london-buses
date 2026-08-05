@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.15.12';
-import { fetchLiveVehicles, fetchVehicleRegistry } from './api.js?v=2.15.12';
+import { state } from './state.js?v=2.16.0';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.0';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -289,6 +289,7 @@ export function restoreOverview() { _overviewLayer?.setStyle(f => overviewStyle(
 
 export function clearRoute() {
   stopLiveVehicles();
+  if (_diversionLayer) { _map.removeLayer(_diversionLayer); _diversionLayer = null; }
   if (_outlineLayer)  { _map.removeLayer(_outlineLayer); _outlineLayer  = null; }
   if (_routeLayer)    { _map.removeLayer(_routeLayer);   _routeLayer    = null; }
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
@@ -374,7 +375,65 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   _stopsVisible = true;
   if (!_stopsPref)    setStopsVisible(false);
   if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
+  renderDiversionOverlay(dir, color);
   fitToRoute();
+}
+
+// ── Active diversion overlay (Atlas route-diversions) ────────────────────────
+// When TfL has the focused route on diversion AND Atlas has derived the
+// diverted path from observed bus GPS traces (geometryStatus "published"),
+// the diverted path draws as a dashed line in the direction colour with a
+// "Diversion" label, and the bypassed piece of the official line gets a
+// white dash overlay — visually hollowing out the section buses aren't
+// serving. Routes whose diversion has no published geometry yet draw
+// nothing: the status chip on the card already carries the reason text.
+let _diversionLayer = null;
+
+function renderDiversionOverlay(dir, color) {
+  if (_diversionLayer) { _map.removeLayer(_diversionLayer); _diversionLayer = null; }
+  const routeId = state.routeId;
+  if (!routeId) return;
+
+  fetchRouteDiversion(routeId).then(divn => {
+    // Stale guards: route or direction changed while fetching, or feed down.
+    if (!divn?.published || !_routeActive) return;
+    if (state.routeId !== routeId || String(state.direction ?? '1') !== String(dir)) return;
+    const segments = divn.segments?.[dir] ?? [];
+    const bypassed = divn.bypassed?.[dir] ?? [];
+    if (!segments.length && !bypassed.length) return;
+    if (_diversionLayer) { _map.removeLayer(_diversionLayer); _diversionLayer = null; }
+
+    _diversionLayer = L.layerGroup();
+    for (const seg of bypassed) {
+      if (seg.length < 2) continue;
+      // White dashes over the solid line → candy-stripe = "not served".
+      _diversionLayer.addLayer(L.polyline(seg, {
+        color: '#ffffff', weight: 4, opacity: 0.9, dashArray: '5 7',
+        lineCap: 'butt', renderer: _routeCanvas, interactive: false,
+      }));
+    }
+    const label = `Diversion${divn.until
+      ? ` · until ${new Date(divn.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`;
+    let longestLine = null, longestLen = 0;
+    for (const seg of segments) {
+      if (seg.length < 2) continue;
+      const line = L.polyline(seg, {
+        color, weight: 5, opacity: 0.95, dashArray: '6 9',
+        lineCap: 'round', lineJoin: 'round', renderer: _routeCanvas,
+      });
+      line.bindTooltip(label, { direction: 'top', className: 'garage-route-tooltip' });
+      _diversionLayer.addLayer(line);
+      if (seg.length > longestLen) { longestLen = seg.length; longestLine = line; }
+    }
+    _diversionLayer.addTo(_map);
+    // Permanent label on the longest diverted segment only — the rest show
+    // the same text on hover.
+    if (longestLine) {
+      longestLine.unbindTooltip();
+      longestLine.bindTooltip(label, { permanent: true, direction: 'top', className: 'garage-route-tooltip' });
+      longestLine.openTooltip();
+    }
+  }).catch(() => { /* diversion overlay is decorative — never fatal */ });
 }
 
 // ── Live vehicle positions (Atlas live feed) ─────────────────────────────────

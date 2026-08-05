@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/app.css?v=2.15.12" />
+    <link rel="stylesheet" href="css/app.css?v=2.16.0" />
     <script>
       (function () {
         try {
@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.15</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.16</a>
 
       <div style="flex:1"></div>
 
@@ -81,6 +81,14 @@
             <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.16</span> Aug 07, 2026</div>
+            <a href="#v2_16" class="cl-entry-title">Diversions drawn on the map</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--new">NEW</span> Active diversions render on the map — the diverted path draws as a <strong>dashed line</strong> with a "Diversion · until date" label, and the bypassed stretch of the official route is striped out as not served. Street-accurate geometry, crowd-sourced from the buses' own GPS traces via the Atlas warehouse, per direction, ~5-minutely fresh. Routes whose diversion geometry isn't derived yet keep showing the status chip as before.</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.15.8</span> Aug 04, 2026</div>
@@ -305,8 +313,8 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/about.js?v=2.15.12" defer></script>
-    <script src="js/roadmap.js?v=2.15.12" defer></script>
+    <script src="js/about.js?v=2.16.0" defer></script>
+    <script src="js/roadmap.js?v=2.16.0" defer></script>
     <!-- Inline theme toggle — keeps the changelog page self-contained while
          persisting to the same `app-theme` key the main app reads. -->
     <script>

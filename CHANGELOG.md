@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.16 — Diversions drawn on the map
+
+_2026-08-07_
+
+- **NEW** Active diversions render on the map — when TfL has the focused route on diversion and the Atlas warehouse has derived the diverted path from observed bus GPS traces, it draws as a **dashed line** in the direction colour with a "Diversion · until \<date\>" label, and the bypassed stretch of the official route gets a white-striped "not served" treatment. Street-accurate geometry (crowd-sourced from the buses themselves via BODS SIRI-VM), per direction, refreshed ~5-minutely; routes whose diversion geometry isn't derived yet simply show the status chip as before. Atlas `/route-diversions`.
+
+---
+
 ## v2.15.8 — Who's out on the route
 
 _2026-08-04_

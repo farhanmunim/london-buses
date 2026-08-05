@@ -663,6 +663,42 @@ export async function fetchVehicleRegistry() {
   return byReg;
 }
 
+/**
+ * Active diversion record for one route (Atlas /route-diversions — live
+ * status + geometry derived from observed bus GPS traces, refreshed ~5 min).
+ * Adapted to the app's direction vocabulary ('1' outbound / '2' inbound):
+ * { status, since, until, reasons[], published,
+ *   segments:  { '1': [ [[lat,lon],…], … ], '2': […] },   // diverted path
+ *   bypassed:  { '1': […], '2': […] },                     // official line not served
+ *   missedStops: { '1': [{id,name,lat,lng}], '2': […] } }
+ * Resolves null when the route has no active diversion record, and
+ * `published: false` when Atlas hasn't derived geometry for it yet.
+ */
+export async function fetchRouteDiversion(routeId) {
+  const key = 'adapted:/route-diversions';
+  let byRoute = _cache.get(key);
+  if (!byRoute) {
+    const raw = await loadApiCached('/route-diversions');
+    if (!raw) return null;
+    byRoute = {};
+    const toLatLng = segs => (segs ?? []).map(seg => seg.map(([lon, lat]) => [lat, lon]));
+    for (const [id, r] of Object.entries(raw.routes ?? {})) {
+      byRoute[id.toUpperCase()] = {
+        status:    r.status ?? null,
+        since:     r.since ?? null,
+        until:     r.until ?? null,
+        reasons:   (r.disruptions ?? []).map(d => d.reason).filter(Boolean),
+        published: r.geometryStatus === 'published',
+        segments:    { '1': toLatLng(r.diversionSegments?.outbound), '2': toLatLng(r.diversionSegments?.inbound) },
+        bypassed:    { '1': toLatLng(r.bypassedSegments?.outbound),  '2': toLatLng(r.bypassedSegments?.inbound) },
+        missedStops: { '1': r.missedStops?.outbound ?? [],           '2': r.missedStops?.inbound ?? [] },
+      };
+    }
+    _cache.set(key, byRoute);
+  }
+  return byRoute[String(routeId).toUpperCase()] ?? null;
+}
+
 /** The API's pipeline-run manifest — per-dataset fetchedAt + cadence. */
 export async function fetchManifest() {
   return loadApiCached('/manifest');

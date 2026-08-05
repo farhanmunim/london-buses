@@ -14,25 +14,25 @@
  *   4. Garages (independent — unblocks route markers on the map).
  */
 
-import './panels.js?v=2.15.12';        // sidebar tabs, right-panel tabs, section collapse
-import './filters.js?v=2.15.12';       // pill-based filter engine
-import './paint-mode.js?v=2.15.12';    // colour-routes-by toggle (both copies synced)
-import './toggles.js?v=2.15.12';       // map-area route/garage visibility controls
-import './search.js?v=2.15.12';        // topbar + routes-tab search (multi-route pills)
-import './stop-search.js?v=2.15.12';   // bus-stop filter in sidebar
-import './garage-filter.js?v=2.15.12'; // garage-selection pill in sidebar (parity with stop filter)
-import './route-detail.js?v=2.15.12';  // route-card renderer (imported for side-effect-free exports)
-import './filtered-routes.js?v=2.15.12'; // lists filter-matched routes in the Routes tab
-import './mobile-nav.js?v=2.15.12';    // pull-up sheet + bottom nav
-import './export.js?v=2.15.12';        // XLSX export
-import './tooltip.js?v=2.15.12';       // custom [data-tip] hover tooltip used by route-card labels
+import './panels.js?v=2.16.0';        // sidebar tabs, right-panel tabs, section collapse
+import './filters.js?v=2.16.0';       // pill-based filter engine
+import './paint-mode.js?v=2.16.0';    // colour-routes-by toggle (both copies synced)
+import './toggles.js?v=2.16.0';       // map-area route/garage visibility controls
+import './search.js?v=2.16.0';        // topbar + routes-tab search (multi-route pills)
+import './stop-search.js?v=2.16.0';   // bus-stop filter in sidebar
+import './garage-filter.js?v=2.16.0'; // garage-selection pill in sidebar (parity with stop filter)
+import './route-detail.js?v=2.16.0';  // route-card renderer (imported for side-effect-free exports)
+import './filtered-routes.js?v=2.16.0'; // lists filter-matched routes in the Routes tab
+import './mobile-nav.js?v=2.16.0';    // pull-up sheet + bottom nav
+import './export.js?v=2.16.0';        // XLSX export
+import './tooltip.js?v=2.16.0';       // custom [data-tip] hover tooltip used by route-card labels
 
-import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.15.12';
-import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.15.12';
-import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.15.12';
-import { renderOperatorStats, setGarageData } from './stats.js?v=2.15.12';
-import { setGarageOptions } from './garage-filter.js?v=2.15.12';
-import { applyFilters } from './filters.js?v=2.15.12';
+import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.16.0';
+import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.16.0';
+import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.16.0';
+import { renderOperatorStats, setGarageData } from './stats.js?v=2.16.0';
+import { setGarageOptions } from './garage-filter.js?v=2.16.0';
+import { applyFilters } from './filters.js?v=2.16.0';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 function setTheme(t) {
