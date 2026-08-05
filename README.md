@@ -33,7 +33,7 @@ npx serve .                   # or: node serve.mjs
 
 ## Contributors
 
-Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, and Paul Tran for data, feedback, and reference material that has shaped this project.
+Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, and Andy Corbett for data, feedback, and reference material that has shaped this project.
 
 ## Tech
 
