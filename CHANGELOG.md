@@ -6,7 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
-## v2.15.10 — Diverted & rerouted sections on the map
+## v2.15.11 — Dashed diversion lines withdrawn
+
+_2026-08-06_
+
+- **UX** The v2.15.10 dashed diversion/rerouted-section lines are removed. Without street-level geometry for off-trace legs (TfL publishes none) the straight stop-to-stop segments looked wrong against the road-accurate route line. Revisit if road-snapped geometry becomes available (the natural home is the Atlas pipeline, which already holds the stop sequences).
+
+---
+
+## v2.15.10 — Diverted & rerouted sections on the map *(withdrawn in v2.15.11)*
 
 _2026-08-06_
 

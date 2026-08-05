@@ -14,11 +14,11 @@
  * `app:selectionchanged` (pins added/removed) so the three states stay in sync.
  */
 
-import { state } from './state.js?v=2.15.10';
-import { getVisibleRouteProps, opColor } from './map.js?v=2.15.10';
-import { getPinnedRouteIds } from './search.js?v=2.15.10';
-import { showRoutePrompt } from './route-detail.js?v=2.15.10';
-import { showRpTab } from './panels.js?v=2.15.10';
+import { state } from './state.js?v=2.15.11';
+import { getVisibleRouteProps, opColor } from './map.js?v=2.15.11';
+import { getPinnedRouteIds } from './search.js?v=2.15.11';
+import { showRoutePrompt } from './route-detail.js?v=2.15.11';
+import { showRpTab } from './panels.js?v=2.15.11';
 
 const ROUTE_FILTER_KEYS = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
 
