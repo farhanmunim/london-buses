@@ -10,6 +10,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-07_
 
+- **UX** Live bus chevrons now contrast both direction lines — orange (outbound) and cyan (inbound), a pair deliberately off the route-line palette: line-blue inbound wedges vanished into the blue inbound line. Warm/cool keeps the direction semantics and orange/cyan survives red-green colour-vision deficiency.
 - **NEW** Active diversions render on the map — when TfL has the focused route on diversion and the Atlas warehouse has derived the diverted path from observed bus GPS traces, it draws as a **dashed line** in the direction colour with a "Diversion · until \<date\>" label, and the bypassed stretch of the official route gets a white-striped "not served" treatment. Street-accurate geometry (crowd-sourced from the buses themselves via BODS SIRI-VM), per direction, refreshed ~5-minutely; routes whose diversion geometry isn't derived yet simply show the status chip as before. Atlas `/route-diversions`.
 
 ---

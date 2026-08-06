@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.16.1';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.1';
+import { state } from './state.js?v=2.16.2';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.2';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -11,14 +11,16 @@ const ZOOM   = 11;
 const COLOR_OUTBOUND = '#dc2626';
 const COLOR_INBOUND  = '#2563eb';
 // Live buses are bearing-rotated chevrons (same wedge grammar as the Atlas
-// site's vehicle markers). Direction pair: outbound buses are ORANGE
-// (orange-500) — the route line itself is red in outbound view (and most
-// operator liveries are red too), so red wedges vanished into it; a bright
-// orange separates cleanly from red-600 while staying unmistakably warm.
-// Inbound stays the canonical blue. The wedge shape + white halo is what
+// site's vehicle markers). The pair deliberately sits OFF the route-line
+// palette so buses contrast whichever direction's line is drawn: orange
+// (orange-500) for outbound — red wedges vanished into the red line — and
+// cyan (cyan-500) for inbound — line-blue wedges vanished into the blue
+// line. Warm = outbound / cool = inbound keeps the direction semantics,
+// and orange/cyan sits on the blue-yellow axis, so the pair survives
+// red-green colour-vision deficiency. The wedge shape + white halo is what
 // says "moving bus, not a stop"; no bearing → dot fallback.
 const COLOR_BUS_OUTBOUND = '#f97316';
-const COLOR_BUS_INBOUND  = COLOR_INBOUND;
+const COLOR_BUS_INBOUND  = '#06b6d4';
 
 // Per-type colors — a deliberately high-contrast categorical palette. Each hue
 // sits in its own wheel zone (red / mustard / teal / violet / green) and is
