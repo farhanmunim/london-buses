@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/app.css?v=2.16.3" />
+    <link rel="stylesheet" href="css/app.css?v=2.16.4" />
     <script>
       (function () {
         try {
@@ -86,6 +86,7 @@
             <div class="cl-date"><span class="cl-version">v2.16</span> Aug 07, 2026</div>
             <a href="#v2_16" class="cl-entry-title">Diversions drawn on the map</a>
             <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--fix">FIX</span> Route cards no longer show another route's disruption notice — TfL files one notice onto several lines' feeds (and sometimes misfiles one outright), and the card showed whichever came first. Now only notices valid right now count, the worst wins, and among equals the one naming the route itself is preferred.</li>
               <li><span class="cl-tag cl-tag--ux">UX</span> Data-source labels aligned with the official <a href="https://atlas.farhan.app/docs/" target="_blank" rel="noopener">Atlas API reference</a> — daily-refreshed fields say so, reliability figures are attributed to TfL's QSI and per-route MPS reports via Atlas, the daily reliability chart is marked experimental, and the About dialog gains a full data-sources &amp; attribution section (Powered by TfL Open Data).</li>
               <li><span class="cl-tag cl-tag--new">NEW</span> Active diversions render on the map — the diverted path draws as a <strong>dashed line</strong> with a "Diversion · until date" label, and the bypassed stretch of the official route is striped out as not served. Street-accurate geometry, recovered by diffing TfL's redrawn route against the frozen pre-diversion baseline, per direction, refreshed daily. Routes whose diversion geometry isn't derived yet keep showing the status chip as before.</li>
             </ul>
@@ -314,8 +315,8 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/about.js?v=2.16.3" defer></script>
-    <script src="js/roadmap.js?v=2.16.3" defer></script>
+    <script src="js/about.js?v=2.16.4" defer></script>
+    <script src="js/roadmap.js?v=2.16.4" defer></script>
     <!-- Inline theme toggle — keeps the changelog page self-contained while
          persisting to the same `app-theme` key the main app reads. -->
     <script>

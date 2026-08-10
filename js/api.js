@@ -577,13 +577,49 @@ export async function fetchLiveVehicles(routeId) {
  * fetchLineStatus().
  */
 export async function fetchLiveStatus(routeId) {
-  const raw = await loadApi(`/live/status?route=${encodeURIComponent(String(routeId).toUpperCase())}`);
-  const ls = raw?.data?.[0]?.lineStatuses?.[0];
-  if (!ls) return null;
+  const name = String(routeId).toUpperCase();
+  const raw  = await loadApi(`/live/status?route=${encodeURIComponent(name)}`);
+  const statuses = raw?.data?.[0]?.lineStatuses;
+  if (!statuses?.length) return null;
+
+  // TfL files one notice onto several lines' feeds (an area closure names
+  // every route it touches) and occasionally misfiles one outright (a 379
+  // diversion published on line 376's feed). Taking lineStatuses[0] blindly
+  // showed whichever notice TfL listed first. Instead: count only statuses
+  // whose validity window brackets now (TfL's isNow flag is unreliable —
+  // judge by dates), then show the worst active one, preferring prose that
+  // actually names this route.
+  const now = Date.now();
+  const dateActive = (ls) => {
+    const vps = ls.validityPeriods;
+    if (!vps?.length) return true;
+    return vps.some(vp => {
+      const from = vp.fromDate ? Date.parse(vp.fromDate) : NaN;
+      const to   = vp.toDate   ? Date.parse(vp.toDate)   : NaN;
+      return (Number.isNaN(from) || from <= now) && (Number.isNaN(to) || to >= now);
+    });
+  };
+  const mentions = (ls) => {
+    const r = ls.reason ?? '';
+    // "ROUTES 238 and 376" beats a bare number match, which can false-hit
+    // dates ("Monday 2 November") for short numeric route names.
+    if (new RegExp(`\\broutes?\\b[^.:]*\\b${name}\\b`, 'i').test(r)) return 2;
+    if (new RegExp(`\\b${name}\\b`, 'i').test(r)) return 1;
+    return 0;
+  };
+  const active = statuses.filter(ls => ls.statusSeverity === 10 || dateActive(ls));
+  // Every listed disruption is outside its validity window → the route is
+  // effectively running normally right now.
+  if (!active.length) {
+    return { status: 'Good Service', reason: null, severity: 10, capturedAt: raw.capturedAt ?? null };
+  }
+  const pick = active
+    .map((ls, i) => ({ ls, i, sev: ls.statusSeverity ?? 10, m: mentions(ls) }))
+    .sort((a, b) => a.sev - b.sev || b.m - a.m || a.i - b.i)[0].ls;
   return {
-    status:     ls.statusSeverityDescription ?? null,
-    reason:     ls.reason ?? null,
-    severity:   ls.statusSeverity ?? null,
+    status:     pick.statusSeverityDescription ?? null,
+    reason:     pick.reason ?? null,
+    severity:   pick.statusSeverity ?? null,
     capturedAt: raw.capturedAt ?? null,
   };
 }
