@@ -263,6 +263,14 @@ a{color:inherit;text-decoration:none}
 .mctl.on{background:var(--surf2);color:var(--tx)}
 .mctl.pri{background:var(--acc);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(232,52,74,.3)}
 .mctl.pri:hover{filter:brightness(1.08)}
+/* In-pill spinner — swaps in for the pill's icon while a fetch is in flight
+   (currently the Live-buses first GPS fetch; see js/toggles.js). */
+.mctl-spin{width:12px;height:12px;flex:none;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:mctl-spin .7s linear infinite}
+@keyframes mctl-spin{to{transform:rotate(360deg)}}
+/* Transient status note under the map pills ("No buses tracked…"). Same
+   glass-pill grammar as .mctl, but inert. */
+.map-toast{position:absolute;top:52px;right:12px;z-index:20;background:var(--surf);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd2);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--tx2);box-shadow:var(--sh);white-space:nowrap;animation:map-toast-in .18s ease-out}
+@keyframes map-toast-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 
 .leaflet-control-zoom{border:none!important;box-shadow:var(--sh)!important;border-radius:10px!important;overflow:hidden;background:var(--surf)!important}
 .leaflet-control-zoom a{background:transparent!important;color:var(--mu)!important;border:none!important;width:36px!important;height:36px!important;line-height:36px!important;font-size:18px!important;font-weight:400!important}
@@ -1991,6 +1999,10 @@ a.tb-ver:hover{background:var(--surf2);color:var(--tx2)}
     z-index:20;
   }
   .mctl{padding:6px 10px;font-size:11px;gap:4px;border-radius:10px}
+  /* Pills stack vertically here, so the toast moves to the bottom centre of
+     the map (fade-only entrance — the centring transform must survive). */
+  .map-toast{top:auto;right:auto;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);font-size:11px;animation:map-toast-in-m .18s ease-out}
+  @keyframes map-toast-in-m{from{opacity:0}to{opacity:1}}
 
   /* Leaflet zoom tucked into the bottom-left so it doesn't collide with the
      stacked layer toggles on the right. */

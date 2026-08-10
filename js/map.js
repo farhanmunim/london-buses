@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.16.4';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.4';
+import { state } from './state.js?v=2.16.5';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.5';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -460,15 +460,34 @@ export function startLiveVehicles(routeId) {
   // never starts a poll, so the pill stays hidden there).
   document.dispatchEvent(new CustomEvent('map:livevehiclesfocus', { detail: true }));
   if (!_vehiclesEnabled) return; // remember the route; the toggle can start us later
+  // The first fetch of a focus announces itself so the "Live buses" pill can
+  // show a spinner while the feed answers (toggles.js listens); the recurring
+  // 15 s refreshes stay silent. detail.count on completion: 0 = feed fine but
+  // nothing tracked, null = feed unreachable — the pill words those apart.
+  let first = true;
   const poll = async () => {
     const id = _vehiclesRouteId;
     if (!id) return;
-    const [vehicles, registry] = await Promise.all([
-      fetchLiveVehicles(id),
-      fetchVehicleRegistry(), // session-cached after the first poll
-    ]);
-    if (_vehiclesRouteId !== id || !_routeActive || !_vehiclesEnabled) return; // stale response
-    renderVehicles(vehicles ?? [], registry ?? {});
+    if (first) document.dispatchEvent(new CustomEvent('map:livevehiclesloading', { detail: { loading: true } }));
+    let count = null;
+    try {
+      const [vehicles, registry] = await Promise.all([
+        fetchLiveVehicles(id),
+        fetchVehicleRegistry(), // session-cached after the first poll
+      ]);
+      if (_vehiclesRouteId !== id || !_routeActive || !_vehiclesEnabled) return; // stale response
+      if (vehicles) count = vehicles.length;
+      renderVehicles(vehicles ?? [], registry ?? {});
+    } finally {
+      if (first) {
+        first = false;
+        // A stale first fetch (route switched mid-flight) must not clear the
+        // spinner the new route's own first fetch just started.
+        if (_vehiclesRouteId === id) {
+          document.dispatchEvent(new CustomEvent('map:livevehiclesloading', { detail: { loading: false, count } }));
+        }
+      }
+    }
   };
   poll();
   _vehiclesTimer = setInterval(poll, VEHICLE_POLL_MS);

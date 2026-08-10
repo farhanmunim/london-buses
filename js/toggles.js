@@ -8,8 +8,8 @@
  * without persisting that transient state.
  */
 
-import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.16.4';
-import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.16.4';
+import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.16.5';
+import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.16.5';
 
 function wire(btn, { storageKey, apply, syncEvent, persistWhen }) {
   if (!btn) return;
@@ -92,9 +92,49 @@ if (toggleLiveBtn) {
   };
   paint(liveOn);
 
+  // Loading feedback — the first GPS fetch of a focus (or of a re-enable)
+  // takes a moment, and without a cue "loading" and "no buses out" look
+  // identical. The pill's bus icon swaps for a spinner while the fetch is
+  // in flight; a transient note under the pills words the empty outcomes.
+  const spinner = document.createElement('span');
+  spinner.className = 'mctl-spin';
+  spinner.hidden = true;
+  const busIcon = toggleLiveBtn.querySelector('svg');
+  busIcon?.before(spinner);
+
+  let toastEl = null, toastTimer = null;
+  const toast = (msg) => {
+    if (toastTimer) { clearTimeout(toastTimer); toastTimer = null; }
+    if (!msg) { toastEl?.remove(); toastEl = null; return; }
+    if (!toastEl) {
+      toastEl = document.createElement('div');
+      toastEl.className = 'map-toast';
+      toastEl.setAttribute('role', 'status');
+      document.querySelector('.map-area')?.append(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastTimer = setTimeout(() => toast(null), 4000);
+  };
+
+  const setLoading = (loading) => {
+    toggleLiveBtn.classList.toggle('is-loading', loading);
+    toggleLiveBtn.setAttribute('aria-busy', String(loading));
+    spinner.hidden = !loading;
+    if (busIcon) busIcon.style.display = loading ? 'none' : '';
+  };
+
+  document.addEventListener('map:livevehiclesloading', e => {
+    const { loading, count } = e.detail ?? {};
+    setLoading(!!loading);
+    if (loading) { toast(null); return; }
+    if (count === 0)         toast('No buses tracked on this route right now');
+    else if (count == null)  toast('Live bus feed unavailable');
+  });
+
   toggleLiveBtn.addEventListener('click', () => {
     liveOn = !liveOn;
     paint(liveOn);
+    if (!liveOn) { setLoading(false); toast(null); }
     setLiveVehiclesEnabled(liveOn);
   });
 
@@ -102,6 +142,7 @@ if (toggleLiveBtn) {
   // focuses routes without live tracking, and the pill must not show there.
   document.addEventListener('map:livevehiclesfocus', e => {
     toggleLiveBtn.hidden = !e.detail;
+    if (!e.detail) { setLoading(false); toast(null); }
     if (e.detail && !liveOn) {
       liveOn = true;
       paint(liveOn);
