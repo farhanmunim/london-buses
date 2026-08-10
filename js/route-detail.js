@@ -11,13 +11,13 @@
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.16.2';
-import { opColor, multiRouteColor } from './map.js?v=2.16.2';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.16.3';
+import { opColor, multiRouteColor } from './map.js?v=2.16.3';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
   fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
   fetchLiveVehicles,
-} from './api.js?v=2.16.2';
+} from './api.js?v=2.16.3';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -43,34 +43,35 @@ const SOURCE = {
   TFL_IBUS:  'TfL iBus open data',
   DVLA:      'DVLA Vehicle Enquiry Service',
   LBR:       'londonbusroutes.net',
-  QSI:       'TfL Bus Performance (QSI) report',
-  QSI_ROUTE: 'TfL per-route QSI reports',
   TENDER:    'TfL tender records',
   PROG:      'TfL tendering programme',
   LOOKUP:    'curated vehicle lookup over LBR chassis strings',
   DERIVED:   'derived (accepted bid ÷ cost per mile)',
   BUSTO:     'TfL BUSTO demand data, via the Atlas API',
   ATLAS_QSI: 'TfL QSI reports, via the Atlas API',
+  ATLAS_MPS: 'TfL per-route MPS reports, via the Atlas API',
+  ATLAS_LBR: 'londonbusroutes.net, via the Atlas API',
 };
 const WEEKLY      = 'as at last weekly refresh';
 const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed weekly';
+const DAILY       = 'refreshed daily';
 const QSI_FRESH   = 'TfL publishes every ~4 weeks';
 const PER_TENDER  = 'set per tender contract';
 const ANNUAL_BUSTO = 'TfL publishes annually';
 const TIPS = {
   // Route KPI tiles
-  pvr:             tip('Peak Vehicle Requirement — buses needed at peak',     SOURCE.LBR,     WEEKLY),
+  pvr:             tip('Peak Vehicle Requirement — buses needed at peak',     SOURCE.ATLAS_LBR, DAILY),
   stops:           tip('',                                                    SOURCE.TFL_API, WEEKLY),
   freq:            tip('H = 5+ buses/hour, L = fewer',                        SOURCE.TFL_API, WEEKLY),
   // Route detail rows
   garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
-  length:          tip('One-way route length',                                SOURCE.LBR + ', via the Atlas API', 'refreshed daily'),
-  headway:         tip('Typical scheduled gap between buses',                  'TfL timetable, via the Atlas API', 'refreshed daily'),
+  length:          tip('One-way route length',                                SOURCE.ATLAS_LBR, DAILY),
+  headway:         tip('Typical scheduled gap between buses',                  'TfL timetable, via the Atlas API', DAILY),
   'avg-wait':      tip('Average wait passengers actually experienced vs the scheduled wait (their difference is the EWT)', SOURCE.ATLAS_QSI, QSI_FRESH),
-  mileage:         tip('Scheduled mileage actually operated last quarter, against the contractual standard', SOURCE.ATLAS_QSI, QSI_FRESH),
+  mileage:         tip('Scheduled mileage actually operated in the latest TfL period, against the contractual minimum', SOURCE.ATLAS_MPS, QSI_FRESH),
   'perf-trend':    tip('Published reliability across recent quarters',        SOURCE.ATLAS_QSI, QSI_FRESH),
-  'rel-daily':     tip('Atlas’s own daily reliability estimate from live arrivals sampling — indicative, not TfL-published', 'Atlas arrivals sampling', 'daily'),
-  'contract-end':  tip('Scheduled end of the current contract',               SOURCE.LBR + ', via the Atlas API', 'refreshed daily'),
+  'rel-daily':     tip('Atlas’s own reliability estimate from live arrivals sampling — experimental, biased high, not comparable to TfL’s QSI', 'Atlas arrivals sampling', 'daily'),
+  'contract-end':  tip('Scheduled end of the current contract — curated Atlas data, published for a few flagship routes only', 'Atlas API (curated)', DAILY),
   // Crowding rows (Atlas API)
   'crowd-peak':    tip('Peak vehicle load ÷ capacity at the max-demand hour', SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-where':   tip('Stop, day type and time of the peak load',            SOURCE.BUSTO,   ANNUAL_BUSTO),
@@ -402,10 +403,10 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // Tile 1 = actual measurement (EWT / OTP). Tile 2 = the contractual
   // Minimum Performance Standard for the same metric. Labels and tooltips
   // both swap together so the metric is unambiguous regardless of class.
-  const TIP_EWT     = tip('Excess Wait Time in minutes',  SOURCE.QSI_ROUTE, QSI_FRESH);
-  const TIP_OTP     = tip('On-Time Performance',          SOURCE.QSI_ROUTE, QSI_FRESH);
-  const TIP_EWT_MPS = tip('Contractual EWT minimum',      SOURCE.TENDER,    PER_TENDER);
-  const TIP_OTP_MPS = tip('Contractual OTP minimum',      SOURCE.TENDER,    PER_TENDER);
+  const TIP_EWT     = tip('Excess Wait Time in minutes',  SOURCE.ATLAS_QSI, QSI_FRESH);
+  const TIP_OTP     = tip('On-Time Performance',          SOURCE.ATLAS_QSI, QSI_FRESH);
+  const TIP_EWT_MPS = tip('Contractual EWT minimum',      SOURCE.ATLAS_MPS, PER_TENDER);
+  const TIP_OTP_MPS = tip('Contractual OTP minimum',      SOURCE.ATLAS_MPS, PER_TENDER);
   if (sc === 'high-frequency') {
     if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
     if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
@@ -863,7 +864,7 @@ function buildDailySvg(series, val, fmt) {
 }
 
 // Inline SVG bar profile: V/C ratio per stop along the peak direction.
-// Bars colour-step at the BUSTO comfort thresholds (0.5 busy, 0.8 crowded).
+// Bars colour-step at BUSTO band boundaries (≥0.5 above-comfortable, ≥0.8 crowded).
 function buildLoadProfileSvg(profile) {
   const NS = 'http://www.w3.org/2000/svg';
   const W = 260, H = 34, GAP = 1;

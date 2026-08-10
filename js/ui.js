@@ -14,25 +14,25 @@
  *   4. Garages (independent — unblocks route markers on the map).
  */
 
-import './panels.js?v=2.16.2';        // sidebar tabs, right-panel tabs, section collapse
-import './filters.js?v=2.16.2';       // pill-based filter engine
-import './paint-mode.js?v=2.16.2';    // colour-routes-by toggle (both copies synced)
-import './toggles.js?v=2.16.2';       // map-area route/garage visibility controls
-import './search.js?v=2.16.2';        // topbar + routes-tab search (multi-route pills)
-import './stop-search.js?v=2.16.2';   // bus-stop filter in sidebar
-import './garage-filter.js?v=2.16.2'; // garage-selection pill in sidebar (parity with stop filter)
-import './route-detail.js?v=2.16.2';  // route-card renderer (imported for side-effect-free exports)
-import './filtered-routes.js?v=2.16.2'; // lists filter-matched routes in the Routes tab
-import './mobile-nav.js?v=2.16.2';    // pull-up sheet + bottom nav
-import './export.js?v=2.16.2';        // XLSX export
-import './tooltip.js?v=2.16.2';       // custom [data-tip] hover tooltip used by route-card labels
+import './panels.js?v=2.16.3';        // sidebar tabs, right-panel tabs, section collapse
+import './filters.js?v=2.16.3';       // pill-based filter engine
+import './paint-mode.js?v=2.16.3';    // colour-routes-by toggle (both copies synced)
+import './toggles.js?v=2.16.3';       // map-area route/garage visibility controls
+import './search.js?v=2.16.3';        // topbar + routes-tab search (multi-route pills)
+import './stop-search.js?v=2.16.3';   // bus-stop filter in sidebar
+import './garage-filter.js?v=2.16.3'; // garage-selection pill in sidebar (parity with stop filter)
+import './route-detail.js?v=2.16.3';  // route-card renderer (imported for side-effect-free exports)
+import './filtered-routes.js?v=2.16.3'; // lists filter-matched routes in the Routes tab
+import './mobile-nav.js?v=2.16.3';    // pull-up sheet + bottom nav
+import './export.js?v=2.16.3';        // XLSX export
+import './tooltip.js?v=2.16.3';       // custom [data-tip] hover tooltip used by route-card labels
 
-import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.16.2';
-import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.16.2';
-import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.16.2';
-import { renderOperatorStats, setGarageData } from './stats.js?v=2.16.2';
-import { setGarageOptions } from './garage-filter.js?v=2.16.2';
-import { applyFilters } from './filters.js?v=2.16.2';
+import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.16.3';
+import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.16.3';
+import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.16.3';
+import { renderOperatorStats, setGarageData } from './stats.js?v=2.16.3';
+import { setGarageOptions } from './garage-filter.js?v=2.16.3';
+import { applyFilters } from './filters.js?v=2.16.3';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 function setTheme(t) {
@@ -145,8 +145,8 @@ updateNetworkLiveStatus();
 // "Refreshed" is the freshest reference data the site consumes — the newest
 // of the local weekly build and the Atlas API datasets it reads (garages,
 // tenders, crowding, performance, route-meta, fleet; live status is
-// excluded, it's stamped where it's shown). "Next" mirrors the Atlas
-// warehouse cadence: its pipeline runs
+// excluded, it's stamped where it's shown). "Next" mirrors the Atlas API's
+// refresh cadence: its pipeline runs
 // daily at ~03:17 UTC, though per-dataset TTLs gate what actually re-pulls.
 // The hover tip breaks the sources down. Falls back to the local build date
 // + weekly Monday schedule when the API is unreachable.
@@ -176,7 +176,7 @@ function updateFooterDates() {
         const d = parse(atlas[k]?.fetchedAt);
         if (d) bits.push(`Atlas ${k} ${fmt(d)}`);
       }
-      bits.push('Atlas warehouse refreshes daily ~03:17 UTC');
+      bits.push('Atlas API refreshes daily ~03:17 UTC');
       pill.dataset.tip = bits.join(' · ');
     }
   }).catch(() => { /* freshness display is non-fatal */ });

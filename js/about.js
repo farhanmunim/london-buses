@@ -36,6 +36,13 @@
         </div>
 
         <section class="modal-section">
+          <span class="modal-section-tag">Data sources</span>
+          <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
+            All data is served by the <a href="https://atlas.farhan.app/docs/" target="_blank" rel="noopener">Atlas API</a> and this site's own weekly build. Upstream sources: Transport for London (routes, stops, geometry, service status, diversions, reliability, crowding) — <strong>Powered by TfL Open Data</strong>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA Vehicle Enquiry Service (vehicle make, year and fuel, OGL); londonbusroutes.net (operators, garages, PVR, vehicle types — community reference); basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) &amp; CARTO.
+          </p>
+        </section>
+
+        <section class="modal-section">
           <span class="modal-section-tag">Privacy</span>
           <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
             Aggregate page-view stats only via <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Analytics</a>. No accounts, no personal data, no advertising cookies.
