@@ -1,27 +1,18 @@
 {
-  "generatedAt": "2026-08-03T13:14:14.119Z",
+  "generatedAt": "2026-08-10T11:02:44.116Z",
   "summary": {
     "critical": 0,
-    "warn": 7,
+    "warn": 6,
     "info": 5
   },
   "issues": [
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "5",
-      "field": "fleetSize/pvr ratio",
-      "expected": "0.2..3",
-      "actual": "0.17",
-      "note": "fleetSize=5 pvr=30"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "60",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 14.9,
+      "actual": 14.8,
       "note": "electric London fleets are post-2015"
     },
     {
@@ -48,8 +39,8 @@
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.42",
-      "note": "fleetSize=53 pvr=12"
+      "actual": "4.33",
+      "note": "fleetSize=52 pvr=12"
     },
     {
       "severity": "WARN",
@@ -98,16 +89,16 @@
         "total": 9510,
         "validVrm": 9510,
         "invalidVrm": 0,
-        "dvla200": 9467,
-        "dvla404": 43,
+        "dvla200": 9468,
+        "dvla404": 42,
         "dvla400": 0,
         "dvlaOther": 0,
         "neverChecked": 0,
-        "ageOK": 9467,
-        "ageMissing": 43,
+        "ageOK": 9468,
+        "ageMissing": 42,
         "ageImplausible": 0,
         "propByFuel": {
-          "diesel": 5992,
+          "diesel": 5993,
           "electric": 3474,
           "gas": 1
         }
@@ -132,7 +123,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14531,
+        "totalObs": 14460,
         "missingFleet": 0
       },
       "note": ""
