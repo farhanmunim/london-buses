@@ -20,10 +20,10 @@
  * erroring into the console.
  */
 
-import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.16.5';
-import { state, exportBtn } from './state.js?v=2.16.5';
-import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.16.5';
-import { getPinnedRouteIds } from './search.js?v=2.16.5';
+import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.16.6';
+import { state, exportBtn } from './state.js?v=2.16.6';
+import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.16.6';
+import { getPinnedRouteIds } from './search.js?v=2.16.6';
 
 // Threshold above which we warn the user before assembling a full-network
 // export. Filtered exports usually return well under this, and skip the

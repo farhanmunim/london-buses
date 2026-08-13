@@ -1,8 +1,11 @@
 import { sanitizeRecord } from './_lib/sanitize.js';
 /**
- * fetch-route-stops.js — Per-route stop lists (TfL API)
+ * fetch-route-stops.js — Per-route stop lists (TfL API + Atlas canonical)
  *
- * Calls /Line/{id}/StopPoints for every bus route and produces two files:
+ * Calls /Line/{id}/StopPoints for every bus route (the enrichment source —
+ * towards/indicator), constrains each list to the Atlas API's /route-stops
+ * canonical stop set (the served-sequence truth, diversion-frozen), and
+ * produces two files:
  *
  *   data/route_stops.json — per-route stop list (ordered as TfL returns):
  *     { generated_at_utc, route_count,
@@ -170,6 +173,52 @@ async function main() {
     }
     if (restored.length) console.warn(`  kept last-known-good stops for ${restored.length} routes: ${restored.join(', ')}`);
   } catch { /* no previous files (cold start) — nothing to merge */ }
+
+  // Canonical constraint (Atlas /route-stops): TfL's /Line/{id}/StopPoints is
+  // a loose association list — it includes diversion-path stops and stale
+  // associations that the route does not actually serve (route 175 carried 52
+  // such stops during its 2026-08 diversions, drawn as orphan rings far off
+  // the line). The Atlas API's /route-stops is built from Route/Sequence, is
+  // diversion-frozen to the canonical baseline, and is validated — so each
+  // route's list is constrained to Atlas's stop set: extras are dropped,
+  // canonical stops StopPoints missed are added (position/name from Atlas;
+  // towards/indicator unknowable there, left null). Skipped wholesale when
+  // Atlas is unreachable — the un-constrained lists are the lesser evil.
+  try {
+    const atlas = await fetchJson('https://atlas.farhan.app/api/v1/route-stops');
+    const canon = atlas?.routes ?? {};
+    let dropped = 0, appended = 0, constrained = 0;
+    for (const [id, entries] of Object.entries(routeStops)) {
+      const rec = canon[id] ?? canon[id.toLowerCase()];
+      if (!rec) continue;
+      const meta = new Map();
+      for (const dir of ['outbound', 'inbound']) {
+        for (const s of rec[dir] ?? []) if (!meta.has(s.id)) meta.set(s.id, s);
+      }
+      if (!meta.size) continue;
+      const have = new Map(entries.map(e => [e.id, e]));
+      const kept = [...meta.keys()].map(sid => have.get(sid) ?? { id: sid });
+      dropped  += entries.length - kept.filter(e => have.has(e.id)).length;
+      appended += kept.filter(e => !have.has(e.id)).length;
+      constrained++;
+      routeStops[id] = kept;
+      for (const sid of meta.keys()) {
+        if (!stopRegistry.has(sid)) {
+          const s = meta.get(sid);
+          stopRegistry.set(sid, { name: s.name, indicator: null, lat: s.lat, lon: s.lng, routes: new Set() });
+        }
+        stopRegistry.get(sid).routes.add(id);
+      }
+      // Keep registry route-membership in step — a stop that lost its last
+      // route is pruned before the write (see below).
+      for (const e of entries) {
+        if (!meta.has(e.id)) stopRegistry.get(e.id)?.routes.delete(id);
+      }
+    }
+    console.log(`  Atlas canonical constraint: ${constrained} routes, ${dropped} stale stops dropped, ${appended} canonical stops added`);
+  } catch (err) {
+    console.warn(`  Atlas /route-stops unreachable (${err.message}) — lists NOT constrained this run`);
+  }
 
   // Spatial sanity gate: drop any stop further than MAX_STOP_DIST_M from the
   // route's own geometry. TfL's /Line/{id}/StopPoints occasionally includes a

@@ -185,12 +185,32 @@ function parseRouteXml(xmlContent, routeId, dateToken) {
   };
 }
 
-function processZip(zipBuffer, dateToken) {
+// Routes with an active (or imminent) TfL diversion, per the Atlas API.
+// iBus schedule drops absorb diversion re-routings — sometimes weeks before
+// the works start — so overwriting a diverted route's geometry silently
+// redefines its canonical line (route 175's Dagenham loop vanished this way,
+// leaving its canonical stops orphaned on the map). Mirrors Atlas's own
+// canonical-baseline freeze; self-heals when the episode leaves the dataset.
+async function fetchFrozenRouteIds() {
+  try {
+    const res = await fetchWithTimeout('https://atlas.farhan.app/api/v1/route-diversions', { headers: userAgentHeaders(SCRIPT) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const d = await res.json();
+    const ids = new Set(Object.keys(d?.routes ?? {}).map(x => x.toUpperCase()));
+    for (const id of d?.upcomingFreeze ?? []) ids.add(String(id).toUpperCase());
+    return ids;
+  } catch (err) {
+    console.warn(`  Atlas /route-diversions unreachable (${err.message}) — no geometry freeze this run`);
+    return new Set();
+  }
+}
+
+function processZip(zipBuffer, dateToken, frozen = new Set()) {
   console.log('\nProcessing ZIP entries...');
   const zip = new AdmZip(zipBuffer);
   const entries = zip.getEntries();
 
-  let written = 0, skipped = 0;
+  let written = 0, skipped = 0, held = 0;
 
   for (const entry of entries) {
     const m = entry.entryName.match(ROUTE_XML_RE);
@@ -205,15 +225,23 @@ function processZip(zipBuffer, dateToken) {
       continue;
     }
 
+    // Diversion freeze — keep the existing canonical file. Only routes that
+    // already have geometry are held; a brand-new route writes regardless.
+    const outPath = path.join(ROUTES_DIR, `${routeId}.geojson`);
+    if (frozen.has(routeId) && fs.existsSync(outPath)) {
+      held++;
+      continue;
+    }
+
     const xmlContent = entry.getData().toString('utf8');
     const geojson = parseRouteXml(xmlContent, routeId, dateToken);
     if (!geojson) { skipped++; continue; }
 
-    writeJson(path.join(ROUTES_DIR, `${routeId}.geojson`), geojson);
+    writeJson(outPath, geojson);
     written++;
   }
 
-  console.log(`  Written: ${written} routes, skipped: ${skipped}`);
+  console.log(`  Written: ${written} routes, skipped: ${skipped}, held on diversion freeze: ${held}`);
 
   // Write index
   const routeIds = fs.readdirSync(ROUTES_DIR)
@@ -240,8 +268,25 @@ async function main() {
   // Comparing the bucket-listed date against the date we already processed
   // avoids a ~10 MB download + ~700 file rewrites on the ~95% of weeks where
   // nothing changed. The `--force` flag bypasses for manual re-runs.
+  const frozen = await fetchFrozenRouteIds();
+  if (frozen.size) console.log(`  ${frozen.size} routes on active/imminent diversion — their geometry is held at last-good`);
+
+  // A route repaired with simplified Atlas-canonical geometry (see the
+  // diversion freeze below) should get its full-resolution iBus line back as
+  // soon as its episode ends — even on weeks where the ZIP itself didn't
+  // change, so the unchanged-ZIP short-circuit must not fire then.
+  const needsRestore = fs.readdirSync(ROUTES_DIR).some(f => {
+    if (!f.endsWith('.geojson') || f === 'index.json') return false;
+    const rid = f.replace('.geojson', '').toUpperCase();
+    if (frozen.has(rid)) return false;
+    try {
+      return JSON.parse(fs.readFileSync(path.join(ROUTES_DIR, f), 'utf8'))?.metadata?.sourceDate === 'atlas-canonical';
+    } catch { return false; }
+  });
+  if (needsRestore) console.log('  a previously-frozen route left its diversion — full reprocess to restore full-res geometry');
+
   const sourceMetaPath = path.join(DATA_DIR, 'geometry-source.json');
-  const force = process.argv.includes('--force');
+  const force = process.argv.includes('--force') || needsRestore;
   if (!force && fs.existsSync(sourceMetaPath)) {
     try {
       const prev = JSON.parse(fs.readFileSync(sourceMetaPath, 'utf8'));
@@ -257,7 +302,7 @@ async function main() {
   }
 
   const zipBuffer = await downloadZip(zipKey);
-  processZip(zipBuffer, dateToken);
+  processZip(zipBuffer, dateToken, frozen);
 
   writeJson(sourceMetaPath, {
     zipDate: dateToken,
