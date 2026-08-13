@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.16.6';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.6';
+import { state } from './state.js?v=2.16.7';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.7';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -377,35 +377,155 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   _stopsVisible = true;
   if (!_stopsPref)    setStopsVisible(false);
   if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
-  renderDiversionOverlay(dir, color);
+  renderDiversionOverlay(dir, color, features, stopsFeatures);
   fitToRoute();
 }
 
 // ── Active diversion overlay (Atlas route-diversions) ────────────────────────
-// When TfL has the focused route on diversion AND Atlas has derived the
-// diverted path from observed bus GPS traces (geometryStatus "published"),
-// the diverted path draws as a dashed line in the direction colour with a
-// "Diversion" label, and the bypassed piece of the official line gets a
-// white dash overlay — visually hollowing out the section buses aren't
-// serving. Routes whose diversion has no published geometry yet draw
-// nothing: the status chip on the card already carries the reason text.
+// When TfL has the focused route on diversion, three elements can draw
+// (mirroring the treatment on atlas.farhan.app):
+//   1. the diverted path as a dashed line in the direction colour with a
+//      "Diversion" label + the bypassed piece of the official line as a
+//      white dash overlay — only when Atlas has the real diverted geometry
+//      (geometryStatus "published");
+//   2. "not served" markers on the stops the diversion skips — from the
+//      structured missedStops diff when present, else matched out of TfL's
+//      prose ("missing stops X, Y and Z" / "from X to Y");
+//   3. a geometric fallback: any of the route's own stops sitting >150 m
+//      off the drawn line while a diversion is active can't currently be
+//      served — mark it too, so a stop never floats unexplained.
 let _diversionLayer = null;
+let _divnStopsCanvas = null; // lazy — lives in the vehicles pane, above stops
 
-function renderDiversionOverlay(dir, color) {
+// Fuzzy stop-name matcher for TfL prose (same normalisation the Atlas map
+// app uses): exact/containment first, then ≥2-significant-word overlap.
+function _matchStopByName(parsed, stops) {
+  const norm = s => String(s || '').toLowerCase().replace(/&/g, ' and ')
+    .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const p = norm(parsed);
+  if (p.length < 3) return null;
+  for (const s of stops) {
+    const n = norm(s.name);
+    if (n && (n === p || n.includes(p) || p.includes(n))) return s;
+  }
+  const pt = new Set(p.split(' ').filter(w => w.length > 2));
+  for (const s of stops) {
+    const st = new Set(norm(s.name).split(' ').filter(w => w.length > 2));
+    let c = 0; pt.forEach(w => st.has(w) && c++);
+    if (c >= 2 && c >= Math.min(pt.size, 2)) return s;
+  }
+  return null;
+}
+
+// Not-served stops recovered from disruption prose. Two signals, applied to
+// the clause after "missing/not serving" so via-road names don't false-hit:
+// stop names contained verbatim in the text, and "from X to Y" ranges (the
+// stops between the matched endpoints, in sequence order).
+function _missedFromProse(reasons, stops) {
+  const found = new Map();
+  const norm = s => String(s || '').toLowerCase().replace(/&/g, ' and ')
+    .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  for (const text of reasons) {
+    const m = /(?:missing|not serving|unable to serve|will not serve)([\s\S]*)$/i.exec(text);
+    const clause = m ? m[1] : text;
+    const nClause = norm(clause);
+    for (const s of stops) {
+      const n = norm(s.name);
+      if (n.length >= 6 && nClause.includes(n)) found.set(s.id, s);
+    }
+    for (const r of clause.matchAll(/from\s+(.{3,70}?)\s+to\s+(.{3,70}?)(?:[,.]|$)/gi)) {
+      const a = _matchStopByName(r[1], stops), b = _matchStopByName(r[2], stops);
+      if (!a || !b) continue;
+      const ia = stops.indexOf(a), ib = stops.indexOf(b);
+      if (ia < 0 || ib < 0 || Math.abs(ia - ib) > 40) continue;
+      for (const s of stops.slice(Math.min(ia, ib), Math.max(ia, ib) + 1)) found.set(s.id, s);
+    }
+  }
+  return [...found.values()];
+}
+
+function renderDiversionOverlay(dir, color, lineFeatures = [], stopsFeatures = []) {
   if (_diversionLayer) { _map.removeLayer(_diversionLayer); _diversionLayer = null; }
   const routeId = state.routeId;
   if (!routeId) return;
 
   fetchRouteDiversion(routeId).then(divn => {
     // Stale guards: route or direction changed while fetching, or feed down.
-    if (!divn?.published || !_routeActive) return;
+    if (!divn || !_routeActive) return;
     if (state.routeId !== routeId || String(state.direction ?? '1') !== String(dir)) return;
-    const segments = divn.segments?.[dir] ?? [];
-    const bypassed = divn.bypassed?.[dir] ?? [];
-    if (!segments.length && !bypassed.length) return;
+    const segments = divn.published ? (divn.segments?.[dir] ?? []) : [];
+    const bypassed = divn.published ? (divn.bypassed?.[dir] ?? []) : [];
+
+    // Assemble the not-served stop set (tiers 2–3 of the comment above).
+    const stops = stopsFeatures.map(f => ({
+      id:   f.properties?.id ?? `${f.geometry.coordinates[1]},${f.geometry.coordinates[0]}`,
+      name: f.properties?.name ?? 'Stop',
+      lat:  f.geometry.coordinates[1],
+      lng:  f.geometry.coordinates[0],
+    }));
+    const missed = new Map();
+    for (const d of ['1', '2']) {
+      for (const s of divn.missedStops?.[d] ?? []) {
+        if (Number.isFinite(s?.lat) && Number.isFinite(s?.lng)) missed.set(s.id ?? s.name, s);
+      }
+    }
+    if (!missed.size) {
+      for (const s of _missedFromProse(divn.reasons ?? [], stops)) missed.set(s.id, s);
+    }
+    // Geometric tier: this route's own stops the drawn line no longer
+    // passes. Distance is point-to-SEGMENT (equirectangular metres) — the
+    // canonical lines can be RDP-simplified to ~40 vertices, so nearest-
+    // vertex distance would flag half the route.
+    const lineSegs = [];
+    for (const f of lineFeatures) {
+      const g = f.geometry;
+      const parts = g.type === 'MultiLineString' ? g.coordinates : [g.coordinates];
+      for (const part of parts) {
+        for (let i = 0; i < part.length - 1; i++) lineSegs.push([part[i], part[i + 1]]);
+      }
+    }
+    if (lineSegs.length) {
+      const segDistM = (lat, lng, a, b) => {
+        const kx = Math.cos(lat * Math.PI / 180) * 111320, ky = 110540;
+        const ax = (a[0] - lng) * kx, ay = (a[1] - lat) * ky;
+        const bx = (b[0] - lng) * kx, by = (b[1] - lat) * ky;
+        const dx = bx - ax, dy = by - ay;
+        if (dx === 0 && dy === 0) return Math.hypot(ax, ay);
+        const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy)));
+        return Math.hypot(ax + t * dx, ay + t * dy);
+      };
+      for (const s of stops) {
+        if (missed.has(s.id)) continue;
+        let min = Infinity;
+        for (const [a, b] of lineSegs) {
+          const d = segDistM(s.lat, s.lng, a, b);
+          if (d < min) min = d;
+          if (min <= 150) break;
+        }
+        if (min > 150) missed.set(s.id, s);
+      }
+    }
+
+    if (!segments.length && !bypassed.length && !missed.size) return;
     if (_diversionLayer) { _map.removeLayer(_diversionLayer); _diversionLayer = null; }
 
     _diversionLayer = L.layerGroup();
+
+    // Not-served markers — red-ringed, dark-filled: visually "switched off"
+    // versus the solid-white served rings. Drawn in the vehicles pane
+    // (z 450) so they paint ABOVE the served-stop canvas — _routeCanvas
+    // stacks below it and would hide them. Hover explains why.
+    if (!_map.getPane('vehicles')) _map.createPane('vehicles').style.zIndex = 450;
+    if (!_divnStopsCanvas) _divnStopsCanvas = L.canvas({ pane: 'vehicles', padding: 0.5 });
+    for (const s of missed.values()) {
+      const mk = L.circleMarker([s.lat, s.lng], {
+        radius: 6, color: '#dc2626', weight: 2.5,
+        fillColor: '#1f2937', fillOpacity: 1, opacity: 1,
+        renderer: _divnStopsCanvas,
+      });
+      mk.bindTooltip(`${s.name} — not served · diversion`, { direction: 'top', className: 'garage-route-tooltip' });
+      _diversionLayer.addLayer(mk);
+    }
     for (const seg of bypassed) {
       if (seg.length < 2) continue;
       // White dashes over the solid line → candy-stripe = "not served".

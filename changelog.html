@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/app.css?v=2.16.6" />
+    <link rel="stylesheet" href="css/app.css?v=2.16.7" />
     <script>
       (function () {
         try {
@@ -86,6 +86,7 @@
             <div class="cl-date"><span class="cl-version">v2.16</span> Aug 07, 2026</div>
             <a href="#v2_16" class="cl-entry-title">Diversions drawn on the map</a>
             <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--ux">UX</span> Stops a diversion skips are marked with dark "switched-off" rings and a "not served · diversion" hover — from the Atlas diff, TfL's prose, or geometry — matching the treatment on <a href="https://atlas.farhan.app" target="_blank" rel="noopener">atlas.farhan.app</a>. A stop can no longer float unexplained.</li>
               <li><span class="cl-tag cl-tag--data">DATA</span> Orphan stops eliminated network-wide — stop lists now come from the Atlas API's canonical served-sequence data instead of TfL's loose stop-association list, removing 31,128 stale entries (route 175 alone carried 52 floating stops). Geometry for routes on an active diversion is held at its real shape instead of absorbing the temporary re-routing.</li>
               <li><span class="cl-tag cl-tag--ux">UX</span> The "Live buses" pill shows a spinner while the first GPS fetch is in flight, and a transient note says when the feed answered with nothing — "No buses tracked on this route right now" vs "Live bus feed unavailable".</li>
               <li><span class="cl-tag cl-tag--fix">FIX</span> Route cards no longer show another route's disruption notice — TfL files one notice onto several lines' feeds (and sometimes misfiles one outright), and the card showed whichever came first. Now only notices valid right now count, the worst wins, and among equals the one naming the route itself is preferred.</li>
@@ -317,8 +318,8 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/about.js?v=2.16.6" defer></script>
-    <script src="js/roadmap.js?v=2.16.6" defer></script>
+    <script src="js/about.js?v=2.16.7" defer></script>
+    <script src="js/roadmap.js?v=2.16.7" defer></script>
     <!-- Inline theme toggle — keeps the changelog page self-contained while
          persisting to the same `app-theme` key the main app reads. -->
     <script>
