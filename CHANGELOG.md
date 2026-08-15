@@ -6,6 +6,18 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.17 — Cleaner defaults & comparison colours
+
+_2026-08-13_
+
+- **UX** Focusing a route now shows a clean line by default — the full stop list and live-bus tracking start OFF per focus (the pills opt in), with only the start and finish stops kept visible as slightly larger rings.
+- **UX** Multi-route comparison gets a designed palette — eight deep, high-contrast hues in the app's own colour language (blue, burnt orange, aqua, violet, mustard, pink, green, plum), in a fixed order validated for colour-vision-deficiency separation and contrast against the basemap. Colours stay sticky per route while selected.
+- **UX** Garage pins now carry three-letter operator initials — SCL Stagecoach, ARL Arriva, GAL Go-Ahead, TUK Transport UK, FRG First, MLN Metroline, UNO Uno, FAL Falcon.
+- **UX** The floating "Operating from here" label is gone — the operating garage's pin itself now lights up with an accent ring and glow when its route is focused (the wording remains as a hover tooltip).
+- **NEW** TVR joins PVR on the route card, in the garage popup and in the XLSX export — Total Vehicle Requirement, the peak requirement plus spares allowance (PVR × 1.13, rounded down).
+
+---
+
 ## v2.16 — Diversions drawn on the map
 
 _2026-08-07_

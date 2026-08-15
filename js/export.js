@@ -20,10 +20,10 @@
  * erroring into the console.
  */
 
-import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.16.7';
-import { state, exportBtn } from './state.js?v=2.16.7';
-import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.16.7';
-import { getPinnedRouteIds } from './search.js?v=2.16.7';
+import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.17.0';
+import { state, exportBtn } from './state.js?v=2.17.0';
+import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.17.0';
+import { getPinnedRouteIds } from './search.js?v=2.17.0';
 
 // Threshold above which we warn the user before assembling a full-network
 // export. Filtered exports usually return well under this, and skip the
@@ -161,6 +161,7 @@ function buildRouteRows(routes, stopCounts) {
         frequency:                 str(props.frequency),
         length_band:               str(props.lengthBand),
         pvr:                       num(cls.pvr),
+        tvr:                       Number.isFinite(cls.pvr) ? Math.floor(cls.pvr * 1.13) : null,
         stop_count:                num(stopCounts.get(id)),
         garage_code:               str(cls.garageCode),
         garage_name:               str(cls.garageName),

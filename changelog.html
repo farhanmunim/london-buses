@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/app.css?v=2.16.7" />
+    <link rel="stylesheet" href="css/app.css?v=2.17.0" />
     <script>
       (function () {
         try {
@@ -48,7 +48,7 @@
         </div>
         <span class="tb-name">London Buses</span>
       </a>
-      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.16</a>
+      <a class="tb-ver" href="changelog.html" title="View changelog" aria-current="page">v2.17</a>
 
       <div style="flex:1"></div>
 
@@ -81,6 +81,17 @@
             <span class="cl-tag cl-tag--data">DATA</span> data &amp; coverage ·
             <span class="cl-tag cl-tag--ux">UX</span> user-facing improvement.
           </p>
+
+          <article class="cl-entry">
+            <div class="cl-date"><span class="cl-version">v2.17</span> Aug 13, 2026</div>
+            <a href="#v2_17" class="cl-entry-title">Cleaner defaults &amp; comparison colours</a>
+            <ul class="cl-list">
+              <li><span class="cl-tag cl-tag--ux">UX</span> Focusing a route shows a clean line by default — stops and live buses start off (the pills opt in), with only the start and finish stops kept visible.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Multi-route comparison gets a designed palette — eight deep, high-contrast colours in a fixed order, validated for colour-blind separation and basemap contrast, sticky per route.</li>
+              <li><span class="cl-tag cl-tag--ux">UX</span> Garage pins carry three-letter operator initials (SCL, ARL, GAL, TUK, FRG, MLN, UNO, FAL), and the operating garage now lights up with an accent ring instead of a floating "Operating from here" label.</li>
+              <li><span class="cl-tag cl-tag--new">NEW</span> TVR joins PVR on the route card, garage popup and XLSX export — Total Vehicle Requirement (PVR × 1.13, rounded down).</li>
+            </ul>
+          </article>
 
           <article class="cl-entry">
             <div class="cl-date"><span class="cl-version">v2.16</span> Aug 07, 2026</div>
@@ -318,8 +329,8 @@
       <span>Built by <a href="https://farhan.app" target="_blank" rel="noopener" style="display: inline">Farhan</a></span>
     </footer>
 
-    <script src="js/about.js?v=2.16.7" defer></script>
-    <script src="js/roadmap.js?v=2.16.7" defer></script>
+    <script src="js/about.js?v=2.17.0" defer></script>
+    <script src="js/roadmap.js?v=2.17.0" defer></script>
     <!-- Inline theme toggle — keeps the changelog page self-contained while
          persisting to the same `app-theme` key the main app reads. -->
     <script>

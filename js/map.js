@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.16.7';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.16.7';
+import { state } from './state.js?v=2.17.0';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.17.0';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -106,6 +106,7 @@ let _overviewGeoJson = null;
 let _outlineLayer    = null; // multi-route dark outline
 let _routeLayer      = null;
 let _stopsLayer      = null;
+let _terminalLayer   = null; // start + finish stops — always visible, outside the Stops toggle
 let _stopsVisible    = true;
 let _identifyPopup   = null;
 let _routeActive     = false; // true while a single or multi route is displayed
@@ -295,6 +296,7 @@ export function clearRoute() {
   if (_outlineLayer)  { _map.removeLayer(_outlineLayer); _outlineLayer  = null; }
   if (_routeLayer)    { _map.removeLayer(_routeLayer);   _routeLayer    = null; }
   if (_stopsLayer)    { _map.removeLayer(_stopsLayer);   _stopsLayer    = null; }
+  if (_terminalLayer) { _map.removeLayer(_terminalLayer); _terminalLayer = null; }
   if (_identifyPopup) { _map.closePopup(_identifyPopup); _identifyPopup = null; }
   _stopsVisible = true;
   const wasActive = _routeActive;
@@ -322,7 +324,32 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
     ).addTo(_map);
   }
 
-  _stopsLayer = L.layerGroup();
+  // Terminal stops — the stop nearest each end of the drawn line. They stay
+  // visible even with the Stops layer off (the new default), so a focused
+  // route always shows where it starts and finishes.
+  const terminalFeatures = new Set();
+  if (features.length && stopsFeatures.length) {
+    const parts = [];
+    for (const f of features) {
+      const g = f.geometry;
+      for (const part of (g.type === 'MultiLineString' ? g.coordinates : [g.coordinates])) parts.push(part);
+    }
+    const ends = parts.length
+      ? [parts[0][0], parts[parts.length - 1][parts[parts.length - 1].length - 1]]
+      : [];
+    for (const ep of ends) {
+      let best = null, bd = Infinity;
+      for (const f of stopsFeatures) {
+        const [lon, lat] = f.geometry.coordinates;
+        const d = (lon - ep[0]) ** 2 + (lat - ep[1]) ** 2;
+        if (d < bd) { bd = d; best = f; }
+      }
+      if (best) terminalFeatures.add(best);
+    }
+  }
+
+  _stopsLayer    = L.layerGroup();
+  _terminalLayer = L.layerGroup();
   for (const f of stopsFeatures) {
     const [lon, lat] = f.geometry.coordinates;
     const p         = f.properties;
@@ -336,8 +363,10 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
       .split(',').map(r => r.trim()).filter(Boolean)
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
+    const isTerminal = terminalFeatures.has(f);
     const marker = L.circleMarker([lat, lon], {
-      radius: 5, fillColor: '#fff', color, weight: 2, opacity: 1, fillOpacity: 1, renderer: _stopsCanvas,
+      radius: isTerminal ? 7 : 5, fillColor: '#fff', color,
+      weight: isTerminal ? 3 : 2, opacity: 1, fillOpacity: 1, renderer: _stopsCanvas,
     });
 
     const displayName = indicator ? `${name} <span style="opacity:.55">(${indicator})</span>` : name;
@@ -370,10 +399,11 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
       }, 0);
     });
 
-    _stopsLayer.addLayer(marker);
+    (isTerminal ? _terminalLayer : _stopsLayer).addLayer(marker);
   }
 
   _stopsLayer.addTo(_map);
+  _terminalLayer.addTo(_map);
   _stopsVisible = true;
   if (!_stopsPref)    setStopsVisible(false);
   if (!_routesVisible) setRoutesVisible(false); // re-apply when user has Routes off
@@ -568,7 +598,7 @@ function renderDiversionOverlay(dir, color, lineFeatures = [], stopsFeatures = [
 let _vehiclesLayer   = null;
 let _vehiclesTimer   = null;
 let _vehiclesRouteId = null;
-let _vehiclesEnabled = true;  // "Live buses" toggle — reset to ON per focus by toggles.js
+let _vehiclesEnabled = false; // "Live buses" toggle — OFF by default per focus (toggles.js resets it)
 
 const VEHICLE_POLL_MS = 15_000;
 
@@ -577,13 +607,26 @@ export function startLiveVehicles(routeId) {
   _vehiclesRouteId = String(routeId).toUpperCase();
   // Announce that live tracking has a target — toggles.js shows the
   // "Live buses" pill on this (single-route focus only; comparison mode
-  // never starts a poll, so the pill stays hidden there).
-  document.dispatchEvent(new CustomEvent('map:livevehiclesfocus', { detail: true }));
+  // never starts a poll, so the pill stays hidden there). The detail is the
+  // route id, not a bare true: the toggle's resume path re-enters here, and
+  // the listener must be able to tell "same focus, resumed" (keep the pill
+  // state) from "new focus" (reset it to off).
+  document.dispatchEvent(new CustomEvent('map:livevehiclesfocus', { detail: _vehiclesRouteId }));
   if (!_vehiclesEnabled) return; // remember the route; the toggle can start us later
-  // The first fetch of a focus announces itself so the "Live buses" pill can
-  // show a spinner while the feed answers (toggles.js listens); the recurring
-  // 15 s refreshes stay silent. detail.count on completion: 0 = feed fine but
-  // nothing tracked, null = feed unreachable — the pill words those apart.
+  _startVehiclePoll();
+}
+
+// The poll itself — shared by a fresh focus (startLiveVehicles) and the
+// toggle's resume path (setLiveVehiclesEnabled), which must NOT re-enter the
+// focus lifecycle: re-dispatching the focus event would make the resume look
+// like a new focus and knock the pill straight back off.
+// The first fetch of a (re)start announces itself so the "Live buses" pill
+// can show a spinner while the feed answers (toggles.js listens); the
+// recurring 15 s refreshes stay silent. detail.count on completion: 0 = feed
+// fine but nothing tracked, null = feed unreachable — the pill words those
+// apart.
+function _startVehiclePoll() {
+  if (_vehiclesTimer || !_vehiclesRouteId) return;
   let first = true;
   const poll = async () => {
     const id = _vehiclesRouteId;
@@ -631,7 +674,7 @@ export function setLiveVehiclesEnabled(on) {
     if (_vehiclesLayer) { _map?.removeLayer(_vehiclesLayer); _vehiclesLayer = null; }
     _vehiclesRouteId = id; // keep the focus so re-enabling restarts in place
   } else if (id && _routeActive && !_vehiclesTimer) {
-    startLiveVehicles(id);
+    _startVehiclePoll(); // resume in place — no focus re-dispatch
   }
 }
 
@@ -682,23 +725,24 @@ function renderVehicles(vehicles, registry = {}) {
 
 // ── Multi-route comparison colours ────────────────────────────────────────────
 // When 2+ routes are pinned they get *distinct* colours (not operator/type
-// colours) so overlapping lines stay distinguishable. Fixed categorical
-// order — validated for colour-vision-deficiency separation (worst adjacent
-// pair ΔE 13.3) and for the cream Voyager basemap; the endpoint labels are
-// the direct-label relief for the lower-contrast amber slot. Assignment is
-// sticky per route while it stays selected: removing one pill never repaints
-// the survivors (colour follows the route, not its position). Selections
-// beyond 8 routes wrap the palette — at that point the endpoint labels do
-// the disambiguating.
+// colours) so overlapping lines stay distinguishable. Deep 600/700-step hues
+// in the app's own palette language, in a fixed categorical order validated
+// against the cream Voyager basemap (adjacent-pair CVD ΔE ≥ 8.4, normal ΔE
+// ≥ 20.5, contrast ≥ 3:1 for all but aqua at 2.6 — the permanent endpoint
+// route-number labels are that slot's relief). Assignment is sticky per
+// route while it stays selected: removing one pill never repaints the
+// survivors (colour follows the route, not its position). Selections beyond
+// 8 routes wrap the palette — at that point the endpoint labels do the
+// disambiguating.
 const MULTI_ROUTE_COLORS = [
-  '#2a78d6', // blue
-  '#c98500', // amber
-  '#199e70', // teal
-  '#e34948', // red
-  '#008300', // green
-  '#d55181', // magenta
-  '#4a3aa7', // violet
-  '#eb6834', // orange
+  '#2563eb', // blue
+  '#c2410c', // burnt orange
+  '#199e70', // aqua
+  '#7c3aed', // violet
+  '#a16207', // mustard
+  '#db2777', // pink
+  '#15803d', // green
+  '#86198f', // plum
 ];
 const _multiRouteSlots = new Map(); // routeId (uppercase) → palette slot
 
@@ -868,21 +912,27 @@ export function setPaintMode(mode) {
 // canonical OPERATOR_COLORS palette above so the garage pin reads the same
 // hue as the route line, the filter pill dot, and the operator card swatch.
 const OPERATOR_META = {
-  'Arriva':            { short: 'AR', color: OPERATOR_COLORS['Arriva']            },
-  'First':             { short: 'FR', color: OPERATOR_COLORS['First']             },
-  'Go-Ahead':          { short: 'GO', color: OPERATOR_COLORS['Go-Ahead']          },
-  'Metroline':         { short: 'ML', color: OPERATOR_COLORS['Metroline']         },
-  'Stagecoach':        { short: 'SC', color: OPERATOR_COLORS['Stagecoach']        },
-  'Stagecoach London': { short: 'SC', color: OPERATOR_COLORS['Stagecoach London'] },
-  'Transport UK':      { short: 'TU', color: OPERATOR_COLORS['Transport UK']      },
-  'RATP':              { short: 'RP', color: OPERATOR_COLORS['RATP']              },
-  'RATP Dev':          { short: 'RP', color: OPERATOR_COLORS['RATP Dev']          },
-  'Uno':               { short: 'UN', color: OPERATOR_COLORS['Uno']               },
+  'Arriva':            { short: 'ARL', color: OPERATOR_COLORS['Arriva']            },
+  'Arriva London':     { short: 'ARL', color: OPERATOR_COLORS['Arriva London']     },
+  'First':             { short: 'FRG', color: OPERATOR_COLORS['First']             },
+  'First London':      { short: 'FRG', color: OPERATOR_COLORS['First London']      },
+  'Go-Ahead':          { short: 'GAL', color: OPERATOR_COLORS['Go-Ahead']          },
+  'Go-Ahead London':   { short: 'GAL', color: OPERATOR_COLORS['Go-Ahead London']   },
+  'Metroline':         { short: 'MLN', color: OPERATOR_COLORS['Metroline']         },
+  'Stagecoach':        { short: 'SCL', color: OPERATOR_COLORS['Stagecoach']        },
+  'Stagecoach London': { short: 'SCL', color: OPERATOR_COLORS['Stagecoach London'] },
+  'Transport UK':      { short: 'TUK', color: OPERATOR_COLORS['Transport UK']      },
+  'RATP':              { short: 'RTP', color: OPERATOR_COLORS['RATP']              },
+  'RATP Dev':          { short: 'RTP', color: OPERATOR_COLORS['RATP Dev']          },
+  'Uno':               { short: 'UNO', color: OPERATOR_COLORS['Uno']               },
+  'Uno Buses':         { short: 'UNO', color: OPERATOR_COLORS['Uno Buses']         },
+  'Falcon':            { short: 'FAL', color: OPERATOR_FALLBACK_COLOR              },
+  'Falcon Buses':      { short: 'FAL', color: OPERATOR_FALLBACK_COLOR              },
 };
 function operatorMeta(name) {
-  if (!name) return { short: '??', color: '#475569' };
+  if (!name) return { short: '???', color: '#475569' };
   if (OPERATOR_META[name]) return OPERATOR_META[name];
-  const short = name.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || '??';
+  const short = name.replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || '???';
   return { short, color: '#475569' };
 }
 
@@ -985,6 +1035,7 @@ export function renderGarages(garages, garageRoutes = {}) {
       `<dl class="map-popup__meta">` +
         `<div><dt data-tip="Operator group. Source: londonbusroutes.net. Freshness: as at last weekly refresh.">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
         `<div><dt data-tip="Peak Vehicle Requirement (garage total). Source: londonbusroutes.net, via the Atlas API. Freshness: refreshed daily.">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Total Vehicle Requirement — PVR plus spares allowance (PVR × 1.13, rounded down).">TVR</dt><dd>${Number.isFinite(totalPvr) ? Math.floor(totalPvr * 1.13) : '–'}</dd></div>` +
         capRow +
         `<div><dt data-tip="Share of the garage's PVR run by battery-electric routes. Source: derived from per-route propulsion. Freshness: refreshed weekly.">Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +
         `<div><dt data-tip="Number of routes operated from this garage. Source: londonbusroutes.net. Freshness: as at last weekly refresh.">Routes operated</dt><dd>${count}</dd></div>` +
@@ -1027,6 +1078,25 @@ export function renderGarages(garages, garageRoutes = {}) {
   }
 }
 
+// Toggle the accent highlight on a garage pin. The old permanent
+// "Operating from here" tooltip cluttered the map — the pin itself now
+// announces it: accent ring + glow + slight scale (see
+// .garage-marker-pin--focus in app.css), with the same wording moved to a
+// hover tooltip for anyone who wants it spelled out.
+function setGaragePinFocus(entry, active) {
+  const pin = entry.marker.getElement()?.querySelector('.garage-marker-pin');
+  pin?.classList.toggle('garage-marker-pin--focus', active);
+  if (active) {
+    if (!entry.marker.getTooltip()) {
+      entry.marker.bindTooltip('Operating from here', {
+        direction: 'top', offset: [0, -14], className: 'garage-route-tooltip',
+      });
+    }
+  } else if (entry.marker.getTooltip()) {
+    entry.marker.unbindTooltip();
+  }
+}
+
 /**
  * Visually highlight the garage(s) that operate a given route. Passing null
  * clears any active highlight. Used when a single route is focused via search
@@ -1035,47 +1105,21 @@ export function renderGarages(garages, garageRoutes = {}) {
 export function highlightGaragesForRoute(routeId) {
   if (!_allGarages.length) return;
   for (const entry of _allGarages) {
-    const active = routeId != null && entry.routeIds.has(routeId);
-    if (active) {
-      if (!entry.marker.getTooltip()) {
-        entry.marker.bindTooltip('Operating from here', {
-          permanent: true,
-          direction: 'top',
-          offset: [0, -14],
-          className: 'garage-route-tooltip',
-        });
-      }
-      entry.marker.openTooltip();
-    } else if (entry.marker.getTooltip()) {
-      entry.marker.unbindTooltip();
-    }
+    setGaragePinFocus(entry, routeId != null && entry.routeIds.has(routeId));
   }
 }
 
 /**
- * Show the "Operating from here" tooltip on a single garage by code, clearing
- * any others. Used by the "View all routes operated here" CTA in both the
- * map popup and the drawer — the user filters the network to one garage's
- * routes, so the same visual marker that fires when a single route is focused
- * should fire for the chosen garage. Passing null clears the highlight.
+ * Accent-highlight a single garage by code, clearing any others. Used by the
+ * "View all routes operated here" CTA in both the map popup and the drawer —
+ * the user filters the network to one garage's routes, so the same visual
+ * marker that fires when a single route is focused should fire for the
+ * chosen garage. Passing null clears the highlight.
  */
 export function highlightGarageByCode(code) {
   if (!_allGarages.length) return;
   for (const entry of _allGarages) {
-    const active = code != null && entry.garage.code === code;
-    if (active) {
-      if (!entry.marker.getTooltip()) {
-        entry.marker.bindTooltip('Operating from here', {
-          permanent: true,
-          direction: 'top',
-          offset: [0, -14],
-          className: 'garage-route-tooltip',
-        });
-      }
-      entry.marker.openTooltip();
-    } else if (entry.marker.getTooltip()) {
-      entry.marker.unbindTooltip();
-    }
+    setGaragePinFocus(entry, code != null && entry.garage.code === code);
   }
 }
 

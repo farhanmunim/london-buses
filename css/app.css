@@ -390,6 +390,12 @@ a{color:inherit;text-decoration:none}
    tile metrics, just narrower. */
 .rc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px}
 .rc-kpis--five{grid-template-columns:repeat(5,1fr)}
+/* Six tiles (PVR·TVR·Stops·Freq·EWT·MPS) need tighter cells than five —
+   slimmer padding + a notch off the type so 3-digit values don't wrap. */
+.rc-kpis--six{grid-template-columns:repeat(6,1fr);gap:3px}
+.rc-kpis--six .rc-kpi{padding:6px 4px;text-align:center}
+.rc-kpis--six .rc-kpi-l{font-size:8px;letter-spacing:.4px}
+.rc-kpis--six .rc-kpi-v{font-size:11px}
 .rc-kpi{background:var(--surf-s);border:none;border-radius:var(--r-md);padding:7px 9px}
 .rc-kpi-l{font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:2px}
 .rc-kpi-v{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--tx);line-height:1.2}
@@ -713,6 +719,15 @@ a{color:inherit;text-decoration:none}
   opacity:.85;
 }
 [data-theme="dark"] .garage-marker-pin{border-color:hsl(240 6% 20%)}
+/* Focused garage — "operating from here" without the floating label: accent
+   ring + soft glow + slight lift on the pin itself (hover tooltip still
+   spells it out). */
+.garage-marker-pin--focus{
+  border-color:var(--acc);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--acc) 35%, transparent),0 4px 14px color-mix(in srgb, var(--acc) 45%, transparent);
+  transform:scale(1.12);
+}
+.garage-marker-pin--focus:hover{transform:scale(1.16)}
 
 @media (max-width:640px){
   .garage-marker-pin{width:28px;height:28px}

@@ -11,13 +11,13 @@
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.16.7';
-import { opColor, multiRouteColor } from './map.js?v=2.16.7';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.17.0';
+import { opColor, multiRouteColor } from './map.js?v=2.17.0';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
   fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
   fetchLiveVehicles,
-} from './api.js?v=2.16.7';
+} from './api.js?v=2.17.0';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -61,6 +61,7 @@ const ANNUAL_BUSTO = 'TfL publishes annually';
 const TIPS = {
   // Route KPI tiles
   pvr:             tip('Peak Vehicle Requirement — buses needed at peak',     SOURCE.ATLAS_LBR, DAILY),
+  tvr:             tip('Total Vehicle Requirement — PVR plus spares allowance (PVR × 1.13, rounded down)', 'derived from PVR', DAILY),
   stops:           tip('',                                                    SOURCE.TFL_API, WEEKLY),
   freq:            tip('H = 5+ buses/hour, L = fewer',                        SOURCE.TFL_API, WEEKLY),
   // Route detail rows
@@ -337,6 +338,8 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
     else          { chipEl.textContent = '';      chipEl.hidden = true;  }
   }
   set('[data-rc-pvr]',        classification?.pvr ?? 'XXX');
+  // TVR = PVR + spares allowance, industry convention PVR × 1.13 floored.
+  set('[data-rc-tvr]',        Number.isFinite(classification?.pvr) ? Math.floor(classification.pvr * 1.13) : 'XXX');
   set('[data-rc-stops]',      Number.isFinite(stopCount) ? stopCount.toLocaleString() : '—');
   set('[data-rc-freq]',       FREQ_MAP[classification?.frequency]  ?? 'XXX');
   set('[data-rc-deck]',       DECK_MAP[classification?.deck]       ?? 'XXX');

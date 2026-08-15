@@ -8,8 +8,8 @@
  * without persisting that transient state.
  */
 
-import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.16.7';
-import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.16.7';
+import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.17.0';
+import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.17.0';
 
 function wire(btn, { storageKey, apply, syncEvent, persistWhen }) {
   if (!btn) return;
@@ -46,12 +46,12 @@ wire(toggleGaragesBtn, {
 });
 
 // Stops toggle: visible only while a route is focused. Every fresh route
-// focus force-resets the stops preference to ON — users expect to see stops
-// appear when they click a route. A persistent "off" setting from an old
-// session was defeating that expectation.
+// focus resets to OFF — a focused route shows only its line plus start and
+// finish stops (drawn outside this toggle by map.js), keeping the view
+// clean by default; the pill turns the full stop list on for this focus.
 if (toggleStopsBtn) {
   toggleStopsBtn.hidden = true;
-  let stopsOn = true;
+  let stopsOn = false;
 
   const paint = (on) => {
     toggleStopsBtn.classList.toggle('on', on);
@@ -69,10 +69,7 @@ if (toggleStopsBtn) {
   document.addEventListener('app:routefocuschange', e => {
     toggleStopsBtn.hidden = !e.detail;
     if (e.detail) {
-      // Reset to ON whenever a route is re-focused so the user always sees
-      // stops by default — the button is their escape hatch, not a sticky
-      // cross-session preference.
-      stopsOn = true;
+      stopsOn = false;
       paint(stopsOn);
       setStopsPreference(stopsOn);
     }
@@ -80,11 +77,11 @@ if (toggleStopsBtn) {
 }
 
 // Live-buses toggle: same lifecycle as Stops — visible only while a route
-// is focused, reset to ON per focus (the button pauses the GPS poll for
-// this focus, it isn't a sticky preference).
+// is focused, reset to OFF per focus (live tracking is opt-in for each
+// focus; the pill starts the GPS poll on demand).
 if (toggleLiveBtn) {
   toggleLiveBtn.hidden = true;
-  let liveOn = true;
+  let liveOn = false;
 
   const paint = (on) => {
     toggleLiveBtn.classList.toggle('on', on);
@@ -140,13 +137,21 @@ if (toggleLiveBtn) {
 
   // Driven by the vehicles lifecycle, not route focus — comparison mode
   // focuses routes without live tracking, and the pill must not show there.
+  // A NEW focus starts with tracking OFF (the pill is the opt-in); the same
+  // event re-fires when the toggle itself resumes the poll (detail = same
+  // route id), and that must not knock the pill back off.
+  let liveFocusRoute = null;
   document.addEventListener('map:livevehiclesfocus', e => {
     toggleLiveBtn.hidden = !e.detail;
-    if (!e.detail) { setLoading(false); toast(null); }
-    if (e.detail && !liveOn) {
-      liveOn = true;
+    const route = e.detail || null;
+    const isNewFocus = route !== liveFocusRoute;
+    liveFocusRoute = route;
+    if (!route) { setLoading(false); toast(null); return; }
+    if (isNewFocus) {
+      setLoading(false); toast(null);
+      liveOn = false;
       paint(liveOn);
-      setLiveVehiclesEnabled(liveOn);
+      setLiveVehiclesEnabled(false);
     }
   });
 }
