@@ -1160,7 +1160,15 @@ async function renderNetworkMap(){
   st.panelOpen = false;                        // filters start collapsed on every visit
   const typeInfo = new Map(routes.map(r => [r.name.toUpperCase(), r.type]));
   const TYPE_COLORS = { regular:'#dc2626', night:'#6d28d9', twentyfour:'#0e7490', school:'#15803d' };
-  const focusColor = name => FOCUS_COLORS[st.pills.indexOf(name) % FOCUS_COLORS.length];
+  /* Focus colours are per operating GARAGE, not per route: routes sharing a
+     garage share a colour, and each new garage in the comparison takes the
+     next palette slot. Routes Atlas can't tie to a garage get their own. */
+  const garKey = p => String(meta?.[p]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean)[0] ?? '·' + p;
+  const focusColor = name => {
+    const seen = [];
+    for(const p of st.pills){ const k = garKey(p); if(!seen.includes(k)) seen.push(k); }
+    return FOCUS_COLORS[Math.max(0, seen.indexOf(garKey(name))) % FOCUS_COLORS.length];
+  };
   const allNames = new Set((ov.features ?? []).map(f => f.properties?.name).filter(Boolean));
 
   const passes = (name) => {
@@ -1211,10 +1219,24 @@ async function renderNetworkMap(){
     garageLayer = L.layerGroup();
     for(const g of garages ?? []){
       if(!garageLocOk(g)) continue;
+      // Focused routes: trust route-meta's garage (authoritative, matches the
+      // card) and only fall back to the garage's own route list when meta has
+      // no garage — the garage lists can carry stale claims (e.g. LI × 86).
+      const belongs = p => {
+        const codes = String(meta?.[p]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
+        return codes.length ? codes.includes(String(g.code).toUpperCase())
+                            : (g.routes ?? []).some(r => String(r).toUpperCase() === p);
+      };
+      if(st.pills.length){
+        const tints = [...new Set(st.pills.filter(belongs).map(focusColor))];
+        if(!tints.length) continue;
+        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints) })
+          .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+          .addTo(garageLayer);
+        continue;
+      }
       if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))) continue;
-      const tints = st.pills.length
-        ? st.pills.filter(p => (g.routes ?? []).some(r => String(r).toUpperCase() === p)).map(focusColor)
-        : null;
+      const tints = null;
       L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints?.length ? tints : null) })
         .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
         .addTo(garageLayer);
@@ -1368,7 +1390,22 @@ async function renderNetworkMap(){
       : `<div class="nm-nores">No route matches “${esc(nmq.value.trim())}”.</div>`;
   }
   function commit(name){ addFocus(name); nmq.value = ''; qClear.hidden = true; hideSugg(); nmq.focus(); }
-  nmq.addEventListener('input', syncSugg);
+  const upsSet = new Set(routeList.map(r => r.up));
+  /* Comma-separated multi-select: "150,175" adds each exact match as it
+     completes (typed or pasted); tokens that match nothing stay in the box. */
+  function takeTokens(all){
+    const parts = nmq.value.split(/[,;]+/);
+    const last = all ? '' : (parts.pop() ?? '');
+    const keep = [];
+    for(const p of parts){
+      const t = p.trim().toUpperCase();
+      if(!t) continue;
+      if(upsSet.has(t)){ if(!st.pills.includes(t)) addFocus(t); }
+      else keep.push(p.trim());
+    }
+    nmq.value = [...keep, last.trimStart()].filter(Boolean).join(', ');
+  }
+  nmq.addEventListener('input', () => { if(/[,;]/.test(nmq.value)) takeTokens(false); syncSugg(); });
   nmq.addEventListener('keydown', e => {
     if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
       if(!sugg.length) return;
@@ -1377,6 +1414,7 @@ async function renderNetworkMap(){
       [...suggBox.querySelectorAll('.nm-sug')].forEach((b,i) => b.classList.toggle('act', i === suggIdx));
       suggBox.querySelector('.nm-sug.act')?.scrollIntoView({ block:'nearest' });
     } else if(e.key === 'Enter'){
+      if(/[,;]/.test(nmq.value)){ takeTokens(true); syncSugg(); return; }
       const v = nmq.value.trim().toUpperCase();
       const pick = sugg.find(r => r.up === v) ?? sugg[suggIdx] ?? sugg[0];
       if(pick) commit(pick.up);

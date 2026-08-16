@@ -11,6 +11,9 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 _2026-08-16_
 
 - **UX** Garage pins on v2's Map page now follow what you're looking at — focused routes show their garages, active filters show only garages still operating a visible route, and with nothing active every garage shows. Garages are **on by default**, and while comparing routes each garage pin is **tinted the same colour as its route's line** (splitting diagonally when one garage runs two focused routes), so "operated from here" reads at a glance.
+- **UX** Map search accepts **comma-separated lists** — type or paste "150,175" and each route is added as it completes; tokens that match nothing stay in the box.
+- **UX** Comparison colours are keyed by **operating garage**, not per route — routes sharing a garage share one colour (and a solid pin), and each new garage takes the next palette slot, so colour = "operated from here".
+- **DATA** Focused-route garage pins now trust route-meta's authoritative garage allocation, falling back to the garage's own route list only when meta has none — the garage lists can carry stale claims (Lea Interchange's list wrongly includes route 86; observed vehicle assignments confirm 86 runs from Romford (NS) only).
 - **UX** The Map page gains a **colour key** — a legend under the Colour by control listing every operator (or route type) with its line colour; it steps aside while routes are focused, where the colours belong to the route cards.
 - **FIX** Faded background routes are fully inert while routes are focused — no pointer cursor, and clicking them no longer silently adds a route.
 - **UX** The "Colour by" control sits on its own aligned row; **Stops** moves to the end of the nav; the experimental tracked-reliability note no longer crowds the bottom of its card.
