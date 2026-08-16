@@ -118,9 +118,14 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .statusline .reason{color:var(--tx2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 @media(min-width:560px){.facts{grid-template-columns:repeat(6,1fr)}}
-.fact{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r-sm);padding:9px 10px}
-.fact .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu)}
-.fact .v{font-family:var(--mono);font-weight:600;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* min-width:0 matters: grid items default to min-width:auto, so a long
+   no-wrap value (vehicle spec strings) would force its column wider than
+   the grid and break the page edge. The value scrolls inside the tile
+   instead — swipe to read the tail. */
+.fact{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r-sm);padding:9px 10px;min-width:0}
+.fact .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.fact .v::-webkit-scrollbar{display:none}
 .kv{display:flex;flex-direction:column}
 .kv>div{display:flex;justify-content:space-between;gap:14px;padding:9px 14px;border-top:1px solid var(--bd);font-size:13.5px}
 .kv>div:first-child{border-top:none}
@@ -129,7 +134,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .kv .v.mono{font-family:var(--mono);font-weight:600;font-size:13px}
 #map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:#eee9e2;position:relative;z-index:0}
 @media(min-width:760px){#map{height:380px}}
-.mapctl{display:flex;gap:8px;margin-top:8px}
+.mapctl{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
 .seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
 .seg button{font-size:12.5px;font-weight:600;color:var(--tx2);border-radius:7px;padding:5px 12px}
 .seg button.on{background:var(--surf);color:var(--tx);box-shadow:var(--sh)}
@@ -689,7 +694,9 @@ async function renderRouteDetail(name){
     const rec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name];
     const out = rec?.outbound ?? [];
     if(out.length >= 2){
-      document.getElementById('dTermini').textContent = `${out[0].name} → ${out[out.length-1].name}`;
+      // TfL stop names occasionally carry sort-hack prefixes (".Russell Square")
+      const clean = n => String(n ?? '').replace(/^[.\s#>]+/, '');
+      document.getElementById('dTermini').textContent = `${clean(out[0].name)} → ${clean(out[out.length-1].name)}`;
     }
   });
 }
