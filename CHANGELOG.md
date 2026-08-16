@@ -6,6 +6,20 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.18 — Readable maps everywhere
+
+_2026-08-16_
+
+- **UX** Place and road names now sit **above** the route lines on every map — the basemap is drawn without labels and CARTO's matching labels-only tiles render in their own layer over the lines. One set of names, never doubled, no longer buried under thick polylines. Applies to the main app and every v2 map view.
+- **UX** v2's Map page redesigned around one floating panel: a real search **typeahead** (suggestions with operator and type — typing "25" no longer grabs routes 2 and 5), multi-route focus with colour-keyed cards, grouped multi-select filters that expand in place, and a hover that stays quiet on faded routes — while routes are focused, only they answer with a tooltip, and filtered-out routes leave the map entirely.
+- **UX** All v2 mini maps are now built by one shared constructor — same tiles, same single-line attribution, same behaviour — and every map that can show a garage shows the two-line operator/code pin. Where Atlas can't place a garage (its record only carries the operating company's registered-office postcode, or the route has no garage link yet), the map says so in a note instead of pinning the wrong spot or leaving a silent gap.
+- **UX** v2 now lands on the **Map** page on desktop screens (and Map leads the desktop nav); phones land on Routes as before. An explicit Routes visit is respected either way.
+- **NEW** Route pages gain a **Tracked reliability** card — Atlas's own EWT/OTD v2 estimate from continuously tracking every bus via BODS (observed vs scheduled waits, on-time departures with the full outcome breakdown, and the measured day with its confidence grade). Clearly badged **experimental** and not comparable to the TfL QSI figures above it; rebuilt daily.
+- **FIX** v2 operator colours — "First Bus London" and "Transport UK London Bus (RATP)" rendered fallback grey because Atlas rewords operator names; both now resolve to their brand colours and correct initials (FRG, TUK), and future rewordings degrade to a prefix match instead of grey.
+- **NEW** Garage pages show a **zero-emission KPI** — the share of the garage's routes running electric or hydrogen.
+
+---
+
 ## v2.17 — Cleaner defaults & comparison colours
 
 _2026-08-13_

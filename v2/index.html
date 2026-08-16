@@ -215,31 +215,34 @@ main.fullbleed{max-width:none;padding:0}
 .netmap-wrap{position:relative;height:calc(100dvh - 53px - var(--tab-h) - env(safe-area-inset-bottom))}
 @media(min-width:760px){.netmap-wrap{height:calc(100dvh - 53px)}}
 #netmap{position:absolute;inset:0;background:#eee9e2;z-index:0}
-.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;gap:8px;pointer-events:none}
-.netmap-panel>*{pointer-events:auto}
-@media(min-width:760px){.netmap-panel{right:auto;width:320px;max-height:calc(100% - 24px)}}
-.netmap-search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid var(--bd2);border-radius:var(--r);padding:9px 13px;box-shadow:0 2px 12px rgba(28,25,23,.09)}
-.netmap-search input{flex:1;border:none;outline:none;background:none;font-size:15px;min-width:0}
-.netmap-search svg{color:var(--mu);flex:none}
-.netmap-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.netmap-chips::-webkit-scrollbar{display:none}
-@media(min-width:760px){.netmap-chips{flex-wrap:wrap;overflow:visible}}
-.netmap-chips .chip{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);box-shadow:0 1px 6px rgba(28,25,23,.08)}
-.netmap-chips .chip.on{background:var(--tx)}
-.netmap-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.netmap-count{font-size:12px;font-weight:600;color:var(--tx2);background:rgba(255,255,255,.95);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;box-shadow:0 1px 6px rgba(28,25,23,.08)}
-.netmap-card{background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:0 4px 18px rgba(28,25,23,.13)}
-.netmap-card .close{float:right;color:var(--mu);padding:2px;border-radius:6px}
-.netmap-card .close:hover{color:var(--tx)}
-.netmap-search{flex-wrap:wrap}
-.nm-pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-weight:600;font-size:12px;background:var(--pc);color:#fff;border-radius:7px;padding:3px 5px 3px 8px}
-.nm-pill button{color:rgba(255,255,255,.85);display:grid;place-items:center;padding:2px;border-radius:4px}
-.nm-pill button:hover{color:#fff;background:rgba(255,255,255,.18)}
+[hidden]{display:none!important}
+.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
+@media(min-width:760px){.netmap-panel{right:auto;width:342px}}
+.nm-search{display:flex;align-items:center;gap:9px;padding:11px 13px}
+.nm-search svg{color:var(--mu);flex:none}
+.nm-search input{flex:1;border:none;outline:none;background:none;font-size:15px;min-width:0}
+.nm-search .clear{color:var(--mu);padding:2px;border-radius:6px}
+.nm-search .clear:hover{color:var(--tx)}
+.nm-sugg{border-top:1px solid var(--bd);max-height:36dvh;overflow-y:auto;padding:5px}
+.nm-sug{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:7px 8px;border-radius:9px;font-size:12.5px;color:var(--tx2);cursor:pointer}
+.nm-sug .rnum{min-width:38px;height:24px;font-size:12px;flex:none}
+.nm-sug .op{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-sug .ty{margin-left:auto;font-size:11px;color:var(--mu);flex:none;padding-left:8px}
+.nm-sug.act,.nm-sug:hover{background:var(--bg)}
+.nm-nores{padding:9px 10px;font-size:12.5px;color:var(--mu)}
+.nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
+.nm-lbl{font-size:11px;color:var(--mu);font-weight:600;margin-left:auto}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
-.netmap-pop{background:rgba(255,255,255,.98);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:var(--r);padding:12px 13px;box-shadow:0 8px 28px rgba(28,25,23,.16);display:flex;flex-direction:column;gap:11px;max-height:46dvh;overflow-y:auto}
+.expchip{display:inline-block;vertical-align:1px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px}
+.nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
-.nm-cards{display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:38dvh}
+.nm-body{border-top:1px solid var(--bd);overflow-y:auto;padding:9px 11px;display:flex;flex-direction:column;gap:8px}
+.netmap-card{position:relative;border:1px solid var(--bd);border-radius:11px;padding:10px 12px;background:#fff}
+.netmap-card .close{position:absolute;top:8px;right:8px;color:var(--mu);padding:3px;border-radius:6px}
+.netmap-card .close:hover{color:var(--tx);background:var(--bg)}
+.nm-foot{display:flex;align-items:center;gap:8px;padding:9px 13px;border-top:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--tx2)}
+.nm-foot .reset{margin-left:auto;color:var(--acc);font-weight:600;font-size:12px}
 
 /* leaflet touches */
 .leaflet-container{font-family:var(--sans)}
@@ -260,8 +263,8 @@ main.fullbleed{max-width:none;padding:0}
       London Buses <small>v2</small>
     </a>
     <nav class="nav-desktop" id="navDesktop">
-      <a href="#/" data-nav="routes">Routes</a>
       <a href="#/map" data-nav="map">Map</a>
+      <a href="#/" data-nav="routes">Routes</a>
       <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
@@ -321,6 +324,7 @@ const D = {
   liveStatus:  (r) => fetch(API + '/live/status?route=' + encodeURIComponent(r)) // never cached — re-polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
   perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
+  relTracked:  (r) => get('/history/reliability-tracked?route=' + encodeURIComponent(r) + '&limit=14'),
   liveVehicles:(r) => fetch(API + '/live/vehicles?line=' + encodeURIComponent(r)) // never cached — polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
   arrivals:    (s) => fetch(API + '/live/arrivals?stop=' + encodeURIComponent(s)) // never cached — polled
@@ -369,10 +373,15 @@ const cmpRoute = (a,b) => { const na=parseInt(a,10), nb=parseInt(b,10);
 
 const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:'School' };
 const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
-const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
-const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
-const opInitials = n => OP_INITIALS[n] ?? String(n ?? '?').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
-const opColor    = n => OP_COLORS[n] ?? '#57534e';
+const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
+const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus (RATP)':'#db2777','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
+/* Atlas sometimes rewords operator names ("First London" became "First Bus
+   London") — fall back to the longest dictionary key the name starts with,
+   so a rewording degrades to the right colour, not to fallback grey. */
+const opKey = (dict, n) => dict[n] != null ? n
+  : Object.keys(dict).sort((a,b) => b.length - a.length).find(k => String(n ?? '').startsWith(k));
+const opInitials = n => { const k = opKey(OP_INITIALS, n); return k ? OP_INITIALS[k] : String(n ?? '?').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase(); };
+const opColor    = n => { const k = opKey(OP_COLORS, n); return k ? OP_COLORS[k] : '#57534e'; };
 
 /* One garage pin for every map: operator initials over the garage code —
    "GAL / (Q)" — so both identities read at a glance. */
@@ -381,6 +390,31 @@ function garagePinIcon(g, size = 38){
     html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${opColor(g.operator)};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
       <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
+}
+/* A garage is pinnable only when Atlas has its real site location. When
+   postcodeSource is "company" the lat/lng is the operating company's
+   registered office — pinning that as the garage would be wrong data. */
+const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g.postcodeSource !== 'company';
+
+/* Base tiles for every map view: a label-free basemap plus CARTO's matching
+   labels-only tiles in their own pane ABOVE the route lines (z420, below
+   markers) — exactly one set of place/road names, never doubled, and never
+   buried under thick polylines. */
+function baseTiles(map){
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(map);
+  const lp = map.createPane('placelabels');
+  lp.style.zIndex = 420;
+  lp.style.pointerEvents = 'none';
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { maxZoom:19, pane:'placelabels' }).addTo(map);
+}
+/* Every map view is built through this one constructor — same options, same
+   single-line attribution, same tiles — so the mini maps stay consistent by
+   construction rather than by review. */
+function makeMap(el){
+  const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false });
+  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO · Powered by TfL Open Data').addTo(map);
+  baseTiles(map);
+  return map;
 }
 
 /* TfL publishes several notices per line, sometimes another route's. Count
@@ -418,6 +452,7 @@ const S = {
   LBR:     'londonbusroutes.net, via the Atlas API|Refreshed daily',
   TFL:     'TfL Unified API, via the Atlas API|Refreshed daily',
   QSI:     'TfL QSI reports, via the Atlas API|TfL publishes every ~4 weeks',
+  TRACKED: 'Atlas tracked reliability (EWT/OTD v2), from continuous BODS vehicle tracking — experimental, not comparable to TfL QSI|rebuilt daily ~00:37 UTC',
   MPS:     'TfL per-route MPS reports, via the Atlas API|TfL publishes every ~4 weeks',
   BUSTO:   'TfL BUSTO demand data, via the Atlas API|TfL publishes annually',
   FLEET:   'TfL arrivals sample + DVLA + bustimes.org, via the Atlas API|Sampled daily ~03:17 UTC',
@@ -444,6 +479,12 @@ const LABEL_TIPS = {
   'Excess wait time': ['How much longer passengers waited than scheduled — the headline reliability metric, shown against the contractual standard', S.QSI],
   'Average wait': ['Actual vs scheduled passenger wait', S.QSI],
   'On time': ['Departures on time (low-frequency routes), against the contractual standard', S.QSI],
+  'Tracked reliability': ['Atlas’s own reliability estimate from tracking every bus — experimental', S.TRACKED],
+  'EWT (tracked)': ['Excess wait: actual minus scheduled wait over every observed headway; slightly negative = over-provision', S.TRACKED],
+  'Wait (tracked)': ['Actual vs scheduled passenger wait from observed headways', S.TRACKED],
+  'On-time departures': ['% of measured departures −2…+5 min of schedule; unmatched departures count as non-arrivals', S.TRACKED],
+  'Departure breakdown': ['Measured departures by outcome; non-arrival = no observed passing within 20 min', S.TRACKED],
+  'Measured': ['The day measured, its confidence grade and the share of scheduled departures the feed could observe', S.TRACKED],
   'Mileage operated': ['Scheduled mileage actually run in the latest TfL period, against the contractual minimum', S.MPS],
   'Peak load': ['Peak passengers ÷ capacity at the max-demand hour', S.BUSTO],
   'Busiest at': ['Stop, day and time of the peak load', S.BUSTO],
@@ -798,6 +839,31 @@ async function buildRouteSections(route, m){
     }
   }
 
+  /* Tracked reliability — Atlas's own experimental EWT/OTD v2 estimate */
+  try{
+    const rt = (await D.relTracked(route.name))?.rows ?? [];
+    const days = rt.filter(r => r.route_id?.toUpperCase() === route.name.toUpperCase())
+      .sort((a,b) => String(b.day).localeCompare(String(a.day)));
+    const rec = days.find(r => r.confidence === 'high') ?? days[0];
+    if(rec){
+      const hf = rec.service_class === 'high-frequency';
+      const rows = [];
+      if(hf && num(rec.ewt_minutes) != null){
+        rows.push(`<div><span class="k">EWT (tracked)</span><span class="v mono">${rec.ewt_minutes.toFixed(1)} min</span></div>`);
+        if(num(rec.awt_minutes) && num(rec.swt_minutes))
+          rows.push(`<div><span class="k">Wait (tracked)</span><span class="v mono">${rec.awt_minutes.toFixed(1)} min · scheduled ${rec.swt_minutes.toFixed(1)}</span></div>`);
+      }
+      if(num(rec.otd_percent) != null)
+        rows.push(`<div><span class="k">On-time departures</span><span class="v mono">${rec.otd_percent.toFixed(1)}% of ${rec.deps_measured ?? '—'}</span></div>`);
+      if(num(rec.on_time) != null)
+        rows.push(`<div><span class="k">Departure breakdown</span><span class="v mono">${rec.on_time} on time · ${rec.early} early · ${rec.late} late · ${rec.non_arrival} no-show</span></div>`);
+      rows.push(`<div><span class="k">Measured</span><span class="v">${fmtDate(rec.day)} (${esc(rec.day_type ?? '')}) · ${esc(rec.confidence ?? '')} confidence${num(rec.feed_coverage_pct) ? ` · ${rec.feed_coverage_pct}% coverage` : ''}</span></div>`);
+      frag.push(`<div class="section"><div class="section-h">Tracked reliability <span class="expchip">Experimental</span></div>
+        <div class="card"><div class="kv">${rows.join('')}</div>
+        <div class="legendrow" style="margin-top:8px"><span>Atlas’s own estimate from tracking every bus via BODS — experimental and not comparable to TfL’s QSI figures above.</span></div></div></div>`);
+    }
+  }catch(e){ /* experimental feed — never fatal */ }
+
   /* Crowding */
   const cr = await D.crowding();
   const crRec = cr?.routes?.[route.name];
@@ -911,9 +977,7 @@ let _map = null;
 async function initRouteMap(route, m = {}){
   const el = document.getElementById('map');
   if(_map){ _map.remove(); _map = null; }
-  _map = L.map(el, { zoomControl:false, attributionControl:true, preferCanvas:true });
-  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map = makeMap(el);
   _map.setView([51.505,-0.118], 11);
 
   let dir = 'outbound';
@@ -931,11 +995,17 @@ async function initRouteMap(route, m = {}){
      through to the garage page. route-meta may list several codes. */
   const codes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
   const garagePins = (garages ?? []).filter(g =>
-    codes.includes(String(g.code).toUpperCase()) && Number.isFinite(g.lat) && Number.isFinite(g.lng));
+    codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
   for(const g of garagePins){
     L.marker([g.lat, g.lng], { icon: garagePinIcon(g) })
       .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br><span style="color:var(--tx2)">Operating garage</span><br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
       .addTo(_map);
+  }
+  // Say why there is no garage pin instead of leaving a silent gap.
+  if(!garagePins.length){
+    el.insertAdjacentHTML('afterend', `<div class="legendrow" style="margin-top:8px"><span>${codes.length
+      ? 'The operating garage isn’t pinned — Atlas only has the operating company’s registered-office postcode for it, not the garage site.'
+      : 'Atlas doesn’t link a garage to this route yet, so no garage pin is shown.'}</span></div>`);
   }
 
   function draw(){
@@ -1041,27 +1111,30 @@ async function renderNetworkMap(){
   main.innerHTML = `
     <div class="netmap-wrap">
       <div id="netmap"></div>
-      <div class="netmap-panel">
-        <div class="netmap-search" id="nmSearch">
+      <div class="netmap-panel" id="nmPanel">
+        <div class="nm-search">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-          <span id="nmPills" style="display:contents"></span>
-          <input id="nmq" placeholder="Add routes to compare…" autocomplete="off" />
-          <button class="clear" id="nmqClear" aria-label="Clear all focused routes" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          <input id="nmq" placeholder="Search routes — 25, N38, X68…" autocomplete="off" enterkeyhint="go" />
+          <button class="clear" id="nmqClear" aria-label="Clear search" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
-        <div class="netmap-foot">
+        <div class="nm-sugg" id="nmSugg" hidden></div>
+        <div class="nm-tools">
           <button class="livebtn" id="nmFilters" style="margin:0">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
             Filters<span id="nmFBadge" class="nm-badge" hidden></span>
           </button>
-          <div class="seg" style="box-shadow:0 1px 6px rgba(28,25,23,.08)">
-            <button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button>
-            <button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button>
-          </div>
           <button class="livebtn ${netmapState.garages?'on':''}" id="nmGarages" style="margin:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Garages</button>
+          <div style="display:flex;align-items:center;gap:7px;margin-left:auto">
+            <span class="nm-lbl" style="margin-left:0">Colour</span>
+            <div class="seg">
+              <button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button>
+              <button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button>
+            </div>
+          </div>
         </div>
-        <div class="netmap-pop" id="nmPop" hidden></div>
-        <div class="netmap-foot"><span class="netmap-count" id="nmCount">Loading network…</span><button class="livebtn" id="nmReset" style="margin:0" hidden>Reset all</button></div>
-        <div id="nmInfo" class="nm-cards"></div>
+        <div class="nm-filters" id="nmPop" hidden></div>
+        <div class="nm-body" id="nmInfo" hidden></div>
+        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmReset" hidden>Reset all</button></div>
       </div>
     </div>`;
 
@@ -1070,15 +1143,15 @@ async function renderNetworkMap(){
   if(!ov?.features?.length){ document.getElementById('nmCount').textContent = 'The Atlas API is unreachable right now.'; return; }
 
   if(_map){ _map.remove(); _map = null; }
-  _map = L.map(document.getElementById('netmap'), { zoomControl:false, preferCanvas:true, attributionControl:true });
-  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO · Powered by TfL Open Data').addTo(_map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map = makeMap(document.getElementById('netmap'));
   _map.setView([51.505,-0.118], 11);
 
   const st = netmapState;
+  st.panelOpen = false;                        // filters start collapsed on every visit
   const typeInfo = new Map(routes.map(r => [r.name.toUpperCase(), r.type]));
   const TYPE_COLORS = { regular:'#dc2626', night:'#6d28d9', twentyfour:'#0e7490', school:'#15803d' };
   const focusColor = name => FOCUS_COLORS[st.pills.indexOf(name) % FOCUS_COLORS.length];
+  const allNames = new Set((ov.features ?? []).map(f => f.properties?.name).filter(Boolean));
 
   const passes = (name) => {
     const m = meta?.[name] ?? {};
@@ -1093,9 +1166,8 @@ async function renderNetworkMap(){
     if(st.pills.length){
       return st.pills.includes(up)
         ? { color: focusColor(up), opacity: 1, weight: 5 }
-        : { color: '#a8a29e', opacity: passes(name) ? .08 : 0, weight: 1.5 };
+        : { color: '#a8a29e', opacity: .12, weight: 1.5 };
     }
-    if(!passes(name)) return { opacity: 0, weight: 0 };
     const base = st.colorBy === 'type'
       ? (TYPE_COLORS[typeInfo.get(up)] ?? '#dc2626')
       : opColor(meta?.[name]?.operator);
@@ -1105,12 +1177,10 @@ async function renderNetworkMap(){
   const layer = L.geoJSON(ov, {
     style: styleFor,
     onEachFeature: (f, ly) => {
-      const name = f.properties?.name ?? '';
-      ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
       ly.on('click', () => {
-        const up = name.toUpperCase();
+        const up = (f.properties?.name ?? '').toUpperCase();
         if(st.pills.includes(up)) removeFocus(up);
-        else if(passes(name)) addFocus(up);
+        else addFocus(up);
       });
     },
   }).addTo(_map);
@@ -1120,7 +1190,7 @@ async function renderNetworkMap(){
     if(st.garages && !garageLayer){
       garageLayer = L.layerGroup();
       for(const g of garages ?? []){
-        if(!Number.isFinite(g.lat) || !Number.isFinite(g.lng)) continue;
+        if(!garageLocOk(g)) continue;
         L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34) })
           .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
           .addTo(garageLayer);
@@ -1132,7 +1202,42 @@ async function renderNetworkMap(){
   }
   syncGarages();
 
-  /* ── filter popover — grouped, multi-select, with its own clear ── */
+  /* ── repaint: per-layer visibility, style, tooltip + hover rules ──
+     Filtered-out routes are REMOVED from the map (no ghost hovers or
+     clicks); while routes are focused, only the focused lines keep a
+     tooltip — the grey context lines stay clickable to add, silent
+     on hover. */
+  function repaint(){
+    layer.eachLayer(ly => {
+      const name = ly.feature?.properties?.name ?? '';
+      const up = name.toUpperCase();
+      const focused = st.pills.includes(up);
+      const visible = focused || passes(name);
+      if(!visible){
+        if(ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
+        if(_map.hasLayer(ly)) _map.removeLayer(ly);
+        return;
+      }
+      if(!_map.hasLayer(ly)) ly.addTo(_map);
+      ly.setStyle(styleFor(ly.feature));
+      const wantTip = focused || !st.pills.length;
+      if(wantTip && !ly.getTooltip()) ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
+      else if(!wantTip && ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
+      if(focused) ly.bringToFront();
+    });
+
+    const vis = new Set();
+    for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) vis.add(n);
+    const filtered = st.f.type.size || st.f.prop.size || st.f.op.size;
+    const cEl = document.getElementById('nmCount');
+    if(cEl) cEl.textContent = st.pills.length
+      ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
+      : (filtered ? `${vis.size} of ${allNames.size} routes` : `${allNames.size} routes`);
+    const reset = document.getElementById('nmReset');
+    if(reset) reset.hidden = !(st.pills.length || filtered);
+  }
+
+  /* ── filter section — inline in the panel, grouped multi-select ── */
   const ops = [...new Set(Object.values(meta ?? {}).map(m => m?.operator).filter(Boolean))].sort();
   const GROUPS = [
     ['type', 'Route type', Object.entries(TYPE_LABEL).map(([v,l]) => [v,l])],
@@ -1153,33 +1258,14 @@ async function renderNetworkMap(){
   const pop = document.getElementById('nmPop');
   function syncPop(){
     pop.hidden = !st.panelOpen;
-    if(st.panelOpen) pop.innerHTML = popHtml();
+    pop.innerHTML = st.panelOpen ? popHtml() : '';
     const n = st.f.type.size + st.f.prop.size + st.f.op.size;
     const badge = document.getElementById('nmFBadge');
     if(badge){ badge.hidden = !n; badge.textContent = n; }
     document.getElementById('nmFilters')?.classList.toggle('on', st.panelOpen || n > 0);
   }
 
-  function repaint(){
-    layer.setStyle(styleFor);
-    let shown = 0;
-    for(const name of new Set((ov.features ?? []).map(f => f.properties?.name).filter(Boolean))) if(passes(name)) shown++;
-    const cEl = document.getElementById('nmCount');
-    if(cEl) cEl.textContent = st.pills.length
-      ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${shown} shown`
-      : `${shown} routes shown`;
-    const anything = st.pills.length || st.f.type.size || st.f.prop.size || st.f.op.size;
-    const reset = document.getElementById('nmReset');
-    if(reset) reset.hidden = !anything;
-    const qc = document.getElementById('nmqClear');
-    if(qc) qc.hidden = !st.pills.length;
-  }
-
-  /* ── multi-focus: pills in the search box + a card per route ── */
-  function pillsHtml(){
-    return st.pills.map(p => `<span class="nm-pill" style="--pc:${focusColor(p)}">${esc(p)}
-      <button data-rm="${esc(p)}" aria-label="Remove ${esc(p)}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></span>`).join('');
-  }
+  /* ── focused-route cards ── */
   function cardsHtml(){
     return st.pills.map(p => {
       const m = meta?.[p] ?? {};
@@ -1198,8 +1284,9 @@ async function renderNetworkMap(){
     }).join('');
   }
   function syncFocus(fit){
-    document.getElementById('nmPills').innerHTML = pillsHtml();
-    document.getElementById('nmInfo').innerHTML = cardsHtml();
+    const info = document.getElementById('nmInfo');
+    info.hidden = !st.pills.length;
+    info.innerHTML = cardsHtml();
     repaint();
     if(fit && st.pills.length){
       const feats = ov.features.filter(f => st.pills.includes((f.properties?.name ?? '').toUpperCase()));
@@ -1214,6 +1301,57 @@ async function renderNetworkMap(){
   syncPop();
   syncFocus(st.pills.length > 0);
 
+  /* ── search: typeahead — nothing is added until the user picks ── */
+  const nmq = document.getElementById('nmq');
+  const suggBox = document.getElementById('nmSugg');
+  const qClear = document.getElementById('nmqClear');
+  const routeList = [...routes].sort((a,b) => cmpRoute(a.name, b.name))
+    .map(r => ({ name:r.name, up:r.name.toUpperCase(), type:r.type, op: meta?.[r.name]?.operator ?? '' }));
+  let sugg = [], suggIdx = -1;
+  function hideSugg(){ suggBox.hidden = true; suggBox.innerHTML = ''; sugg = []; suggIdx = -1; }
+  function syncSugg(){
+    const v = nmq.value.trim().toUpperCase();
+    qClear.hidden = !nmq.value;
+    if(!v) return hideSugg();
+    const pre = [], inc = [];
+    for(const r of routeList){
+      if(st.pills.includes(r.up)) continue;
+      if(r.up.startsWith(v)) pre.push(r);
+      else if(r.up.includes(v)) inc.push(r);
+    }
+    sugg = [...pre, ...inc].slice(0, 8);
+    suggIdx = sugg.length ? 0 : -1;
+    suggBox.hidden = false;
+    suggBox.innerHTML = sugg.length
+      ? sugg.map((r,i) => `<button class="nm-sug${i===suggIdx?' act':''}" data-add="${esc(r.up)}">
+          <span class="rnum ${r.type}">${esc(r.name)}</span>
+          <span class="op">${esc((r.op || '').replace(' London',''))}</span>
+          <span class="ty">${esc(TYPE_LABEL[r.type] ?? '')}</span></button>`).join('')
+      : `<div class="nm-nores">No route matches “${esc(nmq.value.trim())}”.</div>`;
+  }
+  function commit(name){ addFocus(name); nmq.value = ''; qClear.hidden = true; hideSugg(); nmq.focus(); }
+  nmq.addEventListener('input', syncSugg);
+  nmq.addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      if(!sugg.length) return;
+      e.preventDefault();
+      suggIdx = (suggIdx + (e.key === 'ArrowDown' ? 1 : -1) + sugg.length) % sugg.length;
+      [...suggBox.querySelectorAll('.nm-sug')].forEach((b,i) => b.classList.toggle('act', i === suggIdx));
+      suggBox.querySelector('.nm-sug.act')?.scrollIntoView({ block:'nearest' });
+    } else if(e.key === 'Enter'){
+      const v = nmq.value.trim().toUpperCase();
+      const pick = sugg.find(r => r.up === v) ?? sugg[suggIdx] ?? sugg[0];
+      if(pick) commit(pick.up);
+      else if(v && st.pills.includes(v)){ nmq.value = ''; qClear.hidden = true; hideSugg(); }
+    } else if(e.key === 'Escape'){ nmq.value = ''; qClear.hidden = true; hideSugg(); }
+  });
+  suggBox.addEventListener('click', e => {
+    const b = e.target.closest('[data-add]');
+    if(b) commit(b.dataset.add);
+  });
+  qClear.addEventListener('click', () => { nmq.value = ''; qClear.hidden = true; hideSugg(); nmq.focus(); });
+  document.getElementById('netmap').addEventListener('pointerdown', hideSugg);
+
   /* ── wiring ── */
   document.getElementById('nmFilters').addEventListener('click', () => { st.panelOpen = !st.panelOpen; syncPop(); });
   pop.addEventListener('click', e => {
@@ -1227,10 +1365,10 @@ async function renderNetworkMap(){
     if(e.target.closest('#nmFClear')){ st.f.type.clear(); st.f.prop.clear(); st.f.op.clear(); syncPop(); repaint(); }
     if(e.target.closest('#nmFDone')){ st.panelOpen = false; syncPop(); }
   });
-  document.querySelector('.netmap-foot .seg').addEventListener('click', e => {
+  document.querySelector('.nm-tools .seg').addEventListener('click', e => {
     const b = e.target.closest('button[data-cb]'); if(!b) return;
     st.colorBy = b.dataset.cb;
-    document.querySelectorAll('.netmap-foot .seg button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.nm-tools .seg button').forEach(x => x.classList.toggle('on', x === b));
     repaint();
   });
   document.getElementById('nmGarages').addEventListener('click', e => {
@@ -1240,25 +1378,12 @@ async function renderNetworkMap(){
   });
   document.getElementById('nmReset').addEventListener('click', () => {
     st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.op.clear();
+    nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);
     _map.setView([51.505,-0.118], 11);
   });
-  const nmq = document.getElementById('nmq');
-  const names = new Set(routes.map(r => r.name.toUpperCase()));
-  nmq.addEventListener('input', () => {
-    const v = nmq.value.trim().toUpperCase();
-    if(names.has(v)){ addFocus(v); nmq.value = ''; }
-  });
-  nmq.addEventListener('keydown', e => {
-    if(e.key === 'Enter'){
-      const v = nmq.value.trim().toUpperCase();
-      if(names.has(v)){ addFocus(v); nmq.value = ''; }
-    }
-    if(e.key === 'Backspace' && !nmq.value && st.pills.length) removeFocus(st.pills[st.pills.length-1]);
-  });
-  document.getElementById('nmqClear').addEventListener('click', () => { st.pills = []; syncFocus(false); nmq.focus(); });
-  /* one delegated remove handler for pills + cards */
-  document.querySelector('.netmap-panel').addEventListener('click', e => {
+  /* one delegated remove handler for the focused-route cards */
+  document.getElementById('nmPanel').addEventListener('click', e => {
     const rm = e.target.closest('[data-rm]');
     if(rm) removeFocus(rm.dataset.rm);
   });
@@ -1376,11 +1501,17 @@ async function renderGarages(){
 
 async function renderGarageDetail(code){
   main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="skel" style="height:120px"></div>`;
-  const garages = await D.garages();
+  const [garages, meta] = await Promise.all([D.garages(), D.meta()]);
   const g = garages?.find(x => x.code?.toUpperCase() === String(code ?? '').toUpperCase());
   if(!g){ main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="empty">Garage “${esc(code)}” not found.</div>`; return; }
   const tvr = tvrOf(g.pvr);
   const util = num(g.utilisation) ?? (num(g.pvr) && num(g.capacity) ? g.pvr / g.capacity : null);
+  let ev = 0, evKnown = 0;
+  for(const r of g.routes ?? []){
+    const p = meta?.[r]?.propulsion;
+    if(p){ evKnown++; if(p === 'electric' || p === 'hydrogen') ev++; }
+  }
+  const evPct = evKnown ? Math.round(ev / evKnown * 100) : null;
   main.innerHTML = `
     <a class="backrow" href="#/garages">‹ All garages</a>
     <div class="dhead">
@@ -1393,6 +1524,7 @@ async function renderGarageDetail(code){
       <div class="fact"><div class="l">TVR</div><div class="v">${tvr ?? '—'}</div></div>
       <div class="fact"><div class="l">Capacity</div><div class="v">${g.capacity ?? '—'}</div></div>
       <div class="fact"><div class="l">Routes</div><div class="v">${g.routes?.length ?? 0}</div></div>
+      <div class="fact"><div class="l">Zero-emission</div><div class="v">${evPct != null ? evPct + '%' : '—'}</div></div>
       <div class="fact"><div class="l">Postcode</div><div class="v">${esc(g.postcode ?? '—')}</div></div>
       <div class="fact"><div class="l">Code</div><div class="v">${esc(g.code)}</div></div>
     </div>
@@ -1416,9 +1548,7 @@ async function initGarageMap(g){
   const el = document.getElementById('map');
   if(!el) return;
   if(_map){ _map.remove(); _map = null; }
-  _map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:true });
-  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map = makeMap(el);
   const ov = await D.overview();
   if(!document.getElementById('map')) return; // navigated away mid-load
   const mine = new Map();
@@ -1432,13 +1562,22 @@ async function initGarageMap(g){
       .addTo(group);
   }
   group.addTo(_map);
-  if(Number.isFinite(g.lat) && Number.isFinite(g.lng)){
+  const pinnable = garageLocOk(g);
+  if(pinnable){
     L.marker([g.lat, g.lng], { icon: garagePinIcon(g) })
       .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b>`)
       .addTo(_map);
+  } else {
+    // Say why the pin is missing instead of leaving a silent gap.
+    const note = document.querySelector('#map + .legendrow span');
+    if(note) note.textContent += ' Exact garage location isn’t in the Atlas data yet — its record only carries the operating company’s registered-office postcode.';
   }
-  try{ _map.fitBounds(group.getBounds().pad(0.06)); }
-  catch(e){ if(Number.isFinite(g.lat)) _map.setView([g.lat,g.lng],12); else _map.setView([51.505,-0.118],11); }
+  try{
+    let b = group.getBounds();
+    if(pinnable) b = b.extend([g.lat, g.lng]);
+    _map.fitBounds(b.pad(0.06));
+  }
+  catch(e){ if(pinnable) _map.setView([g.lat,g.lng],12); else _map.setView([51.505,-0.118],11); }
 }
 
 /* ════════════════════ STOPS — search + live arrivals ════════════════════ */
@@ -1687,9 +1826,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
   }
 
   if(_map){ _map.remove(); _map = null; }
-  _map = L.map(document.getElementById('map'), { zoomControl:false, preferCanvas:true, attributionControl:true });
-  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map = makeMap(document.getElementById('map'));
   _map.setView([first.lat, first.lng], 14);   // layers need a live projection before they're added
 
   const line = String(first.publishedLine ?? ctxLine ?? candidates[0]).toUpperCase();
@@ -1772,8 +1909,15 @@ async function renderAbout(){
   document.getElementById('freshTable').innerHTML = rows.join('') || '<tr><td colspan="2" style="color:var(--mu)">Manifest unavailable.</td></tr>';
 }
 
-/* boot */
-navigate();
+/* boot — desktops land on the Map (the map is the point of a big screen);
+   small viewports land on Routes, where a full-bleed map would be cramped.
+   Only a truly bare URL is redirected: an explicit #/ (Routes nav click,
+   refresh after navigating) is respected. */
+if(!location.hash && matchMedia('(min-width:760px)').matches){
+  location.replace('#/map');   // the fragment change fires hashchange → navigate()
+} else {
+  navigate();
+}
 </script>
 </body>
 </html>

@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.17.1';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.17.1';
+import { state } from './state.js?v=2.18.0';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.18.0';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -186,11 +186,24 @@ export function initMap() {
 
   L.control.zoom({ position: 'bottomright' }).addTo(_map);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  // Label-free basemap + CARTO's matching labels-only tiles in a pane above
+  // the route lines (z420 — over the overlay pane, under vehicles at z450):
+  // exactly one set of place/road names, never doubled, and no longer buried
+  // under thick polylines.
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> © <a href="https://carto.com/" target="_blank">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
     detectRetina: true,
+  }).addTo(_map);
+  const labelPane = _map.createPane('placelabels');
+  labelPane.style.zIndex = 420;
+  labelPane.style.pointerEvents = 'none';
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    detectRetina: true,
+    pane: 'placelabels',
   }).addTo(_map);
 
   _map.on('click', e => {
