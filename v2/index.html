@@ -210,6 +210,28 @@ a.plate:hover{background:#ffd83d}
 .tipbox.show{opacity:1;transform:none}
 .tipbox .src{color:#d6d3d1}
 
+/* ── Network map view ─────────────────────────────────────────────────── */
+main.fullbleed{max-width:none;padding:0}
+.netmap-wrap{position:relative;height:calc(100dvh - 53px - var(--tab-h) - env(safe-area-inset-bottom))}
+@media(min-width:760px){.netmap-wrap{height:calc(100dvh - 53px)}}
+#netmap{position:absolute;inset:0;background:#eee9e2;z-index:0}
+.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.netmap-panel>*{pointer-events:auto}
+@media(min-width:760px){.netmap-panel{right:auto;width:320px;max-height:calc(100% - 24px)}}
+.netmap-search{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid var(--bd2);border-radius:var(--r);padding:9px 13px;box-shadow:0 2px 12px rgba(28,25,23,.09)}
+.netmap-search input{flex:1;border:none;outline:none;background:none;font-size:15px;min-width:0}
+.netmap-search svg{color:var(--mu);flex:none}
+.netmap-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.netmap-chips::-webkit-scrollbar{display:none}
+@media(min-width:760px){.netmap-chips{flex-wrap:wrap;overflow:visible}}
+.netmap-chips .chip{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);box-shadow:0 1px 6px rgba(28,25,23,.08)}
+.netmap-chips .chip.on{background:var(--tx)}
+.netmap-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.netmap-count{font-size:12px;font-weight:600;color:var(--tx2);background:rgba(255,255,255,.95);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;box-shadow:0 1px 6px rgba(28,25,23,.08)}
+.netmap-card{background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;box-shadow:0 4px 18px rgba(28,25,23,.13)}
+.netmap-card .close{float:right;color:var(--mu);padding:2px;border-radius:6px}
+.netmap-card .close:hover{color:var(--tx)}
+
 /* leaflet touches */
 .leaflet-container{font-family:var(--sans)}
 .lb-bus{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
@@ -230,13 +252,16 @@ a.plate:hover{background:#ffd83d}
     </a>
     <nav class="nav-desktop" id="navDesktop">
       <a href="#/" data-nav="routes">Routes</a>
+      <a href="#/map" data-nav="map">Map</a>
       <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
-      <a href="#/about" data-nav="about">About</a>
     </nav>
     <div class="topbar-spacer"></div>
     <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
+    <a href="#/about" data-nav="about" aria-label="About" style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--mu)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+    </a>
   </div>
 </header>
 
@@ -244,10 +269,10 @@ a.plate:hover{background:#ffd83d}
 
 <nav class="tabbar" aria-label="Primary">
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
+  <a href="#/map" data-nav="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
   <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
-  <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
 </nav>
 
 <script type="module">
@@ -512,7 +537,9 @@ function navigate(){
     : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view === 'vehicle' ? 'routes' : view;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   window.scrollTo(0, 0);
+  main.classList.toggle('fullbleed', view === 'map');
   if(view === 'routes')         renderRoutes();
+  else if(view === 'map')       renderNetworkMap();
   else if(view === 'route')     renderRouteDetail(arg);
   else if(view === 'stops')     renderStops();
   else if(view === 'stop')      renderStopDetail(arg);
@@ -984,6 +1011,186 @@ async function initRouteMap(route, m = {}){
       }
     } else if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
   });
+}
+
+/* ════════════════════ NETWORK MAP ════════════════════ */
+const netmapState = { q:'', type:null, op:null, prop:null, colorBy:'operator', garages:false, focus:null };
+async function renderNetworkMap(){
+  main.innerHTML = `
+    <div class="netmap-wrap">
+      <div id="netmap"></div>
+      <div class="netmap-panel">
+        <div class="netmap-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+          <input id="nmq" placeholder="Focus a route, e.g. 25" autocomplete="off" value="${esc(netmapState.q)}" />
+          <button class="clear" id="nmqClear" aria-label="Clear" ${netmapState.q?'':'hidden'}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        </div>
+        <div class="netmap-chips" id="nmChips"></div>
+        <div class="netmap-foot">
+          <span class="netmap-count" id="nmCount">Loading network…</span>
+          <div class="seg" style="box-shadow:0 1px 6px rgba(28,25,23,.08)">
+            <button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button>
+            <button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button>
+          </div>
+          <button class="livebtn ${netmapState.garages?'on':''}" id="nmGarages" style="margin:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Garages</button>
+        </div>
+        <div id="nmInfo"></div>
+      </div>
+    </div>`;
+
+  const [ov, meta, routes, garages] = await Promise.all([D.overview(), D.meta(), D.routes(), D.garages()]);
+  if(!document.getElementById('netmap')) return;
+  if(!ov?.features?.length){ document.getElementById('nmCount').textContent = 'The Atlas API is unreachable right now.'; return; }
+
+  if(_map){ _map.remove(); _map = null; }
+  _map = L.map(document.getElementById('netmap'), { zoomControl:false, preferCanvas:true, attributionControl:true });
+  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO · Powered by TfL Open Data').addTo(_map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map.setView([51.505,-0.118], 11);
+
+  const typeInfo = new Map(routes.map(r => [r.name.toUpperCase(), r.type]));
+  const TYPE_COLORS = { regular:'#dc2626', night:'#6d28d9', twentyfour:'#0e7490', school:'#15803d' };
+
+  const passes = (name) => {
+    const st = netmapState, m = meta?.[name] ?? {};
+    if(st.type && typeInfo.get(name.toUpperCase()) !== st.type) return false;
+    if(st.op && m.operator !== st.op) return false;
+    if(st.prop && m.propulsion !== st.prop) return false;
+    return true;
+  };
+  const styleFor = (f) => {
+    const name = f.properties?.name ?? '';
+    const st = netmapState;
+    if(!passes(name)) return { opacity: 0, weight: 0 };
+    const base = st.colorBy === 'type'
+      ? (TYPE_COLORS[typeInfo.get(name.toUpperCase())] ?? '#dc2626')
+      : opColor(meta?.[name]?.operator);
+    if(st.focus){
+      return name.toUpperCase() === st.focus
+        ? { color: base, opacity: 1, weight: 5 }
+        : { color: base, opacity: .07, weight: 1.5 };
+    }
+    return { color: base, opacity: .75, weight: 2 };
+  };
+
+  const layer = L.geoJSON(ov, {
+    style: styleFor,
+    onEachFeature: (f, ly) => {
+      const name = f.properties?.name ?? '';
+      ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
+      ly.on('click', () => { if(passes(name)) setFocus(name.toUpperCase()); });
+    },
+  }).addTo(_map);
+
+  let garageLayer = null;
+  function syncGarages(){
+    if(netmapState.garages && !garageLayer){
+      garageLayer = L.layerGroup();
+      for(const g of garages ?? []){
+        if(!Number.isFinite(g.lat) || !Number.isFinite(g.lng)) continue;
+        L.marker([g.lat, g.lng], { icon: L.divIcon({ className:'', iconSize:[30,30], iconAnchor:[15,15],
+          html:`<div style="width:30px;height:30px;border-radius:9px;background:${opColor(g.operator)};color:#fff;display:grid;place-items:center;font:700 9px/1 var(--sans);border:2px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.3)">${esc(g.code)}</div>` }) })
+          .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+          .addTo(garageLayer);
+      }
+      garageLayer.addTo(_map);
+    } else if(!netmapState.garages && garageLayer){
+      _map.removeLayer(garageLayer); garageLayer = null;
+    }
+  }
+  syncGarages();
+
+  const ops = [...new Set(Object.values(meta ?? {}).map(m => m?.operator).filter(Boolean))].sort();
+  function chipsHtml(){
+    const st = netmapState, c = [];
+    for(const [key,label] of Object.entries(TYPE_LABEL))
+      c.push(`<button class="chip ${st.type===key?'on':''}" data-f="type" data-v="${key}">${label}</button>`);
+    for(const p of PROPULSION)
+      c.push(`<button class="chip ${st.prop===p?'on':''}" data-f="prop" data-v="${p}">${title(p)}</button>`);
+    for(const o of ops)
+      c.push(`<button class="chip ${st.op===o?'on':''}" data-f="op" data-v="${esc(o)}">${esc(o.replace(' London',''))}</button>`);
+    return c.join('');
+  }
+  const chipsEl = document.getElementById('nmChips');
+  chipsEl.innerHTML = chipsHtml();
+
+  function repaint(){
+    layer.setStyle(styleFor);
+    const shown = new Set();
+    for(const f of ov.features){ const n = f.properties?.name; if(n && passes(n)) shown.add(n); }
+    const cEl = document.getElementById('nmCount');
+    if(cEl) cEl.textContent = netmapState.focus
+      ? `Route ${netmapState.focus} focused`
+      : `${shown.size} routes shown`;
+  }
+
+  function infoCard(name){
+    const el = document.getElementById('nmInfo');
+    if(!el) return;
+    if(!name){ el.innerHTML = ''; return; }
+    const m = meta?.[name] ?? meta?.[name.toUpperCase()] ?? {};
+    const t = typeInfo.get(name.toUpperCase());
+    el.innerHTML = `
+      <div class="netmap-card">
+        <button class="close" id="nmClose" aria-label="Clear focus"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="rnum ${t}" style="min-width:44px;height:30px">${esc(name)}</span>
+          <div style="min-width:0">
+            <div style="font-weight:700;font-size:13.5px">${esc(m.operator ?? '')}</div>
+            <div style="font-size:12px;color:var(--tx2)">${[TYPE_LABEL[t], m.garageName ? `${m.garageName} (${m.garage})` : null, num(m.pvr) ? `PVR ${m.pvr}` : null].filter(Boolean).map(esc).join(' · ')}</div>
+          </div>
+        </div>
+        <a href="#/route/${encodeURIComponent(name)}" style="display:inline-block;margin-top:9px;color:var(--acc);font-weight:600;font-size:13px">Open route page ›</a>
+      </div>`;
+    document.getElementById('nmClose')?.addEventListener('click', () => setFocus(null));
+  }
+
+  function setFocus(name){
+    netmapState.focus = name;
+    netmapState.q = name ?? '';
+    const q = document.getElementById('nmq'); if(q) q.value = netmapState.q;
+    const qc = document.getElementById('nmqClear'); if(qc) qc.hidden = !netmapState.q;
+    repaint();
+    infoCard(name);
+    if(name){
+      const feats = ov.features.filter(f => (f.properties?.name ?? '').toUpperCase() === name);
+      if(feats.length){
+        try{ _map.fitBounds(L.geoJSON({type:'FeatureCollection',features:feats}).getBounds(), { padding:[40,40] }); }catch(e){}
+      }
+    }
+  }
+
+  repaint();
+  if(netmapState.focus) setFocus(netmapState.focus);
+
+  /* wiring */
+  chipsEl.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    netmapState[b.dataset.f] = netmapState[b.dataset.f] === b.dataset.v ? null : b.dataset.v;
+    chipsEl.innerHTML = chipsHtml();
+    if(netmapState.focus && !passes(netmapState.focus)) { netmapState.focus = null; infoCard(null); }
+    repaint();
+  });
+  document.querySelector('.netmap-foot .seg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-cb]'); if(!b) return;
+    netmapState.colorBy = b.dataset.cb;
+    document.querySelectorAll('.netmap-foot .seg button').forEach(x => x.classList.toggle('on', x === b));
+    repaint();
+  });
+  document.getElementById('nmGarages').addEventListener('click', e => {
+    netmapState.garages = !netmapState.garages;
+    e.currentTarget.classList.toggle('on', netmapState.garages);
+    syncGarages();
+  });
+  const nmq = document.getElementById('nmq'), nmqClear = document.getElementById('nmqClear');
+  const names = new Set(routes.map(r => r.name.toUpperCase()));
+  nmq.addEventListener('input', () => {
+    const v = nmq.value.trim().toUpperCase();
+    nmqClear.hidden = !nmq.value;
+    if(names.has(v)) setFocus(v);
+    else if(!v && netmapState.focus){ setFocus(null); }
+  });
+  nmqClear.addEventListener('click', () => { nmq.value=''; setFocus(null); nmqClear.hidden = true; nmq.focus(); });
 }
 
 /* ════════════════════ OPERATORS ════════════════════ */
