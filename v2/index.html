@@ -687,7 +687,7 @@ async function renderRouteDetail(name){
   buildRouteSections(route, m);
 
   /* map — lazy heavy payloads */
-  initRouteMap(route);
+  initRouteMap(route, m);
 
   /* termini in header once stops arrive */
   D.stops().then(stops => {
@@ -841,7 +841,7 @@ async function buildRouteSections(route, m){
 
 /* ── Route map ────────────────────────────────────────────────────────── */
 let _map = null;
-async function initRouteMap(route){
+async function initRouteMap(route, m = {}){
   const el = document.getElementById('map');
   if(_map){ _map.remove(); _map = null; }
   _map = L.map(el, { zoomControl:false, attributionControl:true, preferCanvas:true });
@@ -853,12 +853,24 @@ async function initRouteMap(route){
   let lineLayer = null, stopsLayer = null, busLayer = null;
   let liveOn = false, stopsOn = false;
 
-  const [ov, stops] = await Promise.all([D.overview(), D.stops()]);
+  const [ov, stops, garages] = await Promise.all([D.overview(), D.stops(), D.garages()]);
   if(location.hash !== `#/route/${encodeURIComponent(route.name)}` && !decodeURIComponent(location.hash).endsWith('/'+route.name)) return;
 
   const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === route.name.toUpperCase()
     || (f.properties?.routeId ?? '').toUpperCase() === route.name.toUpperCase());
   const stopRec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name] ?? {};
+
+  /* Operating garage pin(s) — same treatment as the garage view, linked
+     through to the garage page. route-meta may list several codes. */
+  const codes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
+  const garagePins = (garages ?? []).filter(g =>
+    codes.includes(String(g.code).toUpperCase()) && Number.isFinite(g.lat) && Number.isFinite(g.lng));
+  for(const g of garagePins){
+    L.marker([g.lat, g.lng], { icon: L.divIcon({ className:'', iconSize:[34,34], iconAnchor:[17,17],
+      html:`<div style="width:34px;height:34px;border-radius:10px;background:${opColor(g.operator)};color:#fff;display:grid;place-items:center;font:700 10px/1 var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${esc(g.code)}</div>` }) })
+      .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br><span style="color:var(--tx2)">Operating garage</span><br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+      .addTo(_map);
+  }
 
   function draw(){
     if(lineLayer){ _map.removeLayer(lineLayer); lineLayer = null; }
@@ -869,7 +881,11 @@ async function initRouteMap(route){
     if(use.length){
       lineLayer = L.geoJSON({type:'FeatureCollection',features:use},
         { style:{ color:'#dc2626', weight:5, opacity:.95, lineCap:'round', lineJoin:'round' } }).addTo(_map);
-      try{ _map.fitBounds(lineLayer.getBounds(), { padding:[24,24] }); }catch(e){}
+      try{
+        let b = lineLayer.getBounds();
+        for(const g of garagePins) b = b.extend([g.lat, g.lng]);
+        _map.fitBounds(b, { padding:[24,24] });
+      }catch(e){}
     }
     stopsLayer = L.layerGroup();
     for(const s of (stopRec[dir] ?? [])){
