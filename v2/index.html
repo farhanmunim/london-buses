@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>London Buses · v2</title>
+<meta name="description" content="Search and explore every London bus route, operator and garage — live data from the Atlas API." />
+<link rel="icon" type="image/svg+xml" href="../favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── Design tokens — minimal SaaS, light-only ──────────────────────────── */
+:root{
+  --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
+  --bd:#e7e5e4; --bd2:#d6d3d1;
+  --tx:#1c1917; --tx2:#57534e; --mu:#a8a29e;
+  --acc:#dc2626; --acc-soft:#fef2f2;
+  --good:#16a34a; --warn:#d97706; --bad:#dc2626;
+  --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --r:12px; --r-sm:8px;
+  --sh:0 1px 2px rgba(28,25,23,.05);
+  --maxw:1080px;
+  --tab-h:58px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.45;min-height:100dvh}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit}
+svg{display:block}
+::selection{background:#fecaca}
+
+/* ── App shell ─────────────────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.topbar-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:-.01em}
+.brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
+.brand small{font-weight:600;font-size:10px;color:#fff;background:var(--tx);border-radius:999px;padding:2px 7px;letter-spacing:.04em}
+.nav-desktop{display:none;gap:2px;margin-left:14px}
+.nav-desktop a{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
+.nav-desktop a:hover{background:var(--surf2);color:var(--tx)}
+.nav-desktop a.on{background:var(--tx);color:#fff}
+.topbar-spacer{flex:1}
+.net-chip{display:none;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;background:var(--surf)}
+.net-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+.net-chip.bad .dot{background:var(--warn)}
+@media(min-width:760px){.nav-desktop{display:flex}.net-chip{display:inline-flex}}
+
+main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 28px + env(safe-area-inset-bottom))}
+@media(min-width:760px){main{padding-bottom:56px}}
+
+/* mobile bottom tabs */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mu)}
+.tabbar a.on{color:var(--acc)}
+.tabbar svg{width:21px;height:21px}
+@media(min-width:760px){.tabbar{display:none}}
+
+/* ── Common components ─────────────────────────────────────────────────── */
+.h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px}
+.sub{color:var(--tx2);font-size:13.5px;margin-bottom:14px}
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)}
+.section{margin-top:18px}
+.section-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:0 2px 8px}
+.searchwrap{position:sticky;top:53px;z-index:50;background:var(--bg);padding:2px 0 10px;margin:0 -2px;}
+.search{display:flex;align-items:center;gap:9px;background:var(--surf);border:1px solid var(--bd2);border-radius:var(--r);padding:11px 14px;box-shadow:var(--sh)}
+.search:focus-within{border-color:var(--tx);box-shadow:0 0 0 3px rgba(28,25,23,.06)}
+.search input{flex:1;border:none;outline:none;background:none;font-size:16px;min-width:0}
+.search input::placeholder{color:var(--mu)}
+.search svg{color:var(--mu);flex:none}
+.search .clear{color:var(--mu);padding:2px;border-radius:6px}
+.search .clear:hover{color:var(--tx)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:10px 2px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:12.5px;font-weight:600;color:var(--tx2);background:var(--surf);border:1px solid var(--bd);border-radius:999px;padding:6px 12px;transition:all .12s}
+.chip:hover{border-color:var(--bd2)}
+.chip.on{background:var(--tx);border-color:var(--tx);color:#fff}
+.chip .x{opacity:.7;margin-left:4px}
+.count-note{font-size:12.5px;color:var(--mu);margin:8px 2px 6px}
+.empty{color:var(--mu);text-align:center;padding:44px 0;font-size:14px}
+.skel{background:linear-gradient(90deg,var(--surf2) 25%,#eeedec 50%,var(--surf2) 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* route list */
+.rlist{display:flex;flex-direction:column;gap:8px}
+.rrow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);transition:border-color .12s}
+.rrow:hover{border-color:var(--bd2)}
+.rrow:active{background:var(--surf2)}
+.rnum{flex:none;min-width:46px;height:32px;padding:0 8px;border-radius:9px;background:var(--acc);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14.5px}
+.rnum.night{background:#6d28d9}.rnum.school{background:#15803d}.rnum.twentyfour{background:#0e7490}
+.rmeta{flex:1;min-width:0}
+.rmeta .op{font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
+.rmeta .ga{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px;background:var(--surf2);color:var(--tx2)}
+.rtag.electric{background:#dcfce7;color:#15803d}.rtag.hydrogen{background:#cffafe;color:#0e7490}.rtag.hybrid{background:#e0e7ff;color:#4338ca}
+.rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu)}
+.rrow .pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
+@media(min-width:760px){.rlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+
+/* detail pages */
+.backrow{display:flex;align-items:center;gap:6px;color:var(--tx2);font-size:13.5px;font-weight:500;margin-bottom:10px;padding:4px 0}
+.backrow:hover{color:var(--tx)}
+.dhead{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.dnum{min-width:58px;height:42px;padding:0 10px;border-radius:11px;background:var(--acc);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:20px}
+.dnum.night{background:#6d28d9}.dnum.school{background:#15803d}.dnum.twentyfour{background:#0e7490}
+.dtitle{min-width:0}
+.dtitle h1{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.dtitle .sub2{font-size:13px;color:var(--tx2)}
+.statusline{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;font-size:13px}
+.statusline .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--good)}
+.statusline.bad .dot{background:var(--warn)}
+.statusline b{font-weight:600}
+.statusline .reason{color:var(--tx2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+@media(min-width:560px){.facts{grid-template-columns:repeat(6,1fr)}}
+.fact{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r-sm);padding:9px 10px}
+.fact .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu)}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kv{display:flex;flex-direction:column}
+.kv>div{display:flex;justify-content:space-between;gap:14px;padding:9px 14px;border-top:1px solid var(--bd);font-size:13.5px}
+.kv>div:first-child{border-top:none}
+.kv .k{color:var(--tx2);flex:none}
+.kv .v{text-align:right;font-weight:500;min-width:0}
+.kv .v.mono{font-family:var(--mono);font-weight:600;font-size:13px}
+#map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:#eee9e2;position:relative;z-index:0}
+@media(min-width:760px){#map{height:380px}}
+.mapctl{display:flex;gap:8px;margin-top:8px}
+.seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
+.seg button{font-size:12.5px;font-weight:600;color:var(--tx2);border-radius:7px;padding:5px 12px}
+.seg button.on{background:var(--surf);color:var(--tx);box-shadow:var(--sh)}
+.livebtn{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:6px 13px}
+.livebtn.on{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
+.livebtn .spin{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.livebtn.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divn-note{display:flex;gap:9px;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:11px 13px;font-size:13px;color:#92400e;margin-top:12px}
+.divn-note b{font-weight:700}
+.bars{display:flex;align-items:flex-end;gap:3px;height:44px}
+.bars>div{flex:1;background:#fca5a5;border-radius:3px 3px 0 0;min-height:3px;position:relative}
+.bars>div.hi{background:var(--acc)}
+.minibar{height:7px;border-radius:999px;background:var(--surf2);overflow:hidden}
+.minibar>i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.legendrow{display:flex;gap:14px;font-size:11.5px;color:var(--mu);margin-top:6px;flex-wrap:wrap}
+.legendrow i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* operators & garages */
+.oplist{display:grid;gap:10px}
+@media(min-width:560px){.oplist{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.oplist{grid-template-columns:repeat(3,1fr)}}
+.opcard{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px;transition:border-color .12s}
+.opcard:hover{border-color:var(--bd2)}
+.ophead{display:flex;align-items:center;gap:11px}
+.avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;flex:none}
+.ophead .nm{font-weight:700;font-size:14.5px}
+.ophead .co{font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.opstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.opstat .l{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.opstat .v{font-family:var(--mono);font-weight:600;font-size:14px}
+.glist{display:flex;flex-direction:column;gap:8px}
+@media(min-width:760px){.glist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+.grow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh)}
+.grow:hover{border-color:var(--bd2)}
+.grow .g-nm{flex:1;min-width:0}
+.grow .g-nm b{font-size:14px;font-weight:600;display:block}
+.grow .g-nm span{font-size:12px;color:var(--tx2)}
+.grow .g-pvr{text-align:right;font-size:11.5px;color:var(--mu);flex:none}
+.grow .g-pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}
+.rchip{font-family:var(--mono);font-size:12px;font-weight:600;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;background:var(--surf)}
+.rchip:hover{border-color:var(--acc);color:var(--acc)}
+.util{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--bd);font-size:13px}
+.util .minibar{flex:1}
+
+/* about */
+.prose{font-size:13.5px;color:var(--tx2);line-height:1.6}
+.prose p{margin-bottom:10px}
+.prose b{color:var(--tx)}
+.prose a{color:var(--acc);font-weight:500}
+table.fresh{width:100%;border-collapse:collapse;font-size:12.5px}
+table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
+table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--tx2)}
+.footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
+
+/* leaflet touches */
+.leaflet-container{font-family:var(--sans)}
+.lb-bus{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 4px 18px rgba(28,25,23,.18)}
+.leaflet-popup-content{font-family:var(--sans);font-size:12.5px;margin:10px 13px}
+.leaflet-popup-content b{font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="17" height="15" rx="2.2"/><line x1="7.5" y1="14.5" x2="24.5" y2="14.5"/><circle cx="11" cy="19" r="1.2" fill="#fff"/><circle cx="21" cy="19" r="1.2" fill="#fff"/></svg>
+      </span>
+      London Buses <small>v2</small>
+    </a>
+    <nav class="nav-desktop" id="navDesktop">
+      <a href="#/" data-nav="routes">Routes</a>
+      <a href="#/operators" data-nav="operators">Operators</a>
+      <a href="#/garages" data-nav="garages">Garages</a>
+      <a href="#/about" data-nav="about">About</a>
+    </nav>
+    <div class="topbar-spacer"></div>
+    <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<nav class="tabbar" aria-label="Primary">
+  <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
+  <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
+  <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
+  <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
+</nav>
+
+<script type="module">
+/* ════════════════════════════════════════════════════════════════════════
+   London Buses v2 — single-file app, all data from the Atlas API.
+   One file on purpose: the farhan.app zone edge-caches js/css for 4 h,
+   which has repeatedly served mixed old/new module graphs mid-deploy.
+   HTML is served max-age=0, so a single file can never version-skew.
+   ════════════════════════════════════════════════════════════════════════ */
+
+const API = 'https://atlas.farhan.app/api/v1';
+
+/* ── Data layer — one cached promise per endpoint ─────────────────────── */
+const _cache = new Map();
+function get(path){
+  if(_cache.has(path)) return _cache.get(path);
+  const p = fetch(API + path).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .catch(err => { console.warn('Atlas', path, err.message); _cache.delete(path); return null; });
+  _cache.set(path, p);
+  return p;
+}
+const D = {
+  routes:      () => get('/routes'),
+  meta:        () => get('/route-meta').then(d => d?.routes ?? {}),
+  garages:     () => get('/garages').then(d => d?.garages ?? []),
+  fleet:       () => get('/fleet').then(d => d?.byRoute ?? {}),
+  perf:        () => get('/route-performance'),
+  crowding:    () => get('/crowding'),
+  crowdProf:   () => get('/crowding-profile').then(d => d?.routes ?? {}),
+  tenders:     () => get('/tenders').then(d => d?.byRoute ?? {}),
+  diversions:  () => get('/route-diversions').then(d => d?.routes ?? {}),
+  lineStatus:  () => get('/line-status'),
+  manifest:    () => get('/manifest'),
+  stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
+  overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
+  vehiclesReg: () => get('/vehicles').then(d => d?.byReg ?? {}),
+  liveStatus:  (r) => get('/live/status?route=' + encodeURIComponent(r)),
+  perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
+  liveVehicles:(r) => fetch(API + '/live/vehicles?line=' + encodeURIComponent(r)) // never cached — polled
+                        .then(x => x.ok ? x.json() : null).catch(() => null),
+};
+
+/* ── Small utils ──────────────────────────────────────────────────────── */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const stripTags = s => String(s ?? '').replace(/<[^>]*>/g, ' ')
+  .replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/&#39;|&apos;/g,"'").replace(/&quot;/g,'"')
+  .replace(/\s+/g,' ').trim();
+const num = v => Number.isFinite(v) ? v : null;
+const tvrOf = pvr => Number.isFinite(pvr) ? Math.floor(pvr * 1.13) : null;
+const fmtDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null; };
+const monthYear = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym ?? ''); return m ? new Date(+m[1], +m[2]-1, 1).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : null; };
+const title = s => String(s ?? '').toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
+const cmpRoute = (a,b) => { const na=parseInt(a,10), nb=parseInt(b,10);
+  if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb; if(!isNaN(na)&&isNaN(nb)) return -1; if(isNaN(na)&&!isNaN(nb)) return 1;
+  return String(a).localeCompare(String(b)); };
+
+const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:'School' };
+const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
+const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
+const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
+const opInitials = n => OP_INITIALS[n] ?? String(n ?? '?').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase();
+const opColor    = n => OP_COLORS[n] ?? '#57534e';
+
+/* TfL publishes several notices per line, sometimes another route's. Count
+   only notices whose validity window covers now (isNow is unreliable), take
+   the worst, and among equals prefer prose naming this route. */
+function pickStatus(name, statuses){
+  if(!statuses?.length) return null;
+  const now = Date.now();
+  const active = statuses.filter(ls => {
+    if(ls.statusSeverity === 10) return true;
+    const vps = ls.validityPeriods;
+    if(!vps?.length) return true;
+    return vps.some(vp => {
+      const f = vp.fromDate ? Date.parse(vp.fromDate) : NaN, t = vp.toDate ? Date.parse(vp.toDate) : NaN;
+      return (isNaN(f) || f <= now) && (isNaN(t) || t >= now);
+    });
+  });
+  if(!active.length) return { status:'Good Service', reason:null, severity:10 };
+  const mentions = ls => {
+    const r = ls.reason ?? '';
+    if(new RegExp('\\broutes?\\b[^.:]*\\b'+name+'\\b','i').test(r)) return 2;
+    if(new RegExp('\\b'+name+'\\b','i').test(r)) return 1;
+    return 0;
+  };
+  const pick = active.map((ls,i)=>({ls,i,sev:ls.statusSeverity ?? 10,m:mentions(ls)}))
+    .sort((a,b)=>a.sev-b.sev || b.m-a.m || a.i-b.i)[0].ls;
+  return { status:pick.statusSeverityDescription ?? null, reason:pick.reason ?? null, severity:pick.statusSeverity ?? null };
+}
+
+/* ── Router ───────────────────────────────────────────────────────────── */
+const main = document.getElementById('main');
+const routesViewState = { q:'', type:null, op:null, prop:null };  // survives back-nav
+let liveTimer = null;   // route-detail live poll — killed on any nav
+
+function navigate(){
+  if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
+  const h = location.hash.replace(/^#\/?/, '');
+  const [seg, arg] = h.split('/').map(decodeURIComponent);
+  const view = seg === '' ? 'routes' : seg;
+  document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on',
+    a.dataset.nav === (view === 'route' ? 'routes' : view === 'garage' ? 'garages' : view)));
+  window.scrollTo(0, 0);
+  if(view === 'routes')         renderRoutes();
+  else if(view === 'route')     renderRouteDetail(arg);
+  else if(view === 'operators') renderOperators();
+  else if(view === 'garages')   renderGarages();
+  else if(view === 'garage')    renderGarageDetail(arg);
+  else if(view === 'about')     renderAbout();
+  else                          renderRoutes();
+}
+window.addEventListener('hashchange', navigate);
+
+/* ── Network status chip (topbar, desktop) ────────────────────────────── */
+D.lineStatus().then(ls => {
+  const s = ls?.summary; if(!s) return;
+  const chip = document.getElementById('netChip');
+  document.getElementById('netChipText').textContent =
+    s.disrupted ? `${s.good}/${s.total} on good service` : `All ${s.total} routes on good service`;
+  chip.classList.toggle('bad', s.disrupted > 0);
+  chip.hidden = false;
+});
+
+/* ════════════════════ ROUTES (home) ════════════════════ */
+async function renderRoutes(){
+  main.innerHTML = `
+    <div class="searchwrap">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+        <input id="q" placeholder="Search a route, e.g. 25 or N73" autocomplete="off" inputmode="search" value="${esc(routesViewState.q)}" />
+        <button class="clear" id="qClear" aria-label="Clear search" ${routesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+    <div class="count-note" id="countNote"></div>
+    <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
+
+  const [routes, meta] = await Promise.all([D.routes(), D.meta()]);
+  if(location.hash.replace(/^#\/?/,'').split('/')[0] !== '' && !location.hash.startsWith('#/?')) { /* view changed mid-load */ }
+  if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The Atlas API is unreachable right now — try again shortly.</div>'; return; }
+
+  const ops = [...new Set(Object.values(meta).map(m => m?.operator).filter(Boolean))].sort();
+
+  function chipsHtml(){
+    const st = routesViewState;
+    const c = [];
+    for(const [key,label] of Object.entries(TYPE_LABEL))
+      c.push(`<button class="chip ${st.type===key?'on':''}" data-f="type" data-v="${key}">${label}</button>`);
+    for(const p of PROPULSION)
+      c.push(`<button class="chip ${st.prop===p?'on':''}" data-f="prop" data-v="${p}">${title(p)}</button>`);
+    for(const o of ops)
+      c.push(`<button class="chip ${st.op===o?'on':''}" data-f="op" data-v="${esc(o)}">${esc(o.replace(' London',''))}</button>`);
+    return c.join('');
+  }
+
+  function rowsHtml(){
+    const st = routesViewState;
+    const q = st.q.trim().toUpperCase();
+    let list = routes.filter(r => {
+      const m = meta[r.name] ?? {};
+      if(q && !r.name.toUpperCase().startsWith(q)) return false;
+      if(st.type && r.type !== st.type) return false;
+      if(st.op && m.operator !== st.op) return false;
+      if(st.prop && m.propulsion !== st.prop) return false;
+      return true;
+    }).sort((a,b) => cmpRoute(a.name, b.name));
+    document.getElementById('countNote').textContent =
+      `${list.length} route${list.length===1?'':'s'}${q||st.type||st.op||st.prop ? ' match' : ''}`;
+    if(!list.length) return '<div class="empty">No routes match.</div>';
+    return list.map(r => {
+      const m = meta[r.name] ?? {};
+      const ga = [m.garageName, m.garage ? `(${m.garage})` : null].filter(Boolean).join(' ');
+      return `<a class="rrow" href="#/route/${encodeURIComponent(r.name)}">
+        <span class="rnum ${r.type}">${esc(r.name)}</span>
+        <span class="rmeta">
+          <span class="op">${esc(m.operator ?? '—')}
+            ${m.propulsion ? `<span class="rtag ${m.propulsion}">${esc(m.propulsion)}</span>` : ''}
+            ${r.type !== 'regular' ? `<span class="rtag">${TYPE_LABEL[r.type] ?? r.type}</span>` : ''}
+          </span>
+          <span class="ga">${esc(ga || '—')}</span>
+        </span>
+        <span class="pvr"><b>${m.pvr ?? '—'}</b>PVR</span>
+      </a>`;
+    }).join('');
+  }
+
+  const chips = document.getElementById('chips');
+  const rlist = document.getElementById('rlist');
+  const rerender = () => { rlist.innerHTML = rowsHtml(); };
+  chips.innerHTML = chipsHtml();
+  rerender();
+
+  chips.addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if(!b) return;
+    const f = b.dataset.f, v = b.dataset.v;
+    routesViewState[f] = routesViewState[f] === v ? null : v;
+    chips.innerHTML = chipsHtml();
+    rerender();
+  });
+  const q = document.getElementById('q'), qClear = document.getElementById('qClear');
+  q.addEventListener('input', () => {
+    routesViewState.q = q.value;
+    qClear.hidden = !q.value;
+    rerender();
+  });
+  qClear.addEventListener('click', () => { q.value=''; routesViewState.q=''; qClear.hidden=true; rerender(); q.focus(); });
+}
+
+/* ════════════════════ ROUTE DETAIL ════════════════════ */
+async function renderRouteDetail(name){
+  const id = String(name ?? '').toUpperCase();
+  main.innerHTML = `
+    <a class="backrow" href="#/">‹ All routes</a>
+    <div id="dhead"><div class="skel" style="height:46px;width:70%"></div></div>
+    <div id="dstatus"></div>
+    <div id="dfacts" class="facts">${'<div class="skel" style="height:52px"></div>'.repeat(6)}</div>
+    <div class="section"><div class="section-h">Map</div><div id="map"></div>
+      <div class="mapctl">
+        <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
+        <button class="livebtn" id="liveBtn"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
+      </div>
+      <div id="divnNote"></div>
+    </div>
+    <div id="dsections"></div>`;
+
+  const [routes, meta] = await Promise.all([D.routes(), D.meta()]);
+  const route = routes?.find(r => r.name.toUpperCase() === id);
+  const m = meta?.[route?.name] ?? meta?.[id] ?? {};
+  if(!route){ main.innerHTML = `<a class="backrow" href="#/">‹ All routes</a><div class="empty">Route “${esc(id)}” isn’t in the current TfL network.</div>`; return; }
+
+  /* header */
+  document.getElementById('dhead').outerHTML = `
+    <div class="dhead">
+      <span class="dnum ${route.type}">${esc(route.name)}</span>
+      <div class="dtitle">
+        <h1 id="dTermini">${esc(m.operator ?? 'London bus route')}</h1>
+        <div class="sub2">${[TYPE_LABEL[route.type], m.garageName ? `Garage: ${m.garageName} (${m.garage})` : null].filter(Boolean).map(esc).join(' · ')}</div>
+      </div>
+    </div>`;
+
+  /* live status — seconds-fresh feed, snapshot fallback */
+  D.liveStatus(route.name).then(async raw => {
+    let st = pickStatus(route.name, raw?.data?.[0]?.lineStatuses);
+    if(!st){
+      const snap = await D.lineStatus();
+      const row = snap?.rows?.find(r => r.route === route.name);
+      if(row) st = { status: row.status, reason: row.reason || null, severity: row.severity };
+    }
+    if(!st) return;
+    const good = st.severity === 10;
+    document.getElementById('dstatus').innerHTML = `
+      <div class="statusline ${good?'':'bad'}"><span class="dot"></span>
+        <div><b>${esc(st.status ?? (good?'Good Service':'Disruption'))}</b>
+        ${st.reason && !good ? `<div class="reason">${esc(st.reason)}</div>` : ''}</div>
+      </div>`;
+  });
+
+  /* fact tiles */
+  const facts = [];
+  facts.push(['PVR', m.pvr ?? '—'], ['TVR', tvrOf(m.pvr) ?? '—']);
+  if(num(m.lengthKm)) facts.push(['Length', m.lengthKm + ' km']);
+  facts.push(['Type', TYPE_LABEL[route.type] ?? route.type]);
+  if(m.propulsion) facts.push(['Power', title(m.propulsion)]);
+  if(m.fleet) facts.push(['Vehicle', stripTags(m.fleet)]);
+  document.getElementById('dfacts').innerHTML =
+    facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join('');
+
+  /* diversion note */
+  D.diversions().then(divs => {
+    const dv = divs?.[route.name];
+    if(!dv?.reasons?.length && !dv?.disruptions?.length) return;
+    const reason = dv.disruptions?.[0]?.reason ?? '';
+    const until = fmtDate(dv.until);
+    document.getElementById('divnNote').innerHTML = `
+      <div class="divn-note"><span aria-hidden="true">⚠️</span>
+        <div><b>Diversion in effect${until ? ` until ${until}` : ''}.</b> ${esc(reason)}</div>
+      </div>`;
+  });
+
+  /* the rest of the page */
+  buildRouteSections(route, m);
+
+  /* map — lazy heavy payloads */
+  initRouteMap(route);
+
+  /* termini in header once stops arrive */
+  D.stops().then(stops => {
+    const rec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name];
+    const out = rec?.outbound ?? [];
+    if(out.length >= 2){
+      document.getElementById('dTermini').textContent = `${out[0].name} → ${out[out.length-1].name}`;
+    }
+  });
+}
+
+function sevClass(v, mps, lowerIsBetter){
+  if(!Number.isFinite(v) || !Number.isFinite(mps) || mps <= 0) return '';
+  const ok = lowerIsBetter ? v <= mps : v >= mps;
+  return ok ? 'style="color:var(--good)"' : 'style="color:var(--bad)"';
+}
+
+async function buildRouteSections(route, m){
+  const el = document.getElementById('dsections');
+  const frag = [];
+
+  /* Performance */
+  const perf = (await D.perf())?.routes?.[route.name.toUpperCase()];
+  if(perf?.serviceClass){
+    const hf = perf.serviceClass === 'high-frequency';
+    const rows = [];
+    if(hf && num(perf.ewtMinutes) != null){
+      rows.push(`<div><span class="k">Excess wait time</span><span class="v mono" ${sevClass(perf.ewtMinutes, perf.ewtMps, true)}>${perf.ewtMinutes.toFixed(1)} min${num(perf.ewtMps)?` · standard ≤ ${perf.ewtMps}`:''}</span></div>`);
+      if(num(perf.awtMinutes) && num(perf.swtMinutes))
+        rows.push(`<div><span class="k">Average wait</span><span class="v mono">${perf.awtMinutes.toFixed(1)} min · scheduled ${perf.swtMinutes.toFixed(1)}</span></div>`);
+    }
+    if(!hf && num(perf.onTimePercent) != null)
+      rows.push(`<div><span class="k">On time</span><span class="v mono" ${sevClass(perf.onTimePercent, perf.otpMps, false)}>${perf.onTimePercent.toFixed(0)}%${num(perf.otpMps)?` · standard ≥ ${perf.otpMps}%`:''}</span></div>`);
+    if(num(perf.mileagePercent) != null)
+      rows.push(`<div><span class="k">Mileage operated</span><span class="v mono" ${sevClass(perf.mileagePercent, perf.mileageMps, false)}>${perf.mileagePercent.toFixed(1)}%${num(perf.mileageMps)?` · standard ≥ ${perf.mileageMps}%`:''}</span></div>`);
+    if(rows.length){
+      frag.push(`<div class="section"><div class="section-h">Reliability · TfL QSI ${esc((await D.perf())?.periodLabel ?? '')}</div>
+        <div class="card"><div class="kv">${rows.join('')}</div><div id="perfTrend"></div></div></div>`);
+    }
+  }
+
+  /* Crowding */
+  const cr = await D.crowding();
+  const crRec = cr?.routes?.[route.name];
+  if(crRec && num(crRec.peakVC)){
+    const bandLabel = cr.bands?.find(b => b.key === crRec.band)?.label ?? title(crRec.band ?? '');
+    const days = ['Weekday','Saturday','Sunday'].map(d => {
+      const v = crRec.byDay?.[d]?.vc;
+      return num(v) ? `<div><span class="k">${d}</span><span class="v mono">${Math.round(v*100)}% of capacity</span></div>` : '';
+    }).join('');
+    frag.push(`<div class="section"><div class="section-h">Crowding · TfL BUSTO ${esc(cr.year ?? '')}</div>
+      <div class="card"><div class="kv">
+        <div><span class="k">Peak load</span><span class="v"><b>${esc(bandLabel)}</b> · <span class="mono">${Math.round(crRec.peakVC*100)}%</span> of capacity</span></div>
+        ${crRec.stopname ? `<div><span class="k">Busiest at</span><span class="v">${esc(title(crRec.stopname))}${crRec.time?` · ${esc(String(crRec.time).slice(0,5))}`:''}</span></div>` : ''}
+        ${days}
+      </div><div id="crowdProf"></div></div></div>`);
+  }
+
+  /* Fleet */
+  const fl = (await D.fleet())?.[route.name];
+  if(fl && (fl.count > 0 || m.fleet)){
+    const rows = [];
+    if(m.fleet) rows.push(`<div><span class="k">Rostered vehicle</span><span class="v">${esc(stripTags(m.fleet))}</span></div>`);
+    if(fl.count > 0) rows.push(`<div><span class="k">Observed in last sample</span><span class="v mono">${fl.count} vehicles</span></div>`);
+    if(num(fl.avgAgeYears)) rows.push(`<div><span class="k">Average age</span><span class="v mono">${fl.avgAgeYears.toFixed(1)} years</span></div>`);
+    if(fl.makes?.length) rows.push(`<div><span class="k">Makes</span><span class="v">${fl.makes.map(x=>`${esc(title(x.make))} (${x.n})`).join(', ')}</span></div>`);
+    if(rows.length) frag.push(`<div class="section"><div class="section-h">Fleet</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
+  }
+
+  /* Contract & tendering */
+  const tn = (await D.tenders())?.[route.name] ?? [];
+  const latest = tn[0];
+  const rows = [];
+  if(m.operator)   rows.push(`<div><span class="k">Operator</span><span class="v">${esc(m.operator)}</span></div>`);
+  if(m.company)    rows.push(`<div><span class="k">Company</span><span class="v">${esc(stripTags(m.company))}</span></div>`);
+  if(m.contractStart) rows.push(`<div><span class="k">Contract start</span><span class="v mono">${esc(monthYear(m.contractStart) ?? m.contractStart)}</span></div>`);
+  if(m.contractEnd)   rows.push(`<div><span class="k">Contract end</span><span class="v mono">${esc(monthYear(m.contractEnd) ?? m.contractEnd)}</span></div>`);
+  if(latest){
+    if(latest.awardDate) rows.push(`<div><span class="k">Latest award</span><span class="v">${esc(latest.awardDate)} · ${esc(latest.operator ?? '')}</span></div>`);
+    if(num(latest.costPerMile)) rows.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${latest.costPerMile.toFixed(2)}</span></div>`);
+    if(num(latest.numberOfTenderers)) rows.push(`<div><span class="k">Bids received</span><span class="v mono">${latest.numberOfTenderers}</span></div>`);
+    if(latest.vehicle?.summary) rows.push(`<div><span class="k">Awarded vehicle</span><span class="v">${esc(latest.vehicle.summary)}</span></div>`);
+  }
+  if(rows.length) frag.push(`<div class="section"><div class="section-h">Contract &amp; tendering</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
+
+  el.innerHTML = frag.join('');
+
+  /* performance trend (lazy, after paint) */
+  if(document.getElementById('perfTrend')){
+    D.perfHistory(route.name.toUpperCase()).then(h => {
+      const rows = (h?.rows ?? []).filter(r => r.period_start).sort((a,b)=>String(a.period_start).localeCompare(String(b.period_start)));
+      const hf = rows.some(r => num(r.ewt_minutes) != null);
+      const vals = rows.map(r => hf ? num(r.ewt_minutes) : num(r.on_time_percent)).filter(v => v != null);
+      if(vals.length < 3) return;
+      const max = Math.max(...vals);
+      const bars = rows.map(r => {
+        const v = hf ? num(r.ewt_minutes) : num(r.on_time_percent);
+        if(v == null) return '';
+        const pc = Math.max(6, Math.round(v / max * 100));
+        return `<div style="height:${pc}%" title="${esc(r.period_label)} · ${v}"></div>`;
+      }).join('');
+      document.getElementById('perfTrend').innerHTML =
+        `<div style="padding:10px 14px;border-top:1px solid var(--bd)">
+          <div class="bars">${bars}</div>
+          <div class="legendrow"><span>${hf?'Excess wait time':'On-time %'} per TfL quarter, oldest → newest</span></div>
+        </div>`;
+    });
+  }
+
+  /* crowding profile (lazy) */
+  if(document.getElementById('crowdProf')){
+    D.crowdProf().then(cp => {
+      const prof = cp?.[route.name]?.loadProfile;
+      if(!prof || prof.length < 5) return;
+      const bars = prof.map(p =>
+        `<div class="${p.vc>=0.8?'hi':''}" style="height:${Math.max(4, Math.round(Math.min(p.vc,1.2)/1.2*100))}%" title="${esc(title(p.name))} · ${Math.round(p.vc*100)}%"></div>`).join('');
+      document.getElementById('crowdProf').innerHTML =
+        `<div style="padding:10px 14px;border-top:1px solid var(--bd)">
+          <div class="bars">${bars}</div>
+          <div class="legendrow"><span>Load along the route (peak direction)</span><span><i style="background:var(--acc)"></i>Crowded stop (≥80%)</span></div>
+        </div>`;
+    });
+  }
+}
+
+/* ── Route map ────────────────────────────────────────────────────────── */
+let _map = null;
+async function initRouteMap(route){
+  const el = document.getElementById('map');
+  if(_map){ _map.remove(); _map = null; }
+  _map = L.map(el, { zoomControl:false, attributionControl:true, preferCanvas:true });
+  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map.setView([51.505,-0.118], 11);
+
+  let dir = 'outbound';
+  let lineLayer = null, stopsLayer = null, busLayer = null;
+  let liveOn = false;
+
+  const [ov, stops] = await Promise.all([D.overview(), D.stops()]);
+  if(location.hash !== `#/route/${encodeURIComponent(route.name)}` && !decodeURIComponent(location.hash).endsWith('/'+route.name)) return;
+
+  const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === route.name.toUpperCase()
+    || (f.properties?.routeId ?? '').toUpperCase() === route.name.toUpperCase());
+  const stopRec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name] ?? {};
+
+  function draw(){
+    if(lineLayer){ _map.removeLayer(lineLayer); lineLayer = null; }
+    if(stopsLayer){ _map.removeLayer(stopsLayer); stopsLayer = null; }
+    const dnum = dir === 'outbound' ? '1' : '2';
+    const dirFeats = feats.filter(f => String(f.properties?.direction) === dnum);
+    const use = dirFeats.length ? dirFeats : feats;
+    if(use.length){
+      lineLayer = L.geoJSON({type:'FeatureCollection',features:use},
+        { style:{ color:'#dc2626', weight:5, opacity:.95, lineCap:'round', lineJoin:'round' } }).addTo(_map);
+      try{ _map.fitBounds(lineLayer.getBounds(), { padding:[24,24] }); }catch(e){}
+    }
+    stopsLayer = L.layerGroup();
+    for(const s of (stopRec[dir] ?? [])){
+      L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:'#fff', fillOpacity:1 })
+        .bindPopup(`<b>${esc(s.name)}</b>`)
+        .addTo(stopsLayer);
+    }
+    syncStops();
+  }
+  // At route-wide zoom the stop rings merge into a bead chain — show them
+  // only once the user zooms in far enough for them to separate.
+  function syncStops(){
+    if(!stopsLayer) return;
+    const on = _map.getZoom() >= 13;
+    if(on && !_map.hasLayer(stopsLayer)) stopsLayer.addTo(_map);
+    if(!on && _map.hasLayer(stopsLayer)) _map.removeLayer(stopsLayer);
+  }
+  _map.on('zoomend', syncStops);
+  draw();
+
+  document.getElementById('dirSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    dir = b.dataset.d;
+    document.querySelectorAll('#dirSeg button').forEach(x => x.classList.toggle('on', x === b));
+    draw();
+  });
+
+  /* live buses — opt-in poll every 15 s */
+  const liveBtn = document.getElementById('liveBtn');
+  async function pollBuses(first){
+    if(first) liveBtn.classList.add('loading');
+    const [raw, reg] = await Promise.all([D.liveVehicles(route.name), D.vehiclesReg()]);
+    liveBtn.classList.remove('loading');
+    if(!liveOn) return;
+    const rows = (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng));
+    if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
+    busLayer = L.layerGroup();
+    for(const v of rows){
+      const col = String(v.direction) === '2' ? '#06b6d4' : '#f97316';
+      const icon = L.divIcon({ className:'lb-bus', iconSize:[20,20], iconAnchor:[10,10],
+        html: Number.isFinite(v.bearing)
+          ? `<div style="transform:rotate(${v.bearing}deg)"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
+          : `<div style="width:12px;height:12px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
+      const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
+      const bits = [rec?.make ? title(rec.make) : null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
+      L.marker([v.lat, v.lng], { icon })
+        .bindPopup(`<b>${esc(v.reg ?? 'Bus')}</b><br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}`)
+        .addTo(busLayer);
+    }
+    busLayer.addTo(_map);
+    if(first && !rows.length){
+      liveBtn.insertAdjacentHTML('afterend', `<span id="noBuses" style="font-size:12px;color:var(--mu);align-self:center;margin-left:8px">No buses tracked right now</span>`);
+      setTimeout(() => document.getElementById('noBuses')?.remove(), 4000);
+    }
+  }
+  liveBtn.addEventListener('click', () => {
+    liveOn = !liveOn;
+    liveBtn.classList.toggle('on', liveOn);
+    if(liveOn){ pollBuses(true); liveTimer = setInterval(() => pollBuses(false), 15000); }
+    else { if(liveTimer){ clearInterval(liveTimer); liveTimer = null; } if(busLayer){ _map.removeLayer(busLayer); busLayer = null; } }
+  });
+}
+
+/* ════════════════════ OPERATORS ════════════════════ */
+async function renderOperators(){
+  main.innerHTML = `<h1 class="h1">Operators</h1><div class="sub">Who runs London’s buses — routes, fleet size and electrification.</div>
+    <div class="oplist" id="oplist">${'<div class="skel" style="height:120px"></div>'.repeat(6)}</div>`;
+  const [meta, garages] = await Promise.all([D.meta(), D.garages()]);
+  const agg = new Map();
+  for(const [name, m] of Object.entries(meta ?? {})){
+    if(!m?.operator) continue;
+    const a = agg.get(m.operator) ?? { routes:0, pvr:0, ev:0, evKnown:0, company:m.company };
+    a.routes++;
+    if(num(m.pvr)) a.pvr += m.pvr;
+    if(m.propulsion){ a.evKnown++; if(m.propulsion==='electric'||m.propulsion==='hydrogen') a.ev++; }
+    agg.set(m.operator, a);
+  }
+  const gCount = new Map();
+  for(const g of garages ?? []) if(g.operator) gCount.set(g.operator, (gCount.get(g.operator) ?? 0) + 1);
+  const list = [...agg.entries()].sort((a,b) => b[1].routes - a[1].routes);
+  document.getElementById('oplist').innerHTML = list.map(([op,a]) => {
+    const evPct = a.evKnown ? Math.round(a.ev / a.evKnown * 100) : null;
+    return `<a class="opcard" href="#/?op=${encodeURIComponent(op)}" data-op="${esc(op)}">
+      <div class="ophead">
+        <span class="avatar" style="background:${opColor(op)}">${opInitials(op)}</span>
+        <div><div class="nm">${esc(op)}</div><div class="co">${esc(stripTags(a.company ?? ''))}</div></div>
+      </div>
+      <div class="opstats">
+        <div class="opstat"><div class="l">Routes</div><div class="v">${a.routes}</div></div>
+        <div class="opstat"><div class="l">PVR</div><div class="v">${a.pvr || '—'}</div></div>
+        <div class="opstat"><div class="l">Garages</div><div class="v">${gCount.get(op) ?? '—'}</div></div>
+      </div>
+      ${evPct != null ? `<div><div class="minibar"><i style="width:${evPct}%;background:var(--good)"></i></div>
+        <div class="legendrow"><span>${evPct}% zero-emission routes</span></div></div>` : ''}
+    </a>`;
+  }).join('');
+  /* operator card → routes view pre-filtered */
+  document.getElementById('oplist').addEventListener('click', e => {
+    const card = e.target.closest('[data-op]'); if(!card) return;
+    e.preventDefault();
+    routesViewState.op = card.dataset.op; routesViewState.q = ''; routesViewState.type = null; routesViewState.prop = null;
+    location.hash = '#/';
+  });
+}
+
+/* ════════════════════ GARAGES ════════════════════ */
+const garagesViewState = { q:'' };
+async function renderGarages(){
+  main.innerHTML = `
+    <h1 class="h1">Garages</h1><div class="sub">Every operating garage on the TfL network.</div>
+    <div class="searchwrap"><div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+      <input id="gq" placeholder="Search by name or code" autocomplete="off" value="${esc(garagesViewState.q)}" />
+    </div></div>
+    <div class="count-note" id="gCount"></div>
+    <div class="glist" id="glist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
+  const garages = await D.garages();
+  if(!garages?.length){ document.getElementById('glist').innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
+  const rerender = () => {
+    const q = garagesViewState.q.trim().toLowerCase();
+    const list = garages.filter(g => !q || g.name?.toLowerCase().includes(q) || g.code?.toLowerCase() === q)
+      .sort((a,b) => String(a.name).localeCompare(String(b.name)));
+    document.getElementById('gCount').textContent = `${list.length} garage${list.length===1?'':'s'}`;
+    document.getElementById('glist').innerHTML = list.map(g => `
+      <a class="grow" href="#/garage/${encodeURIComponent(g.code)}">
+        <span class="avatar" style="background:${opColor(g.operator)}">${opInitials(g.operator)}</span>
+        <span class="g-nm"><b>${esc(g.name)} <span style="color:var(--mu);font-weight:500">(${esc(g.code)})</span></b>
+        <span>${esc(g.operator ?? '—')} · ${g.routes?.length ?? 0} routes</span></span>
+        <span class="g-pvr"><b>${g.pvr ?? '—'}</b>PVR</span>
+      </a>`).join('') || '<div class="empty">No garages match.</div>';
+  };
+  rerender();
+  document.getElementById('gq').addEventListener('input', e => { garagesViewState.q = e.target.value; rerender(); });
+}
+
+async function renderGarageDetail(code){
+  main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="skel" style="height:120px"></div>`;
+  const garages = await D.garages();
+  const g = garages?.find(x => x.code?.toUpperCase() === String(code ?? '').toUpperCase());
+  if(!g){ main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="empty">Garage “${esc(code)}” not found.</div>`; return; }
+  const tvr = tvrOf(g.pvr);
+  const util = num(g.utilisation) ?? (num(g.pvr) && num(g.capacity) ? g.pvr / g.capacity : null);
+  main.innerHTML = `
+    <a class="backrow" href="#/garages">‹ All garages</a>
+    <div class="dhead">
+      <span class="avatar" style="width:46px;height:46px;border-radius:12px;font-size:14px;background:${opColor(g.operator)}">${opInitials(g.operator)}</span>
+      <div class="dtitle"><h1>${esc(g.name)} <span style="color:var(--mu)">(${esc(g.code)})</span></h1>
+      <div class="sub2">${esc(g.operator ?? '')}${g.company ? ' · ' + esc(stripTags(g.company)) : ''}</div></div>
+    </div>
+    <div class="facts" style="margin-top:14px">
+      <div class="fact"><div class="l">PVR</div><div class="v">${g.pvr ?? '—'}</div></div>
+      <div class="fact"><div class="l">TVR</div><div class="v">${tvr ?? '—'}</div></div>
+      <div class="fact"><div class="l">Capacity</div><div class="v">${g.capacity ?? '—'}</div></div>
+      <div class="fact"><div class="l">Routes</div><div class="v">${g.routes?.length ?? 0}</div></div>
+      <div class="fact"><div class="l">Postcode</div><div class="v">${esc(g.postcode ?? '—')}</div></div>
+      <div class="fact"><div class="l">Code</div><div class="v">${esc(g.code)}</div></div>
+    </div>
+    <div class="section"><div class="section-h">Routes operated here</div>
+      <div class="card">
+        ${util != null ? `<div class="util"><span style="color:var(--tx2)">Utilisation</span><div class="minibar"><i style="width:${Math.min(100,Math.round(util*100))}%"></i></div><b class="mono" style="font-family:var(--mono);font-size:13px">${Math.round(util*100)}%</b></div>` : ''}
+        <div class="chiprow">${(g.routes ?? []).map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`).join('') || '<span class="empty" style="padding:10px">No routes listed.</span>'}</div>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════ ABOUT ════════════════════ */
+async function renderAbout(){
+  main.innerHTML = `
+    <h1 class="h1">About</h1>
+    <div class="sub">London Buses v2 — search and explore every TfL bus route, operator and garage.</div>
+    <div class="card" style="padding:16px" id="aboutCard">
+      <div class="prose">
+        <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
+        <p>Every number on this site is served by the <a href="https://atlas.farhan.app/docs/" rel="noopener">Atlas API</a>. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, reliability, crowding) — <b>Powered by TfL Open Data</b>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA (vehicle details, OGL); londonbusroutes.net (operators, garages, PVR — community reference); basemap © OpenStreetMap contributors &amp; CARTO.</p>
+        <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
+      </div>
+    </div>
+    <div class="section"><div class="section-h">Data freshness</div>
+      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="2" style="color:var(--mu)">Loading…</td></tr></table></div>
+    </div>
+    <div class="footer">TVR = PVR × 1.13 (rounded down) · Data may be incomplete or out of date — verify before acting on it.</div>`;
+  const mf = await D.manifest();
+  const rows = Object.entries(mf?.datasets ?? {})
+    .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','route-performance','crowding','route-diversions'].includes(k))
+    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(fmtDate(v.fetchedAt) ?? '—')}${v.status && v.status!=='ok' ? ' ⚠️' : ''}</td></tr>`);
+  document.getElementById('freshTable').innerHTML = rows.join('') || '<tr><td colspan="2" style="color:var(--mu)">Manifest unavailable.</td></tr>';
+}
+
+/* boot */
+navigate();
+</script>
+</body>
+</html>

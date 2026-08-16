@@ -10,6 +10,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-13_
 
+- **NEW** London Buses **v2 (beta)** at [/v2](https://london-buses.farhan.app/v2/) — a new mobile-first companion app: search and filter every route (type, operator, propulsion), and explore route, operator and garage detail pages. Minimal light UI, every number served live by the Atlas API (route facts incl. PVR/TVR, live status with the multi-notice selection logic, QSI reliability vs standards with trend, BUSTO crowding with load profile, fleet sample, contract & tendering, per-route map with direction toggle and opt-in live buses, operator aggregates, garage utilisation). Ships as a single HTML file, immune by construction to the edge-cache mixed-asset failures that have bitten the main app.
 - **UX** Focusing a route now shows a clean line by default — the full stop list and live-bus tracking start OFF per focus (the pills opt in), with only the start and finish stops kept visible as slightly larger rings.
 - **UX** Multi-route comparison gets a designed palette — eight deep, high-contrast hues in the app's own colour language (blue, burnt orange, aqua, violet, mustard, pink, green, plum), in a fixed order validated for colour-vision-deficiency separation and contrast against the basemap. Colours stay sticky per route while selected.
 - **UX** Garage pins now carry three-letter operator initials — SCL Stagecoach, ARL Arriva, GAL Go-Ahead, TUK Transport UK, FRG First, MLN Metroline, UNO Uno, FAL Falcon.
