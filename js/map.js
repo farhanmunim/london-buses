@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.18.0';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.18.0';
+import { state } from './state.js?v=2.18.1';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.18.1';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -182,6 +182,7 @@ function findRoutesNearPoint(containerPt, pixelRadius) {
 export function initMap() {
   _map = L.map('map', {
     center: LONDON, zoom: ZOOM, zoomControl: false, preferCanvas: true,
+    attributionControl: false,
   });
 
   L.control.zoom({ position: 'bottomright' }).addTo(_map);
@@ -190,8 +191,9 @@ export function initMap() {
   // the route lines (z420 — over the overlay pane, under vehicles at z450):
   // exactly one set of place/road names, never doubled, and no longer buried
   // under thick polylines.
+  // No on-map attribution strip — the About dialog's data-sources section
+  // carries the OSM / CARTO / TfL credits.
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> © <a href="https://carto.com/" target="_blank">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
     detectRetina: true,

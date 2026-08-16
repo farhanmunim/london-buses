@@ -231,7 +231,8 @@ main.fullbleed{max-width:none;padding:0}
 .nm-sug.act,.nm-sug:hover{background:var(--bg)}
 .nm-nores{padding:9px 10px;font-size:12.5px;color:var(--mu)}
 .nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
-.nm-lbl{font-size:11px;color:var(--mu);font-weight:600;margin-left:auto}
+.nm-lbl{font-size:11px;color:var(--mu);font-weight:600}
+.nm-colour{display:flex;align-items:center;justify-content:space-between;flex:1 0 100%}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
 .expchip{display:inline-block;vertical-align:1px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px}
 .nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
@@ -265,9 +266,9 @@ main.fullbleed{max-width:none;padding:0}
     <nav class="nav-desktop" id="navDesktop">
       <a href="#/map" data-nav="map">Map</a>
       <a href="#/" data-nav="routes">Routes</a>
-      <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
+      <a href="#/stops" data-nav="stops">Stops</a>
     </nav>
     <div class="topbar-spacer"></div>
     <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
@@ -282,9 +283,9 @@ main.fullbleed{max-width:none;padding:0}
 <nav class="tabbar" aria-label="Primary">
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
   <a href="#/map" data-nav="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
-  <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
+  <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
 </nav>
 
 <script type="module">
@@ -412,8 +413,7 @@ function baseTiles(map){
    construction rather than by review. */
 function makeMap(el){
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false });
-  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO · Powered by TfL Open Data').addTo(map);
-  baseTiles(map);
+  baseTiles(map);   // credits live in the About page, not on every map corner
   return map;
 }
 
@@ -859,8 +859,8 @@ async function buildRouteSections(route, m){
         rows.push(`<div><span class="k">Departure breakdown</span><span class="v mono">${rec.on_time} on time · ${rec.early} early · ${rec.late} late · ${rec.non_arrival} no-show</span></div>`);
       rows.push(`<div><span class="k">Measured</span><span class="v">${fmtDate(rec.day)} (${esc(rec.day_type ?? '')}) · ${esc(rec.confidence ?? '')} confidence${num(rec.feed_coverage_pct) ? ` · ${rec.feed_coverage_pct}% coverage` : ''}</span></div>`);
       frag.push(`<div class="section"><div class="section-h">Tracked reliability <span class="expchip">Experimental</span></div>
-        <div class="card"><div class="kv">${rows.join('')}</div>
-        <div class="legendrow" style="margin-top:8px"><span>Atlas’s own estimate from tracking every bus via BODS — experimental and not comparable to TfL’s QSI figures above.</span></div></div></div>`);
+        <div class="card"><div class="kv">${rows.join('')}</div></div>
+        <div class="legendrow" style="margin-top:8px"><span>Atlas’s own estimate from tracking every bus via BODS — experimental and not comparable to TfL’s QSI figures above.</span></div></div>`);
     }
   }catch(e){ /* experimental feed — never fatal */ }
 
@@ -1124,8 +1124,8 @@ async function renderNetworkMap(){
             Filters<span id="nmFBadge" class="nm-badge" hidden></span>
           </button>
           <button class="livebtn ${netmapState.garages?'on':''}" id="nmGarages" style="margin:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Garages</button>
-          <div style="display:flex;align-items:center;gap:7px;margin-left:auto">
-            <span class="nm-lbl" style="margin-left:0">Colour</span>
+          <div class="nm-colour">
+            <span class="nm-lbl">Colour by</span>
             <div class="seg">
               <button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button>
               <button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button>
@@ -1186,19 +1186,27 @@ async function renderNetworkMap(){
   }).addTo(_map);
 
   let garageLayer = null;
+  /* Garage pins track the same state as the lines: with routes focused you
+     see those routes' garages; with filters on, only garages that operate a
+     route still on the map; with nothing active, every garage. */
   function syncGarages(){
-    if(st.garages && !garageLayer){
-      garageLayer = L.layerGroup();
-      for(const g of garages ?? []){
-        if(!garageLocOk(g)) continue;
-        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34) })
-          .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
-          .addTo(garageLayer);
-      }
-      garageLayer.addTo(_map);
-    } else if(!st.garages && garageLayer){
-      _map.removeLayer(garageLayer); garageLayer = null;
+    if(garageLayer){ _map.removeLayer(garageLayer); garageLayer = null; }
+    if(!st.garages) return;
+    const narrowing = st.pills.length || st.f.type.size || st.f.prop.size || st.f.op.size;
+    const vis = new Set();
+    if(narrowing) for(const n of allNames){
+      const up = n.toUpperCase();
+      if(st.pills.length ? st.pills.includes(up) : passes(n)) vis.add(up);
     }
+    garageLayer = L.layerGroup();
+    for(const g of garages ?? []){
+      if(!garageLocOk(g)) continue;
+      if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))) continue;
+      L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34) })
+        .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+        .addTo(garageLayer);
+    }
+    garageLayer.addTo(_map);
   }
   syncGarages();
 
@@ -1220,9 +1228,12 @@ async function renderNetworkMap(){
       }
       if(!_map.hasLayer(ly)) ly.addTo(_map);
       ly.setStyle(styleFor(ly.feature));
-      const wantTip = focused || !st.pills.length;
-      if(wantTip && !ly.getTooltip()) ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
-      else if(!wantTip && ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
+      // Faded context lines are fully inert — no pointer cursor promising a
+      // click that would silently add a route.
+      const active = focused || !st.pills.length;
+      ly.options.interactive = active;
+      if(active && !ly.getTooltip()) ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
+      else if(!active && ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
       if(focused) ly.bringToFront();
     });
 
@@ -1235,6 +1246,7 @@ async function renderNetworkMap(){
       : (filtered ? `${vis.size} of ${allNames.size} routes` : `${allNames.size} routes`);
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
+    syncGarages();
   }
 
   /* ── filter section — inline in the panel, grouped multi-select ── */
