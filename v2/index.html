@@ -284,7 +284,8 @@ const D = {
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => d?.byReg ?? {}),
-  liveStatus:  (r) => get('/live/status?route=' + encodeURIComponent(r)),
+  liveStatus:  (r) => fetch(API + '/live/status?route=' + encodeURIComponent(r)) // never cached — re-polled
+                        .then(x => x.ok ? x.json() : null).catch(() => null),
   perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
   liveVehicles:(r) => fetch(API + '/live/vehicles?line=' + encodeURIComponent(r)) // never cached — polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
@@ -498,10 +499,12 @@ new MutationObserver(() => applyTips(document.getElementById('main'))).observe(
 /* ── Router ───────────────────────────────────────────────────────────── */
 const main = document.getElementById('main');
 const routesViewState = { q:'', type:null, op:null, prop:null };  // survives back-nav
-let liveTimer = null;   // route-detail live poll — killed on any nav
+let liveTimers = [];   // every polling surface registers here — all killed on nav
+const addLiveTimer = t => { liveTimers.push(t); return t; };
 
 function navigate(){
-  if(liveTimer){ clearInterval(liveTimer); liveTimer = null; }
+  for(const t of liveTimers) clearInterval(t);
+  liveTimers = [];
   const h = location.hash.replace(/^#\/?/, '');
   const [seg, arg] = h.split('/').map(decodeURIComponent);
   const view = seg === '' ? 'routes' : seg;
@@ -631,6 +634,7 @@ async function renderRouteDetail(name){
         <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
         <button class="livebtn" id="stopsBtn" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</button>
         <button class="livebtn" id="liveBtn" style="margin-left:0"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
+        <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
     </div>
@@ -655,8 +659,13 @@ async function renderRouteDetail(name){
       </div>
     </div>`;
 
-  /* live status — seconds-fresh feed, snapshot fallback */
-  D.liveStatus(route.name).then(async raw => {
+  /* live status — seconds-fresh feed, snapshot fallback, silently
+     re-polled every 60 s so the banner tracks reality while the page
+     stays open */
+  async function refreshStatus(){
+    const raw = await D.liveStatus(route.name);
+    const host = document.getElementById('dstatus');
+    if(!host) return;   // navigated away
     let st = pickStatus(route.name, raw?.data?.[0]?.lineStatuses);
     if(!st){
       const snap = await D.lineStatus();
@@ -665,12 +674,14 @@ async function renderRouteDetail(name){
     }
     if(!st) return;
     const good = st.severity === 10;
-    document.getElementById('dstatus').innerHTML = `
+    host.innerHTML = `
       <div class="statusline ${good?'':'bad'}"><span class="dot"></span>
         <div><b>${esc(st.status ?? (good?'Good Service':'Disruption'))}</b>
         ${st.reason && !good ? `<div class="reason">${esc(st.reason)}</div>` : ''}</div>
       </div>`;
-  });
+  }
+  refreshStatus();
+  addLiveTimer(setInterval(refreshStatus, 60000));
 
   /* fact tiles */
   const facts = [];
@@ -952,11 +963,26 @@ async function initRouteMap(route, m = {}){
       setTimeout(() => document.getElementById('noBuses')?.remove(), 4000);
     }
   }
+  /* live-surface pattern: 1 s ticker shows 'next update in N s' and fires
+     the 15 s re-poll — registered once, gated by the toggle */
+  let busNextIn = 0, busTickerOn = false;
+  const busNote = document.getElementById('busLiveNote'), busText = document.getElementById('busLiveText');
   liveBtn.addEventListener('click', () => {
     liveOn = !liveOn;
     liveBtn.classList.toggle('on', liveOn);
-    if(liveOn){ pollBuses(true); liveTimer = setInterval(() => pollBuses(false), 15000); }
-    else { if(liveTimer){ clearInterval(liveTimer); liveTimer = null; } if(busLayer){ _map.removeLayer(busLayer); busLayer = null; } }
+    if(busNote) busNote.style.display = liveOn ? 'inline-flex' : 'none';
+    if(liveOn){
+      pollBuses(true); busNextIn = 15;
+      if(!busTickerOn){
+        busTickerOn = true;
+        addLiveTimer(setInterval(() => {
+          if(!liveOn || !document.getElementById('map')) return;
+          busNextIn -= 1;
+          if(busText) busText.textContent = busNextIn > 0 ? `next update in ${busNextIn} s` : 'updating…';
+          if(busNextIn <= 0){ busNextIn = 15; pollBuses(false); }
+        }, 1000));
+      }
+    } else if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
   });
 }
 
@@ -1298,7 +1324,7 @@ async function renderStopDetail(id){
   }
   poll(); nextIn = 30;
   const n0 = document.getElementById('nextUpd'); if(n0) n0.textContent = 'next update in 30 s';
-  liveTimer = setInterval(tick, 1000);
+  addLiveTimer(setInterval(tick, 1000));
 }
 
 /* ════════════════════ VEHICLE ════════════════════ */
@@ -1420,20 +1446,30 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
     else busMarker = L.marker([b.lat, b.lng], { icon })
       .bindPopup(`${plate(R, false)}<br>${esc(b.destination ? 'to ' + title(b.destination) : '')}`)
       .addTo(_map);
-    const t = new Date();
-    if(note) note.textContent = `On route ${line} · updated ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')} · refreshes every 15 s`;
   }
+  const noteText = extra => {
+    if(note) note.innerHTML = `<span class="livechip"><i class="pulse"></i>LIVE</span> · on route ${esc(line)} · ${extra}`;
+  };
   drawBus(first);
   let b = L.latLngBounds([[first.lat, first.lng]]);
   if(stopLL) b = b.extend(stopLL);
   _map.fitBounds(b.pad(0.35), { maxZoom: 15 });
 
-  liveTimer = setInterval(async () => {
-    const cur = await findBus();
+  /* live-surface pattern: per-second countdown, 15 s re-poll */
+  let nextIn = 15, gone = false;
+  noteText('next update in 15 s');
+  addLiveTimer(setInterval(async () => {
     if(!document.getElementById('vLiveSec')) return;
-    if(cur) drawBus(cur);
-    else if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.';
-  }, 15000);
+    nextIn -= 1;
+    if(!gone) noteText(nextIn > 0 ? `next update in ${nextIn} s` : 'updating…');
+    if(nextIn <= 0){
+      nextIn = 15;
+      const cur = await findBus();
+      if(!document.getElementById('vLiveSec')) return;
+      if(cur){ gone = false; drawBus(cur); noteText('next update in 15 s'); }
+      else { gone = true; if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.'; }
+    }
+  }, 1000));
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
