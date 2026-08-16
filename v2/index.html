@@ -981,6 +981,7 @@ async function renderGarages(){
     <div class="searchwrap"><div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
       <input id="gq" placeholder="Search by name or code" autocomplete="off" value="${esc(garagesViewState.q)}" />
+      <button class="clear" id="gqClear" aria-label="Clear search" ${garagesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div></div>
     <div class="count-note" id="gCount"></div>
     <div class="glist" id="glist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
@@ -1000,7 +1001,9 @@ async function renderGarages(){
       </a>`).join('') || '<div class="empty">No garages match.</div>';
   };
   rerender();
-  document.getElementById('gq').addEventListener('input', e => { garagesViewState.q = e.target.value; rerender(); });
+  const gq = document.getElementById('gq'), gqClear = document.getElementById('gqClear');
+  gq.addEventListener('input', () => { garagesViewState.q = gq.value; gqClear.hidden = !gq.value; rerender(); });
+  gqClear.addEventListener('click', () => { gq.value=''; garagesViewState.q=''; gqClear.hidden=true; rerender(); gq.focus(); });
 }
 
 async function renderGarageDetail(code){
@@ -1087,6 +1090,7 @@ async function renderStops(){
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
         <input id="sq" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
+        <button class="clear" id="sqClear" aria-label="Clear search" ${stopsViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <button class="livebtn" id="nearBtn" style="margin:0;flex:none"><span class="spin"></span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Near me</button>
       </div>
@@ -1118,7 +1122,9 @@ async function renderStops(){
     lEl.innerHTML = list.map(s => rowHtml(s)).join('') || '<div class="empty">No stops match.</div>';
   };
   rerender();
-  document.getElementById('sq').addEventListener('input', e => { stopsViewState.q = e.target.value; rerender(); });
+  const sq = document.getElementById('sq'), sqClear = document.getElementById('sqClear');
+  sq.addEventListener('input', () => { stopsViewState.q = sq.value; sqClear.hidden = !sq.value; rerender(); });
+  sqClear.addEventListener('click', () => { sq.value=''; stopsViewState.q=''; sqClear.hidden=true; rerender(); sq.focus(); });
 
   /* Near me — device location → closest stops, sorted by distance */
   const nearBtn = document.getElementById('nearBtn');
