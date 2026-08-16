@@ -1073,37 +1073,83 @@ async function initGarageMap(g){
 
 /* ════════════════════ STOPS — search + live arrivals ════════════════════ */
 const stopsViewState = { q:'' };
+const haversineM = (aLat,aLng,bLat,bLng) => {
+  const D = Math.PI/180, R = 6371e3;
+  const x = Math.sin((bLat-aLat)*D/2)**2 + Math.cos(aLat*D)*Math.cos(bLat*D)*Math.sin((bLng-aLng)*D/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+};
+const fmtDist = m => m < 950 ? `${Math.round(m/10)*10} m` : `${(m/1000).toFixed(1)} km`;
+
 async function renderStops(){
   main.innerHTML = `
     <h1 class="h1">Bus stops</h1><div class="sub">Find any stop and see live arrival times, straight from TfL Countdown.</div>
-    <div class="searchwrap"><div class="search">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-      <input id="sq" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
-    </div></div>
+    <div class="searchwrap">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+        <input id="sq" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
+        <button class="livebtn" id="nearBtn" style="margin:0;flex:none"><span class="spin"></span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Near me</button>
+      </div>
+    </div>
     <div class="count-note" id="sCount"></div>
     <div class="glist" id="slist"><div class="empty" id="sHint">Loading the stop directory…</div></div>`;
   const reg = await stopRegistry();
-  if(!reg?.size){ document.getElementById('slist').innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
+  if(!reg?.size){ const l=document.getElementById('slist'); if(l) l.innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
   const all = [...reg.values()];
+
+  const rowHtml = (s, dist) => `
+    <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
+      <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:10px">${esc([...s.lines].length)}</span>
+      <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).join(' · ')}${s.lines.size>8?' …':''}</span></span>
+      ${dist != null ? `<span class="g-pvr"><b style="font-size:12.5px">${fmtDist(dist)}</b>away</span>` : ''}
+    </a>`;
+
   const rerender = () => {
     const q = stopsViewState.q.trim().toLowerCase();
     const cEl = document.getElementById('sCount'), lEl = document.getElementById('slist');
     if(!cEl || !lEl) return;
     if(q.length < 2){
       cEl.textContent = `${all.length.toLocaleString('en-GB')} stops on the network`;
-      lEl.innerHTML = '<div class="empty">Type at least two characters to search.</div>';
+      lEl.innerHTML = '<div class="empty">Type at least two characters, or use “Near me”.</div>';
       return;
     }
     const list = all.filter(s => s.name?.toLowerCase().includes(q)).slice(0, 60);
     cEl.textContent = `${list.length}${list.length===60?'+':''} stop${list.length===1?'':'s'} match`;
-    lEl.innerHTML = list.map(s => `
-      <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
-        <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:10px">${esc([...s.lines].length)}</span>
-        <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).join(' · ')}${s.lines.size>8?' …':''}</span></span>
-      </a>`).join('') || '<div class="empty">No stops match.</div>';
+    lEl.innerHTML = list.map(s => rowHtml(s)).join('') || '<div class="empty">No stops match.</div>';
   };
   rerender();
   document.getElementById('sq').addEventListener('input', e => { stopsViewState.q = e.target.value; rerender(); });
+
+  /* Near me — device location → closest stops, sorted by distance */
+  const nearBtn = document.getElementById('nearBtn');
+  nearBtn.addEventListener('click', () => {
+    const cEl = document.getElementById('sCount'), lEl = document.getElementById('slist');
+    if(!navigator.geolocation){ cEl.textContent = 'Location is not available in this browser.'; return; }
+    nearBtn.classList.add('loading','on');
+    navigator.geolocation.getCurrentPosition(pos => {
+      nearBtn.classList.remove('loading');
+      const { latitude:lat, longitude:lng } = pos.coords;
+      const nearest = all
+        .map(s => ({ s, d: haversineM(lat, lng, s.lat, s.lng) }))
+        .sort((a,b) => a.d - b.d)
+        .slice(0, 15);
+      if(!cEl || !lEl) return;
+      if(!nearest.length || nearest[0].d > 30000){
+        cEl.textContent = 'You seem to be outside the TfL network.';
+        lEl.innerHTML = '<div class="empty">No London bus stops nearby.</div>';
+        return;
+      }
+      stopsViewState.q = ''; const qEl = document.getElementById('sq'); if(qEl) qEl.value = '';
+      cEl.textContent = 'Closest stops to you';
+      lEl.innerHTML = nearest.map(({s,d}) => rowHtml(s, d)).join('');
+    }, err => {
+      nearBtn.classList.remove('loading','on');
+      const cEl2 = document.getElementById('sCount');
+      if(cEl2) cEl2.textContent = err.code === 1
+        ? 'Location permission was declined — search by name instead.'
+        : 'Couldn’t get your location — try again or search by name.';
+    }, { enableHighAccuracy:false, timeout:10000, maximumAge:60000 });
+  });
 }
 
 async function renderStopDetail(id){
