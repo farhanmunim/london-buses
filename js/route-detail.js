@@ -11,13 +11,13 @@
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.17.0';
-import { opColor, multiRouteColor } from './map.js?v=2.17.0';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.17.1';
+import { opColor, multiRouteColor } from './map.js?v=2.17.1';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
   fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
   fetchLiveVehicles,
-} from './api.js?v=2.17.0';
+} from './api.js?v=2.17.1';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
@@ -931,18 +931,15 @@ function toTitleCase(s) {
 
 // ISO yyyy-mm-dd → "12 Aug 2025". Locale-stable so the card reads the same
 // for everyone regardless of browser locale.
-const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function formatHumanDate(iso) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso));
   if (!m) return iso;
-  const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
-  return `${parseInt(m[3], 10)} ${mon} ${m[1]}`;
+  return `${m[3]}/${m[2]}/${m[1]}`;   // dd/mm/yyyy — house date format
 }
 
 // "2026-11" (month-precision contract dates from the Atlas route-meta) → "Nov 2026".
 function formatMonthYear(ym) {
   const m = /^(\d{4})-(\d{2})/.exec(String(ym));
   if (!m) return ym;
-  const mon = MONTHS_SHORT[parseInt(m[2], 10) - 1] ?? m[2];
-  return `${mon} ${m[1]}`;
+  return `${m[2]}/${m[1]}`;   // mm/yyyy — day unknown at this granularity
 }

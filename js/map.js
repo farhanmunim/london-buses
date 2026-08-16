@@ -2,8 +2,8 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.17.0';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.17.0';
+import { state } from './state.js?v=2.17.1';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.17.1';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
@@ -565,7 +565,7 @@ function renderDiversionOverlay(dir, color, lineFeatures = [], stopsFeatures = [
       }));
     }
     const label = `Diversion${divn.until
-      ? ` · until ${new Date(divn.until).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}`;
+      ? ` · until ${(d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`)(new Date(divn.until))}` : ''}`;
     let longestLine = null, longestLen = 0;
     for (const seg of segments) {
       if (seg.length < 2) continue;

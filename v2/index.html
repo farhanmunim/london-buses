@@ -301,8 +301,9 @@ const stripTags = s => String(s ?? '').replace(/<[^>]*>/g, ' ')
   .replace(/\s+/g,' ').trim();
 const num = v => Number.isFinite(v) ? v : null;
 const tvrOf = pvr => Number.isFinite(pvr) ? Math.floor(pvr * 1.13) : null;
-const fmtDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : null; };
-const monthYear = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym ?? ''); return m ? new Date(+m[1], +m[2]-1, 1).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : null; };
+const fmtDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
+  ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : null; };
+const monthYear = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym ?? ''); return m ? `${m[2]}/${m[1]}` : null; };
 const title = s => String(s ?? '').toLowerCase().replace(/\b[a-z]/g, c => c.toUpperCase());
 const cmpRoute = (a,b) => { const na=parseInt(a,10), nb=parseInt(b,10);
   if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb; if(!isNaN(na)&&isNaN(nb)) return -1; if(isNaN(na)&&!isNaN(nb)) return 1;
@@ -737,7 +738,7 @@ async function buildRouteSections(route, m){
   if(m.contractEnd)   rows.push(`<div><span class="k">Contract end</span><span class="v mono">${esc(monthYear(m.contractEnd) ?? m.contractEnd)}</span></div>`);
   const awardRows = (a) => {
     const r = [];
-    if(a.awardDate) r.push(`<div><span class="k">Awarded on</span><span class="v">${esc(a.awardDate)}</span></div>`);
+    if(a.awardDate) r.push(`<div><span class="k">Awarded on</span><span class="v mono">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</span></div>`);
     if(a.operator)  r.push(`<div><span class="k">Awarded to</span><span class="v">${esc(a.operator)}</span></div>`);
     if(num(a.costPerMile))  r.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${a.costPerMile.toFixed(2)}</span></div>`);
     if(num(a.acceptedBid))  r.push(`<div><span class="k">Accepted bid</span><span class="v mono">£${a.acceptedBid.toLocaleString('en-GB')}/yr</span></div>`);
