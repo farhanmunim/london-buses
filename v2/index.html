@@ -186,6 +186,13 @@ table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
 table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--tx2)}
 .footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
 
+/* UK-plate styling for vehicle registrations */
+.plate{display:inline-block;font-family:var(--mono);font-weight:600;font-size:11.5px;letter-spacing:.06em;color:#111;background:#fc0;border:1.5px solid #1c1917;border-radius:5px;padding:1px 7px;line-height:1.5;white-space:nowrap}
+a.plate:hover{background:#ffd83d}
+/* long values (vehicle makes, company names) must not balloon a card —
+   cap the cell and let it scroll inside */
+.kv .v{max-height:76px;overflow-y:auto;overscroll-behavior:contain}
+
 /* tooltips — data source + refresh cadence on any label */
 [data-tip]{text-decoration:underline dotted var(--bd2);text-underline-offset:3px;cursor:help}
 .tipbox{position:fixed;z-index:90;max-width:280px;background:var(--tx);color:#fff;font-size:12px;line-height:1.5;border-radius:9px;padding:9px 12px;box-shadow:0 6px 22px rgba(28,25,23,.28);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s}
@@ -272,7 +279,12 @@ const D = {
                         .then(x => x.ok ? x.json() : null).catch(() => null),
   arrivals:    (s) => fetch(API + '/live/arrivals?stop=' + encodeURIComponent(s)) // never cached — polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
+  sightings:   (r) => get('/history/vehicle-sightings?reg=' + encodeURIComponent(r) + '&limit=14'),
 };
+const plate = (reg, link=true) => reg
+  ? (link ? `<a class="plate" href="#/vehicle/${encodeURIComponent(String(reg).toUpperCase())}">${esc(String(reg).toUpperCase())}</a>`
+          : `<span class="plate">${esc(String(reg).toUpperCase())}</span>`)
+  : '';
 
 /* Stop registry — every unique stop across all routes, derived once from
    route-stops: id → { name, lat, lng, lines:Set }. */
@@ -353,7 +365,9 @@ const S = {
   QSI:     'TfL QSI reports, via the Atlas API|TfL publishes every ~4 weeks',
   MPS:     'TfL per-route MPS reports, via the Atlas API|TfL publishes every ~4 weeks',
   BUSTO:   'TfL BUSTO demand data, via the Atlas API|TfL publishes annually',
-  FLEET:   'TfL arrivals sample + DVLA, via the Atlas API|Sampled daily ~03:17 UTC',
+  FLEET:   'TfL arrivals sample + DVLA + bustimes.org, via the Atlas API|Sampled daily ~03:17 UTC',
+  SIGHT:   'Vehicle-on-route observations, Atlas warehouse|Accrues daily',
+  DIVN:    'TfL status diffed against the frozen route, via the Atlas API|Refreshed every ~4 h',
   TENDER:  'TfL tender award results, via the Atlas API|Checked daily, append-only',
   CURATED: 'Curated Atlas data — published for a few flagship routes only|Refreshed daily',
   LIVE:    'TfL live status, via the Atlas API|~30 s fresh',
@@ -395,7 +409,16 @@ const LABEL_TIPS = {
   'Bids received': ['How many operators bid', S.TENDER],
   'Joint bid': ['Whether tendered as part of a joint bid across routes', S.TENDER],
   'Awarded vehicle': ['Vehicle spec required by the award', S.TENDER],
+  'Contracted miles': ['Annual live miles — accepted bid ÷ cost per mile', S.TENDER],
   'Tranche': ['LBSL tendering programme batch', S.TENDER],
+  'Registrations': ['Vehicles observed on the route in the last sample — tap a plate for its record', S.FLEET],
+  'Make': ['Chassis maker (DVLA)', S.FLEET],
+  'Body': ['Full vehicle type — chassis + bodywork (bustimes.org)', S.FLEET],
+  'Year': ['Year of manufacture (DVLA)', S.FLEET],
+  'Deck': ['Single or double deck (bustimes.org)', S.FLEET],
+  'Fleet code': ['Operator fleet number (bustimes.org)', S.FLEET],
+  'Observed on': ['Routes this vehicle has been seen working', S.FLEET],
+  'Recent sightings': ['', S.SIGHT],
   'Capacity': ['Approximate bus capacity of the garage', S.CAPACITY],
   'Utilisation': ['PVR ÷ capacity', S.DERIVED],
   'Routes': ['Routes allocated', S.LBR],
@@ -471,7 +494,7 @@ function navigate(){
   const [seg, arg] = h.split('/').map(decodeURIComponent);
   const view = seg === '' ? 'routes' : seg;
   const navKey = view === 'route' ? 'routes' : view === 'garage' ? 'garages'
-    : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view;
+    : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view === 'vehicle' ? 'routes' : view;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   window.scrollTo(0, 0);
   if(view === 'routes')         renderRoutes();
@@ -482,6 +505,7 @@ function navigate(){
   else if(view === 'operator')  renderOperatorDetail(arg);
   else if(view === 'garages')   renderGarages();
   else if(view === 'garage')    renderGarageDetail(arg);
+  else if(view === 'vehicle')   renderVehicleDetail(arg);
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
 }
@@ -725,6 +749,10 @@ async function buildRouteSections(route, m){
     if(fl.count > 0) rows.push(`<div><span class="k">Observed in last sample</span><span class="v mono">${fl.count} vehicles</span></div>`);
     if(num(fl.avgAgeYears)) rows.push(`<div><span class="k">Average age</span><span class="v mono">${fl.avgAgeYears.toFixed(1)} years</span></div>`);
     if(fl.makes?.length) rows.push(`<div><span class="k">Makes</span><span class="v">${fl.makes.map(x=>`${esc(title(x.make))} (${x.n})`).join(', ')}</span></div>`);
+    if(fl.regs?.length){
+      const shown = fl.regs.slice(0, 24);
+      rows.push(`<div><span class="k">Registrations</span><span class="v" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end">${shown.map(r => plate(r)).join('')}${fl.regs.length > shown.length ? `<span style="color:var(--mu);font-size:12px;align-self:center">+${fl.regs.length - shown.length} more</span>` : ''}</span></div>`);
+    }
     if(rows.length) frag.push(`<div class="section"><div class="section-h">Fleet</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
   }
 
@@ -742,6 +770,8 @@ async function buildRouteSections(route, m){
     if(a.operator)  r.push(`<div><span class="k">Awarded to</span><span class="v">${esc(a.operator)}</span></div>`);
     if(num(a.costPerMile))  r.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${a.costPerMile.toFixed(2)}</span></div>`);
     if(num(a.acceptedBid))  r.push(`<div><span class="k">Accepted bid</span><span class="v mono">£${a.acceptedBid.toLocaleString('en-GB')}/yr</span></div>`);
+    if(num(a.acceptedBid) && num(a.costPerMile) && a.costPerMile > 0)
+      r.push(`<div><span class="k">Contracted miles</span><span class="v mono">${Math.round(a.acceptedBid/a.costPerMile).toLocaleString('en-GB')} mi/yr</span></div>`);
     if(num(a.numberOfTenderers)) r.push(`<div><span class="k">Bids received</span><span class="v mono">${a.numberOfTenderers}</span></div>`);
     const jb = a.jb;
     r.push(`<div><span class="k">Joint bid</span><span class="v">${jb?.isJoint ? 'Yes' + (jb.partners?.length ? ' · with ' + jb.partners.map(esc).join(', ') : '') : 'No'}</span></div>`);
@@ -877,9 +907,9 @@ async function initRouteMap(route){
           ? `<div style="transform:rotate(${v.bearing}deg)"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
           : `<div style="width:12px;height:12px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
       const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
-      const bits = [rec?.make ? title(rec.make) : null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
+      const bits = [rec?.make ? title(rec.make) : null, rec?.body ?? null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
       L.marker([v.lat, v.lng], { icon })
-        .bindPopup(`<b>${esc(v.reg ?? 'Bus')}</b><br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}`)
+        .bindPopup(`${v.reg ? plate(v.reg) : '<b>Bus</b>'}<br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}${v.reg?`<br><a href="#/vehicle/${encodeURIComponent(String(v.reg).toUpperCase())}" style="color:var(--acc);font-weight:600">Vehicle details ›</a>`:''}`)
         .addTo(busLayer);
     }
     busLayer.addTo(_map);
@@ -1193,12 +1223,13 @@ async function renderStopDetail(id){
     el.innerHTML = rows.map(a => {
       const mins = Math.floor(a.timeToStation / 60);
       const due = mins <= 0 ? 'Due' : `${mins} min`;
-      const where = a.currentLocation ? esc(a.currentLocation) : (a.vehicleId ? 'Bus ' + esc(a.vehicleId) : '');
+      const sub = [a.currentLocation ? `<span>${esc(a.currentLocation)}</span>` : '', a.vehicleId ? plate(a.vehicleId) : '']
+        .filter(Boolean).join(' ');
       return `<div>
         <span class="k" style="display:flex;align-items:center;gap:9px;color:var(--tx)">
           <a class="rnum" style="min-width:40px;height:26px;font-size:12.5px;border-radius:7px" href="#/route/${encodeURIComponent(a.lineName)}">${esc(a.lineName)}</a>
           <span style="min-width:0"><b style="font-weight:600">${esc(title(a.destinationName ?? ''))}</b>
-          ${where ? `<span style="display:block;font-size:11.5px;color:var(--mu)">${where}</span>` : ''}</span>
+          ${sub ? `<span style="display:flex;align-items:center;gap:6px;margin-top:2px;font-size:11.5px;color:var(--mu);flex-wrap:wrap">${sub}</span>` : ''}</span>
         </span>
         <span class="v mono" style="color:${mins<=0?'var(--good)':'var(--tx)'};align-self:center;white-space:nowrap">${due}</span>
       </div>`;
@@ -1206,6 +1237,51 @@ async function renderStopDetail(id){
   }
   poll();
   liveTimer = setInterval(poll, 30000);
+}
+
+/* ════════════════════ VEHICLE ════════════════════ */
+async function renderVehicleDetail(reg){
+  const R = String(reg ?? '').toUpperCase();
+  main.innerHTML = `<a class="backrow" href="javascript:history.back()">‹ Back</a><div class="skel" style="height:140px"></div>`;
+  const v = (await D.vehiclesReg())?.[R] ?? null;
+  const facts = [];
+  if(v?.make) facts.push(['Make', title(v.make)]);
+  if(v?.body) facts.push(['Body', v.body]);
+  if(v?.year) facts.push(['Year', v.year]);
+  if(v?.propulsion) facts.push(['Power', title(v.propulsion)]);
+  if(v?.deck) facts.push(['Deck', title(v.deck)]);
+  if(v?.fleetCode) facts.push(['Fleet code', v.fleetCode]);
+  main.innerHTML = `
+    <a class="backrow" href="#/">‹ Routes</a>
+    <div class="dhead">
+      <span class="avatar" style="width:46px;height:46px;border-radius:12px;background:#1c1917">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fc0" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><circle cx="8.5" cy="14.5" r=".9" fill="#fc0"/><circle cx="15.5" cy="14.5" r=".9" fill="#fc0"/></svg>
+      </span>
+      <div class="dtitle">
+        <h1 style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">${plate(R,false)}${v?.operator ? `<span style="font-size:14px;font-weight:600">${esc(v.operator)}</span>` : ''}</h1>
+        <div class="sub2">${v ? 'From the Atlas vehicle register' : 'Not in the current vehicle register — it may not have been observed recently.'}</div>
+      </div>
+    </div>
+    ${facts.length ? `<div class="facts" style="margin-top:14px">${facts.map(([l,val]) =>
+      `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(val)}">${esc(val)}</div></div>`).join('')}</div>` : ''}
+    ${v?.routes?.length ? `<div class="section"><div class="section-h">Observed on</div>
+      <div class="card"><div class="chiprow">${v.routes.map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`).join('')}</div></div></div>` : ''}
+    <div class="section"><div class="section-h">Recent sightings</div>
+      <div class="card"><div class="kv" id="sightings"><div><span class="k" style="color:var(--mu)">Loading…</span></div></div></div>
+      <div class="legendrow" style="margin-top:7px"><span>Vehicle-on-route observations from the Atlas warehouse.</span></div>
+    </div>`;
+  D.sightings(R).then(h => {
+    const el = document.getElementById('sightings'); if(!el) return;
+    const rows = (h?.rows ?? []);
+    if(!rows.length){ el.innerHTML = '<div><span class="k" style="color:var(--mu)">No sightings recorded yet.</span></div>'; return; }
+    el.innerHTML = rows.map(r => {
+      const d = new Date(r.observed_at);
+      const when = isNaN(d) ? '' : `${fmtDate(r.observed_at)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      return `<div><span class="k" style="display:flex;align-items:center;gap:9px;color:var(--tx)">
+        <a class="rnum" style="min-width:40px;height:26px;font-size:12.5px;border-radius:7px" href="#/route/${encodeURIComponent(r.route_id)}">${esc(r.route_id)}</a></span>
+        <span class="v mono" style="align-self:center">${esc(when)}</span></div>`;
+    }).join('');
+  });
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
