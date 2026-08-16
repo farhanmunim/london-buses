@@ -197,6 +197,12 @@ a.plate:hover{background:#ffd83d}
 /* long values (vehicle makes, company names) must not balloon a card —
    cap the cell and let it scroll inside */
 .kv .v{max-height:76px;overflow-y:auto;overscroll-behavior:contain}
+/* full-width message inside a card (empty states, loading) — wraps, never
+   uses the k/v flex pair whose no-shrink key column overflows the card */
+.kv-empty{padding:12px 14px;color:var(--mu);font-size:13px;line-height:1.5}
+.livechip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--good)}
+.livechip .pulse{width:8px;height:8px;border-radius:50%;background:var(--good);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
 
 /* tooltips — data source + refresh cadence on any label */
 [data-tip]{text-decoration:underline dotted var(--bd2);text-underline-offset:3px;cursor:help}
@@ -641,7 +647,11 @@ async function renderRouteDetail(name){
       <span class="dnum ${route.type}">${esc(route.name)}</span>
       <div class="dtitle">
         <h1 id="dTermini">${esc(m.operator ?? 'London bus route')}</h1>
-        <div class="sub2">${[TYPE_LABEL[route.type], m.garageName ? `Garage: ${m.garageName} (${m.garage})` : null].filter(Boolean).map(esc).join(' · ')}</div>
+        <div class="sub2">${[
+          TYPE_LABEL[route.type] ? esc(TYPE_LABEL[route.type]) : null,
+          m.operator ? `<a href="#/operator/${encodeURIComponent(m.operator)}" style="color:var(--acc);font-weight:500">${esc(m.operator)}</a>` : null,
+          m.garageName ? `<a href="#/garage/${encodeURIComponent(String(m.garage).split(/[^A-Za-z]/)[0])}" style="color:var(--acc);font-weight:500">${esc(m.garageName)} (${esc(m.garage)})</a>` : null,
+        ].filter(Boolean).join(' · ')}</div>
       </div>
     </div>`;
 
@@ -768,7 +778,7 @@ async function buildRouteSections(route, m){
   const tn = (await D.tenders())?.[route.name] ?? [];
   const latest = tn[0], prev = tn[1];
   const rows = [];
-  if(m.operator)   rows.push(`<div><span class="k">Operator</span><span class="v">${esc(m.operator)}</span></div>`);
+  if(m.operator)   rows.push(`<div><span class="k">Operator</span><span class="v"><a href="#/operator/${encodeURIComponent(m.operator)}" style="color:var(--acc);font-weight:500">${esc(m.operator)}</a></span></div>`);
   if(m.company)    rows.push(`<div><span class="k">Company</span><span class="v">${esc(stripTags(m.company))}</span></div>`);
   if(m.contractStart) rows.push(`<div><span class="k">Contract start</span><span class="v mono">${esc(monthYear(m.contractStart) ?? m.contractStart)}</span></div>`);
   if(m.contractEnd)   rows.push(`<div><span class="k">Contract end</span><span class="v mono">${esc(monthYear(m.contractEnd) ?? m.contractEnd)}</span></div>`);
@@ -1072,7 +1082,7 @@ async function renderGarageDetail(code){
     <div class="dhead">
       <span class="avatar" style="width:46px;height:46px;border-radius:12px;font-size:14px;background:${opColor(g.operator)}">${opInitials(g.operator)}</span>
       <div class="dtitle"><h1>${esc(g.name)} <span style="color:var(--mu)">(${esc(g.code)})</span></h1>
-      <div class="sub2">${esc(g.operator ?? '')}${g.company ? ' · ' + esc(stripTags(g.company)) : ''}</div></div>
+      <div class="sub2">${g.operator ? `<a href="#/operator/${encodeURIComponent(g.operator)}" style="color:var(--acc);font-weight:500">${esc(g.operator)}</a>` : ''}${g.company ? ' · ' + esc(stripTags(g.company)) : ''}</div></div>
     </div>
     <div class="facts" style="margin-top:14px">
       <div class="fact"><div class="l">PVR</div><div class="v">${g.pvr ?? '—'}</div></div>
@@ -1223,30 +1233,35 @@ async function renderStopDetail(id){
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/></svg>
       </span>
       <div class="dtitle"><h1>${esc(s?.name ?? 'Bus stop')}</h1>
-      <div class="sub2">Live arrivals · updates every 30 s</div></div>
+      <div class="sub2"><span class="livechip"><i class="pulse"></i>LIVE</span> · <span id="nextUpd">updating…</span></div></div>
     </div>
     ${s?.lines?.size ? `<div class="section"><div class="section-h">Routes serving this stop</div>
       <div class="card"><div class="chiprow">${[...s.lines].sort(cmpRoute).map(l => `<a class="rchip" href="#/route/${encodeURIComponent(l)}">${esc(l)}</a>`).join('')}</div></div></div>` : ''}
     <div class="section"><div class="section-h">Next buses</div>
-      <div class="card"><div class="kv" id="arrBoard"><div><span class="k" style="color:var(--mu)">Loading arrivals…</span></div></div></div>
-      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, via the Atlas API.</span></div>
+      <div class="card"><div class="kv" id="arrBoard"><div class="kv-empty">Loading arrivals…</div></div></div>
+      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, via the Atlas API. Times count down live and re-sync every 30 s.</span></div>
     </div>`;
 
+  /* Live board: predictions carry an absolute due time, so the display
+     counts down every second between the 30 s re-syncs — like the dot-matrix
+     board at the stop itself. */
   const board = () => document.getElementById('arrBoard');
+  const dueText = ms => ms <= 30000 ? 'Due' : `${Math.round(ms/60000)} min`;
+  let nextIn = 0;
   async function poll(){
     const raw = await D.arrivals(id);
     const el = board(); if(!el) return;   // navigated away
+    const t0 = Date.now();
     const rows = (raw?.data ?? [])
       .filter(a => Number.isFinite(a.timeToStation))
-      .sort((a,b) => a.timeToStation - b.timeToStation)
+      .map(a => ({ ...a, dueAt: Number.isFinite(Date.parse(a.expectedArrival)) ? Date.parse(a.expectedArrival) : t0 + a.timeToStation*1000 }))
+      .sort((a,b) => a.dueAt - b.dueAt)
       .slice(0, 12);
     if(!rows.length){
-      el.innerHTML = '<div><span class="k" style="color:var(--mu)">No buses predicted right now — the stop may not be served at this time.</span></div>';
+      el.innerHTML = '<div class="kv-empty">No buses predicted right now — the stop may not be served at this time of day.</div>';
       return;
     }
     el.innerHTML = rows.map(a => {
-      const mins = Math.floor(a.timeToStation / 60);
-      const due = mins <= 0 ? 'Due' : `${mins} min`;
       const vHref = a.vehicleId
         ? `#/vehicle/${encodeURIComponent(String(a.vehicleId).toUpperCase())}?stop=${encodeURIComponent(id)}&line=${encodeURIComponent(a.lineName ?? '')}`
         : null;
@@ -1259,12 +1274,31 @@ async function renderStopDetail(id){
           <span style="min-width:0"><b style="font-weight:600">${esc(title(a.destinationName ?? ''))}</b>
           ${sub ? `<span style="display:flex;align-items:center;gap:6px;margin-top:2px;font-size:11.5px;color:var(--mu);flex-wrap:wrap">${sub}</span>` : ''}</span>
         </span>
-        <span class="v mono" style="color:${mins<=0?'var(--good)':'var(--tx)'};align-self:center;white-space:nowrap">${due}</span>
+        <span class="v mono" data-due="${a.dueAt}" style="align-self:center;white-space:nowrap"></span>
       </div>`;
     }).join('');
+    paintDues();
   }
-  poll();
-  liveTimer = setInterval(poll, 30000);
+  function paintDues(){
+    const el = board(); if(!el) return;
+    const now = Date.now();
+    el.querySelectorAll('[data-due]').forEach(cell => {
+      const ms = (+cell.dataset.due) - now;
+      cell.textContent = ms < -90000 ? 'Departed' : dueText(Math.max(0, ms));
+      cell.style.color = ms <= 30000 ? 'var(--good)' : 'var(--tx)';
+    });
+  }
+  function tick(){
+    if(!board()) return;
+    paintDues();
+    nextIn -= 1;
+    const n = document.getElementById('nextUpd');
+    if(n) n.textContent = nextIn > 0 ? `next update in ${nextIn} s` : 'updating…';
+    if(nextIn <= 0){ nextIn = 30; poll(); }
+  }
+  poll(); nextIn = 30;
+  const n0 = document.getElementById('nextUpd'); if(n0) n0.textContent = 'next update in 30 s';
+  liveTimer = setInterval(tick, 1000);
 }
 
 /* ════════════════════ VEHICLE ════════════════════ */
@@ -1289,7 +1323,7 @@ async function renderVehicleDetail(regArg){
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fc0" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><circle cx="8.5" cy="14.5" r=".9" fill="#fc0"/><circle cx="15.5" cy="14.5" r=".9" fill="#fc0"/></svg>
       </span>
       <div class="dtitle">
-        <h1 style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">${plate(R,false)}${v?.operator ? `<span style="font-size:14px;font-weight:600">${esc(v.operator)}</span>` : ''}</h1>
+        <h1 style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">${plate(R,false)}${v?.operator ? `<a href="#/operator/${encodeURIComponent(v.operator)}" style="font-size:14px;font-weight:600;color:var(--acc)">${esc(v.operator)}</a>` : ''}</h1>
         <div class="sub2">${v ? 'From the Atlas vehicle register' : 'Not in the current vehicle register — it may not have been observed recently.'}</div>
       </div>
     </div>
@@ -1302,14 +1336,14 @@ async function renderVehicleDetail(regArg){
       <div class="legendrow" style="margin-top:7px"><span id="vLiveNote">Looking for this bus in the live feed…</span></div>
     </div>
     <div class="section"><div class="section-h">Recent sightings</div>
-      <div class="card"><div class="kv" id="sightings"><div><span class="k" style="color:var(--mu)">Loading…</span></div></div></div>
+      <div class="card"><div class="kv" id="sightings"><div class="kv-empty">Loading…</div></div></div>
       <div class="legendrow" style="margin-top:7px"><span>Vehicle-on-route observations from the Atlas warehouse.</span></div>
     </div>`;
   initVehicleLiveMap(R, v, ctxLine, ctxStop);
   D.sightings(R).then(h => {
     const el = document.getElementById('sightings'); if(!el) return;
     const rows = (h?.rows ?? []);
-    if(!rows.length){ el.innerHTML = '<div><span class="k" style="color:var(--mu)">No sightings recorded yet.</span></div>'; return; }
+    if(!rows.length){ el.innerHTML = '<div class="kv-empty">No sightings recorded yet.</div>'; return; }
     el.innerHTML = rows.map(r => {
       const d = new Date(r.observed_at);
       const when = isNaN(d) ? '' : `${fmtDate(r.observed_at)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
