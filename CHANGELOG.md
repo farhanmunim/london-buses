@@ -10,7 +10,8 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-16_
 
-- **UX** Garage pins on v2's Map page now follow what you're looking at — focused routes show their garages, active filters show only garages still operating a visible route, and with nothing active every garage shows.
+- **UX** Garage pins on v2's Map page now follow what you're looking at — focused routes show their garages, active filters show only garages still operating a visible route, and with nothing active every garage shows. Garages are **on by default**, and while comparing routes each garage pin is **tinted the same colour as its route's line** (splitting diagonally when one garage runs two focused routes), so "operated from here" reads at a glance.
+- **UX** The Map page gains a **colour key** — a legend under the Colour by control listing every operator (or route type) with its line colour; it steps aside while routes are focused, where the colours belong to the route cards.
 - **FIX** Faded background routes are fully inert while routes are focused — no pointer cursor, and clicking them no longer silently adds a route.
 - **UX** The "Colour by" control sits on its own aligned row; **Stops** moves to the end of the nav; the experimental tracked-reliability note no longer crowds the bottom of its card.
 - **UX** The "© OpenStreetMap © CARTO · Powered by TfL Open Data" strip is gone from every map corner (v1 and v2) — the credits live in the About / info area.
