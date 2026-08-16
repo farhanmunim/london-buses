@@ -97,8 +97,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .rmeta .ga{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rtag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px;background:var(--surf2);color:var(--tx2)}
 .rtag.electric{background:#dcfce7;color:#15803d}.rtag.hydrogen{background:#cffafe;color:#0e7490}.rtag.hybrid{background:#e0e7ff;color:#4338ca}
-.rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu)}
+.rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu);position:relative}
 .rrow .pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
+.warn-dot{position:absolute;top:1px;right:-4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
 @media(min-width:760px){.rlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
 
 /* detail pages */
@@ -205,6 +206,7 @@ table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--t
     </a>
     <nav class="nav-desktop" id="navDesktop">
       <a href="#/" data-nav="routes">Routes</a>
+      <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
       <a href="#/about" data-nav="about">About</a>
@@ -218,6 +220,7 @@ table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--t
 
 <nav class="tabbar" aria-label="Primary">
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
+  <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
   <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
@@ -261,7 +264,29 @@ const D = {
   perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
   liveVehicles:(r) => fetch(API + '/live/vehicles?line=' + encodeURIComponent(r)) // never cached — polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
+  arrivals:    (s) => fetch(API + '/live/arrivals?stop=' + encodeURIComponent(s)) // never cached — polled
+                        .then(x => x.ok ? x.json() : null).catch(() => null),
 };
+
+/* Stop registry — every unique stop across all routes, derived once from
+   route-stops: id → { name, lat, lng, lines:Set }. */
+let _stopRegP = null;
+function stopRegistry(){
+  return _stopRegP ??= D.stops().then(routes => {
+    const reg = new Map();
+    for(const [rid, rec] of Object.entries(routes ?? {})){
+      for(const d of ['outbound','inbound']){
+        for(const s of rec?.[d] ?? []){
+          let e = reg.get(s.id);
+          if(!e){ e = { id:s.id, name:s.name, lat:s.lat, lng:s.lng, lines:new Set() }; reg.set(s.id, e); }
+          for(const l of s.lines ?? []) e.lines.add(l);
+          e.lines.add(rid.toUpperCase());
+        }
+      }
+    }
+    return reg;
+  });
+}
 
 /* ── Small utils ──────────────────────────────────────────────────────── */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -321,12 +346,16 @@ function navigate(){
   const h = location.hash.replace(/^#\/?/, '');
   const [seg, arg] = h.split('/').map(decodeURIComponent);
   const view = seg === '' ? 'routes' : seg;
-  document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on',
-    a.dataset.nav === (view === 'route' ? 'routes' : view === 'garage' ? 'garages' : view)));
+  const navKey = view === 'route' ? 'routes' : view === 'garage' ? 'garages'
+    : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view;
+  document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   window.scrollTo(0, 0);
   if(view === 'routes')         renderRoutes();
   else if(view === 'route')     renderRouteDetail(arg);
+  else if(view === 'stops')     renderStops();
+  else if(view === 'stop')      renderStopDetail(arg);
   else if(view === 'operators') renderOperators();
+  else if(view === 'operator')  renderOperatorDetail(arg);
   else if(view === 'garages')   renderGarages();
   else if(view === 'garage')    renderGarageDetail(arg);
   else if(view === 'about')     renderAbout();
@@ -358,9 +387,9 @@ async function renderRoutes(){
     <div class="count-note" id="countNote"></div>
     <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
 
-  const [routes, meta] = await Promise.all([D.routes(), D.meta()]);
-  if(location.hash.replace(/^#\/?/,'').split('/')[0] !== '' && !location.hash.startsWith('#/?')) { /* view changed mid-load */ }
+  const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
   if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The Atlas API is unreachable right now — try again shortly.</div>'; return; }
+  const disrupted = new Set((lineStatus?.rows ?? []).filter(r => r.severity !== 10).map(r => r.route));
 
   const ops = [...new Set(Object.values(meta).map(m => m?.operator).filter(Boolean))].sort();
 
@@ -402,7 +431,7 @@ async function renderRoutes(){
           </span>
           <span class="ga">${esc(ga || '—')}</span>
         </span>
-        <span class="pvr"><b>${m.pvr ?? '—'}</b>PVR</span>
+        <span class="pvr">${disrupted.has(r.name) ? '<span class="warn-dot" title="Disruption reported"></span>' : ''}<b>${m.pvr ?? '—'}</b>PVR</span>
       </a>`;
     }).join('');
   }
@@ -440,7 +469,8 @@ async function renderRouteDetail(name){
     <div class="section"><div class="section-h">Map</div><div id="map"></div>
       <div class="mapctl">
         <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
-        <button class="livebtn" id="liveBtn"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
+        <button class="livebtn" id="stopsBtn" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</button>
+        <button class="livebtn" id="liveBtn" style="margin-left:0"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
       </div>
       <div id="divnNote"></div>
     </div>
@@ -574,21 +604,39 @@ async function buildRouteSections(route, m){
     if(rows.length) frag.push(`<div class="section"><div class="section-h">Fleet</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
   }
 
-  /* Contract & tendering */
+  /* Contract & tendering — latest and previous awards as individual lines */
   const tn = (await D.tenders())?.[route.name] ?? [];
-  const latest = tn[0];
+  const latest = tn[0], prev = tn[1];
   const rows = [];
   if(m.operator)   rows.push(`<div><span class="k">Operator</span><span class="v">${esc(m.operator)}</span></div>`);
   if(m.company)    rows.push(`<div><span class="k">Company</span><span class="v">${esc(stripTags(m.company))}</span></div>`);
   if(m.contractStart) rows.push(`<div><span class="k">Contract start</span><span class="v mono">${esc(monthYear(m.contractStart) ?? m.contractStart)}</span></div>`);
   if(m.contractEnd)   rows.push(`<div><span class="k">Contract end</span><span class="v mono">${esc(monthYear(m.contractEnd) ?? m.contractEnd)}</span></div>`);
-  if(latest){
-    if(latest.awardDate) rows.push(`<div><span class="k">Latest award</span><span class="v">${esc(latest.awardDate)} · ${esc(latest.operator ?? '')}</span></div>`);
-    if(num(latest.costPerMile)) rows.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${latest.costPerMile.toFixed(2)}</span></div>`);
-    if(num(latest.numberOfTenderers)) rows.push(`<div><span class="k">Bids received</span><span class="v mono">${latest.numberOfTenderers}</span></div>`);
-    if(latest.vehicle?.summary) rows.push(`<div><span class="k">Awarded vehicle</span><span class="v">${esc(latest.vehicle.summary)}</span></div>`);
+  const awardRows = (a) => {
+    const r = [];
+    if(a.awardDate) r.push(`<div><span class="k">Awarded on</span><span class="v">${esc(a.awardDate)}</span></div>`);
+    if(a.operator)  r.push(`<div><span class="k">Awarded to</span><span class="v">${esc(a.operator)}</span></div>`);
+    if(num(a.costPerMile))  r.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${a.costPerMile.toFixed(2)}</span></div>`);
+    if(num(a.acceptedBid))  r.push(`<div><span class="k">Accepted bid</span><span class="v mono">£${a.acceptedBid.toLocaleString('en-GB')}/yr</span></div>`);
+    if(num(a.numberOfTenderers)) r.push(`<div><span class="k">Bids received</span><span class="v mono">${a.numberOfTenderers}</span></div>`);
+    const jb = a.jb;
+    r.push(`<div><span class="k">Joint bid</span><span class="v">${jb?.isJoint ? 'Yes' + (jb.partners?.length ? ' · with ' + jb.partners.map(esc).join(', ') : '') : 'No'}</span></div>`);
+    const v = a.vehicle;
+    if(v && (v.basis || v.propulsion || v.deck)){
+      const bits = [v.basis, v.propulsion, v.deck ? v.deck + '-deck' : null, v.euro ? 'Euro ' + v.euro : null].filter(Boolean);
+      r.push(`<div><span class="k">Awarded vehicle</span><span class="v">${esc(bits.join(' · '))}</span></div>`);
+    }
+    if(num(a.tranche)) r.push(`<div><span class="k">Tranche</span><span class="v mono">${a.tranche}</span></div>`);
+    return r;
+  };
+  if(rows.length || latest){
+    frag.push(`<div class="section"><div class="section-h">Current contract</div><div class="card"><div class="kv">${rows.join('')}${latest ? awardRows(latest).join('') : ''}</div></div></div>`);
   }
-  if(rows.length) frag.push(`<div class="section"><div class="section-h">Contract &amp; tendering</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
+  if(prev){
+    const opChanged = prev.operator && latest?.operator && prev.operator !== latest.operator;
+    frag.push(`<div class="section"><div class="section-h">Previous award${opChanged ? ' · operator change' : ''}</div>
+      <div class="card"><div class="kv">${awardRows(prev).join('')}</div></div></div>`);
+  }
 
   el.innerHTML = frag.join('');
 
@@ -642,7 +690,7 @@ async function initRouteMap(route){
 
   let dir = 'outbound';
   let lineLayer = null, stopsLayer = null, busLayer = null;
-  let liveOn = false;
+  let liveOn = false, stopsOn = false;
 
   const [ov, stops] = await Promise.all([D.overview(), D.stops()]);
   if(location.hash !== `#/route/${encodeURIComponent(route.name)}` && !decodeURIComponent(location.hash).endsWith('/'+route.name)) return;
@@ -665,21 +713,21 @@ async function initRouteMap(route){
     stopsLayer = L.layerGroup();
     for(const s of (stopRec[dir] ?? [])){
       L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:'#fff', fillOpacity:1 })
-        .bindPopup(`<b>${esc(s.name)}</b>`)
+        .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(s.id)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
         .addTo(stopsLayer);
     }
-    syncStops();
+    if(stopsOn) stopsLayer.addTo(_map);
   }
-  // At route-wide zoom the stop rings merge into a bead chain — show them
-  // only once the user zooms in far enough for them to separate.
-  function syncStops(){
-    if(!stopsLayer) return;
-    const on = _map.getZoom() >= 13;
-    if(on && !_map.hasLayer(stopsLayer)) stopsLayer.addTo(_map);
-    if(!on && _map.hasLayer(stopsLayer)) _map.removeLayer(stopsLayer);
-  }
-  _map.on('zoomend', syncStops);
   draw();
+
+  /* stops — toggle chip, same grammar as live buses */
+  const stopsBtn = document.getElementById('stopsBtn');
+  stopsBtn.addEventListener('click', () => {
+    stopsOn = !stopsOn;
+    stopsBtn.classList.toggle('on', stopsOn);
+    if(!stopsLayer) return;
+    if(stopsOn) stopsLayer.addTo(_map); else _map.removeLayer(stopsLayer);
+  });
 
   document.getElementById('dirSeg').addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
@@ -743,7 +791,7 @@ async function renderOperators(){
   const list = [...agg.entries()].sort((a,b) => b[1].routes - a[1].routes);
   document.getElementById('oplist').innerHTML = list.map(([op,a]) => {
     const evPct = a.evKnown ? Math.round(a.ev / a.evKnown * 100) : null;
-    return `<a class="opcard" href="#/?op=${encodeURIComponent(op)}" data-op="${esc(op)}">
+    return `<a class="opcard" href="#/operator/${encodeURIComponent(op)}">
       <div class="ophead">
         <span class="avatar" style="background:${opColor(op)}">${opInitials(op)}</span>
         <div><div class="nm">${esc(op)}</div><div class="co">${esc(stripTags(a.company ?? ''))}</div></div>
@@ -757,13 +805,48 @@ async function renderOperators(){
         <div class="legendrow"><span>${evPct}% zero-emission routes</span></div></div>` : ''}
     </a>`;
   }).join('');
-  /* operator card → routes view pre-filtered */
-  document.getElementById('oplist').addEventListener('click', e => {
-    const card = e.target.closest('[data-op]'); if(!card) return;
-    e.preventDefault();
-    routesViewState.op = card.dataset.op; routesViewState.q = ''; routesViewState.type = null; routesViewState.prop = null;
-    location.hash = '#/';
-  });
+}
+
+/* ── Operator detail — drill: operator → garages → routes → map ─────────── */
+async function renderOperatorDetail(op){
+  main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="skel" style="height:140px"></div>`;
+  const [meta, garages, routes] = await Promise.all([D.meta(), D.garages(), D.routes()]);
+  const myRoutes = (routes ?? []).filter(r => meta?.[r.name]?.operator === op).sort((a,b)=>cmpRoute(a.name,b.name));
+  if(!myRoutes.length){ main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="empty">No routes found for “${esc(op)}”.</div>`; return; }
+  const myGarages = (garages ?? []).filter(g => g.operator === op).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  let pvr = 0, ev = 0, known = 0;
+  for(const r of myRoutes){
+    const m = meta[r.name];
+    if(num(m?.pvr)) pvr += m.pvr;
+    if(m?.propulsion){ known++; if(m.propulsion==='electric'||m.propulsion==='hydrogen') ev++; }
+  }
+  const company = stripTags(meta[myRoutes[0].name]?.company ?? '');
+  main.innerHTML = `
+    <a class="backrow" href="#/operators">‹ All operators</a>
+    <div class="dhead">
+      <span class="avatar" style="width:46px;height:46px;border-radius:12px;font-size:14px;background:${opColor(op)}">${opInitials(op)}</span>
+      <div class="dtitle"><h1>${esc(op)}</h1><div class="sub2">${esc(company)}</div></div>
+    </div>
+    <div class="facts" style="margin-top:14px">
+      <div class="fact"><div class="l">Routes</div><div class="v">${myRoutes.length}</div></div>
+      <div class="fact"><div class="l">PVR</div><div class="v">${pvr || '—'}</div></div>
+      <div class="fact"><div class="l">TVR</div><div class="v">${tvrOf(pvr) ?? '—'}</div></div>
+      <div class="fact"><div class="l">Garages</div><div class="v">${myGarages.length}</div></div>
+      <div class="fact"><div class="l">Zero-emission</div><div class="v">${known ? Math.round(ev/known*100)+'%' : '—'}</div></div>
+      <div class="fact"><div class="l">Night routes</div><div class="v">${myRoutes.filter(r=>r.type==='night').length}</div></div>
+    </div>
+    <div class="section"><div class="section-h">Garages</div>
+      <div class="glist">${myGarages.map(g => `
+        <a class="grow" href="#/garage/${encodeURIComponent(g.code)}">
+          <span class="avatar" style="background:${opColor(op)}">${esc(g.code)}</span>
+          <span class="g-nm"><b>${esc(g.name)}</b><span>${g.routes?.length ?? 0} routes${num(g.capacity)?` · capacity ${g.capacity}`:''}</span></span>
+          <span class="g-pvr"><b>${g.pvr ?? '—'}</b>PVR</span>
+        </a>`).join('') || '<div class="empty">No garages listed.</div>'}
+      </div>
+    </div>
+    <div class="section"><div class="section-h">Routes</div>
+      <div class="card"><div class="chiprow">${myRoutes.map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r.name)}">${esc(r.name)}</a>`).join('')}</div></div>
+    </div>`;
 }
 
 /* ════════════════════ GARAGES ════════════════════ */
@@ -823,7 +906,130 @@ async function renderGarageDetail(code){
         ${util != null ? `<div class="util"><span style="color:var(--tx2)">Utilisation</span><div class="minibar"><i style="width:${Math.min(100,Math.round(util*100))}%"></i></div><b class="mono" style="font-family:var(--mono);font-size:13px">${Math.round(util*100)}%</b></div>` : ''}
         <div class="chiprow">${(g.routes ?? []).map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`).join('') || '<span class="empty" style="padding:10px">No routes listed.</span>'}</div>
       </div>
+    </div>
+    <div class="section"><div class="section-h">On the map</div><div id="map"></div>
+      <div class="legendrow" style="margin-top:8px"><span>Every route based at ${esc(g.name)} — tap a line to open it.</span></div>
     </div>`;
+  initGarageMap(g);
+}
+
+/* Garage map — the garage pin plus every route based there, each line in its
+   own colour (the validated comparison palette), tappable through to the
+   route page. */
+const GARAGE_MAP_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
+async function initGarageMap(g){
+  const el = document.getElementById('map');
+  if(!el) return;
+  if(_map){ _map.remove(); _map = null; }
+  _map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:true });
+  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  const ov = await D.overview();
+  if(!document.getElementById('map')) return; // navigated away mid-load
+  const mine = new Map();
+  (g.routes ?? []).forEach((r,i) => mine.set(String(r).toUpperCase(), GARAGE_MAP_COLORS[i % GARAGE_MAP_COLORS.length]));
+  const feats = (ov?.features ?? []).filter(f => mine.has((f.properties?.name ?? '').toUpperCase()));
+  const group = L.featureGroup();
+  for(const f of feats){
+    const name = f.properties.name.toUpperCase();
+    L.geoJSON(f, { style:{ color: mine.get(name), weight:3.5, opacity:.9, lineCap:'round', lineJoin:'round' } })
+      .bindPopup(`<b>Route ${esc(name)}</b><br><a href="#/route/${encodeURIComponent(name)}" style="color:var(--acc);font-weight:600">Open route ›</a>`)
+      .addTo(group);
+  }
+  group.addTo(_map);
+  if(Number.isFinite(g.lat) && Number.isFinite(g.lng)){
+    L.marker([g.lat, g.lng], { icon: L.divIcon({ className:'', iconSize:[34,34], iconAnchor:[17,17],
+      html:`<div style="width:34px;height:34px;border-radius:10px;background:${opColor(g.operator)};color:#fff;display:grid;place-items:center;font:700 10px/1 var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">${esc(g.code)}</div>` }) })
+      .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b>`)
+      .addTo(_map);
+  }
+  try{ _map.fitBounds(group.getBounds().pad(0.06)); }
+  catch(e){ if(Number.isFinite(g.lat)) _map.setView([g.lat,g.lng],12); else _map.setView([51.505,-0.118],11); }
+}
+
+/* ════════════════════ STOPS — search + live arrivals ════════════════════ */
+const stopsViewState = { q:'' };
+async function renderStops(){
+  main.innerHTML = `
+    <h1 class="h1">Bus stops</h1><div class="sub">Find any stop and see live arrival times, straight from TfL Countdown.</div>
+    <div class="searchwrap"><div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
+      <input id="sq" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
+    </div></div>
+    <div class="count-note" id="sCount"></div>
+    <div class="glist" id="slist"><div class="empty" id="sHint">Loading the stop directory…</div></div>`;
+  const reg = await stopRegistry();
+  if(!reg?.size){ document.getElementById('slist').innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
+  const all = [...reg.values()];
+  const rerender = () => {
+    const q = stopsViewState.q.trim().toLowerCase();
+    const cEl = document.getElementById('sCount'), lEl = document.getElementById('slist');
+    if(!cEl || !lEl) return;
+    if(q.length < 2){
+      cEl.textContent = `${all.length.toLocaleString('en-GB')} stops on the network`;
+      lEl.innerHTML = '<div class="empty">Type at least two characters to search.</div>';
+      return;
+    }
+    const list = all.filter(s => s.name?.toLowerCase().includes(q)).slice(0, 60);
+    cEl.textContent = `${list.length}${list.length===60?'+':''} stop${list.length===1?'':'s'} match`;
+    lEl.innerHTML = list.map(s => `
+      <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
+        <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:10px">${esc([...s.lines].length)}</span>
+        <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).join(' · ')}${s.lines.size>8?' …':''}</span></span>
+      </a>`).join('') || '<div class="empty">No stops match.</div>';
+  };
+  rerender();
+  document.getElementById('sq').addEventListener('input', e => { stopsViewState.q = e.target.value; rerender(); });
+}
+
+async function renderStopDetail(id){
+  main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="skel" style="height:120px"></div>`;
+  const reg = await stopRegistry();
+  const s = reg?.get(id);
+  main.innerHTML = `
+    <a class="backrow" href="#/stops">‹ Stop search</a>
+    <div class="dhead">
+      <span class="avatar" style="width:46px;height:46px;border-radius:50%;font-size:13px;background:var(--acc)">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/></svg>
+      </span>
+      <div class="dtitle"><h1>${esc(s?.name ?? 'Bus stop')}</h1>
+      <div class="sub2">Live arrivals · updates every 30 s</div></div>
+    </div>
+    ${s?.lines?.size ? `<div class="section"><div class="section-h">Routes serving this stop</div>
+      <div class="card"><div class="chiprow">${[...s.lines].sort(cmpRoute).map(l => `<a class="rchip" href="#/route/${encodeURIComponent(l)}">${esc(l)}</a>`).join('')}</div></div></div>` : ''}
+    <div class="section"><div class="section-h">Next buses</div>
+      <div class="card"><div class="kv" id="arrBoard"><div><span class="k" style="color:var(--mu)">Loading arrivals…</span></div></div></div>
+      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, via the Atlas API.</span></div>
+    </div>`;
+
+  const board = () => document.getElementById('arrBoard');
+  async function poll(){
+    const raw = await D.arrivals(id);
+    const el = board(); if(!el) return;   // navigated away
+    const rows = (raw?.data ?? [])
+      .filter(a => Number.isFinite(a.timeToStation))
+      .sort((a,b) => a.timeToStation - b.timeToStation)
+      .slice(0, 12);
+    if(!rows.length){
+      el.innerHTML = '<div><span class="k" style="color:var(--mu)">No buses predicted right now — the stop may not be served at this time.</span></div>';
+      return;
+    }
+    el.innerHTML = rows.map(a => {
+      const mins = Math.floor(a.timeToStation / 60);
+      const due = mins <= 0 ? 'Due' : `${mins} min`;
+      const where = a.currentLocation ? esc(a.currentLocation) : (a.vehicleId ? 'Bus ' + esc(a.vehicleId) : '');
+      return `<div>
+        <span class="k" style="display:flex;align-items:center;gap:9px;color:var(--tx)">
+          <a class="rnum" style="min-width:40px;height:26px;font-size:12.5px;border-radius:7px" href="#/route/${encodeURIComponent(a.lineName)}">${esc(a.lineName)}</a>
+          <span style="min-width:0"><b style="font-weight:600">${esc(title(a.destinationName ?? ''))}</b>
+          ${where ? `<span style="display:block;font-size:11.5px;color:var(--mu)">${where}</span>` : ''}</span>
+        </span>
+        <span class="v mono" style="color:${mins<=0?'var(--good)':'var(--tx)'};align-self:center;white-space:nowrap">${due}</span>
+      </div>`;
+    }).join('');
+  }
+  poll();
+  liveTimer = setInterval(poll, 30000);
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
