@@ -424,6 +424,7 @@ const LABEL_TIPS = {
   'Fleet code': ['Operator fleet number (bustimes.org)', S.FLEET],
   'Observed on': ['Routes this vehicle has been seen working', S.FLEET],
   'Recent sightings': ['', S.SIGHT],
+  'Live location': ['Where this bus is right now, drawn against its route', S.GPS],
   'Capacity': ['Approximate bus capacity of the garage', S.CAPACITY],
   'Utilisation': ['PVR ÷ capacity', S.DERIVED],
   'Routes': ['Routes allocated', S.LBR],
@@ -1246,7 +1247,11 @@ async function renderStopDetail(id){
     el.innerHTML = rows.map(a => {
       const mins = Math.floor(a.timeToStation / 60);
       const due = mins <= 0 ? 'Due' : `${mins} min`;
-      const sub = [a.currentLocation ? `<span>${esc(a.currentLocation)}</span>` : '', a.vehicleId ? plate(a.vehicleId) : '']
+      const vHref = a.vehicleId
+        ? `#/vehicle/${encodeURIComponent(String(a.vehicleId).toUpperCase())}?stop=${encodeURIComponent(id)}&line=${encodeURIComponent(a.lineName ?? '')}`
+        : null;
+      const sub = [a.currentLocation ? `<span>${esc(a.currentLocation)}</span>` : '',
+        vHref ? `<a class="plate" href="${vHref}">${esc(String(a.vehicleId).toUpperCase())}</a>` : '']
         .filter(Boolean).join(' ');
       return `<div>
         <span class="k" style="display:flex;align-items:center;gap:9px;color:var(--tx)">
@@ -1263,8 +1268,11 @@ async function renderStopDetail(id){
 }
 
 /* ════════════════════ VEHICLE ════════════════════ */
-async function renderVehicleDetail(reg){
-  const R = String(reg ?? '').toUpperCase();
+async function renderVehicleDetail(regArg){
+  const [regPart, qs] = String(regArg ?? '').split('?');
+  const ctx = new URLSearchParams(qs ?? '');
+  const ctxStop = ctx.get('stop'), ctxLine = ctx.get('line');
+  const R = String(regPart ?? '').toUpperCase();
   main.innerHTML = `<a class="backrow" href="javascript:history.back()">‹ Back</a><div class="skel" style="height:140px"></div>`;
   const v = (await D.vehiclesReg())?.[R] ?? null;
   const facts = [];
@@ -1289,10 +1297,15 @@ async function renderVehicleDetail(reg){
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(val)}">${esc(val)}</div></div>`).join('')}</div>` : ''}
     ${v?.routes?.length ? `<div class="section"><div class="section-h">Observed on</div>
       <div class="card"><div class="chiprow">${v.routes.map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`).join('')}</div></div></div>` : ''}
+    <div class="section" id="vLiveSec" hidden><div class="section-h">Live location</div>
+      <div id="map" style="height:260px"></div>
+      <div class="legendrow" style="margin-top:7px"><span id="vLiveNote">Looking for this bus in the live feed…</span></div>
+    </div>
     <div class="section"><div class="section-h">Recent sightings</div>
       <div class="card"><div class="kv" id="sightings"><div><span class="k" style="color:var(--mu)">Loading…</span></div></div></div>
       <div class="legendrow" style="margin-top:7px"><span>Vehicle-on-route observations from the Atlas warehouse.</span></div>
     </div>`;
+  initVehicleLiveMap(R, v, ctxLine, ctxStop);
   D.sightings(R).then(h => {
     const el = document.getElementById('sightings'); if(!el) return;
     const rows = (h?.rows ?? []);
@@ -1305,6 +1318,88 @@ async function renderVehicleDetail(reg){
         <span class="v mono" style="align-self:center">${esc(when)}</span></div>`;
     }).join('');
   });
+}
+
+/* Vehicle live-location map — find the bus in the live GPS feed (trying the
+   arrival-context line first, then every route the register has seen it on),
+   then draw it against its route's line and, when the user arrived from a
+   stop's arrivals board, that stop. Polls every 15 s while the page is open. */
+async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
+  const sec = document.getElementById('vLiveSec');
+  const candidates = [...new Set([ctxLine, ...(v?.routes ?? [])].filter(Boolean).map(x => String(x).toUpperCase()))];
+  if(!sec || !candidates.length) return;
+  sec.hidden = false;
+
+  async function findBus(){
+    for(const line of candidates){
+      const raw = await D.liveVehicles(line);
+      const hit = (raw?.data ?? []).find(x => String(x.reg ?? '').toUpperCase() === R
+        && Number.isFinite(x.lat) && Number.isFinite(x.lng));
+      if(hit) return hit;
+    }
+    return null;
+  }
+
+  const first = await findBus();
+  if(!document.getElementById('vLiveSec')) return;   // navigated away
+  const note = document.getElementById('vLiveNote');
+  if(!first){
+    document.getElementById('map').remove();
+    if(note) note.textContent = 'Not in the live GPS feed right now — it may not be in service.';
+    return;
+  }
+
+  if(_map){ _map.remove(); _map = null; }
+  _map = L.map(document.getElementById('map'), { zoomControl:false, preferCanvas:true, attributionControl:true });
+  L.control.attribution({ prefix:false }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © CARTO').addTo(_map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(_map);
+  _map.setView([first.lat, first.lng], 14);   // layers need a live projection before they're added
+
+  const line = String(first.publishedLine ?? ctxLine ?? candidates[0]).toUpperCase();
+  D.overview().then(ov => {
+    if(!_map) return;
+    const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === line);
+    if(feats.length) L.geoJSON({type:'FeatureCollection',features:feats},
+      { style:{ color:'#dc2626', weight:4, opacity:.6, lineCap:'round', lineJoin:'round' } }).addTo(_map);
+  });
+
+  let stopLL = null;
+  if(ctxStop){
+    const reg = await stopRegistry();     // cached — the user came through the stops flow
+    const s = reg?.get(ctxStop);
+    if(s && _map){
+      stopLL = [s.lat, s.lng];
+      L.circleMarker(stopLL, { radius:7, color:'#1c1917', weight:2.5, fillColor:'#fff', fillOpacity:1 })
+        .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(ctxStop)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
+        .addTo(_map);
+    }
+  }
+
+  let busMarker = null;
+  function drawBus(b){
+    const col = String(b.direction) === '2' ? '#06b6d4' : '#f97316';
+    const icon = L.divIcon({ className:'lb-bus', iconSize:[22,22], iconAnchor:[11,11],
+      html: Number.isFinite(b.bearing)
+        ? `<div style="transform:rotate(${b.bearing}deg)"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
+        : `<div style="width:13px;height:13px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
+    if(busMarker){ busMarker.setLatLng([b.lat, b.lng]); busMarker.setIcon(icon); }
+    else busMarker = L.marker([b.lat, b.lng], { icon })
+      .bindPopup(`${plate(R, false)}<br>${esc(b.destination ? 'to ' + title(b.destination) : '')}`)
+      .addTo(_map);
+    const t = new Date();
+    if(note) note.textContent = `On route ${line} · updated ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')} · refreshes every 15 s`;
+  }
+  drawBus(first);
+  let b = L.latLngBounds([[first.lat, first.lng]]);
+  if(stopLL) b = b.extend(stopLL);
+  _map.fitBounds(b.pad(0.35), { maxZoom: 15 });
+
+  liveTimer = setInterval(async () => {
+    const cur = await findBus();
+    if(!document.getElementById('vLiveSec')) return;
+    if(cur) drawBus(cur);
+    else if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.';
+  }, 15000);
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
