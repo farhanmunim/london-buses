@@ -24,6 +24,18 @@
   --sh:0 1px 2px rgba(28,25,23,.05);
   --maxw:1080px;
   --tab-h:58px;
+  --tipbg:#1c1917; --skel-hi:#eeedec;
+}
+/* Dark theme — the boot script stamps data-theme before first paint, from
+   the stored choice or the system preference. */
+:root[data-theme="dark"]{
+  --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
+  --bd:#2b2725; --bd2:#3d3835;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#7c766f;
+  --acc:#ef4444; --acc-soft:#3a1515;
+  --good:#2fbf5f; --warn:#f59e0b; --bad:#ef4444;
+  --sh:0 1px 2px rgba(0,0,0,.45);
+  --tipbg:#332f2c; --skel-hi:#2c2825;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -35,11 +47,11 @@ svg{display:block}
 ::selection{background:#fecaca}
 
 /* ── App shell ─────────────────────────────────────────────────────────── */
-.topbar{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.topbar{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--surf) 92%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
 .topbar-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
 .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:-.01em}
 .brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
-.brand small{font-weight:600;font-size:10px;color:#fff;background:var(--tx);border-radius:999px;padding:2px 7px;letter-spacing:.04em}
+.brand small{font-weight:600;font-size:10px;color:var(--bg);background:var(--tx);border-radius:999px;padding:2px 7px;letter-spacing:.04em}
 .nav-desktop{display:none;gap:2px;margin-left:14px}
 .nav-desktop a{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
 .nav-desktop a:hover{background:var(--surf2);color:var(--tx)}
@@ -54,7 +66,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 @media(min-width:760px){main{padding-bottom:56px}}
 
 /* mobile bottom tabs */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb, var(--surf) 94%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
 .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mu)}
 .tabbar a.on{color:var(--acc)}
 .tabbar svg{width:21px;height:21px}
@@ -82,7 +94,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .chip .x{opacity:.7;margin-left:4px}
 .count-note{font-size:12.5px;color:var(--mu);margin:8px 2px 6px}
 .empty{color:var(--mu);text-align:center;padding:44px 0;font-size:14px}
-.skel{background:linear-gradient(90deg,var(--surf2) 25%,#eeedec 50%,var(--surf2) 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
+.skel{background:linear-gradient(90deg,var(--surf2) 25%,var(--skel-hi) 50%,var(--surf2) 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
 @keyframes sk{to{background-position:-200% 0}}
 
 /* route list */
@@ -132,7 +144,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .kv .k{color:var(--tx2);flex:none}
 .kv .v{text-align:right;font-weight:500;min-width:0}
 .kv .v.mono{font-family:var(--mono);font-weight:600;font-size:13px}
-#map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:#eee9e2;position:relative;z-index:0}
+#map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:var(--surf2);position:relative;z-index:0}
 @media(min-width:760px){#map{height:380px}}
 .mapctl{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
 .seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
@@ -206,7 +218,7 @@ a.plate:hover{background:#ffd83d}
 
 /* tooltips — data source + refresh cadence on any label */
 [data-tip]{text-decoration:underline dotted var(--bd2);text-underline-offset:3px;cursor:help}
-.tipbox{position:fixed;z-index:90;max-width:280px;background:var(--tx);color:#fff;font-size:12px;line-height:1.5;border-radius:9px;padding:9px 12px;box-shadow:0 6px 22px rgba(28,25,23,.28);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s}
+.tipbox{position:fixed;z-index:90;max-width:280px;background:var(--tipbg);color:#fff;font-size:12px;line-height:1.5;border-radius:9px;padding:9px 12px;box-shadow:0 6px 22px rgba(28,25,23,.28);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s}
 .tipbox.show{opacity:1;transform:none}
 .tipbox .src{color:#d6d3d1}
 
@@ -214,9 +226,9 @@ a.plate:hover{background:#ffd83d}
 main.fullbleed{max-width:none;padding:0}
 .netmap-wrap{position:relative;height:calc(100dvh - 53px - var(--tab-h) - env(safe-area-inset-bottom))}
 @media(min-width:760px){.netmap-wrap{height:calc(100dvh - 53px)}}
-#netmap{position:absolute;inset:0;background:#eee9e2;z-index:0}
+#netmap{position:absolute;inset:0;background:var(--surf2);z-index:0}
 [hidden]{display:none!important}
-.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
+.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:color-mix(in srgb, var(--surf) 97%, transparent);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
 @media(min-width:760px){.netmap-panel{right:auto;width:342px}}
 .nm-search{display:flex;align-items:center;gap:9px;padding:11px 13px}
 .nm-search svg{color:var(--mu);flex:none}
@@ -242,7 +254,7 @@ main.fullbleed{max-width:none;padding:0}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
 .nm-body{border-top:1px solid var(--bd);overflow-y:auto;padding:9px 11px;display:flex;flex-direction:column;gap:8px}
-.netmap-card{position:relative;border:1px solid var(--bd);border-radius:11px;padding:10px 12px;background:#fff}
+.netmap-card{position:relative;border:1px solid var(--bd);border-radius:11px;padding:10px 12px;background:var(--surf)}
 .netmap-card .close{position:absolute;top:8px;right:8px;color:var(--mu);padding:3px;border-radius:6px}
 .netmap-card .close:hover{color:var(--tx);background:var(--bg)}
 .nm-foot{display:flex;align-items:center;gap:8px;padding:9px 13px;border-top:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--tx2)}
@@ -254,7 +266,18 @@ main.fullbleed{max-width:none;padding:0}
 .leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 4px 18px rgba(28,25,23,.18)}
 .leaflet-popup-content{font-family:var(--sans);font-size:12.5px;margin:10px 13px}
 .leaflet-popup-content b{font-size:13px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surf);color:var(--tx)}
+.leaflet-tooltip{background:var(--surf);color:var(--tx);border:1px solid var(--bd2);box-shadow:var(--sh)}
+.leaflet-tooltip-top:before{border-top-color:var(--bd2)}
 </style>
+<script>
+/* Stamp the theme before first paint — stored choice wins, else system. */
+(function(){
+  let t = null; try { t = localStorage.getItem('v2-theme'); } catch(e){}
+  if(t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 </head>
 <body>
 
@@ -275,6 +298,9 @@ main.fullbleed{max-width:none;padding:0}
     </nav>
     <div class="topbar-spacer"></div>
     <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
+    <button id="themeBtn" aria-label="Toggle dark mode" style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--mu)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path class="th-moon" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/><g class="th-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></g></svg>
+    </button>
     <a href="#/about" data-nav="about" aria-label="About" style="display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--mu)">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
     </a>
@@ -310,21 +336,26 @@ function get(path){
   _cache.set(path, p);
   return p;
 }
+/* Atlas currently suffixes Transport UK with "(RATP)" — incorrect: Transport
+   UK Group is independent of RATP. Normalised here at the data edge until the
+   upstream name is fixed. */
+const fixOperator = o => o === 'Transport UK London Bus (RATP)' ? 'Transport UK London Bus' : o;
+const fixOperatorDeep = d => d == null ? d : JSON.parse(JSON.stringify(d).replaceAll('Transport UK London Bus (RATP)', 'Transport UK London Bus'));
 const D = {
   routes:      () => get('/routes'),
-  meta:        () => get('/route-meta').then(d => d?.routes ?? {}),
-  garages:     () => get('/garages').then(d => d?.garages ?? []),
+  meta:        () => get('/route-meta').then(d => { const r = d?.routes ?? {}; for(const m of Object.values(r)) if(m?.operator) m.operator = fixOperator(m.operator); return r; }),
+  garages:     () => get('/garages').then(d => { const g = d?.garages ?? []; for(const x of g) if(x?.operator) x.operator = fixOperator(x.operator); return g; }),
   fleet:       () => get('/fleet').then(d => d?.byRoute ?? {}),
   perf:        () => get('/route-performance'),
   crowding:    () => get('/crowding'),
   crowdProf:   () => get('/crowding-profile').then(d => d?.routes ?? {}),
-  tenders:     () => get('/tenders').then(d => d?.byRoute ?? {}),
+  tenders:     () => get('/tenders').then(d => fixOperatorDeep(d?.byRoute ?? {})),
   diversions:  () => get('/route-diversions').then(d => d?.routes ?? {}),
   lineStatus:  () => get('/line-status'),
   manifest:    () => get('/manifest'),
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
-  vehiclesReg: () => get('/vehicles').then(d => d?.byReg ?? {}),
+  vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
   liveStatus:  (r) => fetch(API + '/live/status?route=' + encodeURIComponent(r)) // never cached — re-polled
                         .then(x => x.ok ? x.json() : null).catch(() => null),
   perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
@@ -377,8 +408,8 @@ const cmpRoute = (a,b) => { const na=parseInt(a,10), nb=parseInt(b,10);
 
 const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:'School' };
 const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
-const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
-const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus (RATP)':'#db2777','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
+const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
+const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus':'#db2777','Transport UK London Bus (RATP)':'#db2777','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
 /* Atlas sometimes rewords operator names ("First London" became "First Bus
    London") — fall back to the longest dictionary key the name starts with,
    so a rewording degrades to the right colour, not to fallback grey. */
@@ -411,11 +442,12 @@ const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g
    markers) — exactly one set of place/road names, never doubled, and never
    buried under thick polylines. */
 function baseTiles(map){
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', { maxZoom:19 }).addTo(map);
+  const style = isDark() ? 'dark' : 'voyager';
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/${style}_nolabels/{z}/{x}/{y}{r}.png`, { maxZoom:19 }).addTo(map);
   const lp = map.createPane('placelabels');
   lp.style.zIndex = 420;
   lp.style.pointerEvents = 'none';
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', { maxZoom:19, pane:'placelabels' }).addTo(map);
+  L.tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/${style}_only_labels/{z}/{x}/{y}{r}.png`, { maxZoom:19, pane:'placelabels' }).addTo(map);
 }
 /* Every map view is built through this one constructor — same options, same
    single-line attribution, same tiles — so the mini maps stay consistent by
@@ -620,6 +652,31 @@ function navigate(){
   else                          renderRoutes();
 }
 window.addEventListener('hashchange', navigate);
+
+/* ── Theme ── */
+const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try { localStorage.setItem('v2-theme', t); } catch(e){}
+  syncThemeBtn();
+  navigate();               // rebuild the view so maps pick up the dark tiles
+}
+function syncThemeBtn(){
+  const b = document.getElementById('themeBtn');
+  if(!b) return;
+  b.querySelector('.th-moon').style.display = isDark() ? 'none' : '';
+  b.querySelector('.th-sun').style.display  = isDark() ? '' : 'none';
+  b.setAttribute('aria-label', isDark() ? 'Switch to light mode' : 'Switch to dark mode');
+}
+document.getElementById('themeBtn')?.addEventListener('click', () => setTheme(isDark() ? 'light' : 'dark'));
+syncThemeBtn();
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', e => {
+  let stored = null; try { stored = localStorage.getItem('v2-theme'); } catch(err){}
+  if(stored !== 'light' && stored !== 'dark'){   // still following the system
+    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    syncThemeBtn(); navigate();
+  }
+});
 
 /* ── Network status chip (topbar, desktop) ────────────────────────────── */
 D.lineStatus().then(ls => {
@@ -1039,7 +1096,7 @@ async function initRouteMap(route, m = {}){
     }
     stopsLayer = L.layerGroup();
     for(const s of (stopRec[dir] ?? [])){
-      L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:'#fff', fillOpacity:1 })
+      L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 })
         .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(s.id)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
         .addTo(stopsLayer);
     }
@@ -1795,6 +1852,14 @@ async function renderStopDetail(id){
         : 'Live arrivals are unreachable right now — retrying shortly.'}</div>`;
       return;
     }
+    // TfL Countdown's platformName is the stop-flag letter ("A") — surface it
+    // in the header roundel once known (route-stops doesn't carry it yet).
+    const letter = rows.map(a => a.platformName).find(p => p && String(p).trim().length <= 3);
+    if(letter){
+      const av = document.querySelector('.dhead .avatar');
+      if(av && av.textContent.trim() !== String(letter).trim())
+        av.innerHTML = `<b style="font-size:16px;font-weight:800;color:#fff">${esc(String(letter).trim())}</b>`;
+    }
     el.innerHTML = rows.map(a => {
       const vHref = a.vehicleId
         ? `#/vehicle/${encodeURIComponent(String(a.vehicleId).toUpperCase())}?stop=${encodeURIComponent(id)}&line=${encodeURIComponent(a.lineName ?? '')}`
@@ -1935,7 +2000,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
     const s = reg?.get(ctxStop);
     if(s && _map){
       stopLL = [s.lat, s.lng];
-      L.circleMarker(stopLL, { radius:7, color:'#1c1917', weight:2.5, fillColor:'#fff', fillOpacity:1 })
+      L.circleMarker(stopLL, { radius:7, color:isDark()?'#f0eeec':'#1c1917', weight:2.5, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 })
         .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(ctxStop)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
         .addTo(_map);
     }

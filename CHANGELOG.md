@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.19 — Dark mode
+
+_2026-08-17_
+
+- **NEW** v2 gains **dark mode** — follows your system preference automatically, with a sun/moon toggle in the top bar that remembers your choice. The whole app re-themes, including the maps: CARTO's dark basemap with matching labels-only tiles above the route lines, dark popups and tooltips, and theme-aware stop markers.
+- **FIX** **Transport UK is not part of RATP** — the operator now displays as "Transport UK London Bus" everywhere (route pages, operator pages, tender history, filters, legend); the "(RATP)" suffix in the Atlas data is normalised out at the data edge until the upstream name is corrected.
+- **NEW** Stop pages show the **stop-flag letter** (e.g. Upton Park Station "A") in the header roundel, sourced from TfL Countdown's platform field — the stop directory itself doesn't carry letters yet.
+
+---
+
 ## v2.18.1 — Map page polish
 
 _2026-08-16_
