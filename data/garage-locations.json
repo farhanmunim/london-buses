@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-10T11:02:43.908Z",
+  "generatedAt": "2026-08-17T10:14:25.070Z",
   "count": 76,
   "garages": {
     "A": {
@@ -479,7 +479,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 207,
+      "pvr": 212,
       "capacity": 245
     },
     "RA": {
@@ -579,7 +579,7 @@
       "address": "Binfield Road, London, SW4 6ST",
       "lat": 51.474125,
       "lon": -0.123662,
-      "pvr": 158,
+      "pvr": 148,
       "capacity": 213
     },
     "T": {
@@ -689,7 +689,7 @@
       "address": "72-74 Chiswick High Road, London, W4 1SY",
       "lat": 51.493417,
       "lon": -0.249484,
-      "pvr": 66,
+      "pvr": 73,
       "capacity": 125
     },
     "W": {

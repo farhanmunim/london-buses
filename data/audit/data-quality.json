@@ -1,11 +1,29 @@
 {
-  "generatedAt": "2026-08-10T11:02:44.116Z",
+  "generatedAt": "2026-08-17T10:14:25.272Z",
   "summary": {
     "critical": 0,
-    "warn": 6,
+    "warn": 8,
     "info": 5
   },
   "issues": [
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "23",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.5,
+      "note": "electric London fleets are post-2015"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "23",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
+      "actual": "ALEXANDER DENNIS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
     {
       "severity": "WARN",
       "scope": "rc",
@@ -39,8 +57,8 @@
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.33",
-      "note": "fleetSize=52 pvr=12"
+      "actual": "3.92",
+      "note": "fleetSize=47 pvr=12"
     },
     {
       "severity": "WARN",
@@ -75,7 +93,7 @@
         "deck": 731,
         "ewtOrOtp": 665,
         "mileageMps": 664,
-        "age": 613
+        "age": 614
       },
       "note": "of 747"
     },
@@ -86,20 +104,20 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "total": 9510,
-        "validVrm": 9510,
+        "total": 9538,
+        "validVrm": 9538,
         "invalidVrm": 0,
-        "dvla200": 9468,
-        "dvla404": 42,
+        "dvla200": 9493,
+        "dvla404": 45,
         "dvla400": 0,
         "dvlaOther": 0,
         "neverChecked": 0,
-        "ageOK": 9468,
-        "ageMissing": 42,
+        "ageOK": 9493,
+        "ageMissing": 45,
         "ageImplausible": 0,
         "propByFuel": {
           "diesel": 5993,
-          "electric": 3474,
+          "electric": 3499,
           "gas": 1
         }
       },
@@ -123,7 +141,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14460,
+        "totalObs": 14305,
         "missingFleet": 0
       },
       "note": ""
