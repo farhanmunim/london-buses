@@ -18,6 +18,7 @@ _2026-08-16_
 - **FIX** Faded background routes are fully inert while routes are focused — no pointer cursor, and clicking them no longer silently adds a route.
 - **UX** The "Colour by" control sits on its own aligned row; **Stops** moves to the end of the nav; the experimental tracked-reliability note no longer crowds the bottom of its card.
 - **UX** The "© OpenStreetMap © CARTO · Powered by TfL Open Data" strip is gone from every map corner (v1 and v2) — the credits live in the About / info area.
+- **FIX** Honest error states, from a full audit of every v2 view: with the Atlas API unreachable, a route page no longer claims the route "isn't in the current TfL network" and the Operators page no longer renders a heading over nothing — both now say the API is unreachable; an unknown stop id says the stop isn't in the directory instead of rendering a ghost live-arrivals board; and a stop whose live feed is down says so instead of "no buses predicted".
 
 ---
 
