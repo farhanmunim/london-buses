@@ -953,7 +953,7 @@ async function buildRouteSections(route, m){
       if(best.size){
         const rows2 = [...best.entries()].sort((a,b) => a[1].d - b[1].d).map(([op, x]) => `<div>
           <span class="k"><a href="#/operator/${encodeURIComponent(op)}" style="color:var(--tx);font-weight:600">${esc(op)}</a>${op === m.operator ? ' <span style="color:var(--acc);font-size:10.5px;font-weight:700">· runs this route</span>' : ''}</span>
-          <span class="v"><a href="#/garage/${encodeURIComponent(x.g.code)}" style="color:var(--acc);font-weight:500">${esc(x.g.name)} (${esc(x.g.code)})</a> · <span class="mono" style="font-family:var(--mono)">${fmtDist(x.d)}</span> <span style="color:var(--mu)">from ${esc(x.at.name)}</span></span></div>`);
+          <span class="v"><a href="#/garage/${encodeURIComponent(x.g.code)}" style="color:var(--acc);font-weight:500">${esc(x.g.name)} (${esc(x.g.code)})</a> · <span class="mono" style="font-family:var(--mono)">${(x.d/1609.344).toFixed(2)} mi</span> <span style="color:var(--mu)">from ${esc(x.at.name)}</span></span></div>`);
         frag.push(`<div class="section"><div class="section-h">Nearest garage · every operator</div>
           <div class="card"><div class="kv">${rows2.join('')}</div></div>
           <div class="legendrow" style="margin-top:8px"><span>Straight-line distance from each operator's closest garage to the nearest stop on this route — a quick tendering lens on who could plausibly work it.</span></div></div>`);
