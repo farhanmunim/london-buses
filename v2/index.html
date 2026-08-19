@@ -597,6 +597,8 @@ const LABEL_TIPS = {
   'Fleet': ['The vehicles observed running the route', S.FLEET],
   'Current contract': ['The route’s operating contract and most recent tender award', S.TENDER],
   'Previous award': ['The tender award before the current one', S.TENDER],
+  'Lowest bid': ['The lowest annual bid received in this tender round', S.TENDER],
+  'Highest bid': ['The highest annual bid received in this tender round', S.TENDER],
 };
 function applyTips(root){
   root.querySelectorAll('.fact .l, .kv .k, .opstat .l, .section-h, .statusline b').forEach(el => {
@@ -1050,8 +1052,11 @@ async function buildRouteSections(route, m){
     if(a.operator)  r.push(`<div><span class="k">Awarded to</span><span class="v">${esc(a.operator)}</span></div>`);
     if(num(a.costPerMile))  r.push(`<div><span class="k">Cost per mile</span><span class="v mono">£${a.costPerMile.toFixed(2)}</span></div>`);
     if(num(a.acceptedBid))  r.push(`<div><span class="k">Accepted bid</span><span class="v mono">£${a.acceptedBid.toLocaleString('en-GB')}/yr</span></div>`);
-    if(num(a.acceptedBid) && num(a.costPerMile) && a.costPerMile > 0)
-      r.push(`<div><span class="k">Contracted miles</span><span class="v mono">${Math.round(a.acceptedBid/a.costPerMile).toLocaleString('en-GB')} mi/yr</span></div>`);
+    if(num(a.lowestBid))    r.push(`<div><span class="k">Lowest bid</span><span class="v mono">£${a.lowestBid.toLocaleString('en-GB')}/yr</span></div>`);
+    if(num(a.highestBid))   r.push(`<div><span class="k">Highest bid</span><span class="v mono">£${a.highestBid.toLocaleString('en-GB')}/yr</span></div>`);
+    const miPA = num(a.contractedMilesPA) ?? (num(a.acceptedBid) && num(a.costPerMile) && a.costPerMile > 0 ? Math.round(a.acceptedBid/a.costPerMile) : null);
+    if(miPA != null)
+      r.push(`<div><span class="k">Contracted miles</span><span class="v mono">${miPA.toLocaleString('en-GB')} mi/yr</span></div>`);
     if(num(a.numberOfTenderers)) r.push(`<div><span class="k">Bids received</span><span class="v mono">${a.numberOfTenderers}</span></div>`);
     const jb = a.jb;
     r.push(`<div><span class="k">Joint bid</span><span class="v">${jb?.isJoint ? 'Yes' + (jb.partners?.length ? ' · with ' + jb.partners.map(esc).join(', ') : '') : 'No'}</span></div>`);
