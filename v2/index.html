@@ -443,13 +443,15 @@ function garagePopupHtml(g, meta){
   const tvr = tvrOf(g.pvr);
   const props = (g.routes ?? []).map(r => meta?.[r]?.propulsion).filter(Boolean);
   const ev = props.length ? Math.round(props.filter(p => p === 'electric' || p === 'hydrogen').length / props.length * 100) + '%' : '—';
-  const stat = (l, v) => `<span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></span>`;
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12.5px">${v}</b></div>`;
   const chips = [...(g.routes ?? [])].sort(cmpRoute).map(r =>
     `<a href="#/route/${encodeURIComponent(r)}" style="background:var(--surf2);color:var(--tx);border-radius:6px;padding:1px 6px;font-family:var(--mono);font-weight:600;font-size:10.5px">${esc(r)}</a>`).join('');
-  return `<b>${esc(g.name)} (${esc(g.code)})</b><br><span style="color:var(--tx2)">${esc(g.operator ?? '')}</span>
-    <div style="display:flex;gap:14px;margin:8px 0 7px">${stat('PVR', g.pvr ?? '—')}${stat('TVR', tvr ?? '—')}${stat('Capacity', g.capacity ?? '—')}${stat('Zero-emission', ev)}</div>
-    <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:250px;margin-bottom:8px">${chips}</div>
-    <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`;
+  return `<div style="min-width:212px"><b style="font-size:13.5px">${esc(g.name)} (${esc(g.code)})</b>
+    <div style="color:var(--tx2);margin:1px 0 8px">${esc(g.operator ?? '')}</div>
+    ${row('PVR', g.pvr ?? '—')}${row('TVR', tvr ?? '—')}${row('Capacity', g.capacity ?? '—')}${row('Zero-emission', ev)}${row('Routes operated', (g.routes ?? []).length)}
+    <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:9px 0 5px">Routes operated</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:250px;margin-bottom:9px">${chips}</div>
+    <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a></div>`;
 }
 
 /* A garage is pinnable only when Atlas has its real site location. When
