@@ -16,7 +16,7 @@
 :root{
   --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
   --bd:#e7e5e4; --bd2:#d6d3d1;
-  --tx:#1c1917; --tx2:#57534e; --mu:#a8a29e;
+  --tx:#1c1917; --tx2:#57534e; --mu:#8b857f;
   --acc:#dc2626; --acc-soft:#fef2f2;
   --good:#16a34a; --warn:#d97706; --bad:#dc2626;
   --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
@@ -55,7 +55,7 @@ svg{display:block}
 .nav-desktop{display:none;gap:2px;margin-left:14px}
 .nav-desktop a{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
 .nav-desktop a:hover{background:var(--surf2);color:var(--tx)}
-.nav-desktop a.on{background:var(--tx);color:#fff}
+.nav-desktop a.on{background:var(--tx);color:var(--bg)}
 .topbar-spacer{flex:1}
 .net-chip{display:none;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;background:var(--surf)}
 .net-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
@@ -90,7 +90,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;font-size:12.5px;font-weight:600;color:var(--tx2);background:var(--surf);border:1px solid var(--bd);border-radius:999px;padding:6px 12px;transition:all .12s}
 .chip:hover{border-color:var(--bd2)}
-.chip.on{background:var(--tx);border-color:var(--tx);color:#fff}
+.chip.on{background:var(--tx);border-color:var(--tx);color:var(--bg)}
 .chip .x{opacity:.7;margin-left:4px}
 .count-note{font-size:12.5px;color:var(--mu);margin:8px 2px 6px}
 .empty{color:var(--mu);text-align:center;padding:44px 0;font-size:14px}
@@ -249,6 +249,7 @@ main.fullbleed{max-width:none;padding:0}
 .nm-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .nm-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
+.nm-term{transform:translate(-50%,-50%);display:inline-block;color:#fff;border:2px solid #fff;border-radius:8px;padding:2px 7px;font-family:var(--mono);font-weight:700;font-size:11px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .expchip{display:inline-block;vertical-align:1px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px}
 .nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
@@ -381,7 +382,11 @@ function stopRegistry(){
       for(const d of ['outbound','inbound']){
         for(const s of rec?.[d] ?? []){
           let e = reg.get(s.id);
-          if(!e){ e = { id:s.id, name:s.name, lat:s.lat, lng:s.lng, lines:new Set() }; reg.set(s.id, e); }
+          if(!e){ e = { id:s.id, name:s.name, lat:s.lat, lng:s.lng, letter:null, lines:new Set() }; reg.set(s.id, e); }
+          // Flag letter — present on most entries; "->N"-style values are
+          // TfL's unlettered compass markers, not display letters.
+          if(!e.letter && s.letter && !String(s.letter).includes('->') && String(s.letter).trim().length <= 3)
+            e.letter = String(s.letter).trim();
           for(const l of s.lines ?? []) e.lines.add(l);
           e.lines.add(rid.toUpperCase());
         }
@@ -848,7 +853,8 @@ async function renderRouteDetail(name){
   if(m.propulsion) facts.push(['Power', title(m.propulsion)]);
   if(m.fleet) facts.push(['Vehicle', stripTags(m.fleet)]);
   document.getElementById('dfacts').innerHTML =
-    facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join('');
+    facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join('')
+    + `<div class="fact"><div class="l">Deck</div><div class="v" id="deckVal">—</div></div>`;
 
   /* diversion note */
   D.diversions().then(divs => {
@@ -919,16 +925,18 @@ async function buildRouteSections(route, m){
     if(rec){
       const hf = rec.service_class === 'high-frequency';
       const rows = [];
+      // Statement values stay standard; clearly good reads green, clearly bad red.
+      const tone = (good, bad) => good ? 'style="color:var(--good)"' : bad ? 'style="color:var(--bad)"' : '';
       if(hf && num(rec.ewt_minutes) != null){
-        rows.push(`<div><span class="k">EWT (tracked)</span><span class="v mono">${rec.ewt_minutes.toFixed(1)} min</span></div>`);
+        rows.push(`<div><span class="k">EWT (tracked)</span><span class="v mono" ${tone(rec.ewt_minutes <= 1, rec.ewt_minutes >= 3)}>${rec.ewt_minutes.toFixed(1)} min</span></div>`);
         if(num(rec.awt_minutes) && num(rec.swt_minutes))
           rows.push(`<div><span class="k">Wait (tracked)</span><span class="v mono">${rec.awt_minutes.toFixed(1)} min · scheduled ${rec.swt_minutes.toFixed(1)}</span></div>`);
       }
       if(num(rec.otd_percent) != null)
-        rows.push(`<div><span class="k">On-time departures</span><span class="v mono">${rec.otd_percent.toFixed(1)}% of ${rec.deps_measured ?? '—'}</span></div>`);
+        rows.push(`<div><span class="k">On-time departures</span><span class="v mono" ${tone(rec.otd_percent >= 80, rec.otd_percent < 60)}>${rec.otd_percent.toFixed(1)}% of ${rec.deps_measured ?? '—'}</span></div>`);
       if(num(rec.on_time) != null)
         rows.push(`<div><span class="k">Departure breakdown</span><span class="v mono">${rec.on_time} on time · ${rec.early} early · ${rec.late} late · ${rec.non_arrival} no-show</span></div>`);
-      rows.push(`<div><span class="k">Measured</span><span class="v">${fmtDate(rec.day)} (${esc(rec.day_type ?? '')}) · ${esc(rec.confidence ?? '')} confidence${num(rec.feed_coverage_pct) ? ` · ${rec.feed_coverage_pct}% coverage` : ''}</span></div>`);
+      rows.push(`<div><span class="k">Measured</span><span class="v">${fmtDate(rec.day)} (${esc(rec.day_type ?? '')}) · <span ${tone(rec.confidence === 'high', rec.confidence === 'low')}>${esc(rec.confidence ?? '')} confidence</span>${num(rec.feed_coverage_pct) ? ` · ${rec.feed_coverage_pct}% coverage` : ''}</span></div>`);
       frag.push(`<div class="section"><div class="section-h">Tracked reliability <span class="expchip">Experimental</span></div>
         <div class="card"><div class="kv">${rows.join('')}</div></div>
         <div class="legendrow" style="margin-top:8px"><span>Atlas’s own estimate from tracking every bus via BODS — experimental and not comparable to TfL’s QSI figures above.</span></div></div>`);
@@ -954,15 +962,31 @@ async function buildRouteSections(route, m){
 
   /* Fleet */
   const fl = (await D.fleet())?.[route.name];
+  // Deck type from the observed vehicles — the registry knows each bus.
+  if(fl?.regs?.length){
+    D.vehiclesReg().then(reg => {
+      const decks = fl.regs.map(r => reg?.[r]?.deck).filter(Boolean);
+      if(!decks.length) return;
+      const dd = decks.filter(d => d === 'double').length, sd = decks.length - dd;
+      const el = document.getElementById('deckVal');
+      if(el) el.textContent = dd && sd ? `Mixed · ${dd} DD / ${sd} SD` : dd ? 'Double deck' : 'Single deck';
+      const kv = document.getElementById('deckRow');
+      if(kv) kv.querySelector('.v').textContent = dd && sd ? `Mixed — ${dd} double, ${sd} single` : dd ? `Double deck (${dd})` : `Single deck (${sd})`;
+    });
+  }
   if(fl && (fl.count > 0 || m.fleet)){
     const rows = [];
     if(m.fleet) rows.push(`<div><span class="k">Rostered vehicle</span><span class="v">${esc(stripTags(m.fleet))}</span></div>`);
     if(fl.count > 0) rows.push(`<div><span class="k">Observed in last sample</span><span class="v mono">${fl.count} vehicles</span></div>`);
     if(num(fl.avgAgeYears)) rows.push(`<div><span class="k">Average age</span><span class="v mono">${fl.avgAgeYears.toFixed(1)} years</span></div>`);
     if(fl.makes?.length) rows.push(`<div><span class="k">Makes</span><span class="v">${fl.makes.map(x=>`${esc(title(x.make))} (${x.n})`).join(', ')}</span></div>`);
+    if(fl.regs?.length) rows.push(`<div id="deckRow"><span class="k">Deck</span><span class="v">—</span></div>`);
     if(fl.regs?.length){
       const shown = fl.regs.slice(0, 24);
-      rows.push(`<div><span class="k">Registrations</span><span class="v" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end">${shown.map(r => plate(r)).join('')}${fl.regs.length > shown.length ? `<span style="color:var(--mu);font-size:12px;align-self:center">+${fl.regs.length - shown.length} more</span>` : ''}</span></div>`);
+      const hidden = fl.regs.slice(shown.length);
+      rows.push(`<div><span class="k">Registrations</span><span class="v" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end">${shown.map(r => plate(r)).join('')}${hidden.length
+        ? `<span id="regMore" hidden style="display:contents">${hidden.map(r => plate(r)).join('')}</span><button id="regMoreBtn" style="color:var(--acc);font-weight:600;font-size:12px;align-self:center">+${hidden.length} more</button>`
+        : ''}</span></div>`);
     }
     if(rows.length) frag.push(`<div class="section"><div class="section-h">Fleet</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
   }
@@ -1004,6 +1028,10 @@ async function buildRouteSections(route, m){
   }
 
   el.innerHTML = frag.join('');
+  document.getElementById('regMoreBtn')?.addEventListener('click', e => {
+    document.getElementById('regMore').hidden = false;
+    e.currentTarget.remove();
+  });
 
   /* performance trend (lazy, after paint) */
   if(document.getElementById('perfTrend')){
@@ -1226,10 +1254,32 @@ async function renderNetworkMap(){
      garage share a colour, and each new garage in the comparison takes the
      next palette slot. Routes Atlas can't tie to a garage get their own. */
   const garKey = p => String(meta?.[p]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean)[0] ?? '·' + p;
-  const focusColor = name => {
+  /* Base colour per operating garage (the pin wears this)… */
+  const garBase = name => {
     const seen = [];
     for(const p of st.pills){ const k = garKey(p); if(!seen.includes(k)) seen.push(k); }
     return FOCUS_COLORS[Math.max(0, seen.indexOf(garKey(name))) % FOCUS_COLORS.length];
+  };
+  /* …and a distinct lightness step of that hue per route within the garage,
+     so two same-garage (or same-operator) routes stay tellable apart while
+     still reading as one family. */
+  function shade(hex, dl){
+    if(!dl) return hex;
+    const n = parseInt(hex.slice(1), 16), r=(n>>16)/255, g=((n>>8)&255)/255, b=(n&255)/255;
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let h=0, s=0, l=(mx+mn)/2;
+    if(mx!==mn){ const d=mx-mn; s = l>.5 ? d/(2-mx-mn) : d/(mx+mn);
+      h = mx===r ? ((g-b)/d + (g<b?6:0)) : mx===g ? (b-r)/d+2 : (r-g)/d+4; h/=6; }
+    l = Math.min(.72, Math.max(.26, l+dl));
+    const f=(p,q,t)=>{ t=(t%1+1)%1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; };
+    const q = l<.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+    const T = x => Math.round(f(p,q,x)*255).toString(16).padStart(2,'0');
+    return '#'+T(h+1/3)+T(h)+T(h-1/3);
+  }
+  const SHADE_STEPS = [0, .17, -.15, .30, -.27, .38];
+  const focusColor = name => {
+    const k = garKey(name);
+    const sibs = st.pills.filter(p => garKey(p) === k);
+    return shade(garBase(name), SHADE_STEPS[Math.max(0, sibs.indexOf(name)) % SHADE_STEPS.length]);
   };
   const allNames = new Set((ov.features ?? []).map(f => f.properties?.name).filter(Boolean));
 
@@ -1265,6 +1315,35 @@ async function renderNetworkMap(){
     },
   }).addTo(_map);
 
+  /* Terminus pills: a small route-number marker at each end of every
+     focused line — start/end read instantly, and the number disambiguates
+     same-garage routes that share a focus colour. */
+  let terminiLayer = null;
+  function syncTermini(){
+    if(terminiLayer){ _map.removeLayer(terminiLayer); terminiLayer = null; }
+    if(!st.pills.length) return;
+    terminiLayer = L.layerGroup();
+    for(const p of st.pills){
+      const feats = (ov.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === p);
+      if(!feats.length) continue;
+      const dir1 = feats.filter(f => String(f.properties?.direction) === '1');
+      const use = (dir1.length ? dir1 : feats).reduce((a,b) =>
+        JSON.stringify(b.geometry?.coordinates ?? '').length > JSON.stringify(a.geometry?.coordinates ?? '').length ? b : a);
+      let cs = use.geometry?.coordinates ?? [];
+      if(cs.length && typeof cs[0]?.[0] !== 'number') cs = [...cs[0], ...cs[cs.length-1]];  // MultiLineString
+      if(cs.length < 2) continue;
+      for(const end of [cs[0], cs[cs.length-1]]){
+        const [lng, lat] = end;
+        if(!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+        L.marker([lat, lng], { icon: L.divIcon({ className:'', iconSize:null, html:
+          `<div class="nm-term" style="background:${focusColor(p)}">${esc(p)}</div>` }) })
+          .bindTooltip(`Route ${esc(p)} · terminus`, { direction:'top' })
+          .addTo(terminiLayer);
+      }
+    }
+    terminiLayer.addTo(_map);
+  }
+
   let garageLayer = null;
   /* Garage pins track the same state as the lines: with routes focused you
      see those routes' garages; with filters on, only garages that operate a
@@ -1290,7 +1369,7 @@ async function renderNetworkMap(){
                             : (g.routes ?? []).some(r => String(r).toUpperCase() === p);
       };
       if(st.pills.length){
-        const tints = [...new Set(st.pills.filter(belongs).map(focusColor))];
+        const tints = [...new Set(st.pills.filter(belongs).map(garBase))];
         if(!tints.length) continue;
         L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints) })
           .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
@@ -1344,6 +1423,7 @@ async function renderNetworkMap(){
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
     syncGarages();
+    syncTermini();
     syncLegend();
   }
   /* Colour key for the current mode. Hidden while routes are focused —
@@ -1748,7 +1828,7 @@ async function renderStops(){
 
   const rowHtml = (s, dist) => `
     <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
-      <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:10px">${esc([...s.lines].length)}</span>
+      <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:${s.letter?'13px;font-weight:800':'10px'}">${esc(s.letter ?? [...s.lines].length)}</span>
       <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).join(' · ')}${s.lines.size>8?' …':''}</span></span>
       ${dist != null ? `<span class="g-pvr"><b style="font-size:12.5px">${fmtDist(dist)}</b>away</span>` : ''}
     </a>`;
@@ -1811,7 +1891,8 @@ async function renderStopDetail(id){
     <a class="backrow" href="#/stops">‹ Stop search</a>
     <div class="dhead">
       <span class="avatar" style="width:46px;height:46px;border-radius:50%;font-size:13px;background:var(--acc)">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/></svg>
+        ${s?.letter ? `<b style="font-size:17px;font-weight:800;color:#fff">${esc(s.letter)}</b>`
+          : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="#fff" stroke="none"/></svg>'}
       </span>
       <div class="dtitle"><h1>${esc(s?.name ?? 'Bus stop')}</h1>
       <div class="sub2"><span class="livechip"><i class="pulse"></i>LIVE</span> · <span id="nextUpd">updating…</span></div></div>

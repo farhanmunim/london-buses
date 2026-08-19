@@ -6,6 +6,20 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.20 — Clearer comparisons
+
+_2026-08-18_
+
+- **NEW** **Stop-flag letters** — stop search results and "Near me" rows now show the stop's letter (e.g. Upton Park Station **A** / **B**) in the red roundel instead of a route count, and stop pages carry it in the header, now that the Atlas stop directory publishes letters. TfL's "→N"-style compass markers are treated as unlettered.
+- **NEW** Map comparisons get **terminus markers** — a small route-number pill at each end of every focused line, so where a route starts and finishes reads instantly.
+- **UX** Same-family focus colours now use **distinct shades** — the operating garage keeps its base colour (and its pin wears it), while each of its routes takes a different lightness of that hue, so two routes from one garage stay tellable apart.
+- **NEW** **Deck type** on route pages — Single/Double deck (or the mixed split) derived from the observed vehicles, as a headline tile and a Fleet-card line.
+- **UX** KPI colour language: clearly-good values read green, clearly-bad red, plain statements stay standard — applied to the tracked-reliability card (EWT, on-time departures, confidence grade).
+- **UX** Long registration lists collapse to a "+n more" button that reveals the rest in place.
+- **FIX** Dark-mode contrast: active nav/filter pills no longer render white-on-white (the bug class behind "Map" disappearing in the top bar), and a programmatic contrast audit of every page in both themes now passes — the light theme's muted labels were darkened to clear 3:1.
+
+---
+
 ## v2.19 — Dark mode
 
 _2026-08-17_
