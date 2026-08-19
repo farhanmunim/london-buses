@@ -437,6 +437,21 @@ function garagePinIcon(g, size = 38, tint = null){
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
       <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
 }
+/* Garage popup used by every map pin: headline numbers, every route as a
+   tappable chip, and the detail link. */
+function garagePopupHtml(g, meta){
+  const tvr = tvrOf(g.pvr);
+  const props = (g.routes ?? []).map(r => meta?.[r]?.propulsion).filter(Boolean);
+  const ev = props.length ? Math.round(props.filter(p => p === 'electric' || p === 'hydrogen').length / props.length * 100) + '%' : '—';
+  const stat = (l, v) => `<span><span style="display:block;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></span>`;
+  const chips = [...(g.routes ?? [])].sort(cmpRoute).map(r =>
+    `<a href="#/route/${encodeURIComponent(r)}" style="background:var(--surf2);color:var(--tx);border-radius:6px;padding:1px 6px;font-family:var(--mono);font-weight:600;font-size:10.5px">${esc(r)}</a>`).join('');
+  return `<b>${esc(g.name)} (${esc(g.code)})</b><br><span style="color:var(--tx2)">${esc(g.operator ?? '')}</span>
+    <div style="display:flex;gap:14px;margin:8px 0 7px">${stat('PVR', g.pvr ?? '—')}${stat('TVR', tvr ?? '—')}${stat('Capacity', g.capacity ?? '—')}${stat('Zero-emission', ev)}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:250px;margin-bottom:8px">${chips}</div>
+    <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`;
+}
+
 /* A garage is pinnable only when Atlas has its real site location. When
    postcodeSource is "company" the lat/lng is the operating company's
    registered office — pinning that as the garage would be wrong data. */
@@ -916,6 +931,34 @@ async function buildRouteSections(route, m){
     }
   }
 
+  /* Nearest garage per operator — a tendering lens: how close every
+     operator's closest garage sits to this route (straight-line, from the
+     nearest stop on the route — not necessarily the terminus). Computed
+     entirely from route-stops × garages. */
+  try{
+    const [stopsAll, garagesAll2] = await Promise.all([D.stops(), D.garages()]);
+    const rec2 = stopsAll?.[route.name.toLowerCase()] ?? stopsAll?.[route.name];
+    const pts = [...(rec2?.outbound ?? []), ...(rec2?.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+    if(pts.length){
+      const best = new Map();
+      for(const g of garagesAll2 ?? []){
+        if(!garageLocOk(g) || !g.operator) continue;
+        let d = Infinity, at = null;
+        for(const s of pts){ const dm = haversineM(s.lat, s.lng, g.lat, g.lng); if(dm < d){ d = dm; at = s; } }
+        const cur = best.get(g.operator);
+        if(!cur || d < cur.d) best.set(g.operator, { g, d, at });
+      }
+      if(best.size){
+        const rows2 = [...best.entries()].sort((a,b) => a[1].d - b[1].d).map(([op, x]) => `<div>
+          <span class="k"><a href="#/operator/${encodeURIComponent(op)}" style="color:var(--tx);font-weight:600">${esc(op)}</a>${op === m.operator ? ' <span style="color:var(--acc);font-size:10.5px;font-weight:700">· runs this route</span>' : ''}</span>
+          <span class="v"><a href="#/garage/${encodeURIComponent(x.g.code)}" style="color:var(--acc);font-weight:500">${esc(x.g.name)} (${esc(x.g.code)})</a> · <span class="mono" style="font-family:var(--mono)">${fmtDist(x.d)}</span> <span style="color:var(--mu)">from ${esc(x.at.name)}</span></span></div>`);
+        frag.push(`<div class="section"><div class="section-h">Nearest garage · every operator</div>
+          <div class="card"><div class="kv">${rows2.join('')}</div></div>
+          <div class="legendrow" style="margin-top:8px"><span>Straight-line distance from each operator's closest garage to the nearest stop on this route — a quick tendering lens on who could plausibly work it.</span></div></div>`);
+      }
+    }
+  }catch(e){ /* derived card — never fatal */ }
+
   /* Tracked reliability — Atlas's own experimental EWT/OTD v2 estimate */
   try{
     const rt = (await D.relTracked(route.name))?.rows ?? [];
@@ -1083,7 +1126,7 @@ async function initRouteMap(route, m = {}){
   let lineLayer = null, stopsLayer = null, busLayer = null;
   let liveOn = false, stopsOn = false;
 
-  const [ov, stops, garages] = await Promise.all([D.overview(), D.stops(), D.garages()]);
+  const [ov, stops, garages, metaAll] = await Promise.all([D.overview(), D.stops(), D.garages(), D.meta()]);
   if(location.hash !== `#/route/${encodeURIComponent(route.name)}` && !decodeURIComponent(location.hash).endsWith('/'+route.name)) return;
 
   const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === route.name.toUpperCase()
@@ -1097,7 +1140,7 @@ async function initRouteMap(route, m = {}){
     codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
   for(const g of garagePins){
     L.marker([g.lat, g.lng], { icon: garagePinIcon(g) })
-      .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br><span style="color:var(--tx2)">Operating garage</span><br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+      .bindPopup(() => garagePopupHtml(g, metaAll))
       .addTo(_map);
   }
   // Say why there is no garage pin instead of leaving a silent gap.
@@ -1203,7 +1246,7 @@ async function initRouteMap(route, m = {}){
 const netmapState = {
   pills: [],                                   // focused routes, in selection order
   f: { type:new Set(), prop:new Set(), op:new Set() },   // multi-select filters
-  colorBy: 'operator', garages: true, panelOpen: false,
+  colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
 async function renderNetworkMap(){
@@ -1223,6 +1266,7 @@ async function renderNetworkMap(){
             Filters<span id="nmFBadge" class="nm-badge" hidden></span>
           </button>
           <button class="livebtn ${netmapState.garages?'on':''}" id="nmGarages" style="margin:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Garages</button>
+          <button class="livebtn" id="nmGaragesAll" style="margin:0" hidden>All</button>
           <div class="nm-colour">
             <span class="nm-lbl">Colour by</span>
             <div class="seg">
@@ -1263,23 +1307,35 @@ async function renderNetworkMap(){
   /* …and a distinct lightness step of that hue per route within the garage,
      so two same-garage (or same-operator) routes stay tellable apart while
      still reading as one family. */
-  function shade(hex, dl){
-    if(!dl) return hex;
+  /* Absolute lightness slots — up to six routes from one garage each get a
+     guaranteed-distinct shade of the base hue (≥0.08 apart in lightness; the
+     palest slots get a saturation lift so the hue stays recognisable). */
+  // Candidate lightness slots; each sibling takes the first candidate that
+  // keeps ≥0.07 lightness distance from EVERY slot already used (base
+  // included), so six same-garage routes always get six distinct shades.
+  const SHADE_CAND = [.68, .32, .78, .24, .50, .60, .40, .86, .18];
+  function shadeAt(hex, idx){
+    if(!idx) return hex;
     const n = parseInt(hex.slice(1), 16), r=(n>>16)/255, g=((n>>8)&255)/255, b=(n&255)/255;
     const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let h=0, s=0, l=(mx+mn)/2;
     if(mx!==mn){ const d=mx-mn; s = l>.5 ? d/(2-mx-mn) : d/(mx+mn);
       h = mx===r ? ((g-b)/d + (g<b?6:0)) : mx===g ? (b-r)/d+2 : (r-g)/d+4; h/=6; }
-    l = Math.min(.72, Math.max(.26, l+dl));
+    const used = [l];
+    while(used.length <= idx){
+      const L = SHADE_CAND.find(c => used.every(u => Math.abs(u - c) >= .07));
+      used.push(L ?? ((used[used.length-1] + .13) % .7) + .15);
+    }
+    const L = used[idx];
+    const S = L > .62 ? Math.min(1, s*1.15 + .08) : s;
     const f=(p,q,t)=>{ t=(t%1+1)%1; if(t<1/6) return p+(q-p)*6*t; if(t<1/2) return q; if(t<2/3) return p+(q-p)*(2/3-t)*6; return p; };
-    const q = l<.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+    const q = L<.5 ? L*(1+S) : L+S-L*S, p = 2*L-q;
     const T = x => Math.round(f(p,q,x)*255).toString(16).padStart(2,'0');
     return '#'+T(h+1/3)+T(h)+T(h-1/3);
   }
-  const SHADE_STEPS = [0, .17, -.15, .30, -.27, .38];
   const focusColor = name => {
     const k = garKey(name);
     const sibs = st.pills.filter(p => garKey(p) === k);
-    return shade(garBase(name), SHADE_STEPS[Math.max(0, sibs.indexOf(name)) % SHADE_STEPS.length]);
+    return shadeAt(garBase(name), Math.max(0, sibs.indexOf(name)));
   };
   const allNames = new Set((ov.features ?? []).map(f => f.properties?.name).filter(Boolean));
 
@@ -1357,6 +1413,12 @@ async function renderNetworkMap(){
       const up = n.toUpperCase();
       if(st.pills.length ? st.pills.includes(up) : passes(n)) vis.add(up);
     }
+    // "All" escape hatch only exists while a focus is narrowing the pins.
+    const allBtn = document.getElementById('nmGaragesAll');
+    if(allBtn){
+      allBtn.hidden = !(st.garages && st.pills.length);
+      allBtn.classList.toggle('on', st.garagesAll);
+    }
     garageLayer = L.layerGroup();
     for(const g of garages ?? []){
       if(!garageLocOk(g)) continue;
@@ -1370,16 +1432,24 @@ async function renderNetworkMap(){
       };
       if(st.pills.length){
         const tints = [...new Set(st.pills.filter(belongs).map(garBase))];
+        if(!tints.length && st.garagesAll){
+          // Context pin: every other garage, operator-coloured but smaller,
+          // so the focused routes' tinted home garages keep the stage.
+          L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 27) })
+            .bindPopup(() => garagePopupHtml(g, meta))
+            .addTo(garageLayer);
+          continue;
+        }
         if(!tints.length) continue;
         L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints) })
-          .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+          .bindPopup(() => garagePopupHtml(g, meta))
           .addTo(garageLayer);
         continue;
       }
       if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))) continue;
       const tints = null;
       L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints?.length ? tints : null) })
-        .bindPopup(`<b>${esc(g.name)} (${esc(g.code)})</b><br>${esc(g.operator ?? '')}<br><a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a>`)
+        .bindPopup(() => garagePopupHtml(g, meta))
         .addTo(garageLayer);
     }
     garageLayer.addTo(_map);
@@ -1433,6 +1503,9 @@ async function renderNetworkMap(){
     const el = document.getElementById('nmLegend');
     if(!el) return;
     el.hidden = !!st.pills.length;
+    // Colour-by has no effect while routes are focused — hide the control.
+    const cb = document.querySelector('.nm-colour');
+    if(cb) cb.hidden = !!st.pills.length;
     if(el.hidden){ el.innerHTML = ''; return; }
     el.innerHTML = st.colorBy === 'type'
       ? Object.entries(TYPE_LABEL).map(([v,l]) => `<span><i style="background:${TYPE_COLORS[v]}"></i>${esc(l)}</span>`).join('')
@@ -1594,8 +1667,13 @@ async function renderNetworkMap(){
     e.currentTarget.classList.toggle('on', st.garages);
     syncGarages();
   });
+  document.getElementById('nmGaragesAll').addEventListener('click', () => {
+    st.garagesAll = !st.garagesAll;
+    syncGarages();
+  });
   document.getElementById('nmReset').addEventListener('click', () => {
     st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.op.clear();
+    st.garagesAll = false;
     nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);
     _map.setView([51.505,-0.118], 11);
@@ -2139,7 +2217,7 @@ async function renderAbout(){
     <div class="section"><div class="section-h">Data freshness</div>
       <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="2" style="color:var(--mu)">Loading…</td></tr></table></div>
     </div>
-    <div class="footer">TVR = PVR × 1.13 (rounded down) · Data may be incomplete or out of date — verify before acting on it.</div>`;
+    <div class="footer">Data may be incomplete or out of date — verify before acting on it.</div>`;
   const mf = await D.manifest();
   const rows = Object.entries(mf?.datasets ?? {})
     .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','route-performance','crowding','route-diversions'].includes(k))

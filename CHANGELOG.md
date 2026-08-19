@@ -6,6 +6,19 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.21 — The tendering lens
+
+_2026-08-18_
+
+- **NEW** Route pages gain **"Nearest garage · every operator"** — every London operator's closest garage to the route, measured straight-line from the nearest stop (not just the terminus), sorted by distance with the incumbent marked. Computed entirely from the Atlas stop and garage coordinates — a quick read on who could plausibly tender for the route.
+- **NEW** Map garage popups now carry the numbers — PVR, TVR, capacity, zero-emission %, and every route served as tappable chips, plus the detail link.
+- **NEW** While comparing routes, an **"All" chip** next to Garages shows every garage in London around your focused routes (competitor scan); the focused routes' home garages stay full-size in their focus tint while the rest render smaller in operator colours. Reset clears it.
+- **UX** Comparison shades now guarantee **six visibly distinct steps** per garage family — slots are placed at fixed lightness values at least 0.08 apart, with a saturation lift on the palest so the hue stays recognisable.
+- **UX** The "Colour by" control hides while routes are focused — it has no effect there (comparison colours are garage-keyed), matching the legend's behaviour.
+- **UX** The About footer drops the TVR formula note.
+
+---
+
 ## v2.20 — Clearer comparisons
 
 _2026-08-18_
