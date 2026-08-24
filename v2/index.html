@@ -144,7 +144,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .kv .k{color:var(--tx2);flex:none}
 .kv .v{text-align:right;font-weight:500;min-width:0}
 .kv .v.mono{font-family:var(--mono);font-weight:600;font-size:13px}
-#map,#nearMap{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:var(--surf2);position:relative;z-index:0}
+#map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:var(--surf2);position:relative;z-index:0}
 @media(min-width:760px){#map{height:380px}}
 .mapctl{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
 .seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
@@ -671,7 +671,6 @@ const addLiveTimer = t => { liveTimers.push(t); return t; };
 function navigate(){
   for(const t of liveTimers) clearInterval(t);
   liveTimers = [];
-  if(_nearMap){ _nearMap.remove(); _nearMap = null; }
   const h = location.hash.replace(/^#\/?/, '');
   const [seg, arg] = h.split('/').map(decodeURIComponent);
   const view = seg === '' ? 'routes' : seg;
@@ -828,6 +827,7 @@ async function renderRouteDetail(name){
         <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
         <button class="livebtn" id="stopsBtn" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</button>
         <button class="livebtn" id="liveBtn" style="margin-left:0"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
+        <button class="livebtn" id="closestBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Closest garages</button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -953,37 +953,6 @@ async function buildRouteSections(route, m){
     }
   }
 
-  let nearData = null;
-  /* Nearest garage per operator — a tendering lens: how close every
-     operator's closest garage sits to this route (straight-line, from the
-     nearest stop on the route — not necessarily the terminus). Computed
-     entirely from route-stops × garages. */
-  try{
-    const [stopsAll, garagesAll2] = await Promise.all([D.stops(), D.garages()]);
-    const rec2 = stopsAll?.[route.name.toLowerCase()] ?? stopsAll?.[route.name];
-    const pts = [...(rec2?.outbound ?? []), ...(rec2?.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-    if(pts.length){
-      const best = new Map();
-      for(const g of garagesAll2 ?? []){
-        if(!garageLocOk(g) || !g.operator) continue;
-        let d = Infinity, at = null;
-        for(const s of pts){ const dm = haversineM(s.lat, s.lng, g.lat, g.lng); if(dm < d){ d = dm; at = s; } }
-        const cur = best.get(g.operator);
-        if(!cur || d < cur.d) best.set(g.operator, { g, d, at });
-      }
-      if(best.size){
-        nearData = { best, pts };
-        const rows2 = [...best.entries()].sort((a,b) => a[1].d - b[1].d).map(([op, x]) => `<div>
-          <span class="k"><a href="#/operator/${encodeURIComponent(op)}" style="color:var(--tx);font-weight:600">${esc(op)}</a>${op === m.operator ? ' <span style="color:var(--acc);font-size:10.5px;font-weight:700">· runs this route</span>' : ''}</span>
-          <span class="v"><a href="#/garage/${encodeURIComponent(x.g.code)}" style="color:var(--acc);font-weight:500">${esc(x.g.name)} (${esc(x.g.code)})</a> · <span class="mono" style="font-family:var(--mono)">${(x.d/1609.344).toFixed(2)} mi</span> <span style="color:var(--mu)">from ${esc(x.at.name)}</span></span></div>`);
-        frag.push(`<div class="section"><div class="section-h">Nearest garage · every operator</div>
-          <div id="nearMap"></div>
-          <div class="card" style="margin-top:10px"><div class="kv">${rows2.join('')}</div></div>
-          <div class="legendrow" style="margin-top:8px"><span>Straight-line distance from each operator's closest garage to the nearest stop on this route — a quick tendering lens on who could plausibly work it. The ringed pin is the operating garage; distant garages are pinned but sit outside the initial view.</span></div></div>`);
-      }
-    }
-  }catch(e){ /* derived card — never fatal */ }
-
   /* Tracked reliability — Atlas's own experimental EWT/OTD v2 estimate */
   try{
     const rt = (await D.relTracked(route.name))?.rows ?? [];
@@ -1099,38 +1068,6 @@ async function buildRouteSections(route, m){
   }
 
   el.innerHTML = frag.join('');
-  /* Near-garage mini map: the route in red, each operator's nearest garage
-     as its operator-coloured pin, dashed connector to the nearest stop.
-     Fitted to the route + garages within reach; far ones stay plotted. */
-  const nearEl = document.getElementById('nearMap');
-  if(nearEl && nearData){
-    if(_nearMap){ _nearMap.remove(); }
-    _nearMap = makeMap(nearEl);
-    _nearMap.setView([51.505,-0.118], 11);
-    const line = nearData.pts.map(s => [s.lat, s.lng]);
-    let b = L.latLngBounds(line);
-    D.overview().then(ov2 => {
-      if(!_nearMap) return;
-      const feats = (ov2?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === route.name.toUpperCase());
-      if(feats.length) L.geoJSON({type:'FeatureCollection',features:feats},
-        { style:{ color:'#dc2626', weight:4, opacity:.9, lineCap:'round', lineJoin:'round' } }).addTo(_nearMap);
-    });
-    const homeCodes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
-    const entries = [...nearData.best.entries()].sort((a,b2) => a[1].d - b2[1].d);
-    for(const [op, x] of entries){
-      const home = homeCodes.includes(String(x.g.code).toUpperCase());
-      L.polyline([[x.g.lat, x.g.lng], [x.at.lat, x.at.lng]],
-        { color: opColor(op), weight: home ? 2.5 : 1.5, opacity: home ? .8 : .55, dashArray: '4 5' }).addTo(_nearMap);
-      L.marker([x.g.lat, x.g.lng], { icon: garagePinIcon(x.g, home ? 38 : 28, null, home), zIndexOffset: home ? 500 : 0 })
-        .bindTooltip(`${home ? 'Operating garage — ' : ''}${esc(op)} · ${(x.d/1609.344).toFixed(2)} mi`, { direction:'top' })
-        .bindPopup(() => garagePopupHtml(x.g, meta))
-        .addTo(_nearMap);
-      if(x.d <= 12000) b.extend([x.g.lat, x.g.lng]);   // near garages steer the zoom
-    }
-    let inView = entries.filter(([,x]) => x.d <= 12000).length;
-    for(const [, x] of entries){ if(inView >= 3) break; b.extend([x.g.lat, x.g.lng]); inView++; }
-    try{ _nearMap.fitBounds(b.pad(0.08)); }catch(e){}
-  }
   document.getElementById('regMoreBtn')?.addEventListener('click', e => {
     document.getElementById('regMore').hidden = false;
     e.currentTarget.remove();
@@ -1176,7 +1113,6 @@ async function buildRouteSections(route, m){
 
 /* ── Route map ────────────────────────────────────────────────────────── */
 let _map = null;
-let _nearMap = null;
 async function initRouteMap(route, m = {}){
   const el = document.getElementById('map');
   if(_map){ _map.remove(); _map = null; }
@@ -1200,10 +1136,57 @@ async function initRouteMap(route, m = {}){
   const garagePins = (garages ?? []).filter(g =>
     codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
   for(const g of garagePins){
-    L.marker([g.lat, g.lng], { icon: garagePinIcon(g) })
+    L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 38, null, true), zIndexOffset: 500 })
+      .bindTooltip(`Operating garage — ${esc(g.operator ?? '')} · ${esc(g.name)} (${esc(g.code)})`, { direction:'top' })
       .bindPopup(() => garagePopupHtml(g, metaAll))
       .addTo(_map);
   }
+
+  /* "Closest garages" layer — every operator's nearest garage to this route
+     (measured at the closest stop), competitor pins in operator colours with
+     dashed connectors. The ringed pin stays the operating garage. */
+  let closestLayer = null, closestOn = false;
+  const closestBtn = document.getElementById('closestBtn');
+  function refitBase(){
+    try{
+      let b = lineLayer.getBounds();
+      for(const g of garagePins) b = b.extend([g.lat, g.lng]);
+      _map.fitBounds(b, { padding:[24,24] });
+    }catch(e){}
+  }
+  closestBtn?.addEventListener('click', () => {
+    closestOn = !closestOn;
+    closestBtn.classList.toggle('on', closestOn);
+    if(!closestOn){
+      if(closestLayer){ _map.removeLayer(closestLayer); closestLayer = null; }
+      refitBase();
+      return;
+    }
+    const pts = [...(stopRec.outbound ?? []), ...(stopRec.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+    if(!pts.length) return;
+    const best = new Map();
+    for(const g of garages ?? []){
+      if(!garageLocOk(g) || !g.operator) continue;
+      let d = Infinity, at = null;
+      for(const s of pts){ const dm = haversineM(s.lat, s.lng, g.lat, g.lng); if(dm < d){ d = dm; at = s; } }
+      const cur = best.get(g.operator);
+      if(!cur || d < cur.d) best.set(g.operator, { g, d, at });
+    }
+    closestLayer = L.layerGroup();
+    let b; try{ b = lineLayer.getBounds(); }catch(e){ b = null; }
+    for(const [op, x] of [...best.entries()].sort((p,q) => p[1].d - q[1].d)){
+      if(codes.includes(String(x.g.code).toUpperCase())) continue;   // operating garage already pinned + ringed
+      L.polyline([[x.g.lat, x.g.lng], [x.at.lat, x.at.lng]],
+        { color: opColor(op), weight: 1.5, opacity: .55, dashArray: '4 5' }).addTo(closestLayer);
+      L.marker([x.g.lat, x.g.lng], { icon: garagePinIcon(x.g, 28) })
+        .bindTooltip(`${esc(op)}’s closest — ${esc(x.g.name)} (${esc(x.g.code)}) · ${(x.d/1609.344).toFixed(2)} mi from ${esc(x.at.name)}`, { direction:'top' })
+        .bindPopup(() => garagePopupHtml(x.g, metaAll))
+        .addTo(closestLayer);
+      if(b && x.d <= 12000) b = b.extend([x.g.lat, x.g.lng]);
+    }
+    closestLayer.addTo(_map);
+    if(b){ try{ _map.fitBounds(b.pad(0.06)); }catch(e){} }
+  });
   // Say why there is no garage pin instead of leaving a silent gap.
   if(!garagePins.length){
     el.insertAdjacentHTML('afterend', `<div class="legendrow" style="margin-top:8px"><span>${codes.length
