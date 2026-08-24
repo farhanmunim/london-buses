@@ -342,6 +342,26 @@ function get(path){
    upstream name is fixed. */
 const fixOperator = o => o === 'Transport UK London Bus (RATP)' ? 'Transport UK London Bus' : o;
 const fixOperatorDeep = d => d == null ? d : JSON.parse(JSON.stringify(d).replaceAll('Transport UK London Bus (RATP)', 'Transport UK London Bus'));
+/* Live fetches align with Atlas's own refresh clock: every /live/* payload
+   carries capturedAt, and Cache-Control's max-age is CORS-readable — so the
+   next poll is scheduled just after Atlas's edge copy expires, instead of on
+   our own drifting timer. */
+function liveGet(url){
+  return fetch(url).then(async x => {
+    if(!x.ok) return null;
+    const j = await x.json();
+    const ma = /max-age=(\d+)/.exec(x.headers.get('cache-control') ?? '');
+    if(j && typeof j === 'object') j._ttl = ma ? +ma[1] : null;
+    return j;
+  }).catch(() => null);
+}
+function nextPollS(j, fallbackS){
+  const ttl = Number.isFinite(j?._ttl) && j._ttl > 0 ? j._ttl : fallbackS;
+  const cap = Date.parse(j?.capturedAt ?? '');
+  if(!Number.isFinite(cap)) return fallbackS;
+  const s = Math.round((cap + ttl*1000 + 1500 - Date.now()) / 1000);
+  return Math.max(4, Math.min(ttl + fallbackS, s));   // stale edge → quick retry
+}
 const D = {
   routes:      () => get('/routes'),
   meta:        () => get('/route-meta').then(d => { const r = d?.routes ?? {}; for(const m of Object.values(r)) if(m?.operator) m.operator = fixOperator(m.operator); return r; }),
@@ -357,14 +377,11 @@ const D = {
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
-  liveStatus:  (r) => fetch(API + '/live/status?route=' + encodeURIComponent(r)) // never cached — re-polled
-                        .then(x => x.ok ? x.json() : null).catch(() => null),
+  liveStatus:  (r) => liveGet(API + '/live/status?route=' + encodeURIComponent(r)),   // never cached — re-polled
   perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
   relTracked:  (r) => get('/history/reliability-tracked?route=' + encodeURIComponent(r) + '&limit=14'),
-  liveVehicles:(r) => fetch(API + '/live/vehicles?line=' + encodeURIComponent(r)) // never cached — polled
-                        .then(x => x.ok ? x.json() : null).catch(() => null),
-  arrivals:    (s) => fetch(API + '/live/arrivals?stop=' + encodeURIComponent(s)) // never cached — polled
-                        .then(x => x.ok ? x.json() : null).catch(() => null),
+  liveVehicles:(r) => liveGet(API + '/live/vehicles?line=' + encodeURIComponent(r)),  // never cached — polled
+  arrivals:    (s) => liveGet(API + '/live/arrivals?stop=' + encodeURIComponent(s)),  // never cached — polled
   sightings:   (r) => get('/history/vehicle-sightings?reg=' + encodeURIComponent(r) + '&limit=14'),
 };
 const plate = (reg, link=true) => reg
@@ -425,7 +442,7 @@ const opColor    = n => { const k = opKey(OP_COLORS, n); return k ? OP_COLORS[k]
 
 /* One garage pin for every map: operator initials over the garage code —
    "GAL / (Q)" — so both identities read at a glance. */
-function garagePinIcon(g, size = 38, tint = null){
+function garagePinIcon(g, size = 38, tint = null, ring = false){
   // tint: focus colour(s) while comparing routes — the pin matches its
   // route's line so "operated from here" reads at a glance. Two focused
   // routes from one garage split the pin diagonally.
@@ -433,7 +450,7 @@ function garagePinIcon(g, size = 38, tint = null){
     ? `linear-gradient(135deg, ${tint[0]} 50%, ${tint[1]} 50%)`
     : (Array.isArray(tint) ? tint[0] : tint) ?? opColor(g.operator);
   return L.divIcon({ className:'', iconSize:[size,size], iconAnchor:[size/2,size/2],
-    html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+    html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:${ring ? '0 0 0 3px var(--acc), ' : ''}0 2px 8px rgba(0,0,0,.3)">
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
       <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
 }
@@ -962,7 +979,7 @@ async function buildRouteSections(route, m){
         frag.push(`<div class="section"><div class="section-h">Nearest garage · every operator</div>
           <div id="nearMap"></div>
           <div class="card" style="margin-top:10px"><div class="kv">${rows2.join('')}</div></div>
-          <div class="legendrow" style="margin-top:8px"><span>Straight-line distance from each operator's closest garage to the nearest stop on this route — a quick tendering lens on who could plausibly work it. Distant garages are pinned but sit outside the initial view.</span></div></div>`);
+          <div class="legendrow" style="margin-top:8px"><span>Straight-line distance from each operator's closest garage to the nearest stop on this route — a quick tendering lens on who could plausibly work it. The ringed pin is the operating garage; distant garages are pinned but sit outside the initial view.</span></div></div>`);
       }
     }
   }catch(e){ /* derived card — never fatal */ }
@@ -1098,12 +1115,14 @@ async function buildRouteSections(route, m){
       if(feats.length) L.geoJSON({type:'FeatureCollection',features:feats},
         { style:{ color:'#dc2626', weight:4, opacity:.9, lineCap:'round', lineJoin:'round' } }).addTo(_nearMap);
     });
+    const homeCodes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
     const entries = [...nearData.best.entries()].sort((a,b2) => a[1].d - b2[1].d);
     for(const [op, x] of entries){
+      const home = homeCodes.includes(String(x.g.code).toUpperCase());
       L.polyline([[x.g.lat, x.g.lng], [x.at.lat, x.at.lng]],
-        { color: opColor(op), weight: 1.5, opacity: .55, dashArray: '4 5' }).addTo(_nearMap);
-      L.marker([x.g.lat, x.g.lng], { icon: garagePinIcon(x.g, 30) })
-        .bindTooltip(`${esc(op)} · ${(x.d/1609.344).toFixed(2)} mi`, { direction:'top' })
+        { color: opColor(op), weight: home ? 2.5 : 1.5, opacity: home ? .8 : .55, dashArray: '4 5' }).addTo(_nearMap);
+      L.marker([x.g.lat, x.g.lng], { icon: garagePinIcon(x.g, home ? 38 : 28, null, home), zIndexOffset: home ? 500 : 0 })
+        .bindTooltip(`${home ? 'Operating garage — ' : ''}${esc(op)} · ${(x.d/1609.344).toFixed(2)} mi`, { direction:'top' })
         .bindPopup(() => garagePopupHtml(x.g, meta))
         .addTo(_nearMap);
       if(x.d <= 12000) b.extend([x.g.lat, x.g.lng]);   // near garages steer the zoom
@@ -1239,6 +1258,7 @@ async function initRouteMap(route, m = {}){
     if(first) liveBtn.classList.add('loading');
     const [raw, reg] = await Promise.all([D.liveVehicles(route.name), D.vehiclesReg()]);
     liveBtn.classList.remove('loading');
+    busNextIn = nextPollS(raw, 15);
     if(!liveOn) return;
     const rows = (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng));
     if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
@@ -1277,7 +1297,7 @@ async function initRouteMap(route, m = {}){
           if(!liveOn || !document.getElementById('map')) return;
           busNextIn -= 1;
           if(busText) busText.textContent = busNextIn > 0 ? `next update in ${busNextIn} s` : 'updating…';
-          if(busNextIn <= 0){ busNextIn = 15; pollBuses(false); }
+          if(busNextIn <= 0){ busNextIn = 999; pollBuses(false); }   // poll re-anchors
         }, 1000));
       }
     } else if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
@@ -2032,6 +2052,7 @@ async function renderStopDetail(id){
   let nextIn = 0;
   async function poll(){
     const raw = await D.arrivals(id);
+    nextIn = nextPollS(raw, 30);
     const el = board(); if(!el) return;   // navigated away
     const t0 = Date.now();
     const rows = (raw?.data ?? [])
@@ -2094,7 +2115,7 @@ async function renderStopDetail(id){
     nextIn -= 1;
     const n = document.getElementById('nextUpd');
     if(n) n.textContent = nextIn > 0 ? `next update in ${nextIn} s` : 'updating…';
-    if(nextIn <= 0){ nextIn = 30; poll(); }
+    if(nextIn <= 0){ nextIn = 999; poll(); }   // poll re-anchors nextIn to the feed
   }
   poll(); nextIn = 30;
   const n0 = document.getElementById('nextUpd'); if(n0) n0.textContent = 'next update in 30 s';
@@ -2164,9 +2185,11 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
   if(!sec || !candidates.length) return;
   sec.hidden = false;
 
+  let lastFeed = null;
   async function findBus(){
     for(const line of candidates){
       const raw = await D.liveVehicles(line);
+      if(raw) lastFeed = raw;
       const hit = (raw?.data ?? []).find(x => String(x.reg ?? '').toUpperCase() === R
         && Number.isFinite(x.lat) && Number.isFinite(x.lng));
       if(hit) return hit;
@@ -2235,10 +2258,11 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
     nextIn -= 1;
     if(!gone) noteText(nextIn > 0 ? `next update in ${nextIn} s` : 'updating…');
     if(nextIn <= 0){
-      nextIn = 15;
+      nextIn = 999;
       const cur = await findBus();
+      nextIn = nextPollS(lastFeed, 15);
       if(!document.getElementById('vLiveSec')) return;
-      if(cur){ gone = false; drawBus(cur); noteText('next update in 15 s'); }
+      if(cur){ gone = false; drawBus(cur); noteText(`next update in ${nextIn} s`); }
       else { gone = true; if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.'; }
     }
   }, 1000));

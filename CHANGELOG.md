@@ -10,6 +10,8 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-18_
 
+- **UX** On the nearest-garage map the **operating garage stands apart** — larger pin with an accent ring and a stronger connector, so home vs competitor garages read at a glance.
+- **UX** **Live refreshes now align with the Atlas clock** — every live poll (arrivals boards, live buses, vehicle tracking, route status) reads the feed's capture time and cache lifetime and schedules the next fetch just after Atlas's copy expires, instead of on the app's own drifting timer. Countdowns show the true seconds to fresh data, and a stale edge answer triggers a quick retry.
 - **NEW** The nearest-garage card gains a **mini map** — the route drawn in red, each operator's closest garage as its operator-coloured pin with a dashed connector to the nearest stop it was measured from, fitted to the route and the garages within reach (distant ones stay pinned outside the initial view). Pins open the full garage popup.
 - **NEW** Tender awards now show the full bid picture — **accepted, lowest and highest bids** (£/yr) on both the current contract and the previous award, plus contracted miles now taken from the published figure rather than derived.
 - **NEW** Route pages gain **"Nearest garage · every operator"** — every London operator's closest garage to the route, measured straight-line from the nearest stop (not just the terminus), sorted by distance with the incumbent marked. Computed entirely from the Atlas stop and garage coordinates — a quick read on who could plausibly tender for the route.
