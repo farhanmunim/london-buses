@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-17T10:14:25.272Z",
+  "generatedAt": "2026-08-24T10:22:27.498Z",
   "summary": {
     "critical": 0,
     "warn": 8,
@@ -27,15 +27,6 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "60",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 14.8,
-      "note": "electric London fleets are post-2015"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "117",
       "field": "make↔model",
       "expected": "MERCEDES for \"Citaro K 10.5m\"",
@@ -54,11 +45,20 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "200",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
+      "actual": "WRIGHTBUS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.92",
-      "note": "fleetSize=47 pvr=12"
+      "actual": "3.58",
+      "note": "fleetSize=43 pvr=12"
     },
     {
       "severity": "WARN",
@@ -141,7 +141,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14305,
+        "totalObs": 14049,
         "missingFleet": 0
       },
       "note": ""
