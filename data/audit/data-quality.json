@@ -1,20 +1,11 @@
 {
-  "generatedAt": "2026-08-24T10:22:27.498Z",
+  "generatedAt": "2026-08-27T22:41:27.120Z",
   "summary": {
     "critical": 0,
-    "warn": 8,
-    "info": 5
+    "warn": 6,
+    "info": 4
   },
   "issues": [
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "23",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 13.5,
-      "note": "electric London fleets are post-2015"
-    },
     {
       "severity": "WARN",
       "scope": "rc",
@@ -63,15 +54,6 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "533",
-      "field": "otpMps",
-      "expected": "present for low-frequency",
-      "actual": null,
-      "note": ""
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "H20",
       "field": "make↔model",
       "expected": "SWITCH for \"MetroCity EV 8.7m\"",
@@ -91,8 +73,8 @@
         "vt": 732,
         "prop": 734,
         "deck": 731,
-        "ewtOrOtp": 665,
-        "mileageMps": 664,
+        "ewtOrOtp": 0,
+        "mileageMps": 0,
         "age": 614
       },
       "note": "of 747"
@@ -143,18 +125,6 @@
       "actual": {
         "totalObs": 14049,
         "missingFleet": 0
-      },
-      "note": ""
-    },
-    {
-      "severity": "INFO",
-      "scope": "mps",
-      "id": "-",
-      "field": "coherence",
-      "expected": "—",
-      "actual": {
-        "coherent": 664,
-        "mismatch": 0
       },
       "note": ""
     }
