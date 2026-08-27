@@ -1241,8 +1241,9 @@ async function initRouteMap(route, m = {}){
     if(first) liveBtn.classList.add('loading');
     const [raw, reg] = await Promise.all([D.liveVehicles(route.name), D.vehiclesReg()]);
     liveBtn.classList.remove('loading');
-    busNextIn = nextPollS(raw, 15);
+    busNextIn = raw ? nextPollS(raw, 15) : 8;
     if(!liveOn) return;
+    if(!raw && busLayer){ if(busText) busText.textContent = 'reconnecting…'; return; }   // keep last positions
     const rows = (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng));
     if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
     busLayer = L.layerGroup();
@@ -2031,18 +2032,27 @@ async function renderStopDetail(id){
      counts down every second between the 30 s re-syncs — like the dot-matrix
      board at the stop itself. */
   const board = () => document.getElementById('arrBoard');
+  let lastGoodAt = 0;
   const dueText = ms => ms <= 30000 ? 'Due' : `${Math.round(ms/60000)} min`;
   let nextIn = 0;
   async function poll(){
     const raw = await D.arrivals(id);
-    nextIn = nextPollS(raw, 30);
+    nextIn = raw ? nextPollS(raw, 30) : 8;     // failed fetch → quick quiet retry
     const el = board(); if(!el) return;   // navigated away
+    // A transient failure must not wipe a good board: dues are absolute
+    // timestamps, so the last data keeps counting down while we reconnect.
+    if(!raw && lastGoodAt && Date.now() - lastGoodAt < 180000){
+      const n = document.getElementById('nextUpd');
+      if(n) n.textContent = 'reconnecting…';
+      return;
+    }
     const t0 = Date.now();
     const rows = (raw?.data ?? [])
       .filter(a => Number.isFinite(a.timeToStation))
       .map(a => ({ ...a, dueAt: Number.isFinite(Date.parse(a.expectedArrival)) ? Date.parse(a.expectedArrival) : t0 + a.timeToStation*1000 }))
       .sort((a,b) => a.dueAt - b.dueAt)
       .slice(0, 12);
+    if(raw) lastGoodAt = Date.now();
     if(!rows.length){
       if(!s){
         // Not in the stop directory AND nothing predicted: this id is not a
@@ -2097,7 +2107,8 @@ async function renderStopDetail(id){
     paintDues();
     nextIn -= 1;
     const n = document.getElementById('nextUpd');
-    if(n) n.textContent = nextIn > 0 ? `next update in ${nextIn} s` : 'updating…';
+    if(n && n.textContent !== 'reconnecting…') n.textContent = nextIn > 0 ? `next update in ${nextIn} s` : 'updating…';
+    if(n && nextIn <= 0) n.textContent = 'updating…';
     if(nextIn <= 0){ nextIn = 999; poll(); }   // poll re-anchors nextIn to the feed
   }
   poll(); nextIn = 30;
@@ -2168,11 +2179,11 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
   if(!sec || !candidates.length) return;
   sec.hidden = false;
 
-  let lastFeed = null;
+  let lastFeed = null, feedOk = false;
   async function findBus(){
     for(const line of candidates){
       const raw = await D.liveVehicles(line);
-      if(raw) lastFeed = raw;
+      if(raw){ lastFeed = raw; feedOk = true; }
       const hit = (raw?.data ?? []).find(x => String(x.reg ?? '').toUpperCase() === R
         && Number.isFinite(x.lat) && Number.isFinite(x.lng));
       if(hit) return hit;
@@ -2242,10 +2253,12 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
     if(!gone) noteText(nextIn > 0 ? `next update in ${nextIn} s` : 'updating…');
     if(nextIn <= 0){
       nextIn = 999;
+      feedOk = false;
       const cur = await findBus();
-      nextIn = nextPollS(lastFeed, 15);
+      nextIn = feedOk ? nextPollS(lastFeed, 15) : 8;
       if(!document.getElementById('vLiveSec')) return;
       if(cur){ gone = false; drawBus(cur); noteText(`next update in ${nextIn} s`); }
+      else if(!feedOk){ if(!gone) noteText('reconnecting…'); }   // feed down ≠ bus gone
       else { gone = true; if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.'; }
     }
   }, 1000));
