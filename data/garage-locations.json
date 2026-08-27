@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T10:22:27.311Z",
+  "generatedAt": "2026-08-27T23:15:24.940Z",
   "count": 76,
   "garages": {
     "A": {
@@ -109,7 +109,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 151,
+      "pvr": 166,
       "capacity": 201
     },
     "BK": {
@@ -169,7 +169,7 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 114,
+      "pvr": 100,
       "capacity": 147
     },
     "CT": {
@@ -209,7 +209,7 @@
       "address": "Central Road, Dartford, Kent, DA1 5BG",
       "lat": 51.450192,
       "lon": 0.220779,
-      "pvr": 65,
+      "pvr": 67,
       "capacity": 123
     },
     "DX": {
@@ -569,7 +569,7 @@
       "address": "331 Pinner Road, Harrow, HA1 4HN",
       "lat": 51.584292,
       "lon": -0.358842,
-      "pvr": 80,
+      "pvr": 75,
       "capacity": null
     },
     "SW": {
@@ -729,7 +729,7 @@
       "address": "Tamian Way, Hounslow, Middlesex, TW4 6BL",
       "lat": 51.463832,
       "lon": -0.398697,
-      "pvr": 51,
+      "pvr": 57,
       "capacity": 110
     },
     "WL": {

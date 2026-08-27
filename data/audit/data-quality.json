@@ -1,11 +1,29 @@
 {
-  "generatedAt": "2026-08-27T22:41:27.120Z",
+  "generatedAt": "2026-08-27T23:15:25.664Z",
   "summary": {
     "critical": 0,
-    "warn": 6,
+    "warn": 8,
     "info": 4
   },
   "issues": [
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "5",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "0.17",
+      "note": "fleetSize=5 pvr=30"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "23",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.3,
+      "note": "electric London fleets are post-2015"
+    },
     {
       "severity": "WARN",
       "scope": "rc",
@@ -14,6 +32,15 @@
       "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
       "actual": "ALEXANDER DENNIS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "60",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 14.8,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -36,20 +63,11 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "200",
-      "field": "make↔model",
-      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
-      "actual": "WRIGHTBUS",
-      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.58",
-      "note": "fleetSize=43 pvr=12"
+      "actual": "3.17",
+      "note": "fleetSize=38 pvr=12"
     },
     {
       "severity": "WARN",
@@ -75,7 +93,7 @@
         "deck": 731,
         "ewtOrOtp": 0,
         "mileageMps": 0,
-        "age": 614
+        "age": 615
       },
       "note": "of 747"
     },
@@ -123,7 +141,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14049,
+        "totalObs": 13337,
         "missingFleet": 0
       },
       "note": ""
