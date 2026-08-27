@@ -185,22 +185,21 @@ function parseRouteXml(xmlContent, routeId, dateToken) {
   };
 }
 
-// Routes with an active (or imminent) TfL diversion, per the Atlas API.
-// iBus schedule drops absorb diversion re-routings — sometimes weeks before
-// the works start — so overwriting a diverted route's geometry silently
-// redefines its canonical line (route 175's Dagenham loop vanished this way,
-// leaving its canonical stops orphaned on the map). Mirrors Atlas's own
-// canonical-baseline freeze; self-heals when the episode leaves the dataset.
+// Routes with an active (or imminent) TfL diversion, per the repo's own
+// diversion register (data/api/route-diversions.json, maintained by
+// fetch-line-status.js several times a day). iBus schedule drops absorb
+// diversion re-routings — sometimes weeks before the works start — so
+// overwriting a diverted route's geometry silently redefines its canonical
+// line (route 175's Dagenham loop vanished this way, leaving its canonical
+// stops orphaned on the map). Self-heals when the episode leaves the dataset.
 async function fetchFrozenRouteIds() {
   try {
-    const res = await fetchWithTimeout('https://atlas.farhan.app/api/v1/route-diversions', { headers: userAgentHeaders(SCRIPT) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const d = await res.json();
+    const d = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'api', 'route-diversions.json'), 'utf8'));
     const ids = new Set(Object.keys(d?.routes ?? {}).map(x => x.toUpperCase()));
     for (const id of d?.upcomingFreeze ?? []) ids.add(String(id).toUpperCase());
     return ids;
   } catch (err) {
-    console.warn(`  Atlas /route-diversions unreachable (${err.message}) — no geometry freeze this run`);
+    console.warn(`  route-diversions.json unreadable (${err.message}) — no geometry freeze this run`);
     return new Set();
   }
 }

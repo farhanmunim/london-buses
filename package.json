@@ -13,8 +13,6 @@
     "fetch-route-details": "node scripts/fetch-route-details.js",
     "fetch-vehicle-fleet": "node scripts/fetch-vehicle-fleet.js",
     "fetch-route-vehicles": "node scripts/fetch-route-vehicles.js",
-    "fetch-route-performance": "node scripts/fetch-route-performance.js",
-    "fetch-route-mps": "node scripts/fetch-route-mps.js",
     "fetch-tenders": "node scripts/fetch-tenders.js",
     "fetch-tender-programme": "node scripts/fetch-tender-programme.js",
     "build-classifications": "node scripts/build-classifications.js",
@@ -25,7 +23,9 @@
     "audit-data": "node scripts/audit-data.js",
     "audit-data-strict": "node scripts/audit-data.js --strict",
     "audit-vehicle-data": "node scripts/audit-vehicle-data.js",
-    "audit-summary": "node scripts/audit-summary.js"
+    "audit-summary": "node scripts/audit-summary.js",
+    "fetch-line-status": "node scripts/fetch-line-status.js",
+    "build-api": "node scripts/build-api.js"
   },
   "engines": {
     "node": ">=18"

@@ -220,33 +220,6 @@ if (Object.keys(routeVehicles).length) {
   console.log(`Loaded route-vehicle observations for ${Object.keys(routeVehicles).length} routes`);
 }
 
-// Per-route reliability metrics from the QSI PDF (high-frequency routes get
-// EWT, low-frequency get OTP). Surfaced on the route card as a "Reliability"
-// row. Falls through silently if the file is missing.
-const routePerfPath = path.join(DATA_DIR, 'source', 'route-performance.json');
-const routePerfFile = fs.existsSync(routePerfPath)
-  ? JSON.parse(fs.readFileSync(routePerfPath, 'utf8'))
-  : { routes: {} };
-const routePerf = routePerfFile.routes ?? {};
-const routePerfPeriod = routePerfFile.periodLabel ?? null;
-if (Object.keys(routePerf).length) {
-  console.log(`Loaded route performance for ${Object.keys(routePerf).length} routes (${routePerfPeriod ?? 'unknown period'})`);
-}
-
-// Per-route Minimum Performance Standards (contractual benchmarks). Values
-// vary per route (EL2 high-freq EWT 0.70 vs route 122 high-freq EWT 1.20)
-// because each tender contract sets its own threshold. The card surfaces
-// these alongside the actuals in the Tender · Current contract section.
-const routeMpsPath = path.join(DATA_DIR, 'source', 'route-mps.json');
-const routeMpsFile = fs.existsSync(routeMpsPath)
-  ? JSON.parse(fs.readFileSync(routeMpsPath, 'utf8'))
-  : { routes: {} };
-const routeMps = routeMpsFile.routes ?? {};
-if (Object.keys(routeMps).length) {
-  const ok = Object.values(routeMps).filter(r => r.status === 200).length;
-  console.log(`Loaded route MPS for ${ok} routes`);
-}
-
 // ── Tender award enrichment ─────────────────────────────────────────────────
 // Joins data/source/tenders.json (every historical tender award keyed by btID)
 // to per-route fields surfaced on the route card:
@@ -815,12 +788,6 @@ for (const file of routeFiles) {
   // derived fields fall back to last-known-good before we give up to null, so
   // a flaky upstream scrape doesn't wipe vehicle/operator/pvr/etc. that we
   // already knew about from a previous run.
-  // Per-route reliability metric from TfL's QSI PDF. Last-known-good fallback
-  // because the PDF only updates every ~4 weeks — between releases the value
-  // is the same as last run, so preserving the previous reading is correct.
-  const perf = routePerf[routeId] ?? null;
-  const mps  = (routeMps[routeId]?.status === 200) ? routeMps[routeId] : null;
-
   // Tender history lookup. routeId is upper-case here, matching the keys in
   // tendersByRoute / programmeByRoute. N-route fallback: an N-prefixed route
   // with no separate tender history inherits from its daytime sibling (same
@@ -895,26 +862,6 @@ for (const file of routeFiles) {
     // Per-make breakdown of the core fleet ([{make, count, share}], desc) so a
     // mixed route can be shown honestly rather than collapsed to one make.
     fleetComposition: fleetAgg?.fleetComposition ?? lastRec.fleetComposition ?? null,
-    // Per-route reliability — exactly one of (ewtMinutes | onTimePercent) is
-    // populated depending on serviceClass. perfPeriod tells the UI which TfL
-    // reporting period the figure covers.
-    // serviceClass precedence: MPS PDF (contractual, set per tender) wins
-    // over the QSI performance reading (a measurement that occasionally
-    // misclassifies — H25 is the canonical case where the perf PDF lists
-    // it under the high-frequency table but its MPS row + bus frequency
-    // are unambiguously low-frequency). Once serviceClass is locked, the
-    // two reliability metrics are mutually exclusive — only the metric
-    // matching the class is meaningful.
-    serviceClass:    mps?.service_class    ?? perf?.service_class     ?? lastRec.serviceClass    ?? null,
-    ewtMinutes:      (mps?.service_class === 'low-frequency') ? null : (perf?.ewt_minutes     ?? lastRec.ewtMinutes      ?? null),
-    onTimePercent:   (mps?.service_class === 'high-frequency') ? null : (perf?.on_time_percent ?? lastRec.onTimePercent   ?? null),
-    perfPeriod:      (perf ? routePerfPeriod : null) ?? lastRec.perfPeriod ?? null,
-    // Per-route Minimum Performance Standards (the contractual benchmark
-    // each route is graded against). Set per tender, vary route-by-route
-    // even within the same service class.
-    ewtMps:          override.ewtMps     ?? mps?.ewt_mps_minutes      ?? lastRec.ewtMps     ?? null,
-    otpMps:          override.otpMps     ?? mps?.otp_mps_percent      ?? lastRec.otpMps     ?? null,
-    mileageMps:      override.mileageMps ?? mps?.mileage_mps_percent  ?? lastRec.mileageMps ?? null,
     // Tender enrichment — only fall back to last-known-good when the *source
     // file* didn't load (so a missing tenders.json or programme.json after a
     // failed fetch doesn't wipe the card). When the source loaded but a

@@ -446,21 +446,6 @@ function auditObservations(rv, vf) {
 }
 
 // ── Audit: MPS service-class vs classification serviceClass ────────────────
-function auditMps(rc, mps) {
-  if (!rc?.routes || !mps?.routes) return;
-  let coherent = 0, mismatch = 0;
-  for (const [id, r] of Object.entries(rc.routes)) {
-    if (!r.serviceClass) continue;
-    const m = mps.routes[id];
-    if (!m || m.status !== 200) continue;
-    if (m.service_class !== r.serviceClass) {
-      add('WARN', 'mps', id, 'service_class', r.serviceClass, m.service_class);
-      mismatch++;
-    } else coherent++;
-  }
-  add('INFO', 'mps', '-', 'coherence', '—', { coherent, mismatch });
-}
-
 // ── Audit: freshness ────────────────────────────────────────────────────────
 function auditFreshness() {
   const checks = [
@@ -469,7 +454,6 @@ function auditFreshness() {
     ['data/route_stops.json',               'generated_at_utc', 8],
     ['data/source/vehicle-fleet.json',      'generatedAt', 8],
     ['data/source/route-vehicles.json',     'generatedAt', 8],
-    ['data/source/route-mps.json',          'generatedAt', 14],
     ['data/source/tender-programme.json',   'generatedAt', 14],
     ['data/route_classifications.json',     'generatedAt', 8],
   ];
@@ -497,7 +481,6 @@ function main() {
   const rc  = tryRead(path.join(DATA_DIR, 'route_classifications.json'));
   const vf  = tryRead(path.join(DATA_DIR, 'source', 'vehicle-fleet.json'));
   const rv  = tryRead(path.join(DATA_DIR, 'source', 'route-vehicles.json'));
-  const mps = tryRead(path.join(DATA_DIR, 'source', 'route-mps.json'));
   const ov  = tryRead(path.join(DATA_DIR, 'routes-overview.geojson'));
   const gar = tryRead(path.join(DATA_DIR, 'garages.geojson'));
 
@@ -505,7 +488,6 @@ function main() {
   if (vf)  auditFleet(vf);
   if (gar) auditGarages(gar);
   if (rv && vf) auditObservations(rv, vf);
-  if (rc && mps) auditMps(rc, mps);
   auditFreshness();
 
   // Summarise

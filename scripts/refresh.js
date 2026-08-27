@@ -10,20 +10,19 @@
  *   6. fetch-route-details.js       — garages + details.htm → data/source/route_details.json
  *   7. fetch-vehicle-fleet.js       — iBus + DVLA → data/source/vehicle-fleet.json (sticky cache)
  *   8. fetch-route-vehicles.js      — TfL arrivals → data/source/route-vehicles.json (this run's snapshot)
- *   9. fetch-route-performance.js   — TfL QSI PDF → data/source/route-performance.json (EWT/OTP)
- *  10. fetch-tenders.js             — TfL tender award form → data/source/tenders.json (sticky cache)
- *  11. fetch-tender-programme.js    — TfL annual programme PDFs → data/source/tender-programme.json
+ *   9. fetch-tenders.js             — TfL tender award form → data/source/tenders.json (sticky cache)
+ *  10. fetch-tender-programme.js    — TfL annual programme PDFs → data/source/tender-programme.json
+ *  11. fetch-line-status.js         — TfL status → data/api/line-status.json + route-diversions.json
  *  12. build-classifications.js     — data/route_classifications.json (master per-route record)
  *  13. build-overview.js            — simplified network overview layer
  *  14. build-garage-locations.js    — geocode garages → data/garage-locations.json (frontend)
- *  15. audit-data.js                — data-quality gate (hard-fails on CRITICAL)
+ *  15. build-api.js                 — assemble the served faux-API (data/api/*.json)
+ *  16. audit-data.js                — data-quality gate (hard-fails on CRITICAL)
  *
- * Note: fetch-route-mps.js also runs (per-route MPS) — see STEPS below for the
- * authoritative, numbered order.
- *
- * Historical storage lives in the Atlas warehouse (atlas.farhan.app) now —
- * this pipeline no longer writes to Supabase, and the frontend reads the
- * datasets Atlas serves straight from its public API (see js/api.js).
+ * This repo IS the data platform now: GitHub Actions runs this pipeline on a
+ * schedule, the validated outputs are committed, and Cloudflare Pages serves
+ * data/api/*.json as the API both front-ends read (see js/api.js and v2/).
+ * The retired Atlas warehouse's QSI/MPS performance calcs are gone with it.
  */
 
 import { execFileSync } from 'child_process';
@@ -41,13 +40,13 @@ const STEPS = [
   { label: 'Step 6/16 — Route details (vehicle/op/garage)',         script: 'fetch-route-details.js' },
   { label: 'Step 7/16 — Vehicle fleet (iBus + DVLA)',               script: 'fetch-vehicle-fleet.js' },
   { label: 'Step 8/16 — Route → vehicle observations (TfL)',        script: 'fetch-route-vehicles.js' },
-  { label: 'Step 9/16 — Route performance actuals (EWT/OTP)',       script: 'fetch-route-performance.js' },
-  { label: 'Step 10/16 — Per-route MPS (contractual standards)',    script: 'fetch-route-mps.js' },
-  { label: 'Step 11/16 — Tender award results (TfL)',               script: 'fetch-tenders.js' },
-  { label: 'Step 12/16 — Tender programme PDFs (TfL)',              script: 'fetch-tender-programme.js' },
-  { label: 'Step 13/16 — Build classifications',                    script: 'build-classifications.js' },
-  { label: 'Step 14/16 — Build overview + snapshot',                script: 'build-overview.js' },
-  { label: 'Step 15/16 — Garage locations (frontend JSON)',         script: 'build-garage-locations.js' },
+  { label: 'Step 9/16 — Tender award results (TfL)',                script: 'fetch-tenders.js' },
+  { label: 'Step 10/16 — Tender programme PDFs (TfL)',              script: 'fetch-tender-programme.js' },
+  { label: 'Step 11/16 — Line status + diversions (TfL)',           script: 'fetch-line-status.js' },
+  { label: 'Step 12/16 — Build classifications',                    script: 'build-classifications.js' },
+  { label: 'Step 13/16 — Build overview + snapshot',                script: 'build-overview.js' },
+  { label: 'Step 14/16 — Garage locations (frontend JSON)',         script: 'build-garage-locations.js' },
+  { label: 'Step 15/16 — Build served API (data/api)',              script: 'build-api.js' },
   { label: 'Step 16/16 — Data-quality audit',                       script: 'audit-data.js' },
 ];
 
@@ -64,9 +63,8 @@ const SOFT_FAIL = new Set([
   'fetch-route-details.js',
   'fetch-vehicle-fleet.js',
   'fetch-route-vehicles.js',
-  'fetch-route-performance.js',
-  'fetch-route-mps.js',
   'fetch-tenders.js',
+  'fetch-line-status.js',
   'fetch-tender-programme.js',
   'build-garage-locations.js',
 ]);
