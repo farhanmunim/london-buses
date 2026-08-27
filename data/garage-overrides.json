@@ -1,0 +1,15 @@
+{
+  "comment": "Manual garage fixes applied by scripts/build-api.js on top of data/garage-locations.json. Postcodes/coords here win over the source dataset (postcodeSource is reported as 'override').",
+  "garages": {
+    "CP": {
+      "postcode": "HA7 1QA",
+      "lat": 51.604366,
+      "lng": -0.297784
+    },
+    "NM": {
+      "postcode": "AL9 7TS",
+      "lat": 51.724,
+      "lng": -0.222508
+    }
+  }
+}
