@@ -402,7 +402,7 @@ a{color:inherit;text-decoration:none}
 
 /* Section grouping inside the route card — Route / Fleet / Tender.
    Reuses the modal-section "tag" treatment so the visual vocabulary is
-   consistent with the About/Roadmap dialogs. */
+   consistent with the About dialog. */
 .rc-section{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
 .rc-section:last-child{margin-bottom:0}
 .rc-section-tag{
@@ -979,8 +979,8 @@ html.paint-by-type .pill[data-filter="routetype"] .op-dot{display:inline-block}
 .tb-btn-reset:hover{filter:brightness(1.1);border-color:var(--acc);color:var(--acc)}
 .tb-btn-reset svg{color:inherit}
 
-/* ══════════════════════════════════════════════ ABOUT / ROADMAP MODALS ══
-   Class names match what about.js / roadmap.js inject, re-pointed at the
+/* ══════════════════════════════════════════════ ABOUT MODAL ══
+   Class names match what about.js injects, re-pointed at the
    new token system so the modals feel native in the redesigned app. */
 
 .modal{
@@ -1003,7 +1003,6 @@ html.paint-by-type .pill[data-filter="routetype"] .op-dot{display:inline-block}
 }
 .modal-panel::-webkit-scrollbar{width:3px}
 .modal-panel::-webkit-scrollbar-thumb{background:var(--sc-th);border-radius:2px}
-/* About + Roadmap now share a width so the two dialogs feel like siblings. */
 .modal-panel--wide{max-inline-size:560px}
 .modal-panel{max-inline-size:560px}
 
@@ -1069,17 +1068,6 @@ html.paint-by-type .pill[data-filter="routetype"] .op-dot{display:inline-block}
 .credits-list--inline .credits-note{text-align:right}
 .modal-note{margin-top:10px;font-size:11.5px;color:var(--tx2);padding:0 10px}
 
-.roadmap{inline-size:100%;margin-block-start:14px;border-collapse:collapse;font-size:13px}
-.roadmap thead th{
-  text-align:start;padding:8px 12px;border-bottom:1px solid var(--bd);
-  color:var(--mu);
-}
-.roadmap tbody td{padding:12px;border-bottom:1px solid var(--bd);color:var(--tx2);vertical-align:top}
-.roadmap tbody tr:last-child td{border-bottom:none}
-.roadmap__desc{font-size:11.5px;color:var(--mu);margin-top:4px;line-height:1.5}
-.roadmap__desc ul{padding-left:18px;margin:6px 0 0}
-.roadmap__link{color:var(--blue);text-decoration:none;border-bottom:1px dashed var(--blue);font-weight:500;font-size:11.5px}
-.roadmap__link:hover{filter:brightness(1.1)}
 
 .b{
   display:inline-block;padding:2px 8px;border-radius:20px;
@@ -1178,14 +1166,13 @@ body.changelog-page html{height:auto}
 /* ══════════════════════════════════════════════ TYPOGRAPHY HARMONY ══
    A single treatment for every "small uppercase label" across the app —
    sidebar filter headers, overview section labels, drawer section labels,
-   popup headings, roadmap/credits section tags. */
+   popup headings, credits section tags. */
 .sb-sec-lbl,
 .slbl,
 .dsec-lbl,
 .rp-kicker,
 .modal-section-tag,
 .map-popup__routes-hd,
-.roadmap thead th,
 .ov-ops thead th{
   font-size:9.5px!important;
   font-weight:700!important;
@@ -1200,25 +1187,7 @@ body.changelog-page html{height:auto}
    markup in case we ever want to shift the right-panel tabs independently. */
 .rp-tabs-top{}
 
-/* Roadmap stage pills — four states, same visual language as the route-card
-   contract badges so "amber = attention", "blue = upcoming", "green = done". */
-.roadmap__stage-cell{white-space:nowrap;vertical-align:middle!important}
-.roadmap__stage{
-  display:inline-block;padding:3px 10px;border-radius:20px;
-  font-size:10px;font-weight:700;letter-spacing:.3px;
-  white-space:nowrap;line-height:1.3;
-}
-.roadmap__stage--idea    {background:var(--surf3);color:var(--tx2);border:1px solid var(--bd2)}
-.roadmap__stage--planned {background:var(--bds);color:var(--bdst)}
-.roadmap__stage--building{background:var(--bdr);color:var(--bdt)}
-.roadmap__stage--shipped {background:var(--bdg);color:var(--bdgt)}
-
-/* Roadmap title column — give it presence so the stage pill doesn't dominate. */
-.roadmap__title{font-weight:600;color:var(--tx);font-size:13px;white-space:nowrap;padding-right:12px!important}
-.roadmap__notes{margin:6px 0 0;padding-left:18px;font-size:11.5px;color:var(--mu);line-height:1.5}
-.roadmap__notes li{margin-bottom:3px}
-
-/* Drop the "bus icon" block from About/Roadmap headers — the title + subtitle
+/* Drop the "bus icon" block from the About header — the title + subtitle
    already identify the dialog, and removing the mark makes the two modals
    feel lighter and more typographic. */
 .modal-brand{display:none!important}
@@ -1473,7 +1442,7 @@ html.changelog-page .topbar{position:sticky;top:0;z-index:40;flex-shrink:0}
    ORIGINAL-SITE PARITY — ported verbatim from github.com/farhanmunim/london-buses
    @ HEAD and re-pointed at the v2.5 token palette via the bridge below. This
    block overrides any earlier footer / modal / changelog declarations so the
-   About dialog, Roadmap dialog, Changelog page, and app footer all match the
+   About dialog, Changelog page, and app footer all match the
    live site at london-buses.farhan.app. ══════════════════════════════════ */
 
 /* ── Legacy token bridge ────────────────────────────────────────────────── */
@@ -1673,32 +1642,6 @@ html.changelog-page .topbar{position:sticky;top:0;z-index:40;flex-shrink:0}
 .credits-note{color:var(--text-3);font-size:var(--fs-xs);text-align:left}
 .credits-list--inline li{flex-direction:row;justify-content:space-between;align-items:baseline;gap:var(--sp-4)}
 .credits-list--inline .credits-note{text-align:right}
-
-/* Roadmap table + stage pills */
-.roadmap{inline-size:100%;margin-block-start:var(--sp-5);border-collapse:collapse;font-size:var(--fs-sm)}
-.roadmap thead th{
-  text-align:start;padding:var(--sp-2) var(--sp-3);
-  border-bottom:1px solid var(--border-c);
-  font-size:10.5px;font-weight:600;color:var(--text-3);
-  text-transform:uppercase;letter-spacing:.06em;
-}
-.roadmap tbody td{padding:var(--sp-3);border-bottom:1px solid var(--border-c);vertical-align:top;color:var(--text-2)}
-.roadmap tbody tr:last-child td{border-bottom:none}
-.roadmap__title{font-weight:600;color:var(--text-1);white-space:nowrap;padding-right:var(--sp-4)!important}
-.roadmap__desc{font-size:var(--fs-xs);color:var(--text-3);line-height:1.55;margin-top:4px}
-.roadmap__notes{margin:var(--sp-2) 0 0;padding-left:var(--sp-5);font-size:var(--fs-xs);color:var(--text-3);line-height:1.5}
-.roadmap__notes li{margin-bottom:3px}
-.roadmap__link{color:hsl(var(--info));text-decoration:none;border-bottom:1px dashed hsl(var(--info) / .4);font-weight:500;font-size:var(--fs-xs)}
-.roadmap__link:hover{border-bottom-style:solid}
-.roadmap__stage-cell{white-space:nowrap;vertical-align:middle!important}
-.roadmap__stage{
-  display:inline-block;padding:3px 10px;border-radius:var(--r-pill);
-  font-size:10px;font-weight:700;letter-spacing:.3px;white-space:nowrap;line-height:1.3;
-}
-.roadmap__stage--idea    {background:var(--surf3);color:var(--text-2);border:1px solid var(--border-2)}
-.roadmap__stage--planned {background:var(--bds);color:var(--bdst)}
-.roadmap__stage--building{background:var(--bdr);color:var(--bdt)}
-.roadmap__stage--shipped {background:var(--bdg);color:var(--bdgt)}
 
 /* ── CHANGELOG PAGE SHELL (original) ────────────────────────────────────── */
 html.changelog-page,
@@ -1971,14 +1914,6 @@ html.changelog-page body{padding-bottom:32px}
   background:var(--pill-bg)!important;border-color:var(--pill-bd)!important;
   color:var(--mu)!important;cursor:default;padding:1px 8px!important;
 }
-
-/* Roadmap stage pills need a hairline border to match the other badges in
-   the app (route-card contract bdg, filter pills) so they read as a set. */
-.roadmap__stage{border:1px solid transparent}
-.roadmap__stage--idea    {border-color:var(--bd2)}
-.roadmap__stage--planned {border-color:var(--bdst)}
-.roadmap__stage--building{border-color:var(--bdt)}
-.roadmap__stage--shipped {border-color:var(--bdgt)}
 
 /* Version pill links to the changelog — subtle hover to cue interactivity. */
 a.tb-ver{text-decoration:none;transition:background .15s,color .15s}

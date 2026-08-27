@@ -10,6 +10,8 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-27_
 
+- **UX** The **Roadmap** dialog is retired (footer button, modal and styles removed) as part of winding the project down — the sunset banner is the forward-looking notice now.
+
 - **FIX** A flapping live feed no longer wipes your screen. During a TfL-proxy outage (2026-08-27: ~1-in-3 requests succeeding) the stop arrivals board showed "Live arrivals are unreachable" on nearly every refresh even though it had good data seconds earlier. Now every live surface keeps its **last-good data** — arrival times keep counting down (they're absolute timestamps), live buses hold their last positions, vehicle tracking stops claiming "the bus has left" when it's the feed that's gone — shows a quiet "reconnecting…" and retries every ~8 s. The unreachable message appears only when there's genuinely nothing to show, and route status already fell back to the daily snapshot.
 - **NEW** A live-resilience test suite ships in `tests/` (feed-outage simulation, sticky-board and recovery assertions), so this behaviour stays verified.
 
