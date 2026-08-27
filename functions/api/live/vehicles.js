@@ -59,7 +59,12 @@ export async function onRequestGet(context) {
   upstream.searchParams.set('api_key', env.BODS_API_KEY);
 
   const res = await fetch(upstream, { headers: { 'User-Agent': 'london-buses.farhan.app live proxy' } });
-  if (!res.ok) return json({ error: `BODS upstream HTTP ${res.status}` }, 502);
+  // 503, not 502 — Cloudflare swallows a Worker's 502/504 body and serves
+  // its own branded error page, which hides this diagnostic JSON.
+  if (!res.ok) {
+    const snippet = (await res.text().catch(() => '')).slice(0, 300);
+    return json({ error: `BODS upstream HTTP ${res.status}`, upstreamBody: snippet }, 503);
+  }
   const xml = await res.text();
 
   const capturedAt = tag(xml, 'ResponseTimestamp') ?? new Date().toISOString();
