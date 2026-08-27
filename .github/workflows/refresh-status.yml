@@ -1,0 +1,59 @@
+name: Intraday Status Refresh
+
+# Service status + diversion register, several times daily. One TfL call
+# (/Line/Mode/bus/Status?detail=true) feeds data/api/line-status.json and
+# data/api/route-diversions.json. Minutes off the hour boundary — GitHub
+# delays or skips scheduled jobs that fire on the hour (peak load).
+on:
+  schedule:
+    - cron: "41 6,9,12,15,18,21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Fetch line status + diversions
+        env:
+          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+        run: node scripts/fetch-line-status.js
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/api/line-status.json data/api/route-diversions.json data/api/manifest.json || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "data: status refresh $(date -u +%Y-%m-%dT%H:%M)"
+            for attempt in 1 2 3; do
+              if git push; then break; fi
+              if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
+              git stash push --include-untracked --quiet --message "ci-residue-$attempt" || true
+              git pull --rebase origin main
+            done
+          fi

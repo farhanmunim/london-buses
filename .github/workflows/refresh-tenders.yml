@@ -1,0 +1,65 @@
+name: Intraday Tender Refresh
+
+# Tender award sweep, twice each afternoon. TfL generally publishes new
+# award results around 1pm and 3pm UK time; 12:20 + 15:20 UTC covers both
+# publish windows year-round (13:20/16:20 BST in summer, 12:20/15:20 GMT in
+# winter — the second run always lands after both windows). Awards are
+# immutable and keyed by btID, so a run with nothing new commits nothing.
+on:
+  schedule:
+    - cron: "20 12,15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  tenders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Fetch tender awards
+        run: node scripts/fetch-tenders.js
+
+      - name: Rebuild served API
+        run: node scripts/build-api.js
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Only commit when the award cache itself moved — build-api rewrites
+          # timestamps on every run, so gating on tenders.json avoids a no-op
+          # commit (and a Cloudflare build) when TfL published nothing new.
+          git add -f data/source/tenders.json || true
+          if git diff --cached --quiet; then
+            echo "No new tender awards"
+          else
+            git add data/api/ || true
+            git commit -m "data: tender refresh $(date -u +%Y-%m-%dT%H:%M)"
+            for attempt in 1 2 3; do
+              if git push; then break; fi
+              if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
+              git stash push --include-untracked --quiet --message "ci-residue-$attempt" || true
+              git pull --rebase origin main
+            done
+          fi

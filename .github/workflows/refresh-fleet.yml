@@ -1,0 +1,71 @@
+name: Intraday Fleet Sweep
+
+# Incremental fleet observation, twice daily: ~midday and ~midnight UK
+# (11:20 + 23:20 UTC ≈ 12:20/00:20 BST, 11:20/23:20 GMT). Each sweep reads
+# TfL /Line/{id}/Arrivals for every route (registrations of buses out right
+# now) and accumulates into data/source/route-vehicles.json; new
+# registrations get a DVLA VES lookup into the sticky vehicle-fleet cache.
+# Together with the 03:17 nightly run (which catches the night network)
+# this replaces the retired 24/7 fleet monitoring with incremental samples.
+on:
+  schedule:
+    - cron: "20 11,23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  fleet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Sweep route vehicles (TfL arrivals)
+        env:
+          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+        run: node scripts/fetch-route-vehicles.js
+
+      - name: Enrich new registrations (DVLA)
+        env:
+          DVLA_API_KEY: ${{ secrets.DVLA_API_KEY }}
+        run: node scripts/fetch-vehicle-fleet.js
+
+      - name: Rebuild served API
+        run: node scripts/build-api.js
+
+      - name: Commit and push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/source/route-vehicles.json data/source/vehicle-fleet.json || true
+          git add data/api/ || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "data: fleet sweep $(date -u +%Y-%m-%dT%H:%M)"
+            for attempt in 1 2 3; do
+              if git push; then break; fi
+              if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
+              git stash push --include-untracked --quiet --message "ci-residue-$attempt" || true
+              git pull --rebase origin main
+            done
+          fi

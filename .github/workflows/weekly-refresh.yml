@@ -1,32 +1,43 @@
-name: Weekly Data Refresh
+name: Nightly Data Refresh
 
-# Runs every Monday at 09:23 UTC (10:23 BST in summer, 09:23 GMT in winter).
-# Minute is deliberately off the top of the hour — GitHub Actions delays or
-# skips scheduled jobs that fire on the hour boundary (peak load). Timed for
-# peak running so TfL `/Line/<id>/Arrivals` returns a representative sample
-# of the active fleet (used by fetch-route-vehicles.js). Can also be
-# triggered manually from the GitHub Actions tab.
+# Full pipeline, nightly at 03:17 UTC. Minute deliberately off the top of
+# the hour — GitHub Actions delays or skips scheduled jobs on the hour
+# boundary (peak load). The 03:17 slot also puts the fetch-route-vehicles
+# arrivals sweep on the night network, which the daytime fleet sweeps
+# (refresh-fleet.yml) never see — between them coverage spans the full day.
+# Can also be triggered manually from the GitHub Actions tab.
 #
-# Lives at weekly-refresh.yml: the previous path (refresh-data.yml) was
-# manually disabled in the Actions UI on 2026-07-04 during the Supabase
-# decommission, and GitHub pins the disabled state to the workflow's file
-# path. This path registers as a new, enabled workflow. Still required
-# post-Atlas: geometry, stops, destinations, overview and the
-# classifications base all ship as committed files (see js/api.js header
-# for the fidelity gaps that keep them bundled).
+# Lives at weekly-refresh.yml (historical name): the earlier path
+# (refresh-data.yml) was manually disabled in the Actions UI on 2026-07-04
+# during the Supabase decommission, and GitHub pins the disabled state to
+# the workflow's file path; renaming this file would register a new workflow
+# and lose this one's run history, so the filename stays.
+#
+# This repo IS the data platform (GitHub Actions = scheduler + compute,
+# git = database, Cloudflare Pages serves data/api/*.json as the API).
+# Intraday companions: refresh-status.yml (service status + diversions),
+# refresh-tenders.yml (after TfL's ~1pm/~3pm publish windows),
+# refresh-fleet.yml (fleet sweeps ~midday + ~midnight UK).
 on:
   schedule:
-    - cron: "23 9 * * 1"
+    - cron: "17 3 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
+# One refresh at a time across ALL data workflows — TfL rate limits punish
+# concurrency, and parallel commits race each other's pushes.
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # 45-min ceiling. Cold-start week may use up to 20 min on the iBus → DVLA
-    # fleet build (~6000 lookups @ 5 RPS); steady-state weekly runs are ~10 min.
+    # 45-min ceiling. Cold-start run may use up to 20 min on the iBus → DVLA
+    # fleet build (~6000 lookups @ 5 RPS); steady-state nightly runs are
+    # dominated by the ~1900-call route-stops sweep (~10 min).
     timeout-minutes: 45
 
     steps:
@@ -75,8 +86,10 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Always stage the aggregated/summary files that change weekly.
+          # Always stage the aggregated/summary files that change nightly,
+          # including the served faux-API (data/api/) both front-ends read.
           git add -A \
+            data/api/ \
             data/routes-overview.geojson \
             data/route_destinations.json \
             data/route_stops.json \
@@ -88,48 +101,33 @@ jobs:
             data/frequencies.json \
             data/garages.geojson || true
 
-          # Persist the weekly data-quality audit report. The refresh
-          # hard-fails on CRITICAL issues (so a broken commit never lands),
-          # but committing the report each successful week gives a history
-          # we can diff for regressions.
+          # Persist the data-quality audit report. The refresh hard-fails on
+          # CRITICAL issues (so a broken commit never lands), but committing
+          # the report each successful run gives a history we can diff for
+          # regressions.
           git add -f data/audit/data-quality.json || true
 
           # Persist the postcodes.io geocode cache across runs to avoid
-          # re-geocoding every garage weekly.
+          # re-geocoding every garage nightly.
           git add -f data/source/geocode_cache.json || true
 
           # Persist the DVLA vehicle-fleet cache + per-route observed
           # registrations across runs. The fleet cache is sticky (90-day TTL
           # per registration) so without persistence we'd hammer DVLA with
-          # ~9000 calls every Monday. The route-vehicles cache accumulates
-          # observations week-over-week so coverage of each route's fleet
+          # ~9000 calls every night. The route-vehicles cache accumulates
+          # observations run-over-run so coverage of each route's fleet
           # grows steadily.
           git add -f data/source/vehicle-fleet.json  || true
           git add -f data/source/route-vehicles.json || true
 
-          # Persist parsed route performance (EWT/OTP) across runs. The PDF
-          # only updates every ~4 weeks; persisting means we can always
-          # answer "what was the latest reading?" between PDF refreshes.
-          # Raw text dump is also persisted to make parser iteration easy
-          # without re-fetching from TfL.
-          git add -f data/source/route-performance.json     || true
-          git add -f data/source/route-performance-raw.txt  || true
-
-          # Persist per-route Minimum Performance Standards. ~700 routes
-          # parsed from TfL's per-route QSI PDFs. MPS values are contract-
-          # defined (only change at tender renewal) so this cache is very
-          # sticky; without persistence we'd hammer TfL with ~700 PDF
-          # downloads every Monday for data that rarely moves.
-          git add -f data/source/route-mps.json             || true
-
           # Persist the historical tender award cache. ~2500 rows; immutable
-          # once written so steady-state weekly runs only add the handful of
-          # new btIDs TfL has published since last week.
+          # once written so steady-state runs only add the handful of new
+          # btIDs TfL has published since last time.
           git add -f data/source/tenders.json               || true
 
           # Persist the upcoming-tender programme parse. Small (~100 KB); TfL
           # republishes the programme PDFs ~monthly during the planning year
-          # so re-parsing weekly is fine. Idempotent on (programme_year,
+          # so re-parsing nightly is fine. Idempotent on (programme_year,
           # tranche, route_id) so re-pushing has no effect when nothing
           # changed upstream.
           git add -f data/source/tender-programme.json      || true
@@ -146,7 +144,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "data: weekly refresh $(date -u +%Y-%m-%d)"
+            git commit -m "data: nightly refresh $(date -u +%Y-%m-%d)"
 
             # Retry push if origin/main moved between checkout and push.
             # Rebase our single data commit onto whatever landed upstream;

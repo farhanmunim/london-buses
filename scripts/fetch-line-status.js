@@ -144,6 +144,17 @@ async function main() {
     routes: sorted,
   }) + '\n', 'utf8');
 
+  // Keep the served manifest's freshness rows truthful between full
+  // build-api runs — intraday refreshes only touch these two datasets.
+  const manifestPath = path.join(API_DIR, 'manifest.json');
+  try {
+    const mf = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    for (const [key, rowsN] of [['line-status', rows.length], ['route-diversions', Object.keys(sorted).length]]) {
+      if (mf?.datasets?.[key]) Object.assign(mf.datasets[key], { fetchedAt: now, status: 'ok', rows: rowsN });
+    }
+    fs.writeFileSync(manifestPath, JSON.stringify(mf) + '\n', 'utf8');
+  } catch { /* no manifest yet — build-api owns creating it */ }
+
   console.log(`Wrote ${rows.length} rows (${rows.length - good} disrupted) → ${STATUS_PATH}`);
   console.log(`Wrote ${Object.keys(sorted).length} diversions → ${DIVERSIONS_PATH}`);
 }

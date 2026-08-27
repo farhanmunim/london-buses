@@ -34,7 +34,17 @@ const API = p => path.join(ROOT, 'data', 'api', p);
 
 const read = p => JSON.parse(fs.readFileSync(p, 'utf8'));
 const tryRead = p => { try { return read(p); } catch { return null; } };
-const write = (p, obj) => fs.writeFileSync(p, JSON.stringify(obj) + '\n', 'utf8');
+// Content-stable write: skip when only volatile timestamps differ from the
+// file on disk. Without this every run rewrites generatedAt in ~4 MB of
+// otherwise-identical JSON, and the twice-daily workflows would commit it
+// all — pure git bloat.
+const stripVolatile = obj => JSON.stringify(obj, (k, v) =>
+  (k === 'generatedAt' || k === 'fetchedAt' || k === 'capturedAt') ? undefined : v);
+const write = (p, obj) => {
+  const prev = tryRead(p);
+  if (prev && stripVolatile(prev) === stripVolatile(obj)) return;
+  fs.writeFileSync(p, JSON.stringify(obj) + '\n', 'utf8');
+};
 const now = new Date().toISOString();
 const sortKeys = obj => Object.fromEntries(Object.keys(obj).sort().map(k => [k, obj[k]]));
 
