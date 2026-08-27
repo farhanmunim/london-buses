@@ -6,6 +6,20 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.22 — Standing on its own
+
+_2026-08-27_
+
+The Atlas API is retired: **this repository is now the whole platform**. GitHub Actions fetches, validates and commits every dataset; the site serves them as static JSON from `data/api/`; and Cloudflare Pages hosts it all — no VPS, no warehouse, no external API.
+
+- **NEW** An in-repo **faux-API** (`data/api/*.json`, same response shapes the Atlas API served) is rebuilt by `scripts/build-api.js` from the pipeline's primary datasets — routes, route-meta, garages, route-stops (per-direction with stop letters, from TfL's canonical Route/Sequence), fleet, vehicles, tenders (accepted/lowest/highest bids), line-status, route-diversions, routes-overview and a freshness manifest. Sticky per-field last-known-good merges mean a thin upstream run never blanks a served field.
+- **NEW** **Scheduled refreshes fit each dataset's rhythm** — full pipeline nightly at 03:17 UTC (the night slot also samples the night network); service status + diversions ~6×/day; tender awards checked after TfL's ~1pm/~3pm publish windows; fleet sweeps ~midday and ~midnight. Runs that find nothing new commit nothing.
+- **NEW** Live bus positions now come through this site's own `/api/live/vehicles` Cloudflare Pages Function (BODS SIRI-VM, bounded per route, 10 s edge cache); live arrivals and live route status go **straight to TfL's own API** from the browser. Live data is never stored.
+- **DATA** The 24/7 fleet-tracking estimates are retired with the warehouse: the QSI reliability section, Tracked reliability card, performance trend, per-route MPS figures and vehicle sighting history are gone from both apps. Everything else — tenders, fleet, crowding (archived BUSTO snapshot), garages, diversions, live layers — carries over unchanged.
+- **NEW** A migration test suite (`tests/verify-migration.mjs`) proves both apps run with **zero requests to the retired API**, and the live-resilience suite is re-pointed at the new endpoints (8/8 passing).
+
+---
+
 ## v2.21.1 — Riding out feed outages
 
 _2026-08-27_
