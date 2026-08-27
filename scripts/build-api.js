@@ -327,6 +327,32 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     features,
   });
   console.log(`routes-overview.json — ${features.length} features`);
+
+  // Per-route bounding boxes [minLng, minLat, maxLng, maxLat], padded ~500 m.
+  // The live-vehicles Pages Function uses these to bound its BODS SIRI-VM
+  // query — TfL's SIRI LineRef is the internal iBus number, so the function
+  // filters by PublishedLineName within the route's bbox instead.
+  const PAD = 0.006;
+  const bboxes = {};
+  for (const f of features) {
+    const name = f.properties.routeId;
+    const b = bboxes[name] ?? (bboxes[name] = [Infinity, Infinity, -Infinity, -Infinity]);
+    const segs = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+    for (const seg of segs) for (const [lng, lat] of seg) {
+      if (lng < b[0]) b[0] = lng;
+      if (lat < b[1]) b[1] = lat;
+      if (lng > b[2]) b[2] = lng;
+      if (lat > b[3]) b[3] = lat;
+    }
+  }
+  for (const b of Object.values(bboxes)) {
+    b[0] = Math.round((b[0] - PAD) * 1e4) / 1e4;
+    b[1] = Math.round((b[1] - PAD) * 1e4) / 1e4;
+    b[2] = Math.round((b[2] + PAD) * 1e4) / 1e4;
+    b[3] = Math.round((b[3] + PAD) * 1e4) / 1e4;
+  }
+  write(API('route-bboxes.json'), { generatedAt: now, routes: sortKeys(bboxes) });
+  console.log(`route-bboxes.json — ${Object.keys(bboxes).length} routes`);
 }
 
 /* ── manifest.json ───────────────────────────────────────────────────── */
@@ -335,6 +361,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     'routes':           { source: 'TfL Unified API · /Line/Mode/bus + /Route/Sequence', cadence: 'daily' },
     'route-stops':      { source: 'TfL Unified API · /Line/{id}/Route/Sequence', cadence: 'daily' },
     'routes-overview':  { source: 'TfL Unified API · route geometry (simplified)', cadence: 'daily' },
+    'route-bboxes':     { source: 'derived from route geometry', cadence: 'daily' },
     'route-meta':       { source: 'londonbusroutes.net (garages.csv + details.htm)', cadence: 'daily' },
     'garages':          { source: 'londonbusroutes.net + postcodes.io + DVSA VOL (OGL)', cadence: 'daily' },
     'fleet':            { source: 'TfL arrivals sweep + DVLA VES', cadence: 'twice daily' },

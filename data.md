@@ -260,16 +260,20 @@ The pipeline factors common patterns into a small set of helper modules so each 
 
 | Dimension | Limit | Headroom today |
 |---|---|---|
-| **Cloudflare Pages** (free) | 500 builds/mo, unlimited bandwidth, 25 MiB per file, 20 000 files per deploy | We are static only — no deploy-time build. Largest deployed files are `stops.json` and `route_stops.json` at ~6 MB each (lazy-loaded on stop-search focus; ~1.3 MB each gzipped). Comfortably within. |
-| **GitHub free plan** | 2 000 Actions minutes/mo (private repos; unlimited for public) | Weekly refresh uses ~6 min → ~25 min/mo. |
-| **GitHub Actions job** | 6 h per job; 30-min timeout configured here | Plenty. |
+| **Cloudflare Pages** (free) | 500 builds/mo, unlimited bandwidth, 25 MiB per file, 20 000 files per deploy | Static + one Pages Function (`/api/live/vehicles`). ~11 data commits/day worst case → ~330 builds/mo, within 500. Largest deployed files are `data/api/route-stops.json`, `stops.json` and `route_stops.json` at ~6–7 MB each (lazy-loaded; ~1.3 MB gzipped). |
+| **GitHub free plan** | 2 000 Actions minutes/mo (private repos; unlimited for public) | Nightly full refresh ~10–20 min + intraday runs ~2–5 min each → ~15–20 h/mo. Fine on a public repo (unlimited); would not fit a private one. |
+| **GitHub Actions job** | 6 h per job; 45-min (nightly) / 10–30-min (intraday) timeouts configured here | Plenty. Scheduled workflows auto-disable after 60 days without repo activity — the data commits themselves keep the clock reset. |
 | **Repo size** | No hard limit, but >1 GB warns; single file >100 MB blocked | Committed data ~3–4 MB. |
 | **TfL API** | 500 req/min with key | Self-throttled to ~350. |
 | **DVLA VES** (free tier) | ~15 req/s, 500k req/day | Self-throttled to 5 RPS. Sticky 90-day cache means weekly runs touch ~2–5% of the fleet (~200–500 calls), well under any limit. |
 | **postcodes.io** | ~10 req/s bulk; no published hard cap | Cache hit rate ~100% on stable weeks. |
 | **Nominatim** | 1 req/s, ≥1s between requests, UA required, 60s back-off on 429 | Photon is primary so we almost never hit Nominatim. |
+| **Cloudflare Workers** (free, runs the Pages Function) | 100k requests/day, ~10 ms CPU per request | Live-vehicles proxy: 10 s edge cache per line collapses each viewer's 10–15 s poll into ~6 upstream parses/min per watched route; bbox-bounded BODS payloads keep the regex parse in low-ms. |
+| **DfT BODS** (free, key required) | no published hard cap; fair use | Only called by the Pages Function, behind the 10 s cache. Never stored. |
 
-**Secret storage:** `BUS_API_KEY` and `DVLA_API_KEY` live in GitHub Actions secrets and in a local `.env` (gitignored). They are used **build-time only**; the frontend fetches static JSON/GeoJSON. Vehicle registrations are kept server-side in `data/source/route-vehicles.json` and are **never** exported to the browser; only the per-route aggregates (`make`, `propulsion`, `vehicleAgeYears`, `fleetSize`) are surfaced.
+**Secret storage:** `BUS_API_KEY` and `DVLA_API_KEY` live in GitHub Actions secrets and in a local `.env` (gitignored) — pipeline build-time only. `BODS_API_KEY` lives in the Cloudflare Pages project's environment variables and is used only by the `/api/live/vehicles` Pages Function (BODS has no CORS and the key must stay server-side). The front-ends otherwise fetch static JSON/GeoJSON plus TfL's CORS-open Unified API endpoints (arrivals, status), which need no key at browser rates.
+
+**Live layer (never stored):** live bus positions come from BODS SIRI-VM via the Pages Function above; live arrivals countdowns and live per-route status come straight from TfL's Unified API in the browser (`/StopPoint/{id}/Arrivals`, `/Line/{id}/Status`). None of this is committed to the repo — the repo stores only what changes slowly (the replicate-guide rule: store what's needed for performance, never what's needed live).
 
 ---
 
