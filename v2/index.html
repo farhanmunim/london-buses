@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>London Buses · v2</title>
-<meta name="description" content="Search and explore every London bus route, operator and garage — live data from the Atlas API." />
+<meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed straight from TfL and other public sources." />
 <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -323,32 +323,35 @@ main.fullbleed{max-width:none;padding:0}
 
 <script type="module">
 /* ════════════════════════════════════════════════════════════════════════
-   London Buses v2 — single-file app, all data from the Atlas API.
+   London Buses v2 — single-file app, all data from this site’s own pipeline (data/api/*.json) plus TfL’s live endpoints.
    One file on purpose: the farhan.app zone edge-caches js/css for 4 h,
    which has repeatedly served mixed old/new module graphs mid-deploy.
    HTML is served max-age=0, so a single file can never version-skew.
    ════════════════════════════════════════════════════════════════════════ */
 
-const API = 'https://atlas.farhan.app/api/v1';
+/* The data layer reads this site's own faux-API — data/api/*.json, rebuilt
+   by the GitHub Actions pipeline and deployed with the site. Same shapes the
+   Atlas API used to serve, so everything downstream is unchanged. */
+const API = '/data/api';
+const TFL = 'https://api.tfl.gov.uk';   // CORS-open, no key needed at browser rates
 
 /* ── Data layer — one cached promise per endpoint ─────────────────────── */
 const _cache = new Map();
 function get(path){
   if(_cache.has(path)) return _cache.get(path);
-  const p = fetch(API + path).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .catch(err => { console.warn('Atlas', path, err.message); _cache.delete(path); return null; });
+  const p = fetch(API + path + '.json').then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .catch(err => { console.warn('data', path, err.message); _cache.delete(path); return null; });
   _cache.set(path, p);
   return p;
 }
-/* Atlas currently suffixes Transport UK with "(RATP)" — incorrect: Transport
-   UK Group is independent of RATP. Normalised here at the data edge until the
-   upstream name is fixed. */
+/* Historical guard from the Atlas era ("Transport UK London Bus (RATP)") —
+   the pipeline now canonicalises operator names, this is a no-op safety net. */
 const fixOperator = o => o === 'Transport UK London Bus (RATP)' ? 'Transport UK London Bus' : o;
 const fixOperatorDeep = d => d == null ? d : JSON.parse(JSON.stringify(d).replaceAll('Transport UK London Bus (RATP)', 'Transport UK London Bus'));
-/* Live fetches align with Atlas's own refresh clock: every /live/* payload
-   carries capturedAt, and Cache-Control's max-age is CORS-readable — so the
-   next poll is scheduled just after Atlas's edge copy expires, instead of on
-   our own drifting timer. */
+/* Live fetches align with the feed's refresh clock: payloads carry
+   capturedAt, and Cache-Control's max-age is CORS-readable — so the next
+   poll is scheduled just after the edge copy expires, instead of on our own
+   drifting timer. */
 function liveGet(url){
   return fetch(url).then(async x => {
     if(!x.ok) return null;
@@ -365,12 +368,18 @@ function nextPollS(j, fallbackS){
   const s = Math.round((cap + ttl*1000 + 1500 - Date.now()) / 1000);
   return Math.max(4, Math.min(ttl + fallbackS, s));   // stale edge → quick retry
 }
+/* TfL-direct live adapters — wrap TfL's CORS-open responses into the
+   { data, capturedAt } envelope the consumers already read. */
+const tflLive = (url) => liveGet(url).then(j => {
+  if(j == null) return null;
+  const arr = Array.isArray(j) ? j : [j];
+  return { data: arr, capturedAt: new Date().toISOString(), _ttl: j?._ttl ?? arr?._ttl ?? null };
+});
 const D = {
   routes:      () => get('/routes'),
   meta:        () => get('/route-meta').then(d => { const r = d?.routes ?? {}; for(const m of Object.values(r)) if(m?.operator) m.operator = fixOperator(m.operator); return r; }),
   garages:     () => get('/garages').then(d => { const g = d?.garages ?? []; for(const x of g) if(x?.operator) x.operator = fixOperator(x.operator); return g; }),
   fleet:       () => get('/fleet').then(d => d?.byRoute ?? {}),
-  perf:        () => get('/route-performance'),
   crowding:    () => get('/crowding'),
   crowdProf:   () => get('/crowding-profile').then(d => d?.routes ?? {}),
   tenders:     () => get('/tenders').then(d => fixOperatorDeep(d?.byRoute ?? {})),
@@ -380,12 +389,9 @@ const D = {
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
-  liveStatus:  (r) => liveGet(API + '/live/status?route=' + encodeURIComponent(r)),   // never cached — re-polled
-  perfHistory: (r) => get('/history/performance-history?route=' + encodeURIComponent(r) + '&limit=12'),
-  relTracked:  (r) => get('/history/reliability-tracked?route=' + encodeURIComponent(r) + '&limit=14'),
-  liveVehicles:(r) => liveGet(API + '/live/vehicles?line=' + encodeURIComponent(r)),  // never cached — polled
-  arrivals:    (s) => liveGet(API + '/live/arrivals?stop=' + encodeURIComponent(s)),  // never cached — polled
-  sightings:   (r) => get('/history/vehicle-sightings?reg=' + encodeURIComponent(r) + '&limit=14'),
+  liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
+  liveVehicles:(r) => liveGet('/api/live/vehicles?line=' + encodeURIComponent(r)),                 // BODS via our Pages Function
+  arrivals:    (s) => tflLive(TFL + '/StopPoint/' + encodeURIComponent(s) + '/Arrivals'),          // never cached — polled
 };
 const plate = (reg, link=true) => reg
   ? (link ? `<a class="plate" href="#/vehicle/${encodeURIComponent(String(reg).toUpperCase())}">${esc(String(reg).toUpperCase())}</a>`
@@ -435,7 +441,7 @@ const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:
 const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
 const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
 const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus':'#db2777','Transport UK London Bus (RATP)':'#db2777','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
-/* Atlas sometimes rewords operator names ("First London" became "First Bus
+/* Upstream sources sometimes reword operator names ("First London" became "First Bus
    London") — fall back to the longest dictionary key the name starts with,
    so a rewording degrades to the right colour, not to fallback grey. */
 const opKey = (dict, n) => dict[n] != null ? n
@@ -474,7 +480,7 @@ function garagePopupHtml(g, meta){
     <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a></div>`;
 }
 
-/* A garage is pinnable only when Atlas has its real site location. When
+/* A garage is pinnable only when the dataset has its real site location. When
    postcodeSource is "company" the lat/lng is the operating company's
    registered office — pinning that as the garage would be wrong data. */
 const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g.postcodeSource !== 'company';
@@ -530,26 +536,22 @@ function pickStatus(name, statuses){
 /* ── Tooltips — source + refresh cadence on every label ───────────────────
    One dictionary keyed by visible label text, applied automatically to any
    rendered view by a MutationObserver, shown on hover (desktop) or tap
-   (touch). Wording follows the Atlas API reference (atlas.farhan.app/docs). */
+   (touch). */
 const S = {
-  LBR:     'londonbusroutes.net, via the Atlas API|Refreshed daily',
-  TFL:     'TfL Unified API, via the Atlas API|Refreshed daily',
-  QSI:     'TfL QSI reports, via the Atlas API|TfL publishes every ~4 weeks',
-  TRACKED: 'Atlas tracked reliability (EWT/OTD v2), from continuous BODS vehicle tracking — experimental, not comparable to TfL QSI|rebuilt daily ~00:37 UTC',
-  MPS:     'TfL per-route MPS reports, via the Atlas API|TfL publishes every ~4 weeks',
-  BUSTO:   'TfL BUSTO demand data, via the Atlas API|TfL publishes annually',
-  FLEET:   'TfL arrivals sample + DVLA + bustimes.org, via the Atlas API|Sampled daily ~03:17 UTC',
-  SIGHT:   'Vehicle-on-route observations, Atlas warehouse|Accrues daily',
-  DIVN:    'TfL status diffed against the frozen route, via the Atlas API|Refreshed every ~4 h',
-  TENDER:  'TfL tender award results, via the Atlas API|Checked daily, append-only',
-  CURATED: 'Curated Atlas data — published for a few flagship routes only|Refreshed daily',
-  LIVE:    'TfL live status, via the Atlas API|~30 s fresh',
-  ARRIVE:  'TfL Countdown predictions, via the Atlas API|~30 s fresh',
-  STOPS:   'TfL served-stop sequence (canonical), via the Atlas API|Refreshed daily',
-  TVR:     'Derived: PVR × 1.13, rounded down|Follows PVR (daily)',
-  CAPACITY:'Community reference, curated via the Atlas API|Updated as allocations change',
-  DERIVED: 'Derived from Atlas route data|Refreshed daily',
-  GPS:     'Live bus GPS (BODS SIRI-VM), via the Atlas API|~10 s fresh',
+  LBR:     'londonbusroutes.net, via this site’s data pipeline|Refreshed nightly',
+  TFL:     'TfL Unified API, via this site’s data pipeline|Refreshed nightly',
+  BUSTO:   'TfL BUSTO demand data (archived snapshot)|TfL publishes annually',
+  FLEET:   'TfL arrivals sweeps + DVLA, via this site’s data pipeline|Sampled ~midday, ~midnight and overnight',
+  DIVN:    'TfL service status, diversion notices|Refreshed ~6×/day',
+  TENDER:  'TfL tender award results, via this site’s data pipeline|Checked after TfL’s ~1pm/~3pm publishes',
+  CURATED: 'Curated data — published for a few flagship routes only|Refreshed nightly',
+  LIVE:    'TfL live status, straight from TfL|~30 s fresh',
+  ARRIVE:  'TfL Countdown predictions, straight from TfL|~30 s fresh',
+  STOPS:   'TfL served-stop sequence (canonical)|Refreshed nightly',
+  TVR:     'Derived: PVR × 1.13, rounded down|Follows PVR (nightly)',
+  CAPACITY:'Community reference, curated|Updated as allocations change',
+  DERIVED: 'Derived from route data|Refreshed nightly',
+  GPS:     'Live bus GPS (BODS SIRI-VM), via this site’s live proxy|~10 s fresh',
 };
 const LABEL_TIPS = {
   'PVR': ['Peak Vehicle Requirement — buses needed at peak', S.LBR],
@@ -559,16 +561,6 @@ const LABEL_TIPS = {
   'Power': ['Propulsion, reconciled against the DVLA-enriched live fleet', S.LBR],
   'Vehicle': ['Rostered vehicle spec', S.LBR],
   'Rostered vehicle': ['', S.LBR],
-  'Excess wait time': ['How much longer passengers waited than scheduled — the headline reliability metric, shown against the contractual standard', S.QSI],
-  'Average wait': ['Actual vs scheduled passenger wait', S.QSI],
-  'On time': ['Departures on time (low-frequency routes), against the contractual standard', S.QSI],
-  'Tracked reliability': ['Atlas’s own reliability estimate from tracking every bus — experimental', S.TRACKED],
-  'EWT (tracked)': ['Excess wait: actual minus scheduled wait over every observed headway; slightly negative = over-provision', S.TRACKED],
-  'Wait (tracked)': ['Actual vs scheduled passenger wait from observed headways', S.TRACKED],
-  'On-time departures': ['% of measured departures −2…+5 min of schedule; unmatched departures count as non-arrivals', S.TRACKED],
-  'Departure breakdown': ['Measured departures by outcome; non-arrival = no observed passing within 20 min', S.TRACKED],
-  'Measured': ['The day measured, its confidence grade and the share of scheduled departures the feed could observe', S.TRACKED],
-  'Mileage operated': ['Scheduled mileage actually run in the latest TfL period, against the contractual minimum', S.MPS],
   'Peak load': ['Peak passengers ÷ capacity at the max-demand hour', S.BUSTO],
   'Busiest at': ['Stop, day and time of the peak load', S.BUSTO],
   'Weekday': ['Peak load ÷ capacity on weekdays', S.BUSTO],
@@ -597,7 +589,6 @@ const LABEL_TIPS = {
   'Deck': ['Single or double deck (bustimes.org)', S.FLEET],
   'Fleet code': ['Operator fleet number (bustimes.org)', S.FLEET],
   'Observed on': ['Routes this vehicle has been seen working', S.FLEET],
-  'Recent sightings': ['', S.SIGHT],
   'Live location': ['Where this bus is right now, drawn against its route', S.GPS],
   'Capacity': ['Approximate bus capacity of the garage', S.CAPACITY],
   'Utilisation': ['PVR ÷ capacity', S.DERIVED],
@@ -612,7 +603,6 @@ const LABEL_TIPS = {
   'Live buses': ['Real-time bus positions', S.GPS],
   'Stops': ['Served stops in sequence', S.STOPS],
   'Good Service': ['Live service status', S.LIVE],
-  'Reliability': ['TfL’s published Quality of Service Indicators', S.QSI],
   'Crowding': ['How full the route gets, from TfL’s BUSTO demand model', S.BUSTO],
   'Fleet': ['The vehicles observed running the route', S.FLEET],
   'Current contract': ['The route’s operating contract and most recent tender award', S.TENDER],
@@ -747,7 +737,7 @@ async function renderRoutes(){
     <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
 
   const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
-  if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The Atlas API is unreachable right now — try again shortly.</div>'; return; }
+  if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The route data is unreachable right now — try again shortly.</div>'; return; }
   const disrupted = new Set((lineStatus?.rows ?? []).filter(r => r.severity !== 10).map(r => r.route));
 
   const ops = [...new Set(Object.values(meta).map(m => m?.operator).filter(Boolean))].sort();
@@ -843,7 +833,7 @@ async function renderRouteDetail(name){
   if(!route){
     main.innerHTML = `<a class="backrow" href="#/">‹ All routes</a><div class="empty">${routes?.length
       ? `Route “${esc(id)}” isn’t in the current TfL network.`
-      : 'The Atlas API is unreachable right now — try again shortly.'}</div>`;
+      : 'The stop directory is unreachable right now — try again shortly.'}</div>`;
     return;
   }
 
@@ -926,62 +916,12 @@ async function renderRouteDetail(name){
   });
 }
 
-function sevClass(v, mps, lowerIsBetter){
-  if(!Number.isFinite(v) || !Number.isFinite(mps) || mps <= 0) return '';
-  const ok = lowerIsBetter ? v <= mps : v >= mps;
-  return ok ? 'style="color:var(--good)"' : 'style="color:var(--bad)"';
-}
 
 async function buildRouteSections(route, m){
   const el = document.getElementById('dsections');
   const frag = [];
 
   /* Performance */
-  const perf = (await D.perf())?.routes?.[route.name.toUpperCase()];
-  if(perf?.serviceClass){
-    const hf = perf.serviceClass === 'high-frequency';
-    const rows = [];
-    if(hf && num(perf.ewtMinutes) != null){
-      rows.push(`<div><span class="k">Excess wait time</span><span class="v mono" ${sevClass(perf.ewtMinutes, perf.ewtMps, true)}>${perf.ewtMinutes.toFixed(1)} min${num(perf.ewtMps)?` · standard ≤ ${perf.ewtMps}`:''}</span></div>`);
-      if(num(perf.awtMinutes) && num(perf.swtMinutes))
-        rows.push(`<div><span class="k">Average wait</span><span class="v mono">${perf.awtMinutes.toFixed(1)} min · scheduled ${perf.swtMinutes.toFixed(1)}</span></div>`);
-    }
-    if(!hf && num(perf.onTimePercent) != null)
-      rows.push(`<div><span class="k">On time</span><span class="v mono" ${sevClass(perf.onTimePercent, perf.otpMps, false)}>${perf.onTimePercent.toFixed(0)}%${num(perf.otpMps)?` · standard ≥ ${perf.otpMps}%`:''}</span></div>`);
-    if(num(perf.mileagePercent) != null)
-      rows.push(`<div><span class="k">Mileage operated</span><span class="v mono" ${sevClass(perf.mileagePercent, perf.mileageMps, false)}>${perf.mileagePercent.toFixed(1)}%${num(perf.mileageMps)?` · standard ≥ ${perf.mileageMps}%`:''}</span></div>`);
-    if(rows.length){
-      frag.push(`<div class="section"><div class="section-h">Reliability · TfL QSI ${esc((await D.perf())?.periodLabel ?? '')}</div>
-        <div class="card"><div class="kv">${rows.join('')}</div><div id="perfTrend"></div></div></div>`);
-    }
-  }
-
-  /* Tracked reliability — Atlas's own experimental EWT/OTD v2 estimate */
-  try{
-    const rt = (await D.relTracked(route.name))?.rows ?? [];
-    const days = rt.filter(r => r.route_id?.toUpperCase() === route.name.toUpperCase())
-      .sort((a,b) => String(b.day).localeCompare(String(a.day)));
-    const rec = days.find(r => r.confidence === 'high') ?? days[0];
-    if(rec){
-      const hf = rec.service_class === 'high-frequency';
-      const rows = [];
-      // Statement values stay standard; clearly good reads green, clearly bad red.
-      const tone = (good, bad) => good ? 'style="color:var(--good)"' : bad ? 'style="color:var(--bad)"' : '';
-      if(hf && num(rec.ewt_minutes) != null){
-        rows.push(`<div><span class="k">EWT (tracked)</span><span class="v mono" ${tone(rec.ewt_minutes <= 1, rec.ewt_minutes >= 3)}>${rec.ewt_minutes.toFixed(1)} min</span></div>`);
-        if(num(rec.awt_minutes) && num(rec.swt_minutes))
-          rows.push(`<div><span class="k">Wait (tracked)</span><span class="v mono">${rec.awt_minutes.toFixed(1)} min · scheduled ${rec.swt_minutes.toFixed(1)}</span></div>`);
-      }
-      if(num(rec.otd_percent) != null)
-        rows.push(`<div><span class="k">On-time departures</span><span class="v mono" ${tone(rec.otd_percent >= 80, rec.otd_percent < 60)}>${rec.otd_percent.toFixed(1)}% of ${rec.deps_measured ?? '—'}</span></div>`);
-      if(num(rec.on_time) != null)
-        rows.push(`<div><span class="k">Departure breakdown</span><span class="v mono">${rec.on_time} on time · ${rec.early} early · ${rec.late} late · ${rec.non_arrival} no-show</span></div>`);
-      rows.push(`<div><span class="k">Measured</span><span class="v">${fmtDate(rec.day)} (${esc(rec.day_type ?? '')}) · <span ${tone(rec.confidence === 'high', rec.confidence === 'low')}>${esc(rec.confidence ?? '')} confidence</span>${num(rec.feed_coverage_pct) ? ` · ${rec.feed_coverage_pct}% coverage` : ''}</span></div>`);
-      frag.push(`<div class="section"><div class="section-h">Tracked reliability <span class="expchip">Experimental</span></div>
-        <div class="card"><div class="kv">${rows.join('')}</div></div>
-        <div class="legendrow" style="margin-top:8px"><span>Atlas’s own estimate from tracking every bus via BODS — experimental and not comparable to TfL’s QSI figures above.</span></div></div>`);
-    }
-  }catch(e){ /* experimental feed — never fatal */ }
 
   /* Crowding */
   const cr = await D.crowding();
@@ -1075,28 +1015,6 @@ async function buildRouteSections(route, m){
     document.getElementById('regMore').hidden = false;
     e.currentTarget.remove();
   });
-
-  /* performance trend (lazy, after paint) */
-  if(document.getElementById('perfTrend')){
-    D.perfHistory(route.name.toUpperCase()).then(h => {
-      const rows = (h?.rows ?? []).filter(r => r.period_start).sort((a,b)=>String(a.period_start).localeCompare(String(b.period_start)));
-      const hf = rows.some(r => num(r.ewt_minutes) != null);
-      const vals = rows.map(r => hf ? num(r.ewt_minutes) : num(r.on_time_percent)).filter(v => v != null);
-      if(vals.length < 3) return;
-      const max = Math.max(...vals);
-      const bars = rows.map(r => {
-        const v = hf ? num(r.ewt_minutes) : num(r.on_time_percent);
-        if(v == null) return '';
-        const pc = Math.max(6, Math.round(v / max * 100));
-        return `<div style="height:${pc}%" title="${esc(r.period_label)} · ${v}"></div>`;
-      }).join('');
-      document.getElementById('perfTrend').innerHTML =
-        `<div style="padding:10px 14px;border-top:1px solid var(--bd)">
-          <div class="bars">${bars}</div>
-          <div class="legendrow"><span>${hf?'Excess wait time':'On-time %'} per TfL quarter, oldest → newest</span></div>
-        </div>`;
-    });
-  }
 
   /* crowding profile (lazy) */
   if(document.getElementById('crowdProf')){
@@ -1193,8 +1111,8 @@ async function initRouteMap(route, m = {}){
   // Say why there is no garage pin instead of leaving a silent gap.
   if(!garagePins.length){
     el.insertAdjacentHTML('afterend', `<div class="legendrow" style="margin-top:8px"><span>${codes.length
-      ? 'The operating garage isn’t pinned — Atlas only has the operating company’s registered-office postcode for it, not the garage site.'
-      : 'Atlas doesn’t link a garage to this route yet, so no garage pin is shown.'}</span></div>`);
+      ? 'The operating garage isn’t pinned — the dataset only has the operating company’s registered-office postcode for it, not the garage site.'
+      : 'No garage is linked to this route yet, so no garage pin is shown.'}</span></div>`);
   }
 
   function draw(){
@@ -1333,7 +1251,7 @@ async function renderNetworkMap(){
 
   const [ov, meta, routes, garages] = await Promise.all([D.overview(), D.meta(), D.routes(), D.garages()]);
   if(!document.getElementById('netmap')) return;
-  if(!ov?.features?.length){ document.getElementById('nmCount').textContent = 'The Atlas API is unreachable right now.'; return; }
+  if(!ov?.features?.length){ document.getElementById('nmCount').textContent = 'The map data is unreachable right now.'; return; }
 
   if(_map){ _map.remove(); _map = null; }
   _map = makeMap(document.getElementById('netmap'));
@@ -1345,7 +1263,7 @@ async function renderNetworkMap(){
   const TYPE_COLORS = { regular:'#dc2626', night:'#6d28d9', twentyfour:'#0e7490', school:'#15803d' };
   /* Focus colours are per operating GARAGE, not per route: routes sharing a
      garage share a colour, and each new garage in the comparison takes the
-     next palette slot. Routes Atlas can't tie to a garage get their own. */
+     next palette slot. Routes with no linked garage get their own. */
   const garKey = p => String(meta?.[p]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean)[0] ?? '·' + p;
   /* Base colour per operating garage (the pin wears this)… */
   const garBase = name => {
@@ -1751,7 +1669,7 @@ async function renderOperators(){
   const gCount = new Map();
   for(const g of garages ?? []) if(g.operator) gCount.set(g.operator, (gCount.get(g.operator) ?? 0) + 1);
   const list = [...agg.entries()].sort((a,b) => b[1].routes - a[1].routes);
-  if(!list.length){ document.getElementById('oplist').innerHTML = '<div class="empty">The Atlas API is unreachable right now — try again shortly.</div>'; return; }
+  if(!list.length){ document.getElementById('oplist').innerHTML = '<div class="empty">The route data is unreachable right now — try again shortly.</div>'; return; }
   document.getElementById('oplist').innerHTML = list.map(([op,a]) => {
     const evPct = a.evKnown ? Math.round(a.ev / a.evKnown * 100) : null;
     return `<a class="opcard" href="#/operator/${encodeURIComponent(op)}">
@@ -1825,7 +1743,7 @@ async function renderGarages(){
     <div class="count-note" id="gCount"></div>
     <div class="glist" id="glist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
   const garages = await D.garages();
-  if(!garages?.length){ document.getElementById('glist').innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
+  if(!garages?.length){ document.getElementById('glist').innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
   const rerender = () => {
     const q = garagesViewState.q.trim().toLowerCase();
     const list = garages.filter(g => !q || g.name?.toLowerCase().includes(q) || g.code?.toLowerCase() === q)
@@ -1916,7 +1834,7 @@ async function initGarageMap(g){
   } else {
     // Say why the pin is missing instead of leaving a silent gap.
     const note = document.querySelector('#map + .legendrow span');
-    if(note) note.textContent += ' Exact garage location isn’t in the Atlas data yet — its record only carries the operating company’s registered-office postcode.';
+    if(note) note.textContent += ' Exact garage location isn’t in the dataset yet — its record only carries the operating company’s registered-office postcode.';
   }
   try{
     let b = group.getBounds();
@@ -1950,7 +1868,7 @@ async function renderStops(){
     <div class="count-note" id="sCount"></div>
     <div class="glist" id="slist"><div class="empty" id="sHint">Loading the stop directory…</div></div>`;
   const reg = await stopRegistry();
-  if(!reg?.size){ const l=document.getElementById('slist'); if(l) l.innerHTML = '<div class="empty">The Atlas API is unreachable right now.</div>'; return; }
+  if(!reg?.size){ const l=document.getElementById('slist'); if(l) l.innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
   const all = [...reg.values()];
 
   const rowHtml = (s, dist) => `
@@ -2028,7 +1946,7 @@ async function renderStopDetail(id){
       <div class="card"><div class="chiprow">${[...s.lines].sort(cmpRoute).map(l => `<a class="rchip" href="#/route/${encodeURIComponent(l)}">${esc(l)}</a>`).join('')}</div></div></div>` : ''}
     <div class="section"><div class="section-h">Next buses</div>
       <div class="card"><div class="kv" id="arrBoard"><div class="kv-empty">Loading arrivals…</div></div></div>
-      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, via the Atlas API. Times count down live and re-sync every 30 s.</span></div>
+      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, straight from TfL. Times count down live and re-sync every 30 s.</span></div>
     </div>`;
 
   /* Live board: predictions carry an absolute due time, so the display
@@ -2062,7 +1980,7 @@ async function renderStopDetail(id){
         // stop we can show — say so instead of rendering a ghost live board.
         main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="empty">${raw
           ? `Stop “${esc(id)}” isn’t in the stop directory.`
-          : 'The Atlas API is unreachable right now — try again shortly.'}</div>`;
+          : 'The stop directory is unreachable right now — try again shortly.'}</div>`;
         return;
       }
       el.innerHTML = `<div class="kv-empty">${raw
@@ -2142,7 +2060,7 @@ async function renderVehicleDetail(regArg){
       </span>
       <div class="dtitle">
         <h1 style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">${plate(R,false)}${v?.operator ? `<a href="#/operator/${encodeURIComponent(v.operator)}" style="font-size:14px;font-weight:600;color:var(--acc)">${esc(v.operator)}</a>` : ''}</h1>
-        <div class="sub2">${v ? 'From the Atlas vehicle register' : 'Not in the current vehicle register — it may not have been observed recently.'}</div>
+        <div class="sub2">${v ? 'From the vehicle register' : 'Not in the current vehicle register — it may not have been observed recently.'}</div>
       </div>
     </div>
     ${facts.length ? `<div class="facts" style="margin-top:14px">${facts.map(([l,val]) =>
@@ -2153,23 +2071,8 @@ async function renderVehicleDetail(regArg){
       <div id="map" style="height:260px"></div>
       <div class="legendrow" style="margin-top:7px"><span id="vLiveNote">Looking for this bus in the live feed…</span></div>
     </div>
-    <div class="section"><div class="section-h">Recent sightings</div>
-      <div class="card"><div class="kv" id="sightings"><div class="kv-empty">Loading…</div></div></div>
-      <div class="legendrow" style="margin-top:7px"><span>Vehicle-on-route observations from the Atlas warehouse.</span></div>
-    </div>`;
+    `;
   initVehicleLiveMap(R, v, ctxLine, ctxStop);
-  D.sightings(R).then(h => {
-    const el = document.getElementById('sightings'); if(!el) return;
-    const rows = (h?.rows ?? []);
-    if(!rows.length){ el.innerHTML = '<div class="kv-empty">No sightings recorded yet.</div>'; return; }
-    el.innerHTML = rows.map(r => {
-      const d = new Date(r.observed_at);
-      const when = isNaN(d) ? '' : `${fmtDate(r.observed_at)} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      return `<div><span class="k" style="display:flex;align-items:center;gap:9px;color:var(--tx)">
-        <a class="rnum" style="min-width:40px;height:26px;font-size:12.5px;border-radius:7px" href="#/route/${encodeURIComponent(r.route_id)}">${esc(r.route_id)}</a></span>
-        <span class="v mono" style="align-self:center">${esc(when)}</span></div>`;
-    }).join('');
-  });
 }
 
 /* Vehicle live-location map — find the bus in the live GPS feed (trying the
@@ -2275,7 +2178,7 @@ async function renderAbout(){
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
-        <p>Every number on this site is served by the <a href="https://atlas.farhan.app/docs/" rel="noopener">Atlas API</a>. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, reliability, crowding) — <b>Powered by TfL Open Data</b>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA (vehicle details, OGL); londonbusroutes.net (operators, garages, PVR — community reference); basemap © OpenStreetMap contributors &amp; CARTO.</p>
+        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA (vehicle details, OGL); londonbusroutes.net (operators, garages, PVR — community reference); basemap © OpenStreetMap contributors &amp; CARTO.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
       </div>
     </div>
@@ -2285,7 +2188,7 @@ async function renderAbout(){
     <div class="footer">Data may be incomplete or out of date — verify before acting on it.</div>`;
   const mf = await D.manifest();
   const rows = Object.entries(mf?.datasets ?? {})
-    .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','route-performance','crowding','route-diversions'].includes(k))
+    .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','crowding','route-diversions'].includes(k))
     .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(fmtDate(v.fetchedAt) ?? '—')}${v.status && v.status!=='ok' ? ' ⚠️' : ''}</td></tr>`);
   document.getElementById('freshTable').innerHTML = rows.join('') || '<tr><td colspan="2" style="color:var(--mu)">Manifest unavailable.</td></tr>';
 }
