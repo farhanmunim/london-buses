@@ -2,15 +2,15 @@
  * map.js — Map initialisation, overview layer, route highlighting
  */
 
-import { state } from './state.js?v=2.18.2';
-import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.18.2';
+import { state } from './state.js?v=2.19.0';
+import { fetchLiveVehicles, fetchVehicleRegistry, fetchRouteDiversion } from './api.js?v=2.19.0';
 
 const LONDON = [51.505, -0.118];
 const ZOOM   = 11;
 
 const COLOR_OUTBOUND = '#dc2626';
 const COLOR_INBOUND  = '#2563eb';
-// Live buses are bearing-rotated chevrons (same wedge grammar as the Atlas
+// Live buses are bearing-rotated chevrons (same wedge grammar as the v2
 // site's vehicle markers). The pair deliberately sits OFF the route-line
 // palette so buses contrast whichever direction's line is drawn: orange
 // (orange-500) for outbound — red wedges vanished into the red line — and
@@ -426,12 +426,12 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
   fitToRoute();
 }
 
-// ── Active diversion overlay (Atlas route-diversions) ────────────────────────
+// ── Active diversion overlay (route-diversions register) ─────────────────────
 // When TfL has the focused route on diversion, three elements can draw
-// (mirroring the treatment on atlas.farhan.app):
+// :
 //   1. the diverted path as a dashed line in the direction colour with a
 //      "Diversion" label + the bypassed piece of the official line as a
-//      white dash overlay — only when Atlas has the real diverted geometry
+//      white dash overlay — only when the real diverted geometry exists
 //      (geometryStatus "published");
 //   2. "not served" markers on the stops the diversion skips — from the
 //      structured missedStops diff when present, else matched out of TfL's
@@ -442,7 +442,7 @@ export function renderRoute(routeGeoJson, stopsFeatures, direction) {
 let _diversionLayer = null;
 let _divnStopsCanvas = null; // lazy — lives in the vehicles pane, above stops
 
-// Fuzzy stop-name matcher for TfL prose (same normalisation the Atlas map
+// Fuzzy stop-name matcher for TfL prose (same normalisation the v2 map
 // app uses): exact/containment first, then ≥2-significant-word overlap.
 function _matchStopByName(parsed, stops) {
   const norm = s => String(s || '').toLowerCase().replace(/&/g, ' and ')
@@ -603,9 +603,9 @@ function renderDiversionOverlay(dir, color, lineFeatures = [], stopsFeatures = [
   }).catch(() => { /* diversion overlay is decorative — never fatal */ });
 }
 
-// ── Live vehicle positions (Atlas live feed) ─────────────────────────────────
+// ── Live vehicle positions (BODS via this site's live proxy) ─────────────────
 // While a single route is focused, its buses' real-time GPS positions (BODS
-// SIRI-VM via Atlas, ~10 s fresh) are drawn as solid direction-coloured dots
+// SIRI-VM via the live proxy, ~10 s fresh) are drawn as solid direction-coloured dots
 // — the visual inverse of the white stop rings, so buses and stops read as
 // different things at a glance. Polled every 15 s; markers rebuilt in place.
 // The layer dies with the route: clearRoute() stops the poll, and a poll
@@ -717,7 +717,7 @@ function renderVehicles(vehicles, registry = {}) {
     const marker = L.marker([v.lat, v.lng], {
       icon: liveBusIcon(v), pane: 'vehicles', keyboard: false,
     });
-    // Vehicle details from the Atlas per-reg registry (make, year, fuel,
+    // Vehicle details from the per-reg registry (make, year, fuel,
     // operator — DVLA-enriched). Absent regs just show the live line.
     const rec  = v.reg ? registry[String(v.reg).toUpperCase()] : null;
     const bits = [];
@@ -1036,10 +1036,10 @@ export function renderGarages(garages, garageRoutes = {}) {
       : '';
 
     // Approximate garage capacity (community-curated file served by the
-    // Atlas API), shown only when on file for this garage.
+    // faux-API), shown only when on file for this garage.
     const capacity = Number.isFinite(g.capacity) ? g.capacity : null;
     const capRow = capacity
-      ? `<div><dt data-tip="Approximate bus capacity of this garage. Source: community reference, curated via the Atlas API. Freshness: updated as allocations change.">Capacity</dt><dd>${capacity}</dd></div>`
+      ? `<div><dt data-tip="Approximate bus capacity of this garage. Source: community reference, curated. Freshness: updated as allocations change.">Capacity</dt><dd>${capacity}</dd></div>`
       : '';
 
     // Source hovers on every label — mirrors the route-card tooltips. The
@@ -1049,7 +1049,7 @@ export function renderGarages(garages, garageRoutes = {}) {
       `<span class="map-popup__name">${g.name} <span style="opacity:.55">(${g.code})</span></span>` +
       `<dl class="map-popup__meta">` +
         `<div><dt data-tip="Operator group. Source: londonbusroutes.net. Freshness: as at last weekly refresh.">Operator</dt><dd>${g.operator ?? '–'}</dd></div>` +
-        `<div><dt data-tip="Peak Vehicle Requirement (garage total). Source: londonbusroutes.net, via the Atlas API. Freshness: refreshed daily.">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
+        `<div><dt data-tip="Peak Vehicle Requirement (garage total). Source: londonbusroutes.net, via this site’s data pipeline. Freshness: refreshed nightly.">PVR</dt><dd>${totalPvr ?? '–'}</dd></div>` +
         `<div><dt data-tip="Total Vehicle Requirement — PVR plus spares allowance (PVR × 1.13, rounded down).">TVR</dt><dd>${Number.isFinite(totalPvr) ? Math.floor(totalPvr * 1.13) : '–'}</dd></div>` +
         capRow +
         `<div><dt data-tip="Share of the garage's PVR run by battery-electric routes. Source: derived from per-route propulsion. Freshness: refreshed weekly.">Electrification</dt><dd>${evShare == null ? '–' : `${evShare}%`}</dd></div>` +

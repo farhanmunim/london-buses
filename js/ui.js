@@ -14,25 +14,25 @@
  *   4. Garages (independent — unblocks route markers on the map).
  */
 
-import './panels.js?v=2.18.2';        // sidebar tabs, right-panel tabs, section collapse
-import './filters.js?v=2.18.2';       // pill-based filter engine
-import './paint-mode.js?v=2.18.2';    // colour-routes-by toggle (both copies synced)
-import './toggles.js?v=2.18.2';       // map-area route/garage visibility controls
-import './search.js?v=2.18.2';        // topbar + routes-tab search (multi-route pills)
-import './stop-search.js?v=2.18.2';   // bus-stop filter in sidebar
-import './garage-filter.js?v=2.18.2'; // garage-selection pill in sidebar (parity with stop filter)
-import './route-detail.js?v=2.18.2';  // route-card renderer (imported for side-effect-free exports)
-import './filtered-routes.js?v=2.18.2'; // lists filter-matched routes in the Routes tab
-import './mobile-nav.js?v=2.18.2';    // pull-up sheet + bottom nav
-import './export.js?v=2.18.2';        // XLSX export
-import './tooltip.js?v=2.18.2';       // custom [data-tip] hover tooltip used by route-card labels
+import './panels.js?v=2.19.0';        // sidebar tabs, right-panel tabs, section collapse
+import './filters.js?v=2.19.0';       // pill-based filter engine
+import './paint-mode.js?v=2.19.0';    // colour-routes-by toggle (both copies synced)
+import './toggles.js?v=2.19.0';       // map-area route/garage visibility controls
+import './search.js?v=2.19.0';        // topbar + routes-tab search (multi-route pills)
+import './stop-search.js?v=2.19.0';   // bus-stop filter in sidebar
+import './garage-filter.js?v=2.19.0'; // garage-selection pill in sidebar (parity with stop filter)
+import './route-detail.js?v=2.19.0';  // route-card renderer (imported for side-effect-free exports)
+import './filtered-routes.js?v=2.19.0'; // lists filter-matched routes in the Routes tab
+import './mobile-nav.js?v=2.19.0';    // pull-up sheet + bottom nav
+import './export.js?v=2.19.0';        // XLSX export
+import './tooltip.js?v=2.19.0';       // custom [data-tip] hover tooltip used by route-card labels
 
-import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.18.2';
-import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.18.2';
-import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.18.2';
-import { renderOperatorStats, setGarageData } from './stats.js?v=2.18.2';
-import { setGarageOptions } from './garage-filter.js?v=2.18.2';
-import { applyFilters } from './filters.js?v=2.18.2';
+import { initMap, renderOverview, renderGarages, setGaragesVisible } from './map.js?v=2.19.0';
+import { fetchRouteIndex, fetchAllDestinations, fetchRouteClassifications, fetchGarageLocations, fetchLineStatus, fetchManifest } from './api.js?v=2.19.0';
+import { state, footerDate, footerNextDate, themeToggle, themeToggleMob } from './state.js?v=2.19.0';
+import { renderOperatorStats, setGarageData } from './stats.js?v=2.19.0';
+import { setGarageOptions } from './garage-filter.js?v=2.19.0';
+import { applyFilters } from './filters.js?v=2.19.0';
 
 // ── Theme ────────────────────────────────────────────────────────────────────
 function setTheme(t) {
@@ -118,7 +118,7 @@ Promise.all([fetchGarageLocations(), fetchRouteClassifications()]).then(([garage
   applyFilters(); // refresh op cards now that garage counts are known
 });
 
-// ── Overview: network live-status line (Atlas API) ───────────────────────────
+// ── Overview: network live-status line ──────────────────────────────────────
 // One line under the KPI grid: how much of the network is on good service
 // right now. Stays hidden when the API is unreachable.
 function updateNetworkLiveStatus() {
@@ -132,7 +132,7 @@ function updateNetworkLiveStatus() {
       : `All ${total} routes on good service`;
     el.classList.toggle('ov-live--bad', disrupted > 0);
     const asOf = ls.capturedAt ? new Date(ls.capturedAt) : null;
-    el.dataset.tip = 'Live network status. Source: TfL, via the Atlas API.'
+    el.dataset.tip = 'Live network status. Source: TfL, via this site’s data pipeline.'
       + (asOf && !Number.isNaN(asOf.getTime())
           ? ` As of ${String(asOf.getHours()).padStart(2, '0')}:${String(asOf.getMinutes()).padStart(2, '0')}.`
           : '');
@@ -143,13 +143,11 @@ updateNetworkLiveStatus();
 
 // ── Footer: last / next refresh ──────────────────────────────────────────────
 // "Refreshed" is the freshest reference data the site consumes — the newest
-// of the local weekly build and the Atlas API datasets it reads (garages,
-// tenders, crowding, performance, route-meta, fleet; live status is
-// excluded, it's stamped where it's shown). "Next" mirrors the Atlas API's
-// refresh cadence: its pipeline runs
-// daily at ~03:17 UTC, though per-dataset TTLs gate what actually re-pulls.
-// The hover tip breaks the sources down. Falls back to the local build date
-// + weekly Monday schedule when the API is unreachable.
+// of the committed build and the faux-API datasets it reads (garages,
+// tenders, crowding, route-meta, fleet; live status is excluded, it's
+// stamped where it's shown). "Next" mirrors the pipeline's nightly run at
+// ~03:17 UTC (intraday workflows refresh status/tenders/fleet in between).
+// The hover tip breaks the sources down.
 function updateFooterDates() {
   Promise.all([
     fetch('./data/build-meta.json').then(r => r.json()).catch(() => null),
@@ -159,40 +157,33 @@ function updateFooterDates() {
     const parse = ts => { const d = ts ? new Date(ts) : null; return d && !Number.isNaN(d.getTime()) ? d : null; };
 
     const buildTs   = parse(meta?.routeOverview?.updatedAt);
-    const atlas     = manifest?.datasets ?? {};
-    const atlasSets = ['garages', 'tenders', 'crowding', 'performance', 'route-meta', 'fleet'];
-    const newest    = [buildTs, ...atlasSets.map(k => parse(atlas[k]?.fetchedAt))]
+    const atlas     = manifest?.datasets ?? {};   // faux-API manifest
+    const apiSets = ['garages', 'tenders', 'crowding', 'route-meta', 'fleet'];
+    const newest    = [buildTs, ...apiSets.map(k => parse(atlas[k]?.fetchedAt))]
       .filter(Boolean).sort((a, b) => b - a)[0];
     if (!newest) return;
 
     if (footerDate)     footerDate.textContent     = fmt(newest);
-    if (footerNextDate) footerNextDate.textContent = fmt(manifest ? nextAtlasRun() : nextMondayAt(5));
+    if (footerNextDate) footerNextDate.textContent = fmt(nextNightlyRun());
 
     const pill = document.querySelector('.footer-data');
     if (pill && manifest) {
       const bits = [];
-      if (buildTs) bits.push(`Site build ${fmt(buildTs)} (weekly, Mondays)`);
-      for (const k of atlasSets) {
+      if (buildTs) bits.push(`Site build ${fmt(buildTs)}`);
+      for (const k of apiSets) {
         const d = parse(atlas[k]?.fetchedAt);
-        if (d) bits.push(`Atlas ${k} ${fmt(d)}`);
+        if (d) bits.push(`${k} ${fmt(d)}`);
       }
-      bits.push('Atlas API refreshes daily ~03:17 UTC');
+      bits.push('Pipeline refreshes nightly ~03:17 UTC');
       pill.dataset.tip = bits.join(' · ');
     }
   }).catch(() => { /* freshness display is non-fatal */ });
 }
-// The Atlas data warehouse refreshes via a daily GitHub Action at 03:17 UTC
-// (the push triggers the Atlas site/API rebuild a few minutes later).
-function nextAtlasRun() {
+// The data pipeline refreshes via a nightly GitHub Action at 03:17 UTC
+// (the push triggers the site rebuild a few minutes later).
+function nextNightlyRun() {
   const now = new Date();
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 3, 17, 0));
   if (d <= now) d.setUTCDate(d.getUTCDate() + 1);
-  return d;
-}
-function nextMondayAt(utcHour) {
-  const now = new Date();
-  const d   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), utcHour, 0, 0));
-  const daysAhead = (1 - d.getUTCDay() + 7) % 7 || (d > now ? 0 : 7);
-  d.setUTCDate(d.getUTCDate() + daysAhead);
   return d;
 }

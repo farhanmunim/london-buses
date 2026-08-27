@@ -1,41 +1,25 @@
 /**
  * api.js – Data access layer
  *
- * Two sources, one shape:
- *   • The Atlas public API (atlas.farhan.app/api/v1 — same author, same
- *     upstream warehouse; CORS-open, read-only, no key) is the primary
- *     source for every dataset it serves at UI fidelity: garages (merged
- *     join-safely with the bundled record — see fetchGarageLocations),
- *     tender awards, and the per-route reliability, route-meta and fleet
- *     blocks (overlaid onto the classifications — see
- *     fetchRouteClassifications). Responses are adapted to the
- *     bundled-file shapes so nothing downstream changes, and the committed
- *     /data files remain the automatic fallback when the API is
- *     unreachable.
- *   • The rest still loads from the static GeoJSON/JSON committed by the
- *     weekly refresh, because the API does not yet serve it at the
- *     fidelity the UI needs (verified 2026-07-27):
- *       – per-route geometry: /routes/{id}/geometry answers with the route
- *         list (catch-all), and the warehouse's route_geometry table is
- *         only published inside transit.db;
- *       – overview layer: /routes-overview features lack the paint/filter
- *         properties (operator, propulsion, deck, frequency, lengthBand,
- *         isPrefix);
- *       – stops: /route-stops has no `indicator`, no `towards`, and each
- *         stop's `lines` lists only the queried route, not all routes
- *         serving the stop;
- *       – destinations: no endpoint;
- *       – deck / frequency / lengthBand / next-tender programme: absent
- *         from every endpoint.
- *     Each of those moves API-first as soon as Atlas closes the gap.
+ * One source of truth: this site's own faux-API — data/api/*.json, rebuilt
+ * by the GitHub Actions pipeline and deployed with the site (same shapes
+ * the Atlas API used to serve, so everything downstream is unchanged).
+ * The bundled committed files remain the automatic fallback for datasets
+ * that predate the faux-API, and per-route geometry / stops / destinations
+ * still load from the committed static files directly.
+ *
+ * Live data is never stored: bus positions come from /api/live/vehicles
+ * (a Cloudflare Pages Function proxying BODS SIRI-VM) and live per-route
+ * status comes straight from TfL's CORS-open Unified API.
+ *
  * All responses are cached in memory for the session.
  */
 
 const BASE    = './data';
 
-// Remote data API. Override via `globalThis.LB_API_BASE` before module load
-// (e.g. to point a preview build at a staging API).
-const API_BASE = globalThis.LB_API_BASE ?? 'https://atlas.farhan.app/api/v1';
+// The faux-API root. Override via `globalThis.LB_API_BASE` before module
+// load (e.g. to point a preview build at another deployment's data).
+const API_BASE = globalThis.LB_API_BASE ?? './data/api';
 
 // In-memory cache
 const _cache = new Map();
@@ -49,10 +33,11 @@ async function loadJson(path) {
   return data;
 }
 
-/** Fetch a data-API endpoint; resolves null (with a console.warn) when unavailable. */
+/** Fetch a faux-API dataset ('/garages' → data/api/garages.json); resolves
+ * null (with a console.warn) when unavailable. */
 async function loadApi(path) {
   try {
-    const res = await fetch(`${API_BASE}${path}`);
+    const res = await fetch(`${API_BASE}${path}.json`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -99,15 +84,10 @@ export async function fetchAllDestinations() {
 
 /**
  * Returns the route classifications map — the master per-route record built
- * by the weekly pipeline — with three Atlas overlays applied per route:
+ * by the nightly pipeline — with two faux-API overlays applied per route:
  *
- *   /route-performance — the reliability block (serviceClass, EWT / OTP
- *   actuals, MPS standards). Both sides parse the same TfL QSI
- *   publications, but the API re-checks daily, so the overlay is never
- *   staler than the committed build.
- *
- *   /route-meta — daily re-parse of the same londonbusroutes.net source
- *   the weekly build reads. Only PVR (a plain number, no join) takes the
+ *   /route-meta — same nightly parse of londonbusroutes.net, served in the
+ *   faux-API shape. Only PVR (a plain number, no join) takes the
  *   API value when present. Everything else fills bundled nulls only:
  *   operator (parent-brand vocabulary that stats.js / garage-filter.js
  *   join on), garage code + name (the API's code vocabulary diverges —
@@ -116,10 +96,10 @@ export async function fetchAllDestinations() {
  *   marker/drawer counts), vehicleType (fleet-string cleanup), and
  *   DVLA-derived propulsion.
  *
- *   /fleet — today's arrivals sample enriched via DVLA. The bundled
- *   aggregates come from weeks of accumulated, recurrence-filtered
- *   observations, so a one-day sample only fills routes the build has no
- *   answer for (make, age, size, composition, propulsion), and marks them
+ *   /fleet — the recent-window arrivals sweep enriched via DVLA. The
+ *   bundled aggregates come from weeks of accumulated, recurrence-filtered
+ *   observations, so the sweep only fills routes the build has no answer
+ *   for (make, age, size, composition, propulsion), and marks them
  *   fleetConfidence 'low'.
  *
  * When the API is unreachable the committed values stand.
@@ -129,9 +109,8 @@ export async function fetchRouteClassifications() {
   const key = 'adapted:classifications';
   if (_cache.has(key)) return _cache.get(key);
 
-  const [data, perf, meta, fleet] = await Promise.all([
+  const [data, meta, fleet] = await Promise.all([
     loadJson(`${BASE}/route_classifications.json`),
-    loadApiCached('/route-performance'),
     loadApiCached('/route-meta'),
     loadApiCached('/fleet'),
   ]);
@@ -142,29 +121,6 @@ export async function fetchRouteClassifications() {
   const routes = Object.fromEntries(
     Object.entries(data.routes ?? {}).map(([k, v]) => [k, { ...v }]),
   );
-  for (const [id, p] of Object.entries(perf?.routes ?? {})) {
-    const routeId = id.toUpperCase();
-    const rec = routes[routeId];
-    // Take the API's reliability block whole (nulls included) so the
-    // class/metric pairing stays coherent — the build nulls the wrong-class
-    // metric deliberately, and a field-by-field merge could resurrect it.
-    if (!rec || !p?.serviceClass) continue;
-    routes[routeId] = {
-      ...rec,
-      serviceClass:   p.serviceClass,
-      ewtMinutes:     p.ewtMinutes     ?? null,
-      onTimePercent:  p.onTimePercent  ?? null,
-      ewtMps:         p.ewtMps         ?? null,
-      otpMps:         p.otpMps         ?? null,
-      mileageMps:     p.mileageMps     ?? null,
-      // API-only — the weekly build never carried operated-mileage actuals
-      // or the scheduled/actual wait pair behind the EWT.
-      mileagePercent: p.mileagePercent ?? null,
-      swtMinutes:     p.swtMinutes     ?? null,
-      awtMinutes:     p.awtMinutes     ?? null,
-    };
-  }
-
   for (const [id, m] of Object.entries(meta?.routes ?? {})) {
     const rec = routes[id.toUpperCase()];
     if (!rec || typeof m !== 'object' || m === null) continue;
@@ -527,34 +483,15 @@ export async function fetchCrowdingProfile() {
 }
 
 /**
- * Published quarterly performance for one route (TfL QSI, via the Atlas
- * history API). Returns rows sorted oldest → newest: { period_label,
- * period_start, service_class, ewt_minutes, on_time_percent, ... }.
- * Resolves [] when the API is unreachable or the route has no history.
- */
-export async function fetchPerformanceHistory(routeId) {
-  const id  = String(routeId).toUpperCase();
-  const key = `api:/history/performance-history:${id}`;
-  if (_cache.has(key)) return _cache.get(key);
-  const raw  = await loadApi(`/history/performance-history?route=${encodeURIComponent(id)}&limit=24`);
-  const rows = (raw?.rows ?? [])
-    .filter(r => r?.period_start)
-    .sort((a, b) => String(a.period_start).localeCompare(String(b.period_start)));
-  _cache.set(key, rows);
-  return rows;
-}
-
-/**
- * Live GPS positions of the buses on one route (BODS SIRI-VM via the Atlas
- * live feed, ~10 s fresh). Returns [{ reg, direction, lat, lng, bearing,
- * destination }] or null when the feed is unreachable. Never cached —
- * callers poll.
+ * Live GPS positions of the buses on one route (BODS SIRI-VM via this
+ * site's /api/live/vehicles Pages Function, ~10 s fresh). Returns
+ * [{ reg, direction, lat, lng, bearing, destination }] or null when the
+ * feed is unreachable. Never cached — callers poll.
  */
 export async function fetchLiveVehicles(routeId) {
-  // Deliberately the /v1/live path, NOT the shorter /api/live alias — the
-  // alias serves the same feed but without CORS headers, so browsers drop
-  // every response (found the hard way, 2026-08-04).
-  const raw = await loadApi(`/live/vehicles?line=${encodeURIComponent(String(routeId).toUpperCase())}`);
+  const raw = await fetch(`/api/live/vehicles?line=${encodeURIComponent(String(routeId).toUpperCase())}`)
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
   const rows = raw?.data ?? raw?.vehicles;
   if (!rows) return null;
   return rows
@@ -570,16 +507,18 @@ export async function fetchLiveVehicles(routeId) {
 }
 
 /**
- * Live TfL service status for one route (Atlas /live/status — seconds
- * fresh, unlike the /line-status snapshot the warehouse captures daily).
- * Adapted to the snapshot's per-route shape: { status, reason, severity,
- * capturedAt }. Resolves null when unreachable — callers fall back to
- * fetchLineStatus().
+ * Live TfL service status for one route, straight from TfL's CORS-open
+ * Unified API (seconds fresh, unlike the /line-status snapshot the
+ * pipeline captures intraday). Adapted to the snapshot's per-route shape:
+ * { status, reason, severity, capturedAt }. Resolves null when
+ * unreachable — callers fall back to fetchLineStatus().
  */
 export async function fetchLiveStatus(routeId) {
   const name = String(routeId).toUpperCase();
-  const raw  = await loadApi(`/live/status?route=${encodeURIComponent(name)}`);
-  const statuses = raw?.data?.[0]?.lineStatuses;
+  const raw  = await fetch(`https://api.tfl.gov.uk/Line/${encodeURIComponent(name)}/Status`)
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null);
+  const statuses = raw?.[0]?.lineStatuses;
   if (!statuses?.length) return null;
 
   // TfL files one notice onto several lines' feeds (an area closure names
@@ -611,7 +550,7 @@ export async function fetchLiveStatus(routeId) {
   // Every listed disruption is outside its validity window → the route is
   // effectively running normally right now.
   if (!active.length) {
-    return { status: 'Good Service', reason: null, severity: 10, capturedAt: raw.capturedAt ?? null };
+    return { status: 'Good Service', reason: null, severity: 10, capturedAt: new Date().toISOString() };
   }
   const pick = active
     .map((ls, i) => ({ ls, i, sev: ls.statusSeverity ?? 10, m: mentions(ls) }))
@@ -620,49 +559,15 @@ export async function fetchLiveStatus(routeId) {
     status:     pick.statusSeverityDescription ?? null,
     reason:     pick.reason ?? null,
     severity:   pick.statusSeverity ?? null,
-    capturedAt: raw.capturedAt ?? null,
+    capturedAt: new Date().toISOString(),
   };
-}
-
-/**
- * Current scheduled-service record for one route (Atlas history API):
- * { headway_min, swt_minutes, scheduled_trips, scheduled_km, ... } or null.
- */
-export async function fetchSchedule(routeId) {
-  const id  = String(routeId).toUpperCase();
-  const key = `api:/history/schedule:${id}`;
-  if (_cache.has(key)) return _cache.get(key);
-  const raw = await loadApi(`/history/schedule?route=${encodeURIComponent(id)}&limit=1`);
-  const row = raw?.rows?.[0] ?? null;
-  if (row) _cache.set(key, row);
-  return row;
-}
-
-/**
- * Atlas's own daily reliability estimates for one route, oldest → newest:
- * [{ day, service_class, ewt_minutes, otd_percent, sample_count, ... }].
- * The current (partial) day is excluded — its figures are mid-flight
- * artifacts until the day's sampling completes. Resolves [] when
- * unreachable.
- */
-export async function fetchReliabilityDaily(routeId) {
-  const id  = String(routeId).toUpperCase();
-  const key = `api:/history/reliability-daily:${id}`;
-  if (_cache.has(key)) return _cache.get(key);
-  const raw   = await loadApi(`/history/reliability-daily?route=${encodeURIComponent(id)}&limit=40`);
-  const today = new Date().toISOString().slice(0, 10);
-  const rows  = (raw?.rows ?? [])
-    .filter(r => r?.day && r.day < today)
-    .sort((a, b) => String(a.day).localeCompare(String(b.day)));
-  _cache.set(key, rows);
-  return rows;
 }
 
 /**
  * Per-registration vehicle registry: REG → { make, year, propulsion,
  * operator, bonnet }. Two sources merged: the bundled weekly DVLA fleet
  * cache (data/source/vehicle-fleet.json, ~9,500 regs accumulated over
- * months — the coverage) overlaid with Atlas /vehicles (~670 regs from
+ * months — the coverage) overlaid with the faux-API /vehicles (regs from
  * today's sample — the freshness). Loaded lazily on first use (the bundled
  * file is ~2.6 MB raw; only live-vehicle popups need it) and session-cached.
  * Resolves {} when both sources fail, so lookups simply miss.
@@ -700,15 +605,16 @@ export async function fetchVehicleRegistry() {
 }
 
 /**
- * Active diversion record for one route (Atlas /route-diversions — live
- * status + geometry derived from observed bus GPS traces, refreshed ~5 min).
+ * Active diversion record for one route (/route-diversions — the pipeline's
+ * intraday diversion register).
  * Adapted to the app's direction vocabulary ('1' outbound / '2' inbound):
  * { status, since, until, reasons[], published,
  *   segments:  { '1': [ [[lat,lon],…], … ], '2': […] },   // diverted path
  *   bypassed:  { '1': […], '2': […] },                     // official line not served
  *   missedStops: { '1': [{id,name,lat,lng}], '2': […] } }
  * Resolves null when the route has no active diversion record, and
- * `published: false` when Atlas hasn't derived geometry for it yet.
+ * `published: false` when no diversion geometry exists (the retired
+ * GPS-trace derivation is no longer produced, so overlays stay hidden).
  */
 export async function fetchRouteDiversion(routeId) {
   const key = 'adapted:/route-diversions';

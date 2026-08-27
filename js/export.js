@@ -20,10 +20,10 @@
  * erroring into the console.
  */
 
-import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.18.2';
-import { state, exportBtn } from './state.js?v=2.18.2';
-import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.18.2';
-import { getPinnedRouteIds } from './search.js?v=2.18.2';
+import { getVisibleRouteProps, getVisibleGarages } from './map.js?v=2.19.0';
+import { state, exportBtn } from './state.js?v=2.19.0';
+import { fetchRouteStopCount, fetchTenders, fetchTenderProgramme } from './api.js?v=2.19.0';
+import { getPinnedRouteIds } from './search.js?v=2.19.0';
 
 // Threshold above which we warn the user before assembling a full-network
 // export. Filtered exports usually return well under this, and skip the
@@ -174,13 +174,6 @@ function buildRouteRows(routes, stopCounts) {
         avg_fleet_age_years:       num(cls.vehicleAgeYears),
         observed_fleet_size:       num(cls.fleetSize),
 
-        // ── Reliability (TfL QSI PDF — actuals + per-route contractual MPS) ──
-        service_class:             str(cls.serviceClass),
-        ewt_minutes:               num(cls.ewtMinutes),
-        ewt_mps_minutes:           num(cls.ewtMps),
-        on_time_percent:           num(cls.onTimePercent),
-        otp_mps_percent:           num(cls.otpMps),
-        mileage_mps_percent:       num(cls.mileageMps),
         performance_period:        str(cls.perfPeriod),
 
         // ── Tender — current active contract (in-service) ──

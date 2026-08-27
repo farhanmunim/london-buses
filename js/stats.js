@@ -21,8 +21,8 @@ import {
   state,
   opDrawer, drawerBack, drawerName, drawerSub, drawerSwatch,
   dGarages, dContracts,
-} from './state.js?v=2.18.2';
-import { opColor, highlightGarageByCode } from './map.js?v=2.18.2';
+} from './state.js?v=2.19.0';
+import { opColor, highlightGarageByCode } from './map.js?v=2.19.0';
 
 // Populate a drawer KPI slot. Slots 1-4 are always visible; the optional
 // slot 5 (capacity) carries a `data-dkpi-slot` wrapper that we hide when
@@ -331,7 +331,7 @@ export function openGarageDrawer(code) {
   drawerSwatch.style.background = opColor(garage.operator);
   // Subtitle is just the operator — route count is in the KPIs.
   drawerSub.textContent         = DISPLAY_NAME[garage.operator] ?? garage.operator ?? '—';
-  // Legal operating company (Atlas API field) — hover tip on the subtitle;
+  // Legal operating company — hover tip on the subtitle;
   // the customer-facing brand stays the headline.
   if (garage.company) drawerSub.dataset.tip = garage.company;
   else                delete drawerSub.dataset.tip;

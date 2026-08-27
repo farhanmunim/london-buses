@@ -15,12 +15,12 @@
  * every pass so any change flows through a single pipeline.
  */
 
-import { filterOverview, filterGarages, getVisibleRouteProps, countVisibleGarages } from './map.js?v=2.18.2';
-import { fetchStopsRegistry } from './api.js?v=2.18.2';
+import { filterOverview, filterGarages, getVisibleRouteProps, countVisibleGarages } from './map.js?v=2.19.0';
+import { fetchStopsRegistry } from './api.js?v=2.19.0';
 import { state, routeCountEl, mobRoutesEl,
-         clearRouteFiltersBtn, clearGarageFiltersBtn, resetAllBtn } from './state.js?v=2.18.2';
-import { renderOperatorStats } from './stats.js?v=2.18.2';
-import { showRpTab } from './panels.js?v=2.18.2';
+         clearRouteFiltersBtn, clearGarageFiltersBtn, resetAllBtn } from './state.js?v=2.19.0';
+import { renderOperatorStats } from './stats.js?v=2.19.0';
+import { showRpTab } from './panels.js?v=2.19.0';
 
 const ROUTE_FILTER_KEYS   = ['routetype', 'operator', 'frequency', 'deck', 'propulsion'];
 const GARAGE_FILTER_KEYS  = ['garageoperator'];

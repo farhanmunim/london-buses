@@ -25,7 +25,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 
-    <link rel="stylesheet" href="css/app.css?v=2.18.2" />
+    <link rel="stylesheet" href="css/app.css?v=2.19.0" />
 
     <script>
       (function () {
@@ -299,7 +299,7 @@
             Stops
           </button>
           <!-- Visible only while a single route is focused — live GPS dots
-               from the Atlas feed. Resets to ON per focus, like Stops. -->
+               from the live feed. Resets to ON per focus, like Stops. -->
           <button type="button" class="mctl on" id="toggleLive" aria-pressed="true" aria-label="Toggle live bus positions" hidden>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r="0.8" fill="currentColor"/><circle cx="15" cy="14" r="0.8" fill="currentColor"/><line x1="8.5" y1="17" x2="8.5" y2="19.5"/><line x1="15.5" y1="17" x2="15.5" y2="19.5"/></svg>
             Live buses
@@ -323,7 +323,7 @@
             <div class="ov-kpi"><div class="ov-kpi-n" id="hero-pvr">—</div><div class="ov-kpi-l">PVR</div></div>
           </div>
 
-          <!-- Network live status — Atlas API line-status snapshot; hidden
+          <!-- Network live status — pipeline line-status snapshot; hidden
                until data arrives (and when the API is unreachable). -->
           <div class="ov-live" id="ov-live" hidden>
             <span class="ov-live-dot" aria-hidden="true"></span>
@@ -484,7 +484,7 @@
                   </div>
                   <div class="rc-op" data-rc-op>—</div>
                 </div>
-                <!-- Live service status — Atlas API /live/status (30 s cache),
+                <!-- Live service status — TfL Unified API (30 s cache),
                      falling back to the stored line-status snapshot. Hidden for
                      routes the feed doesn't cover (school routes) and when the
                      API is unreachable. -->
@@ -495,25 +495,15 @@
                 <div class="rc-status-reason" data-rc-status-reason hidden></div>
                 <div class="rc-section">
                   <div class="rc-section-tag">Route</div>
-                  <div class="rc-kpis rc-kpis--six">
+                  <div class="rc-kpis">
                     <div class="rc-kpi"><div class="rc-kpi-l">PVR</div><div class="rc-kpi-v" data-rc-pvr>—</div></div>
                     <div class="rc-kpi"><div class="rc-kpi-l">TVR</div><div class="rc-kpi-v" data-rc-tvr>—</div></div>
                     <div class="rc-kpi"><div class="rc-kpi-l">Stops</div><div class="rc-kpi-v" data-rc-stops>—</div></div>
                     <div class="rc-kpi"><div class="rc-kpi-l">Freq</div><div class="rc-kpi-v" data-rc-freq>—</div></div>
-                    <div class="rc-kpi"><div class="rc-kpi-l" data-rc-perf-l>EWT</div><div class="rc-kpi-v" data-rc-perf>—</div></div>
-                    <div class="rc-kpi"><div class="rc-kpi-l" data-rc-perf-mps-l>MPS</div><div class="rc-kpi-v" data-rc-perf-mps>—</div></div>
                   </div>
                   <div class="rc-tender">
                     <div class="rc-tr"><span class="rc-tr-l">Garage</span><span class="rc-tr-v" data-rc-garage>XXX</span></div>
                     <div class="rc-tr" data-rc-row="length" hidden><span class="rc-tr-l">Length</span><span class="rc-tr-v" data-rc-length>—</span></div>
-                    <div class="rc-tr" data-rc-row="headway" hidden><span class="rc-tr-l">Headway</span><span class="rc-tr-v" data-rc-headway>—</span></div>
-                    <div class="rc-tr" data-rc-row="avg-wait" hidden><span class="rc-tr-l">Average wait</span><span class="rc-tr-v" data-rc-avg-wait>—</span></div>
-                    <div class="rc-tr" data-rc-row="mileage" hidden><span class="rc-tr-l">Mileage operated</span><span class="rc-tr-v" data-rc-mileage>—</span></div>
-                    <div class="rc-tr" data-rc-row="perf-trend" hidden><span class="rc-tr-l">Reliability trend</span><span class="rc-tr-v" data-rc-perf-trend>—</span></div>
-                    <div class="rc-tr rc-tr--stack" data-rc-row="rel-daily" hidden>
-                      <span class="rc-tr-l">Daily reliability</span>
-                      <div class="rc-crowd-profile" data-rc-rel-daily></div>
-                    </div>
                   </div>
                 </div>
 
@@ -533,7 +523,7 @@
                   </div>
                 </div>
 
-                <!-- Crowding — TfL BUSTO demand data via the Atlas API.
+                <!-- Crowding — TfL BUSTO demand data (archived snapshot).
                      Hidden for routes without BUSTO coverage and when the
                      API is unreachable. -->
                 <div class="rc-section" data-rc-section="crowding" hidden>
@@ -749,9 +739,9 @@
     </nav>
 
     <!-- Modal injectors (standalone, work on every page). -->
-    <script src="js/about.js?v=2.18.2" defer></script>
+    <script src="js/about.js?v=2.19.0" defer></script>
 
     <!-- Boot orchestrator — pulls in every interactive module. -->
-    <script type="module" src="js/ui.js?v=2.18.2"></script>
+    <script type="module" src="js/ui.js?v=2.19.0"></script>
   </body>
 </html>

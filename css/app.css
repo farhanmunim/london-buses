@@ -384,18 +384,9 @@ a{color:inherit;text-decoration:none}
 .rc-type-chip[hidden]{display:none}
 
 /* KPI grid — single row of 4 KPI tiles for the headline route facts
-   (PVR · Stops · Freq · EWT/OTP). Lives inside the Route section now,
-   so margin-bottom is small — the section already provides bottom spacing.
-   .rc-kpis--five extends to 5 columns when the MPS tile is added — same
-   tile metrics, just narrower. */
+   (PVR · TVR · Stops · Freq). Lives inside the Route section now, so
+   margin-bottom is small — the section already provides bottom spacing. */
 .rc-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:5px}
-.rc-kpis--five{grid-template-columns:repeat(5,1fr)}
-/* Six tiles (PVR·TVR·Stops·Freq·EWT·MPS) need tighter cells than five —
-   slimmer padding + a notch off the type so 3-digit values don't wrap. */
-.rc-kpis--six{grid-template-columns:repeat(6,1fr);gap:3px}
-.rc-kpis--six .rc-kpi{padding:6px 4px;text-align:center}
-.rc-kpis--six .rc-kpi-l{font-size:8px;letter-spacing:.4px}
-.rc-kpis--six .rc-kpi-v{font-size:11px}
 .rc-kpi{background:var(--surf-s);border:none;border-radius:var(--r-md);padding:7px 9px}
 .rc-kpi-l{font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--mu);margin-bottom:2px}
 .rc-kpi-v{font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--tx);line-height:1.2}

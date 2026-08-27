@@ -6,22 +6,20 @@
  *   - operator, PVR, deck, propulsion (LBR + DVLA)
  *   - make + vehicle (DVLA + LBR)
  *   - avg fleet age + fleet size (DVLA cross-referenced with TfL arrivals)
- *   - reliability — EWT for high-freq, OTP for low-freq (TfL QSI PDF)
  *   - previous operator, contract expires, contract value (TfL tender data,
  *     joined from data/source/tenders.json + tender-programme.json)
  */
 
-import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.18.2';
-import { opColor, multiRouteColor } from './map.js?v=2.18.2';
+import { routeResults, routePrompt, routeNoResult, routeCardTpl } from './state.js?v=2.19.0';
+import { opColor, multiRouteColor } from './map.js?v=2.19.0';
 import {
   fetchLineStatus, fetchLiveStatus, fetchCrowding, fetchCrowdingProfile,
-  fetchPerformanceHistory, fetchSchedule, fetchReliabilityDaily,
   fetchLiveVehicles,
-} from './api.js?v=2.18.2';
+} from './api.js?v=2.19.0';
 
 // Frequency label — the underlying classification is binary high/low, but
 // in the narrow Freq KPI tile we render just the initial (H / L) so the
-// value visually matches the compact treatment of EWT / OTP / PVR / Stops.
+// value visually matches the compact treatment of PVR / Stops.
 // The full word is still used in filter pills and tooltips elsewhere.
 const FREQ_MAP  = { high: 'H', low: 'L' };
 // Deck rendered as the standard industry abbreviations — saves horizontal
@@ -32,8 +30,6 @@ const PROP_MAP  = { electric: 'Electric', hydrogen: 'Hydrogen', hybrid: 'Hybrid'
 
 // Tooltip text per field — short, professional "what + source" lines.
 // Keyed by the value element's data-rc-* attribute (without the prefix).
-// The dynamic perf / MPS tiles flip their tip text alongside their label
-// (EWT vs OTP) and are wired separately in buildCard's reliability block.
 // Tooltip text. Format: "[short description.] Source: X. Freshness: Y." The
 // description is dropped when the label itself is self-explanatory.
 const tip = (desc, source, freshness) =>
@@ -47,15 +43,12 @@ const SOURCE = {
   PROG:      'TfL tendering programme',
   LOOKUP:    'curated vehicle lookup over LBR chassis strings',
   DERIVED:   'derived (accepted bid ÷ cost per mile)',
-  BUSTO:     'TfL BUSTO demand data, via the Atlas API',
-  ATLAS_QSI: 'TfL QSI reports, via the Atlas API',
-  ATLAS_MPS: 'TfL per-route MPS reports, via the Atlas API',
-  ATLAS_LBR: 'londonbusroutes.net, via the Atlas API',
+  BUSTO:     'TfL BUSTO demand data (archived snapshot)',
+  ATLAS_LBR: 'londonbusroutes.net, via this site’s data pipeline',
 };
-const WEEKLY      = 'as at last weekly refresh';
-const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed weekly';
-const DAILY       = 'refreshed daily';
-const QSI_FRESH   = 'TfL publishes every ~4 weeks';
+const WEEKLY      = 'as at last nightly refresh';
+const WEEKLY_DVLA = 'per-vehicle 90-day cache, refreshed with each sweep';
+const DAILY       = 'refreshed nightly';
 const PER_TENDER  = 'set per tender contract';
 const ANNUAL_BUSTO = 'TfL publishes annually';
 const TIPS = {
@@ -67,13 +60,8 @@ const TIPS = {
   // Route detail rows
   garage:          tip('Operating garage',                                    SOURCE.LBR,     WEEKLY),
   length:          tip('One-way route length',                                SOURCE.ATLAS_LBR, DAILY),
-  headway:         tip('Typical scheduled gap between buses',                  'TfL timetable, via the Atlas API', DAILY),
-  'avg-wait':      tip('Average wait passengers actually experienced vs the scheduled wait (their difference is the EWT)', SOURCE.ATLAS_QSI, QSI_FRESH),
-  mileage:         tip('Scheduled mileage actually operated in the latest TfL period, against the contractual minimum', SOURCE.ATLAS_MPS, QSI_FRESH),
-  'perf-trend':    tip('Published reliability across recent quarters',        SOURCE.ATLAS_QSI, QSI_FRESH),
-  'rel-daily':     tip('Atlas’s own reliability estimate from live arrivals sampling — experimental, biased high, not comparable to TfL’s QSI', 'Atlas arrivals sampling', 'daily'),
-  'contract-end':  tip('Scheduled end of the current contract — curated Atlas data, published for a few flagship routes only', 'Atlas API (curated)', DAILY),
-  // Crowding rows (Atlas API)
+  'contract-end':  tip('Scheduled end of the current contract — curated data, published for a few flagship routes only', 'curated route data', DAILY),
+  // Crowding rows (archived BUSTO snapshot)
   'crowd-peak':    tip('Peak vehicle load ÷ capacity at the max-demand hour', SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-where':   tip('Stop, day type and time of the peak load',            SOURCE.BUSTO,   ANNUAL_BUSTO),
   'crowd-days':    tip('Peak load ÷ capacity per day type',                   SOURCE.BUSTO,   ANNUAL_BUSTO),
@@ -84,8 +72,8 @@ const TIPS = {
   'vehicle-make':  tip('Manufacturer',                                        SOURCE.DVLA,    WEEKLY_DVLA),
   'vehicle-model': tip('Chassis and body',                                    SOURCE.LBR,     WEEKLY),
   age:             tip('Mean age of buses observed on the route',             SOURCE.DVLA,    WEEKLY_DVLA),
-  'out-now':       tip('Buses tracked on the route right now',                'BODS SIRI-VM, via the Atlas API', 'live snapshot at card open'),
-  'out-now-regs':  tip('Each registration currently tracked — click a bus on the map for its details', 'BODS SIRI-VM, via the Atlas API', 'live snapshot at card open'),
+  'out-now':       tip('Buses tracked on the route right now',                'BODS SIRI-VM, via this site’s live proxy', 'live snapshot at card open'),
+  'out-now-regs':  tip('Each registration currently tracked — click a bus on the map for its details', 'BODS SIRI-VM, via this site’s live proxy', 'live snapshot at card open'),
   // Tender · Current active contract
   'current-op':    tip('Operator who won the originating tender',             SOURCE.TENDER,  WEEKLY),
   'current-award': tip('Award date of the current in-service contract',      SOURCE.TENDER,  WEEKLY),
@@ -349,30 +337,11 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   const gc = classification?.garageCode;
   set('[data-rc-garage]', gn && gc ? `${gn} (${gc})` : (gn ?? gc ?? 'XXX'));
 
-  // One-way length in km — Atlas route-meta only, so the row hides when the
-  // API was unreachable and the record carries just the bundled lengthBand.
+  // One-way length in km — route-meta only, so the row hides when the
+  // record carries just the lengthBand.
   const lenKm = classification?.lengthKm;
   toggleRow(node, 'length', Number.isFinite(lenKm));
   if (Number.isFinite(lenKm)) set('[data-rc-length]', `${lenKm} km`);
-
-  // Operated mileage vs the contractual standard — Atlas /route-performance
-  // only (the weekly build never carried the actuals).
-  const milePct = classification?.mileagePercent;
-  const mileMps = classification?.mileageMps;
-  toggleRow(node, 'mileage', Number.isFinite(milePct));
-  if (Number.isFinite(milePct)) {
-    set('[data-rc-mileage]', `${milePct.toFixed(1)}%`
-      + (Number.isFinite(mileMps) && mileMps > 0 ? ` · standard ${mileMps}%` : ''));
-  }
-
-  // Actual vs scheduled wait — the pair behind the EWT figure, so it only
-  // makes sense for high-frequency (EWT-graded) routes. Atlas API only.
-  const awt = classification?.awtMinutes;
-  const swt = classification?.swtMinutes;
-  const showWait = classification?.serviceClass === 'high-frequency'
-    && Number.isFinite(awt) && Number.isFinite(swt);
-  toggleRow(node, 'avg-wait', showWait);
-  if (showWait) set('[data-rc-avg-wait]', `${awt.toFixed(1)} min · scheduled ${swt.toFixed(1)}`);
 
   // Vehicle make — DVLA returns the manufacturer in upper-case ("VOLVO").
   // Title-case it so it reads naturally ("Volvo").
@@ -388,44 +357,6 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // observed regs. One decimal, matches DVLA's resolution.
   const age = classification?.vehicleAgeYears;
   set('[data-rc-age]', Number.isFinite(age) ? `${age.toFixed(1)} years` : 'XXX');
-
-  // Reliability KPIs — paired tiles in the Route section. The first tile
-  // shows the actual measurement (EWT for high-freq, OTP for low-freq);
-  // the second shows the contractual minimum performance standard for the
-  // same metric. Splitting them keeps each tile readable on a narrow card
-  // while still letting the eye compare actual vs standard side-by-side.
-  // Both labels swap together so the user always knows which metric is
-  // being shown (EWT/EWT-MPS vs OTP/OTP-MPS).
-  const perfL    = node.querySelector('[data-rc-perf-l]');
-  const perfMpsL = node.querySelector('[data-rc-perf-mps-l]');
-  const sc       = classification?.serviceClass;
-  const ewt      = classification?.ewtMinutes;
-  const otp      = classification?.onTimePercent;
-  const ewtMps   = classification?.ewtMps;
-  const otpMps   = classification?.otpMps;
-  // Tile 1 = actual measurement (EWT / OTP). Tile 2 = the contractual
-  // Minimum Performance Standard for the same metric. Labels and tooltips
-  // both swap together so the metric is unambiguous regardless of class.
-  const TIP_EWT     = tip('Excess Wait Time in minutes',  SOURCE.ATLAS_QSI, QSI_FRESH);
-  const TIP_OTP     = tip('On-Time Performance',          SOURCE.ATLAS_QSI, QSI_FRESH);
-  const TIP_EWT_MPS = tip('Contractual EWT minimum',      SOURCE.ATLAS_MPS, PER_TENDER);
-  const TIP_OTP_MPS = tip('Contractual OTP minimum',      SOURCE.ATLAS_MPS, PER_TENDER);
-  if (sc === 'high-frequency') {
-    if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
-    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
-    set('[data-rc-perf]',     Number.isFinite(ewt)    ? ewt.toFixed(1)    : '—');
-    set('[data-rc-perf-mps]', Number.isFinite(ewtMps) && ewtMps > 0 ? ewtMps.toFixed(1) : '—');
-  } else if (sc === 'low-frequency') {
-    if (perfL)    { perfL.textContent    = 'OTP'; perfL.dataset.tip    = TIP_OTP; }
-    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_OTP_MPS; }
-    set('[data-rc-perf]',     Number.isFinite(otp)    ? `${otp.toFixed(0)}%` : '—');
-    set('[data-rc-perf-mps]', Number.isFinite(otpMps) && otpMps > 0 ? `${otpMps.toFixed(0)}%` : '—');
-  } else {
-    if (perfL)    { perfL.textContent    = 'EWT'; perfL.dataset.tip    = TIP_EWT; }
-    if (perfMpsL) { perfMpsL.textContent = 'MPS'; perfMpsL.dataset.tip = TIP_EWT_MPS; }
-    set('[data-rc-perf]',     '—');
-    set('[data-rc-perf-mps]', '—');
-  }
 
   // Awarded on — when the most recent tender on this route was decided.
   const lastAwd = classification?.lastAwardDate;
@@ -468,7 +399,7 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   toggleRow(node, 'contract-start', !!start);
   if (start) set('[data-rc-contract-start]', formatHumanDate(start));
 
-  // Contract end — Atlas route-meta only, month precision ("2026-11").
+  // Contract end — route-meta only, month precision ("2026-11").
   const end = classification?.contractEndDate;
   toggleRow(node, 'contract-end', !!end);
   if (end) set('[data-rc-contract-end]', formatMonthYear(end));
@@ -662,20 +593,20 @@ function buildCard({ id, classification, destinations, stopCount }, { single = f
   // tooltip is available; the browser shows the `title` text on hover.
   attachTooltips(node);
 
-  // Live status + crowding arrive asynchronously from the Atlas API once the
+  // Live status + crowding arrive asynchronously once the
   // card is in the DOM — they must never block or break the card itself.
-  hydrateAtlasExtras(node, id);
+  hydrateLiveExtras(node, id);
 
   return node;
 }
 
-// ── Atlas API extras — live status + crowding ────────────────────────────────
+// ── Live extras — live status + crowding ─────────────────────────────────────
 // Both datasets have no bundled equivalent (the weekly pipeline never carried
 // them) and are session-cached in api.js, so re-renders on every filter change
 // cost nothing after the first fetch. When the API is unreachable, or the
 // route isn't covered (school routes; BUSTO covers ~606 routes), the elements
 // simply stay hidden.
-function hydrateAtlasExtras(node, id) {
+function hydrateLiveExtras(node, id) {
   const routeId = String(id).toUpperCase();
 
   // Live per-route status first (seconds fresh); the warehouse's daily
@@ -697,7 +628,7 @@ function hydrateAtlasExtras(node, id) {
       strip.classList.toggle('rc-status--bad', !good);
       text.textContent = rec.status ?? (good ? 'Good Service' : 'Disruption');
       const asOf = formatTimeShort(rec.capturedAt);
-      text.dataset.tip = 'Live service status. Source: TfL, via the Atlas API.'
+      text.dataset.tip = 'Live service status. Source: TfL, straight from the Unified API.'
         + (asOf ? ` As of ${asOf}${rec._snapshot ? ' (daily snapshot — live feed unavailable)' : ''}.` : '');
       if (reason) {
         // TfL reason texts run to whole paragraphs — clamped by CSS, full text
@@ -762,35 +693,6 @@ function hydrateAtlasExtras(node, id) {
     // no extra unhide is needed here.
   }).catch(() => {});
 
-  fetchPerformanceHistory(routeId).then(rows => {
-    // Metric follows the route's QSI class: EWT (lower = better) for
-    // high-frequency, on-time % (higher = better) for low-frequency.
-    const ewts = rows.filter(r => Number.isFinite(r.ewt_minutes));
-    const otps = rows.filter(r => Number.isFinite(r.on_time_percent));
-    const useEwt = ewts.length >= otps.length;
-    const series = (useEwt ? ewts : otps).slice(-4);
-    if (series.length < 2) return; // a single period is already on the KPI tile
-
-    const val   = r => useEwt ? r.ewt_minutes : r.on_time_percent;
-    const fmt   = v => useEwt ? v.toFixed(1) : `${Math.round(v)}%`;
-    const first = val(series[0]);
-    const last  = val(series[series.length - 1]);
-    // For EWT a fall is an improvement; for on-time % a rise is.
-    const delta     = useEwt ? first - last : last - first;
-    const word      = Math.abs(delta) < (useEwt ? 0.05 : 0.5) ? 'steady'
-                    : delta > 0 ? 'improving' : 'worsening';
-
-    const el = node.querySelector('[data-rc-perf-trend]');
-    if (!el) return;
-    el.textContent = `${series.map(r => fmt(val(r))).join(' → ')} · ${word}`;
-    el.classList.toggle('rc-trend--good', word === 'improving');
-    el.classList.toggle('rc-trend--bad',  word === 'worsening');
-    el.dataset.tip = series
-      .map(r => `${r.period_label ?? r.period_start}: ${fmt(val(r))}`)
-      .join(' · ') + (useEwt ? ' (EWT, lower is better)' : ' (on-time %, higher is better)');
-    toggleRow(node, 'perf-trend', true);
-  }).catch(() => {});
-
   // Which buses are out on the route right now — a one-shot snapshot at card
   // open (the map's live layer keeps its own 15 s poll; the card doesn't).
   fetchLiveVehicles(routeId).then(vehicles => {
@@ -808,63 +710,8 @@ function hydrateAtlasExtras(node, id) {
     }
   }).catch(() => {});
 
-  fetchSchedule(routeId).then(sched => {
-    const hw = sched?.headway_min;
-    if (!Number.isFinite(hw) || hw <= 0) return;
-    const el = node.querySelector('[data-rc-headway]');
-    if (!el) return;
-    el.textContent = `every ~${Math.round(hw)} min`;
-    toggleRow(node, 'headway', true);
-  }).catch(() => {});
-
-  fetchReliabilityDaily(routeId).then(rows => {
-    // Metric mirrors the KPI tile: EWT for high-frequency days, on-time-
-    // departure % otherwise — whichever the route's days actually carry.
-    const ewts = rows.filter(r => Number.isFinite(r.ewt_minutes));
-    const otds = rows.filter(r => Number.isFinite(r.otd_percent));
-    const useEwt = ewts.length >= otds.length;
-    const series = (useEwt ? ewts : otds).slice(-30);
-    if (series.length < 7) return; // too sparse to read as a trend
-    const host = node.querySelector('[data-rc-rel-daily]');
-    if (!host) return;
-    const val = r => useEwt ? r.ewt_minutes : r.otd_percent;
-    const fmt = v => useEwt ? `${v.toFixed(1)} min EWT` : `${Math.round(v)}% on time`;
-    host.replaceChildren(buildDailySvg(series, val, fmt));
-    const label = host.closest('[data-rc-row]')?.querySelector('.rc-tr-l');
-    if (label) label.textContent = `Daily ${useEwt ? 'EWT' : 'on-time'} · last ${series.length} days`;
-    toggleRow(node, 'rel-daily', true);
-  }).catch(() => {});
 }
 
-// Inline SVG bars: one per sampled day. Same visual grammar as the crowding
-// profile; neutral fill (no thresholds — Atlas's estimate is indicative).
-function buildDailySvg(series, val, fmt) {
-  const NS = 'http://www.w3.org/2000/svg';
-  const W = 260, H = 30, GAP = 1;
-  const values = series.map(val);
-  const max = Math.max(...values), min = Math.min(...values);
-  const span = max - min || 1;
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.setAttribute('preserveAspectRatio', 'none');
-  svg.classList.add('rc-crowd-profile-svg');
-  const bw = (W - GAP * (series.length - 1)) / series.length;
-  series.forEach((r, i) => {
-    // Bars scale within the observed range so day-to-day shape is readable.
-    const h = 4 + ((val(r) - min) / span) * (H - 4);
-    const rect = document.createElementNS(NS, 'rect');
-    rect.setAttribute('x', (i * (bw + GAP)).toFixed(2));
-    rect.setAttribute('y', (H - h).toFixed(2));
-    rect.setAttribute('width', bw.toFixed(2));
-    rect.setAttribute('height', h.toFixed(2));
-    rect.setAttribute('class', 'rc-rdbar');
-    const title = document.createElementNS(NS, 'title');
-    title.textContent = `${r.day}: ${fmt(val(r))}`;
-    rect.appendChild(title);
-    svg.appendChild(rect);
-  });
-  return svg;
-}
 
 // Inline SVG bar profile: V/C ratio per stop along the peak direction.
 // Bars colour-step at BUSTO band boundaries (≥0.5 above-comfortable, ≥0.8 crowded).
@@ -937,7 +784,7 @@ function formatHumanDate(iso) {
   return `${m[3]}/${m[2]}/${m[1]}`;   // dd/mm/yyyy — house date format
 }
 
-// "2026-11" (month-precision contract dates from the Atlas route-meta) → "Nov 2026".
+// "2026-11" (month-precision contract dates from route-meta) → "Nov 2026".
 function formatMonthYear(ym) {
   const m = /^(\d{4})-(\d{2})/.exec(String(ym));
   if (!m) return ym;
