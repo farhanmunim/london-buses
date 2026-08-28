@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.22.1 — Keyless basemap
+
+_2026-08-28_
+
+- **FIX** Maps showed "API KEY REQUIRED" watermark tiles — CARTO began requiring an API key for its free basemap tiles. Both apps now use standard OpenStreetMap tiles (keyless); v2's dark mode renders them through an invert/hue-rotate tile filter. Attribution updated.
+
+---
+
 ## v2.22 — Standing on its own
 
 _2026-08-27_

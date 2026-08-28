@@ -48,7 +48,7 @@ await page.route('**/api/live/vehicles*', r => {
     data: line === '25' ? [{ reg:'LV25TST', lat:51.53, lng:-0.02, bearing:90, direction:'1', destination:'Test', publishedLine:'25' }] : [] };
   return r.fulfill({ contentType:'application/json', headers:{'access-control-allow-origin':'*','cache-control':'public, max-age=15'}, body: JSON.stringify(v) });
 });
-await page.route(/cartocdn|fonts\./, r => r.abort());
+await page.route(/cartocdn|openstreetmap\.org|fonts\./, r => r.abort());
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 const checks = {}; let pass = 0, fail = 0;
 const F = (k, ok) => { checks[k] = ok; console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };

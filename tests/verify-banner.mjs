@@ -16,7 +16,7 @@ const F = (k, ok) => { console.log((ok?'PASS':'FAIL')+'  '+k); ok?pass++:fail++;
 for(const [url, scheme] of [['/', 'light'], ['/changelog.html', 'light'], ['/404.html', 'light'], ['/v2/', 'light'], ['/v2/', 'dark']]){
   const ctx = await browser.newContext({ viewport:{width:1280,height:900}, colorScheme: scheme });
   const page = await ctx.newPage();
-  await page.route(/atlas\.farhan\.app|unpkg|cartocdn|fonts\./, r => r.abort());
+  await page.route(/atlas\.farhan\.app|unpkg|cartocdn|openstreetmap\.org|fonts\./, r => r.abort());
   await page.goto('http://127.0.0.1:8902'+url, { waitUntil:'domcontentloaded' }); await page.waitForTimeout(1200);
   const b = await page.evaluate(() => {
     const el = document.querySelector('.sunset-banner');

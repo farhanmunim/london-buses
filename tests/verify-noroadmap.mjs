@@ -13,7 +13,7 @@ const srv = createServer((req, res) => {
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const page = await (await browser.newContext({ viewport:{width:1380,height:900} })).newPage();
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
-await page.route(/atlas\.farhan\.app|cartocdn|fonts\./, r => r.abort());
+await page.route(/atlas\.farhan\.app|cartocdn|openstreetmap\.org|fonts\./, r => r.abort());
 await page.route('**://unpkg.com/**', r => {
   const u = r.request().url();
   if(u.endsWith('leaflet.js'))  return r.fulfill({ contentType:'text/javascript', body: readFileSync(ROOT+'/tests/fixtures/leaflet.js') });

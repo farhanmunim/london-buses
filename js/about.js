@@ -38,7 +38,7 @@
         <section class="modal-section">
           <span class="modal-section-tag">Data sources</span>
           <p class="modal-note" style="margin-top: 0; padding: 0 var(--sp-3);">
-            All data comes from this site's own open pipeline — GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: Transport for London (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <strong>Powered by TfL Open Data</strong>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA Vehicle Enquiry Service (vehicle make, year and fuel, OGL); londonbusroutes.net (operators, garages, PVR, vehicle types — community reference); basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL) &amp; CARTO.
+            All data comes from this site's own open pipeline — GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: Transport for London (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <strong>Powered by TfL Open Data</strong>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA Vehicle Enquiry Service (vehicle make, year and fuel, OGL); londonbusroutes.net (operators, garages, PVR, vehicle types — community reference); basemap © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL).
           </p>
         </section>
 

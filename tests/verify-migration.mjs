@@ -43,7 +43,7 @@ await page.route('**/api/live/vehicles*', r => r.fulfill({
   contentType:'application/json', headers:{'cache-control':'public, max-age=10'},
   body: JSON.stringify({ feed:'vehicles', live:true, capturedAt:new Date().toISOString(), count:0, data:[] }),
 }));
-await page.route(/cartocdn|fonts\./, r => r.abort());
+await page.route(/cartocdn|openstreetmap\.org|fonts\./, r => r.abort());
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 const checks = {}; let pass = 0, fail = 0;
 const F = (k, ok) => { checks[k] = ok; console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
