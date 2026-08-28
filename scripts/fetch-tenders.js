@@ -47,10 +47,24 @@ const REQS_PER_MIN  = 200;            // ~3.3 RPS -- polite rate against TfL
 const FLUSH_EVERY   = 100;            // periodic cache flush so a CI timeout doesn't lose progress
 const MAX_PER_RUN   = 4000;           // hard cap; cold-start week takes one extended run
 
-async function fetchText(url) {
-  const res = await fetchWithTimeout(url, { headers: userAgentHeaders(SCRIPT) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.text();
+async function fetchText(url, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    // TfL's WAF intermittently 403s datacenter traffic (first seen
+    // 2026-08-28 from GitHub runners). Identifying UA first; retries add
+    // browser-ish Accept headers and jittered backoff for the transient
+    // cases — a hard policy block still surfaces as the final error.
+    const headers = attempt === 1
+      ? userAgentHeaders(SCRIPT)
+      : { ...userAgentHeaders(SCRIPT), Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 'Accept-Language': 'en-GB,en;q=0.9' };
+    try {
+      const res = await fetchWithTimeout(url, { headers });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.text();
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, attempt * 3000 + Math.random() * 2000));
+    }
+  }
 }
 
 // Discovery: pull every option value from the route dropdown
@@ -217,7 +231,22 @@ function flushCache(cache, totalKnown, newThisRun) {
 // Main
 async function main() {
   console.log(`Discovering tender IDs from ${DISCOVERY_URL} ...`);
-  const allIds = await discoverTenderIds();
+  let allIds;
+  try {
+    allIds = await discoverTenderIds();
+  } catch (err) {
+    // Awards are immutable and append-only, so a blocked discovery loses
+    // nothing permanent — with a warm cache this run is a graceful no-op
+    // rather than a red workflow email. The data-quality audit warns when
+    // tenders.json's generatedAt goes stale, so a *persistent* WAF block
+    // still surfaces. A cold start (no cache) must fail loudly.
+    const cached = loadCache();
+    if (Object.keys(cached.tenders).length) {
+      console.warn(`  Discovery blocked (${err.message}) — serving ${Object.keys(cached.tenders).length} cached awards, no refresh this run.`);
+      return;
+    }
+    throw err;
+  }
   console.log(`  ${allIds.length} tender IDs in dropdown`);
 
   const cache = loadCache();

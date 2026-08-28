@@ -454,6 +454,10 @@ function auditFreshness() {
     ['data/route_stops.json',               'generated_at_utc', 8],
     ['data/source/vehicle-fleet.json',      'generatedAt', 8],
     ['data/source/route-vehicles.json',     'generatedAt', 8],
+    // tenders.json's generatedAt only advances on a successful discovery
+    // sweep — staleness here means TfL's forms WAF has been blocking the
+    // fetcher (which skips gracefully instead of failing the workflow).
+    ['data/source/tenders.json',            'generatedAt', 7],
     ['data/source/tender-programme.json',   'generatedAt', 14],
     ['data/route_classifications.json',     'generatedAt', 8],
   ];
