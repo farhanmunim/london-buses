@@ -152,6 +152,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .seg button.on{background:var(--surf);color:var(--tx);box-shadow:var(--sh)}
 .livebtn{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:6px 13px}
 .livebtn.on{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
+.livebtn.iconb{padding:7px;gap:0;margin-left:0;color:var(--tx2)}
+.livebtn.iconb.on{color:var(--acc)}
 .livebtn .spin{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .livebtn.loading .spin{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -827,11 +829,11 @@ async function renderRouteDetail(name){
     <div class="section"><div class="section-h">Map</div><div id="map"></div>
       <div class="mapctl">
         <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
-        <button class="livebtn" id="stopsBtn" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</button>
-        <button class="livebtn" id="liveBtn" style="margin-left:0"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
-        <button class="livebtn" id="closestBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Closest garages</button>
-        <button class="livebtn" id="bridgeBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg>Low bridges</button>
-        <button class="livebtn" id="incBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>Incidents</button>
+        <button class="livebtn iconb" id="stopsBtn" style="margin-left:auto" title="Stops" aria-label="Stops"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
+        <button class="livebtn iconb" id="liveBtn" title="Live buses" aria-label="Live buses"><span class="spin"></span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg></button>
+        <button class="livebtn iconb" id="closestBtn" title="Closest garages" aria-label="Closest garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
+        <button class="livebtn iconb" id="bridgeBtn" title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
+        <button class="livebtn iconb" id="incBtn" title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -1161,12 +1163,16 @@ async function initRouteMap(route, m = {}){
     if(!bridgeOn) return;   // toggled off while loading
     const near = (all ?? []).filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng) && nearRoute(b.lat, b.lng, 300));
     bridgeLayer = L.layerGroup();
+    const prow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
     for(const b of near){
       const h = Number.isFinite(b.height_m) ? `${b.height_m} m` : null;
       L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'',
-          html:`<div style="background:#fef3c7;color:#92400e;border:1.5px solid #d97706;border-radius:6px;font:700 10px/1.5 ui-monospace,monospace;padding:1px 5px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)">${h ? '↕ '+esc(h) : '↕'}</div>`,
-          iconSize:null, iconAnchor:[16,10] }) })
-        .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')} — ${h ?? 'height n/a'}${b.height_imperial ? ` (${esc(b.height_imperial)})` : ''} · ${esc(title(b.structure_type ?? 'structure'))}${b.borough ? ` · ${esc(b.borough)}` : ''}`, { direction:'top' })
+          html:'<div style="width:11px;height:11px;background:#f59e0b;border:1.5px solid #92400e;transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.3)"></div>',
+          iconSize:[11,11], iconAnchor:[6,6] }) })
+        .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')}${h ? ' · ' + h : ''}`, { direction:'top' })
+        .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px">${esc(b.name ?? b.road ?? 'Height restriction')}</b>
+          <div style="color:var(--tx2);margin:1px 0 7px">${esc(title(b.structure_type ?? 'structure'))}</div>
+          ${prow('Height', h ?? '—')}${prow('Signed', b.height_imperial ? esc(b.height_imperial) : null)}${prow('Road', b.road && b.road !== b.name ? esc(b.road) : null)}${prow('Borough', b.borough ? esc(b.borough) : null)}</div>`)
         .addTo(bridgeLayer);
     }
     bridgeLayer.addTo(_map);
@@ -1189,10 +1195,15 @@ async function initRouteMap(route, m = {}){
     const canvas = L.canvas({ padding:.5 });
     // Slight first so serious/fatal draw on top of the cluster.
     near.sort((a,b) => (a.severity==='slight'?0:a.severity==='serious'?1:2) - (b.severity==='slight'?0:b.severity==='serious'?1:2));
+    const arow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
     for(const a of near){
       const sv = SEV[a.severity] ?? SEV.slight;
       L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r, color:'#fff', weight:1, fillColor: sv.c, fillOpacity:.85 })
-        .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}${Number.isFinite(a.casualties) ? ` · ${a.casualties} casualt${a.casualties===1?'y':'ies'}` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}${a.light ? ` · ${esc(a.light)}` : ''}`, { direction:'top' })
+        .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}`, { direction:'top' })
+        .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px;color:${sv.c === '#111827' ? 'var(--tx)' : sv.c}">${sv.label} collision</b>
+          <div style="color:var(--tx2);margin:1px 0 7px">${esc(fmtDate(a.date) ?? a.date ?? '')}${a.day ? ` (${esc(a.day)})` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}</div>
+          ${arow('Casualties', a.casualties)}${arow('Vehicles', a.vehicles)}${arow('Road type', a.roadType ? esc(a.roadType) : null)}${arow('Speed limit', a.speedLimit ? esc(a.speedLimit) : null)}${arow('Junction', a.junction ? esc(a.junction) : null)}${arow('Light', a.light ? esc(a.light) : null)}${arow('Weather', a.weather ? esc(a.weather) : null)}${arow('Surface', a.roadSurface ? esc(a.roadSurface) : null)}
+          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT STATS19 · bus/coach-involved</div></div>`)
         .addTo(incLayer);
     }
     incLayer.addTo(_map);

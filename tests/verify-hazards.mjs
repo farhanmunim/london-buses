@@ -32,12 +32,28 @@ const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fai
 
 await page.goto('http://127.0.0.1:8905/v2/#/route/1', { waitUntil:'load' }); await page.waitForTimeout(3500);
 
+const btns = await page.evaluate(() => ['stopsBtn','liveBtn','closestBtn','bridgeBtn','incBtn'].map(id => {
+  const b = document.getElementById(id);
+  return { id, title: b?.title ?? '', text: (b?.textContent ?? '').trim() };
+}));
+F('trigger buttons are icon-only with tooltips', btns.every(b => b.title.length > 2 && b.text === ''));
+
 await page.evaluate(() => document.getElementById('bridgeBtn')?.click()); await page.waitForTimeout(2500);
 const br = await page.evaluate(() => ({
   on: document.getElementById('bridgeBtn')?.classList.contains('on'),
   note: document.getElementById('bridgeNote')?.textContent ?? '',
 }));
 F('bridge toggle on + note ("' + br.note.slice(0,60) + '")', br.on && /height restriction/.test(br.note));
+
+// Click a bridge glyph (real DOM element) → detail popup opens
+await page.evaluate(() => {
+  const glyphs = [...document.querySelectorAll('#map .leaflet-marker-icon')];
+  const g = glyphs.find(x => x.innerHTML.includes('rotate(45deg)'));
+  g?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+});
+await page.waitForTimeout(800);
+const pop = await page.evaluate(() => document.querySelector('#map .leaflet-popup')?.textContent ?? '');
+F('bridge click opens detail popup ("' + pop.slice(0,50).replace(/\s+/g,' ') + '")', /Height/.test(pop));
 
 await page.evaluate(() => document.getElementById('incBtn')?.click()); await page.waitForTimeout(3500);
 const inc = await page.evaluate(() => ({
