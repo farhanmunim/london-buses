@@ -6,11 +6,11 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
-## v2.22.1 — Keyless basemap
+## v2.22.1 — The basemap, restored
 
 _2026-08-28_
 
-- **FIX** Maps showed "API KEY REQUIRED" watermark tiles — CARTO began requiring an API key for its free basemap tiles. Both apps now use standard OpenStreetMap tiles (keyless); v2's dark mode renders them through an invert/hue-rotate tile filter. Attribution updated.
+- **FIX** Maps showed "API KEY REQUIRED" watermark tiles — CARTO began requiring an API key for its free basemap tiles. Now running on a registered CARTO Basemaps key (free tier, 5M tiles/month): the muted Voyager style is back, dark mode uses CARTO's dark style again, and the labels-above-route-lines pane returns. As the free tier requires, every map now carries a visible OSM + CARTO attribution line. (An interim commit swapped to keyless OpenStreetMap tiles while the key was issued.)
 
 ---
 

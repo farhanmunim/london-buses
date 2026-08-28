@@ -8,8 +8,8 @@
  * without persisting that transient state.
  */
 
-import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.19.1';
-import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.19.1';
+import { setRoutesVisible, setGaragesVisible, setStopsPreference, setLiveVehiclesEnabled, isRouteActive } from './map.js?v=2.19.2';
+import { toggleLinesBtn, toggleGaragesBtn, toggleStopsBtn, toggleLiveBtn } from './state.js?v=2.19.2';
 
 function wire(btn, { storageKey, apply, syncEvent, persistWhen }) {
   if (!btn) return;
