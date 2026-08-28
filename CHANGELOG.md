@@ -10,6 +10,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-28_
 
+- **UX** Full licence-compliance pass on attributions: every map carries the visible OSM + CARTO credit; the About sections in both apps now carry the formal statements the upstream licences require — "Powered by TfL Open Data" with the OS Crown copyright / Geomni acknowledgement, the Open Government Licence v3.0 statement for BODS and DVLA data, and the OSM (ODbL) / CARTO basemap credits.
 - **FIX** Maps showed "API KEY REQUIRED" watermark tiles — CARTO began requiring an API key for its free basemap tiles. Now running on a registered CARTO Basemaps key (free tier, 5M tiles/month): the muted Voyager style is back, dark mode uses CARTO's dark style again, and the labels-above-route-lines pane returns. As the free tier requires, every map now carries a visible OSM + CARTO attribution line. (An interim commit swapped to keyless OpenStreetMap tiles while the key was issued.)
 
 ---
