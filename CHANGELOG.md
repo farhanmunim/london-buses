@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.23 — Hazards on the map
+
+_2026-08-28_
+
+- **NEW** Two new route-map layers alongside Stops, Live buses and Closest garages: **Low bridges** — every height restriction within 300 m of the route from TfL's official height-restrictions register (London Datastore EPOWR, cross-checked against OSM), drawn as amber height tags (↕ 4.6 m) with the imperial band and structure type on hover; and **Incidents** — every bus/coach-involved collision within 150 m of the route from DfT STATS19 (2021–2025), severity-coded dots (slight amber → serious orange → fatal charcoal, worst drawn on top) with date, casualties, time band and light conditions on hover. Each toggle reports its corridor count under the map, and both datasets ship as seeded snapshots in the faux-API.
+
+---
+
 ## v2.22.1 — The basemap, restored
 
 _2026-08-28_

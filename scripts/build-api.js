@@ -371,6 +371,8 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     'route-diversions': { source: 'TfL Unified API · /Line/{ids}/Status (disruptions)', cadence: 'several times daily' },
     'crowding':         { source: 'seeded snapshot (TfL BUSTO)', cadence: 'static' },
     'crowding-profile': { source: 'seeded snapshot (TfL BUSTO)', cadence: 'static' },
+    'bridges':          { source: 'seeded snapshot (TfL/London Datastore EPOWR height restrictions + OSM cross-check)', cadence: 'static' },
+    'accidents':        { source: 'seeded snapshot (DfT STATS19, bus/coach-involved, 2021–2025)', cadence: 'static' },
   };
   const rowsOf = j => {
     for (const k of ['routes', 'byRoute', 'byReg', 'garages', 'features', 'rows', 'stops']) {

@@ -389,6 +389,8 @@ const D = {
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
+  bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
+  accidents:   () => get('/accidents').then(d => d ?? null),             // static snapshot — DfT STATS19, bus/coach-involved
   liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
   liveVehicles:(r) => liveGet('/api/live/vehicles?line=' + encodeURIComponent(r)),                 // BODS via our Pages Function
   arrivals:    (s) => tflLive(TFL + '/StopPoint/' + encodeURIComponent(s) + '/Arrivals'),          // never cached — polled
@@ -828,6 +830,8 @@ async function renderRouteDetail(name){
         <button class="livebtn" id="stopsBtn" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</button>
         <button class="livebtn" id="liveBtn" style="margin-left:0"><span class="spin"></span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>Live buses</button>
         <button class="livebtn" id="closestBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Closest garages</button>
+        <button class="livebtn" id="bridgeBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg>Low bridges</button>
+        <button class="livebtn" id="incBtn" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>Incidents</button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -1115,6 +1119,89 @@ async function initRouteMap(route, m = {}){
     closestLayer.addTo(_map);
     if(b){ try{ _map.fitBounds(b.pad(0.06)); }catch(e){} }
   });
+  /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
+     the route's corridor. Route points are collected once, lazily; distance
+     is a bbox prefilter + equirectangular metres with early exit, so 7.5k
+     collision records stay cheap to sieve. */
+  let _corridor = null;
+  function corridorPts(){
+    if(_corridor) return _corridor;
+    const pts = [];
+    for(const f of feats){
+      const segs = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+      for(const seg of segs) for(let i = 0; i < seg.length; i += 2) pts.push(seg[i]);   // [lng,lat], thinned
+    }
+    let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+    for(const [lng, lat] of pts){ if(lng<w)w=lng; if(lat<s)s=lat; if(lng>e)e=lng; if(lat>n)n=lat; }
+    return _corridor = { pts, w, s, e, n };
+  }
+  function nearRoute(lat, lng, maxM){
+    const c = corridorPts();
+    const pad = maxM / 78000;   // ≈ degrees of longitude at London's latitude (the tighter axis)
+    if(lng < c.w - pad || lng > c.e + pad || lat < c.s - pad || lat > c.n + pad) return false;
+    const KLAT = 111320, KLNG = 69400;   // metres per degree at ~51.5°N
+    for(const [plng, plat] of c.pts){
+      const dx = (lng - plng) * KLNG, dy = (lat - plat) * KLAT;
+      if(dx*dx + dy*dy <= maxM*maxM) return true;
+    }
+    return false;
+  }
+  const layerNote = (id, html) => {
+    document.getElementById(id)?.remove();
+    if(html) el.insertAdjacentHTML('afterend', `<div class="legendrow" id="${id}" style="margin-top:8px">${html}</div>`);
+  };
+
+  let bridgeLayer = null, bridgeOn = false;
+  const bridgeBtn = document.getElementById('bridgeBtn');
+  bridgeBtn?.addEventListener('click', async () => {
+    bridgeOn = !bridgeOn;
+    bridgeBtn.classList.toggle('on', bridgeOn);
+    if(!bridgeOn){ if(bridgeLayer){ _map.removeLayer(bridgeLayer); bridgeLayer = null; } layerNote('bridgeNote'); return; }
+    const all = await D.bridges();
+    if(!bridgeOn) return;   // toggled off while loading
+    const near = (all ?? []).filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng) && nearRoute(b.lat, b.lng, 300));
+    bridgeLayer = L.layerGroup();
+    for(const b of near){
+      const h = Number.isFinite(b.height_m) ? `${b.height_m} m` : null;
+      L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'',
+          html:`<div style="background:#fef3c7;color:#92400e;border:1.5px solid #d97706;border-radius:6px;font:700 10px/1.5 ui-monospace,monospace;padding:1px 5px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.25)">${h ? '↕ '+esc(h) : '↕'}</div>`,
+          iconSize:null, iconAnchor:[16,10] }) })
+        .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')} — ${h ?? 'height n/a'}${b.height_imperial ? ` (${esc(b.height_imperial)})` : ''} · ${esc(title(b.structure_type ?? 'structure'))}${b.borough ? ` · ${esc(b.borough)}` : ''}`, { direction:'top' })
+        .addTo(bridgeLayer);
+    }
+    bridgeLayer.addTo(_map);
+    layerNote('bridgeNote', near.length
+      ? `<span>${near.length} height restriction${near.length===1?'':'s'} within 300 m of the route — TfL’s height-restrictions register (London Datastore).</span>`
+      : `<span>No recorded height restrictions within 300 m of this route.</span>`);
+  });
+
+  const SEV = { fatal:{ c:'#111827', r:6, label:'Fatal' }, serious:{ c:'#ea580c', r:5, label:'Serious' }, slight:{ c:'#f59e0b', r:3.5, label:'Slight' } };
+  let incLayer = null, incOn = false;
+  const incBtn = document.getElementById('incBtn');
+  incBtn?.addEventListener('click', async () => {
+    incOn = !incOn;
+    incBtn.classList.toggle('on', incOn);
+    if(!incOn){ if(incLayer){ _map.removeLayer(incLayer); incLayer = null; } layerNote('incNote'); return; }
+    const snap = await D.accidents();
+    if(!incOn) return;
+    const near = (snap?.accidents ?? []).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lng) && nearRoute(a.lat, a.lng, 150));
+    incLayer = L.layerGroup();
+    const canvas = L.canvas({ padding:.5 });
+    // Slight first so serious/fatal draw on top of the cluster.
+    near.sort((a,b) => (a.severity==='slight'?0:a.severity==='serious'?1:2) - (b.severity==='slight'?0:b.severity==='serious'?1:2));
+    for(const a of near){
+      const sv = SEV[a.severity] ?? SEV.slight;
+      L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r, color:'#fff', weight:1, fillColor: sv.c, fillOpacity:.85 })
+        .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}${Number.isFinite(a.casualties) ? ` · ${a.casualties} casualt${a.casualties===1?'y':'ies'}` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}${a.light ? ` · ${esc(a.light)}` : ''}`, { direction:'top' })
+        .addTo(incLayer);
+    }
+    incLayer.addTo(_map);
+    const nf = near.filter(a => a.severity==='fatal').length, ns = near.filter(a => a.severity==='serious').length;
+    layerNote('incNote', near.length
+      ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m of the route, ${esc(snap.period ?? '2021–2025')}${nf||ns ? ` (${[nf?`${nf} fatal`:null, ns?`${ns} serious`:null].filter(Boolean).join(', ')})` : ''} — DfT STATS19.</span>`
+      : `<span>No recorded bus/coach-involved collisions within 150 m of this route, ${esc(snap?.period ?? '2021–2025')}.</span>`);
+  });
+
   // Say why there is no garage pin instead of leaving a silent gap.
   if(!garagePins.length){
     el.insertAdjacentHTML('afterend', `<div class="legendrow" style="margin-top:8px"><span>${codes.length
@@ -2185,7 +2272,7 @@ async function renderAbout(){
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
-        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
       </div>
     </div>
