@@ -27,6 +27,7 @@ const page = await (await browser.newContext({ viewport:{width:1280,height:900} 
 const state = { failArrivals: false, failVehicles: false };
 await page.route('**://unpkg.com/**', r => {
   const u = r.request().url();
+  if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body: payload('leaflet-heat.js') });
   if(u.endsWith('leaflet.js'))  return r.fulfill({ contentType:'text/javascript', body: payload('leaflet.js') });
   if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body: payload('leaflet.css') });
   return r.abort();

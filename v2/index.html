@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <style>
 /* ── Design tokens — minimal SaaS, light-only ──────────────────────────── */
 :root{
@@ -1164,20 +1165,28 @@ async function initRouteMap(route, m = {}){
     const near = (all ?? []).filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng) && nearRoute(b.lat, b.lng, 300));
     bridgeLayer = L.layerGroup();
     const prow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
+    // Height bands against a ~4.4 m double-decker: below DD height + margin
+    // is red, tight clearance amber, comfortable clearance calm slate.
+    const bridgeBand = h => !Number.isFinite(h)
+      ? { c:'#94a3b8', bc:'#475569', label:'Height not recorded' }
+      : h < 4.2 ? { c:'#dc2626', bc:'#7f1d1d', label:'Very low — below double-deck clearance' }
+      : h < 4.9 ? { c:'#f59e0b', bc:'#92400e', label:'Low — tight for double-deckers' }
+      :           { c:'#64748b', bc:'#334155', label:'Clears double-deckers' };
+    const diamond = (c, bc, sz=10) => `<div style="width:${sz}px;height:${sz}px;background:${c};border:1.5px solid #fff;outline:1px solid ${bc}40;transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2.5px rgba(0,0,0,.28)"></div>`;
     for(const b of near){
       const h = Number.isFinite(b.height_m) ? `${b.height_m} m` : null;
-      L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'',
-          html:'<div style="width:11px;height:11px;background:#f59e0b;border:1.5px solid #92400e;transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2px rgba(0,0,0,.3)"></div>',
-          iconSize:[11,11], iconAnchor:[6,6] }) })
+      const band = bridgeBand(b.height_m);
+      L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'', html: diamond(band.c, band.bc), iconSize:[10,10], iconAnchor:[5,5] }) })
         .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')}${h ? ' · ' + h : ''}`, { direction:'top' })
         .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px">${esc(b.name ?? b.road ?? 'Height restriction')}</b>
-          <div style="color:var(--tx2);margin:1px 0 7px">${esc(title(b.structure_type ?? 'structure'))}</div>
+          <div style="color:var(--tx2);margin:1px 0 7px">${esc(title(b.structure_type ?? 'structure'))} · <span style="color:${band.c === '#94a3b8' ? 'var(--tx2)' : band.c};font-weight:600">${band.label}</span></div>
           ${prow('Height', h ?? '—')}${prow('Signed', b.height_imperial ? esc(b.height_imperial) : null)}${prow('Road', b.road && b.road !== b.name ? esc(b.road) : null)}${prow('Borough', b.borough ? esc(b.borough) : null)}</div>`)
         .addTo(bridgeLayer);
     }
     bridgeLayer.addTo(_map);
+    const chip = (c, bc, t) => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px"><span style="display:inline-block">${diamond(c, bc, 8)}</span>${t}</span>`;
     layerNote('bridgeNote', near.length
-      ? `<span>${near.length} height restriction${near.length===1?'':'s'} within 300 m of the route — TfL’s height-restrictions register (London Datastore).</span>`
+      ? `<span>${near.length} height restriction${near.length===1?'':'s'} within 300 m — ${chip('#dc2626','#7f1d1d','&lt; 4.2 m')}${chip('#f59e0b','#92400e','4.2–4.9 m')}${chip('#64748b','#334155','≥ 4.9 m')} · TfL height-restrictions register.</span>`
       : `<span>No recorded height restrictions within 300 m of this route.</span>`);
   });
 
@@ -1193,12 +1202,21 @@ async function initRouteMap(route, m = {}){
     const near = (snap?.accidents ?? []).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lng) && nearRoute(a.lat, a.lng, 150));
     incLayer = L.layerGroup();
     const canvas = L.canvas({ padding:.5 });
-    // Slight first so serious/fatal draw on top of the cluster.
-    near.sort((a,b) => (a.severity==='slight'?0:a.severity==='serious'?1:2) - (b.severity==='slight'?0:b.severity==='serious'?1:2));
     const arow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
-    for(const a of near){
+    // Density as heat (all severities, weighted), individual markers only for
+    // the grave ones — serious and fatal stay clickable for the full record.
+    const WEIGHT = { slight:.35, serious:.75, fatal:1 };
+    if(L.heatLayer){
+      L.heatLayer(near.map(a => [a.lat, a.lng, WEIGHT[a.severity] ?? .35]), {
+        radius: 16, blur: 14, maxZoom: 16, max: 2, minOpacity: .22,
+        gradient: { .25:'#fcd34d', .5:'#f59e0b', .75:'#ea580c', 1:'#b91c1c' },
+      }).addTo(incLayer);
+    }
+    const grave = near.filter(a => a.severity === 'serious' || a.severity === 'fatal');
+    grave.sort((a,b) => (a.severity==='serious'?0:1) - (b.severity==='serious'?0:1));   // fatal drawn last, on top
+    for(const a of grave){
       const sv = SEV[a.severity] ?? SEV.slight;
-      L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r, color:'#fff', weight:1, fillColor: sv.c, fillOpacity:.85 })
+      L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r - 1, color:'#fff', weight:1.25, fillColor: sv.c, fillOpacity:.92 })
         .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}`, { direction:'top' })
         .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px;color:${sv.c === '#111827' ? 'var(--tx)' : sv.c}">${sv.label} collision</b>
           <div style="color:var(--tx2);margin:1px 0 7px">${esc(fmtDate(a.date) ?? a.date ?? '')}${a.day ? ` (${esc(a.day)})` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}</div>
@@ -1209,7 +1227,7 @@ async function initRouteMap(route, m = {}){
     incLayer.addTo(_map);
     const nf = near.filter(a => a.severity==='fatal').length, ns = near.filter(a => a.severity==='serious').length;
     layerNote('incNote', near.length
-      ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m of the route, ${esc(snap.period ?? '2021–2025')}${nf||ns ? ` (${[nf?`${nf} fatal`:null, ns?`${ns} serious`:null].filter(Boolean).join(', ')})` : ''} — DfT STATS19.</span>`
+      ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m, ${esc(snap.period ?? '2021–2025')} — shown as a density heatmap; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;border:1px solid #fff;vertical-align:baseline"></span> serious (${ns}) and <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#111827;border:1px solid #fff;vertical-align:baseline"></span> fatal (${nf}) are individual dots — click one for the record. DfT STATS19.</span>`
       : `<span>No recorded bus/coach-involved collisions within 150 m of this route, ${esc(snap?.period ?? '2021–2025')}.</span>`);
   });
 

@@ -21,6 +21,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? 
 const page = await (await browser.newContext({ viewport:{width:1280,height:900} })).newPage();
 await page.route('**://unpkg.com/**', r => {
   const u = r.request().url();
+  if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body: payload('leaflet-heat.js') });
   if(u.endsWith('leaflet.js'))  return r.fulfill({ contentType:'text/javascript', body: payload('leaflet.js') });
   if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body: payload('leaflet.css') });
   return r.abort();
@@ -59,8 +60,14 @@ await page.evaluate(() => document.getElementById('incBtn')?.click()); await pag
 const inc = await page.evaluate(() => ({
   on: document.getElementById('incBtn')?.classList.contains('on'),
   note: document.getElementById('incNote')?.textContent ?? '',
+  heat: !!document.querySelector('#map .leaflet-heatmap-layer'),
 }));
 F('incidents toggle on + note ("' + inc.note.slice(0,80) + '")', inc.on && /collision/.test(inc.note) && /STATS19|No recorded/.test(inc.note));
+F('incident density renders as heatmap canvas', inc.heat);
+F('note explains heat + clickable serious/fatal dots', /heatmap/.test(inc.note) && /serious/.test(inc.note) && /fatal/.test(inc.note));
+
+const legend = await page.evaluate(() => document.getElementById('bridgeNote')?.innerHTML ?? '');
+F('bridge legend carries height-band chips', /#dc2626/.test(legend) && /#f59e0b/.test(legend) && /4\.2/.test(legend));
 
 await page.evaluate(() => { document.getElementById('bridgeBtn')?.click(); document.getElementById('incBtn')?.click(); });
 await page.waitForTimeout(800);
