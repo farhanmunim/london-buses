@@ -24,7 +24,7 @@ const COLOR_BUS_INBOUND  = '#06b6d4';
 
 // Per-type colors — a deliberately high-contrast categorical palette. Each hue
 // sits in its own wheel zone (red / mustard / teal / violet / green) and is
-// dark enough to punch through the basemap.
+// dark enough to punch through the CARTO Voyager cream basemap.
 const TYPE_COLORS = {
   regular:    '#dc2626', // red-600    — iconic London bus red
   prefix:     '#a16207', // yellow-700 — dark mustard, no warm-red bleed
@@ -187,15 +187,28 @@ export function initMap() {
 
   L.control.zoom({ position: 'bottomright' }).addTo(_map);
 
-  // Standard OpenStreetMap raster tiles — keyless. CARTO's free basemap
-  // tiles started requiring an API key (served "API KEY REQUIRED" watermark
-  // tiles from 2026-08), which also ends the nolabels/labels-pane split:
-  // OSM bakes labels into the base tiles, so route lines draw over names.
-  // No on-map attribution strip — the About dialog's data-sources section
-  // carries the OSM / TfL credits.
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  // Label-free CARTO basemap + its matching labels-only tiles in a pane
+  // above the route lines (z420 — over the overlay pane, under vehicles at
+  // z450): exactly one set of place/road names, never doubled, and never
+  // buried under thick polylines. CARTO basemaps require an API key since
+  // 2026-08 (free tier: 5M tiles/month in exchange for the visible
+  // CARTO + OSM attribution added below).
+  const CARTO_KEY = 'cb1_2fm5_1_26615b0300555b1070348b74';
+  L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
     maxZoom: 19,
+    detectRetina: true,
   }).addTo(_map);
+  const labelPane = _map.createPane('placelabels');
+  labelPane.style.zIndex = 420;
+  labelPane.style.pointerEvents = 'none';
+  L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, {
+    maxZoom: 19,
+    detectRetina: true,
+    pane: 'placelabels',
+  }).addTo(_map);
+  L.control.attribution({ prefix: false })
+    .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener">CARTO</a>')
+    .addTo(_map);
 
   _map.on('click', e => {
     if (_stopsLayer) return;

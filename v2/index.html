@@ -272,9 +272,6 @@ main.fullbleed{max-width:none;padding:0}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surf);color:var(--tx)}
 .leaflet-tooltip{background:var(--surf);color:var(--tx);border:1px solid var(--bd2);box-shadow:var(--sh)}
 .leaflet-tooltip-top:before{border-top-color:var(--bd2)}
-/* Dark-mode raster tiles: OSM has no dark style, so invert the tile pane —
-   muted, keeps water/parks legible, roads read as dark ribbon. */
-.tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7)}
 </style>
 <script>
 /* Stamp the theme before first paint — stored choice wins, else system. */
@@ -488,21 +485,31 @@ function garagePopupHtml(g, meta){
    registered office — pinning that as the garage would be wrong data. */
 const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g.postcodeSource !== 'company';
 
-/* Base tiles for every map view: standard OpenStreetMap raster tiles —
-   keyless. CARTO's free basemap tiles started requiring an API key (served
-   "API KEY REQUIRED" watermark tiles from 2026-08), which also ends the
-   nolabels/labels-pane split — OSM bakes labels into the base tiles. Dark
-   mode is an invert/hue-rotate filter on the tile pane (the standard
-   raster-tile dark treatment). */
+/* Base tiles for every map view: a label-free CARTO basemap plus its
+   matching labels-only tiles in their own pane ABOVE the route lines
+   (z420, below markers) — exactly one set of place/road names, never
+   doubled, never buried under thick polylines. CARTO basemaps require an
+   API key since 2026-08 (free tier: 5M tiles/month in exchange for
+   visible CARTO + OSM attribution — added in makeMap below). */
+const CARTO_KEY = 'cb1_2fm5_1_26615b0300555b1070348b74';
 function baseTiles(map){
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:19, className: isDark() ? 'tiles-dark' : '' }).addTo(map);
+  const style = isDark() ? 'dark' : 'voyager';
+  L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/${style}_nolabels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { maxZoom:19 }).addTo(map);
+  const lp = map.createPane('placelabels');
+  lp.style.zIndex = 420;
+  lp.style.pointerEvents = 'none';
+  L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/${style}_only_labels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { maxZoom:19, pane:'placelabels' }).addTo(map);
 }
 /* Every map view is built through this one constructor — same options, same
    single-line attribution, same tiles — so the mini maps stay consistent by
    construction rather than by review. */
 function makeMap(el){
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false });
-  baseTiles(map);   // credits live in the About page, not on every map corner
+  baseTiles(map);
+  // Visible OSM + CARTO credit is the condition of the free basemap tier.
+  L.control.attribution({ prefix:false })
+    .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener">CARTO</a>')
+    .addTo(map);
   return map;
 }
 
@@ -2178,7 +2185,7 @@ async function renderAbout(){
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
-        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA (vehicle details, OGL); londonbusroutes.net (operators, garages, PVR — community reference); basemap © OpenStreetMap contributors.</p>
+        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>; DfT Bus Open Data Service (live bus positions, OGL v3.0); DVLA (vehicle details, OGL); londonbusroutes.net (operators, garages, PVR — community reference); basemap © OpenStreetMap contributors &amp; CARTO.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
       </div>
     </div>
