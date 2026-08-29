@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-28T06:15:14.726Z",
+  "generatedAt": "2026-08-29T03:49:18.628Z",
   "summary": {
     "critical": 0,
-    "warn": 7,
+    "warn": 8,
     "info": 4
   },
   "issues": [
@@ -12,7 +12,7 @@
       "id": "23",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 13.2,
+      "actual": 13,
       "note": "electric London fleets are post-2015"
     },
     {
@@ -23,15 +23,6 @@
       "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
       "actual": "ALEXANDER DENNIS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "60",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 14.9,
-      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -50,6 +41,15 @@
       "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
       "actual": "WRIGHTBUS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "292",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.8,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -132,9 +132,18 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14334,
+        "totalObs": 15178,
         "missingFleet": 0
       },
+      "note": ""
+    },
+    {
+      "severity": "WARN",
+      "scope": "fresh",
+      "id": "data/source/tenders.json",
+      "field": "generatedAt",
+      "expected": "<=7d old",
+      "actual": "109.5d",
       "note": ""
     }
   ]
