@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-29T03:49:18.628Z",
+  "generatedAt": "2026-08-30T04:04:26.632Z",
   "summary": {
     "critical": 0,
-    "warn": 8,
+    "warn": 11,
     "info": 4
   },
   "issues": [
@@ -12,7 +12,7 @@
       "id": "23",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 13,
+      "actual": 12.9,
       "note": "electric London fleets are post-2015"
     },
     {
@@ -45,6 +45,15 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "200",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
+      "actual": "WRIGHTBUS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "292",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
@@ -54,11 +63,29 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "297",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 12.1,
+      "note": "electric London fleets are post-2015"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.58",
-      "note": "fleetSize=43 pvr=12"
+      "actual": "3.92",
+      "note": "fleetSize=47 pvr=12"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "485",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 14.7,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -84,7 +111,7 @@
         "deck": 731,
         "ewtOrOtp": 0,
         "mileageMps": 0,
-        "age": 618
+        "age": 619
       },
       "note": "of 747"
     },
@@ -132,7 +159,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 15178,
+        "totalObs": 16195,
         "missingFleet": 0
       },
       "note": ""
@@ -143,7 +170,7 @@
       "id": "data/source/tenders.json",
       "field": "generatedAt",
       "expected": "<=7d old",
-      "actual": "109.5d",
+      "actual": "110.5d",
       "note": ""
     }
   ]

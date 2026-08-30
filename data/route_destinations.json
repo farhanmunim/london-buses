@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-08-29T03:33:02Z",
-  "route_count": 642,
+  "generated_at_utc": "2026-08-30T03:40:06Z",
+  "route_count": 646,
   "routes": {
     "1": {
       "service_types": [
@@ -328,8 +328,8 @@
       },
       "inbound": {
         "destination": "Westbourne Park",
-        "qualifier": "Westbourne Park Bus Garage",
-        "full": "Westbourne Park"
+        "qualifier": "Elgin Avenue / Chippenham Road",
+        "full": "Westbourne Park, Elgin Avenue / Chippenham Road"
       }
     },
     "24": {
@@ -403,8 +403,8 @@
       },
       "inbound": {
         "destination": "Kensal Rise",
-        "qualifier": "Kensal Rise Station",
-        "full": "Kensal Rise"
+        "qualifier": "White City Bus Station",
+        "full": "Kensal Rise, White City Bus Station"
       }
     },
     "29": {
@@ -666,6 +666,11 @@
       "service_types": [
         "Regular"
       ],
+      "outbound": {
+        "destination": "Smithfield, St Bartholomew's Hospital",
+        "qualifier": "St Bartholomew's Hospital",
+        "full": "Smithfield, St Bartholomew's Hospital"
+      },
       "inbound": {
         "destination": "Paddington",
         "qualifier": "Paddington Station",
@@ -1008,8 +1013,8 @@
       ],
       "outbound": {
         "destination": "South Kensington",
-        "qualifier": "Queensberry Place",
-        "full": "South Kensington, Queensberry Place"
+        "qualifier": "White City Station",
+        "full": "South Kensington, White City Station"
       },
       "inbound": {
         "destination": "Chiswick, Business Park",
@@ -4563,8 +4568,8 @@
       ],
       "outbound": {
         "destination": "White City",
-        "qualifier": "White City Bus Station",
-        "full": "White City"
+        "qualifier": "Elgin Avenue / Chippenham Road",
+        "full": "White City, Elgin Avenue / Chippenham Road"
       },
       "inbound": {
         "destination": "Brent Cross West Station",
@@ -5128,18 +5133,16 @@
       }
     },
     "362": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "King George Hospital",
+        "destination": "Little Heath King George Hospital",
         "qualifier": "",
-        "full": "King George Hospital"
+        "full": "Little Heath King George Hospital"
       },
       "inbound": {
-        "destination": "Grange Hill",
-        "qualifier": "Manor Road / Grange Hill Station",
-        "full": "Grange Hill"
+        "destination": "Grange Hill Station",
+        "qualifier": "",
+        "full": "Grange Hill Station"
       }
     },
     "363": {
@@ -6061,6 +6064,11 @@
       "service_types": [
         "Regular"
       ],
+      "outbound": {
+        "destination": "Marylebone",
+        "qualifier": "Great Central Street",
+        "full": "Marylebone, Great Central Street"
+      },
       "inbound": {
         "destination": "Deptford Bridge",
         "qualifier": "",
@@ -6083,54 +6091,62 @@
       }
     },
     "460": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Willesden",
-        "qualifier": "",
-        "full": "Willesden"
+        "destination": "North Finchley",
+        "qualifier": "North Finchley Bus Station",
+        "full": "North Finchley"
       },
       "inbound": {
-        "destination": "North Finchley",
-        "qualifier": "",
-        "full": "North Finchley"
+        "destination": "Willesden, Bus Garage",
+        "qualifier": "Pound Lane",
+        "full": "Willesden, Bus Garage, Pound Lane"
       }
     },
     "462": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Ilford",
-        "qualifier": "",
-        "full": "Ilford"
+        "qualifier": "Hainault Street",
+        "full": "Ilford, Hainault Street"
       },
       "inbound": {
-        "destination": "Limes Farm",
-        "qualifier": "",
-        "full": "Limes Farm"
+        "destination": "Limes Farm Estate",
+        "qualifier": "Limes Farm / Copperfield",
+        "full": "Limes Farm Estate, Limes Farm / Copperfield"
       }
     },
     "463": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Pollards Hill",
         "qualifier": "",
         "full": "Pollards Hill"
       },
       "inbound": {
-        "destination": "Coulsdon South Station",
-        "qualifier": "",
-        "full": "Coulsdon South Station"
+        "destination": "Coulsdon South",
+        "qualifier": "Coulsdon South Station",
+        "full": "Coulsdon South"
       }
     },
     "464": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "New Addington",
-        "qualifier": "",
+        "qualifier": "New Addington Tram Stop",
         "full": "New Addington"
       },
       "inbound": {
         "destination": "Tatsfield",
-        "qualifier": "",
+        "qualifier": "Tatsfield Village / Old Ship",
         "full": "Tatsfield"
       }
     },
@@ -6987,6 +7003,61 @@
         "destination": "Whitton, Lincoln Avenue",
         "qualifier": "Selkirk Road",
         "full": "Whitton, Lincoln Avenue, Selkirk Road"
+      }
+    },
+    "148X": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Notting Hill Gate Station",
+        "qualifier": "",
+        "full": "Notting Hill Gate Station"
+      },
+      "inbound": {
+        "destination": "Vauxhall Bus Station",
+        "qualifier": "",
+        "full": "Vauxhall Bus Station"
+      }
+    },
+    "18X": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Warren Street Station",
+        "qualifier": "",
+        "full": "Warren Street Station"
+      },
+      "inbound": {
+        "destination": "North Circular Road",
+        "qualifier": "",
+        "full": "North Circular Road"
+      }
+    },
+    "36X": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Elgin Avenue / Chippenham Road",
+        "qualifier": "",
+        "full": "Elgin Avenue / Chippenham Road"
+      }
+    },
+    "7X": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Oxford Circus Station / John Lewis",
+        "qualifier": "",
+        "full": "Oxford Circus Station / John Lewis"
+      },
+      "inbound": {
+        "destination": "Brunel Road",
+        "qualifier": "",
+        "full": "Brunel Road"
       }
     },
     "A10": {
@@ -8105,11 +8176,13 @@
       }
     },
     "N242": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Tottenham Court Road Station",
-        "qualifier": "",
-        "full": "Tottenham Court Road Station"
+        "destination": "Tottenham Court Road",
+        "qualifier": "St Giles High Street",
+        "full": "Tottenham Court Road, St Giles High Street"
       },
       "inbound": {
         "destination": "Homerton Hospital",
@@ -8118,41 +8191,47 @@
       }
     },
     "N25": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Oxford Circus",
-        "qualifier": "",
-        "full": "Oxford Circus"
+        "destination": "Ilford",
+        "qualifier": "Great Titchfield St / Oxford Circus Stn",
+        "full": "Ilford, Great Titchfield St / Oxford Circus Stn"
       },
       "inbound": {
-        "destination": "Ilford",
-        "qualifier": "",
-        "full": "Ilford"
+        "destination": "Oxford Circus",
+        "qualifier": "Hainault Street",
+        "full": "Oxford Circus, Hainault Street"
       }
     },
     "N250": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Brixton",
-        "qualifier": "",
-        "full": "Brixton"
+        "destination": "Croydon Town Centre",
+        "qualifier": "Fairfield Halls",
+        "full": "Croydon Town Centre, Fairfield Halls"
       },
       "inbound": {
-        "destination": "Croydon",
-        "qualifier": "",
-        "full": "Croydon"
+        "destination": "Brixton",
+        "qualifier": "Brixton Station",
+        "full": "Brixton"
       }
     },
     "N253": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Tottenham Court Road Station",
-        "qualifier": "",
-        "full": "Tottenham Court Road Station"
+        "destination": "Tottenham Court Road",
+        "qualifier": "St Giles High Street",
+        "full": "Tottenham Court Road, St Giles High Street"
       },
       "inbound": {
         "destination": "Aldgate",
-        "qualifier": "",
+        "qualifier": "Aldgate Station",
         "full": "Aldgate"
       }
     },
@@ -8207,8 +8286,8 @@
       ],
       "outbound": {
         "destination": "Chalk Farm",
-        "qualifier": "Hartland Road / Camden Market",
-        "full": "Chalk Farm, Hartland Road / Camden Market"
+        "qualifier": "Camden Town Station",
+        "full": "Chalk Farm, Camden Town Station"
       },
       "inbound": {
         "destination": "Hammersmith",
