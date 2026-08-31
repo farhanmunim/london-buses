@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-30T04:04:26.632Z",
+  "generatedAt": "2026-08-31T03:57:34.884Z",
   "summary": {
     "critical": 0,
-    "warn": 11,
+    "warn": 12,
     "info": 4
   },
   "issues": [
@@ -12,7 +12,7 @@
       "id": "23",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 12.9,
+      "actual": 12.6,
       "note": "electric London fleets are post-2015"
     },
     {
@@ -45,11 +45,29 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "161",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.19",
+      "note": "fleetSize=51 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "200",
       "field": "make↔model",
       "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
       "actual": "WRIGHTBUS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "206",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.09",
+      "note": "fleetSize=34 pvr=11"
     },
     {
       "severity": "WARN",
@@ -63,20 +81,11 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "297",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 12.1,
-      "note": "electric London fleets are post-2015"
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.92",
-      "note": "fleetSize=47 pvr=12"
+      "actual": "4.17",
+      "note": "fleetSize=50 pvr=12"
     },
     {
       "severity": "WARN",
@@ -159,7 +168,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 16195,
+        "totalObs": 16811,
         "missingFleet": 0
       },
       "note": ""
@@ -170,7 +179,7 @@
       "id": "data/source/tenders.json",
       "field": "generatedAt",
       "expected": "<=7d old",
-      "actual": "110.5d",
+      "actual": "111.5d",
       "note": ""
     }
   ]
