@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.25.1 — The register, deepened
+
+_2026-08-29_
+
+- **NEW** Tender awards are **enriched with everything we hold**: contract start dates, tranches, vehicle types and two-year-extension options joined from the LBSL tendering programmes (2017/18 onward); contract end taken as the next contract's observed start (or londonbusroutes.net's current-contract end for the newest award); term derived from the two; and **operator changes** flagged per route with who lost the work. The Tenders table gains Start / End / Term / Vehicle / Joint-with columns (joint partners as tappable route chips) and an "↺ from X" marker under the operator on every change of hands; the CSV export carries all 19 fields including vehicle notes.
+- **UX** Route search on the Tenders page matches the **exact route** — typing 24 finds route 24 and N24, not 124/240/324; operators still match by substring.
+- **UX** The £/mile chart is redrawn to the house dataviz standard — a standard line connecting awards, thin 2 px segments coloured by the incumbent operator, surface-ringed 8 px markers, clean rounded £ ticks, hairline grid, an end label on the price in force, and distinct fallback colours for operators outside the brand palette. Hover now actually works: generous invisible hit targets drive a positioned tooltip (touch and keyboard included), with operator changes called out — and it no longer collides with the site-wide label-tooltip engine.
+
+---
+
 ## v2.25 — The tender register
 
 _2026-08-29_

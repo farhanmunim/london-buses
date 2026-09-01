@@ -246,6 +246,20 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
 /* ── tenders.json ────────────────────────────────────────────────────── */
 {
   const src = read(DATA('source/tenders.json')).tenders ?? {};
+  // LBSL tendering-programme index: route → contract starts (ascending) with
+  // tranche/vehicle/extension detail, for joining awards to the contract
+  // they produced (programmes cover 2017/18 onward).
+  const progByRoute = (() => {
+    const idx = {};
+    const tp = tryRead(DATA('source/tender-programme.json'));
+    for (const y of tp?.years ?? []) for (const e of y.entries ?? []) {
+      if (!e?.route_id || !e.contract_start_date) continue;
+      for (const tok of String(e.route_id).toUpperCase().split('/').map(t => t.trim()).filter(Boolean))
+        (idx[tok] ??= []).push(e);
+    }
+    for (const list of Object.values(idx)) list.sort((a, b) => String(a.contract_start_date).localeCompare(String(b.contract_start_date)));
+    return idx;
+  })();
   const byRoute = {};
   const byId = {};
   const num = v => (Number.isFinite(v) && v > 0 ? v : null);
@@ -289,6 +303,42 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   }
   for (const list of Object.values(byRoute))
     list.sort((a, b) => String(b.awardDate ?? '').localeCompare(String(a.awardDate ?? '')));
+
+  // Per-route chronological enrichment. Only honest joins:
+  //   contractStart — the first programme start on this route 0–24 months
+  //                   after the award (the contract this award produced);
+  //   contractEnd   — the NEXT award's contract start (observed handover);
+  //                   the newest award has no observed end (route-meta
+  //                   carries the current contract's projected end);
+  //   termYears     — end − start, 1 dp, only when both are observed;
+  //   operatorChange/fromOperator — vs the previous award on the route.
+  const metaRoutes = tryRead(API('route-meta.json'))?.routes ?? {};
+  for (const [name, list] of Object.entries(byRoute)) {
+    const asc = [...list].reverse();
+    const prog = progByRoute[name] ?? [];
+    for (let i = 0; i < asc.length; i++) {
+      const a = asc[i];
+      const prevA = asc[i - 1];
+      a.fromOperator = prevA?.operator ?? null;
+      a.operatorChange = !!(prevA?.operator && a.operator && prevA.operator !== a.operator);
+      if (a.awardDate) {
+        const lo = a.awardDate, hi = (Number(a.awardDate.slice(0, 4)) + 2) + a.awardDate.slice(4, 10);
+        const pe = prog.find(e => e.contract_start_date >= lo && (!hi || e.contract_start_date <= hi));
+        if (pe) {
+          a.contractStart = pe.contract_start_date;
+          a.tranche = a.tranche ?? (pe.tranche ? Number(pe.tranche) || pe.tranche : null);
+          a.vehicle = a.vehicle ?? (pe.vehicle_type ? { basis: null, propulsion: null, deck: null, raw: pe.vehicle_type } : null);
+          a.twoYearExtension = pe.two_year_extension ?? null;
+        }
+      }
+    }
+    for (let i = 0; i < asc.length; i++) {
+      const a = asc[i], nextA = asc[i + 1];
+      a.contractEnd = nextA?.contractStart ?? (nextA ? null : (metaRoutes[name]?.contractEnd ?? null));
+      if (a.contractStart && a.contractEnd)
+        a.termYears = Math.round((Date.parse(a.contractEnd) - Date.parse(a.contractStart)) / 3.15576e10 * 10) / 10;
+    }
+  }
   write(API('tenders.json'), {
     generatedAt: now,
     source: 'TfL tender results (13923/13796.aspx)',

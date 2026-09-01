@@ -1050,7 +1050,7 @@ async function buildRouteSections(route, m){
   if(cw){
     const tipEl = cw.querySelector('.cpm-tip');
     const show = h => {
-      tipEl.innerHTML = h.dataset.tip;
+      tipEl.innerHTML = h.dataset.cpmtip;
       tipEl.hidden = false;
       const x = Math.min(Math.max(parseFloat(h.dataset.x), 14), 86);
       tipEl.style.left = x + '%';
@@ -2383,7 +2383,7 @@ function cpmChartHtml(routeName, awards){
     };
   })();
   const W = 640, H = 180, L = 40, R = 14, T = 12, B = 24;
-  const tEnd = Math.max(pts[pts.length-1].t, Date.now());
+  const tEnd = pts[pts.length-1].t;
   const t0 = pts[0].t;
   const vs = pts.map(p => p.a.costPerMile);
 
@@ -2405,16 +2405,12 @@ function cpmChartHtml(routeName, awards){
   const xticks = [];
   for(let y = y0; y <= yN; y += ystep) xticks.push(y);
 
-  // step path segments: flat run at each award's price to the next award
-  // (or to today for the current contract), riser at each award date.
+  // line segments between consecutive awards; each wears the colour of the
+  // operator holding the contract through that interval (the earlier award).
   const segs = [];
-  for(let i = 0; i < pts.length; i++){
-    const cur = pts[i], next = pts[i+1];
-    const c = colorOf(cur.a.operator);
-    const xA = X(cur.t), xB = X(next ? next.t : tEnd);
-    const y = Y(cur.a.costPerMile);
-    segs.push(`<line x1="${xA.toFixed(1)}" y1="${y.toFixed(1)}" x2="${xB.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c}" stroke-width="2" stroke-linecap="round"/>`);
-    if(next) segs.push(`<line x1="${xB.toFixed(1)}" y1="${y.toFixed(1)}" x2="${xB.toFixed(1)}" y2="${Y(next.a.costPerMile).toFixed(1)}" stroke="${colorOf(next.a.operator)}" stroke-width="2" stroke-linecap="round"/>`);
+  for(let i = 1; i < pts.length; i++){
+    const from = pts[i-1], to = pts[i];
+    segs.push(`<line x1="${X(from.t).toFixed(1)}" y1="${Y(from.a.costPerMile).toFixed(1)}" x2="${X(to.t).toFixed(1)}" y2="${Y(to.a.costPerMile).toFixed(1)}" stroke="${colorOf(from.a.operator)}" stroke-width="2" stroke-linecap="round"/>`);
   }
   const dots = pts.map(p =>
     `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="4" fill="${colorOf(p.a.operator)}" stroke="var(--surf)" stroke-width="2" pointer-events="none"/>`).join('');
@@ -2425,7 +2421,7 @@ function cpmChartHtml(routeName, awards){
     const html = `<b>£${p.a.costPerMile.toFixed(2)}/mile</b> · ${esc(fmtDate(p.a.awardDate) ?? p.a.awardDate)}<br>${esc(p.a.operator ?? 'Unknown operator')}`
       + (Number.isFinite(p.a.acceptedBid) ? `<br>Accepted bid £${p.a.acceptedBid.toLocaleString('en-GB')}/yr` : '')
       + (changed ? `<br><span style="color:var(--acc);font-weight:600">Operator change</span> — from ${esc(pts[i-1].a.operator)}` : '');
-    return `<circle class="cpm-hit" cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="14" fill="transparent" style="cursor:pointer" data-x="${(X(p.t)/W*100).toFixed(2)}" data-y="${(Y(p.a.costPerMile)/H*100).toFixed(2)}" data-tip="${esc(html)}" tabindex="0" role="img" aria-label="${esc(fmtDate(p.a.awardDate) ?? '')} £${p.a.costPerMile.toFixed(2)} per mile, ${esc(p.a.operator ?? '')}"/>`;
+    return `<circle class="cpm-hit" cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="14" fill="transparent" style="cursor:pointer" data-x="${(X(p.t)/W*100).toFixed(2)}" data-y="${(Y(p.a.costPerMile)/H*100).toFixed(2)}" data-cpmtip="${esc(html)}" tabindex="0" role="img" aria-label="${esc(fmtDate(p.a.awardDate) ?? '')} £${p.a.costPerMile.toFixed(2)} per mile, ${esc(p.a.operator ?? '')}"/>`;
   }).join('');
 
   // end label: the price currently in force, at the line's end (selective)
@@ -2438,7 +2434,7 @@ function cpmChartHtml(routeName, awards){
   return `<div class="section"><div class="section-h">Cost per mile · every award</div>
     <div class="card" style="padding:14px 10px 8px">
       <div class="cpmwrap">
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Awarded cost per mile over time for route ${esc(routeName)} — each step holds until the next award">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Awarded cost per mile at each tender award for route ${esc(routeName)}">
         ${yticks.map(v => `<g><line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="${L-6}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${money(v)}</text></g>`).join('')}
         ${xticks.map(y => { const x = X(Date.UTC(y,0,1)); return x >= L - 1 && x <= W - R + 1 ? `<text x="${x.toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${y}</text>` : ''; }).join('')}
         ${segs.join('')}${dots}${endLabel}
@@ -2448,7 +2444,7 @@ function cpmChartHtml(routeName, awards){
       </div>
       <div class="legendrow" style="padding:7px 8px 3px;flex-wrap:wrap">${legend}</div>
     </div>
-    <div class="legendrow" style="margin-top:7px"><span>Each step holds the awarded price until the next contract; a colour change at a step is an operator change (hover a dot for the award). Nominal £/mile as awarded, not CPI-indexed. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
+    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile at each award (not CPI-indexed) — a colour change marks an operator change; hover a dot for the award. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
   </div>`;
 }
 
@@ -2475,20 +2471,22 @@ async function renderTenders(){
       <button class="livebtn" id="tExport"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button>
     </div>
     <div class="section"><div class="section-h" id="tCount"></div>
-      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:760px">
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1150px">
         <thead><tr>
           <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="op" style="cursor:pointer">Operator</th>
           <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
-          <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th><th>Joint</th>
+          <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th>
+          <th data-sort="start" style="cursor:pointer">Start</th><th>End</th><th class="num" data-sort="term" style="cursor:pointer">Term</th>
+          <th>Vehicle</th><th>Joint with</th>
         </tr></thead>
         <tbody id="tBody"></tbody>
       </table></div>
       <div style="margin-top:10px"><button class="livebtn" id="tMore" hidden>Show all rows</button></div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: TfL tender results, via this site’s data pipeline — checked after TfL’s ~1pm/~3pm publish windows, append-only. Nominal £ as awarded.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>Sources: TfL tender results (bids, operators, vehicle notes — checked after TfL’s ~1pm/~3pm publish windows, append-only) joined with the LBSL tendering programmes (contract start dates, tranches, extension options; 2017/18 onward) and londonbusroutes.net (current contract ends). Contract end = the next contract’s observed start; term = end − start. Nominal £ as awarded.</span></div>
     </div>
   </div>`;
 
-  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1 };
+  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1, start: a => a.contractStart ?? '', term: a => a.termYears ?? -1 };
   const filtered = () => {
     const q = st.q.trim().toUpperCase();
     // Routes match EXACTLY (typing "24" means route 24, not 124/240/N241 —
@@ -2508,16 +2506,27 @@ async function renderTenders(){
   function draw(){
     const list = filtered();
     const shown = list.slice(0, st.limit);
+    const vehCell = a => {
+      const v = a.vehicle;
+      if(!v) return '—';
+      const bits = [v.basis, v.propulsion, v.deck ? v.deck + '-deck' : null].filter(Boolean);
+      const label = bits.length ? bits.map(title).join(' · ') : String(v.raw ?? '').replace(/^Awarded on\s*/i, '').replace(/\.$/, '');
+      return label ? `<span title="${esc(v.raw ?? '')}">${esc(label.length > 34 ? label.slice(0,32) + '…' : label)}</span>` : '—';
+    };
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(a.route)}</span></td>
-      <td>${esc(a.operator ?? '—')}</td>
+      <td>${esc(a.operator ?? '—')}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
       <td class="num">${money(a.highestBid)}</td>
       <td class="num">${Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '—'}</td>
-      <td>${a.jb?.isJoint ? 'Yes' : ''}</td></tr>`).join('');
+      <td class="num" style="text-align:left">${esc(fmtDate(a.contractStart) ?? '—')}</td>
+      <td class="num" style="text-align:left">${esc(fmtDate(a.contractEnd) ?? '—')}</td>
+      <td class="num">${Number.isFinite(a.termYears) ? a.termYears + ' yr' + (a.twoYearExtension ? ' <span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2</span>' : '') : (a.twoYearExtension ? '<span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2 opt</span>' : '—')}</td>
+      <td>${vehCell(a)}</td>
+      <td>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tMore').hidden = list.length <= st.limit;
     document.querySelectorAll('#main th[data-sort]').forEach(th => {
@@ -2537,11 +2546,15 @@ async function renderTenders(){
   }));
   document.getElementById('tExport').addEventListener('click', () => {
     downloadCsv('london-bus-tenders.csv', [
-      ['award_date','route','operator','cost_per_mile','accepted_bid','lowest_bid','highest_bid','bids_received','joint_bid'],
-      ...filtered().map(a => [a.awardDate, a.route ?? '', a.operator ?? '', Number.isFinite(a.costPerMile) ? a.costPerMile : '',
-        Number.isFinite(a.acceptedBid) ? a.acceptedBid : '', Number.isFinite(a.lowestBid) ? a.lowestBid : '',
-        Number.isFinite(a.highestBid) ? a.highestBid : '', Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '',
-        a.jb?.isJoint ? 'yes' : 'no']),
+      ['award_date','route','operator','operator_change','from_operator','cost_per_mile','accepted_bid','lowest_bid','highest_bid','bids_received',
+       'contract_start','contract_end','term_years','two_year_extension_option','tranche','vehicle','joint_bid','joint_with','notes'],
+      ...filtered().map(a => [a.awardDate, a.route ?? '', a.operator ?? '', a.operatorChange ? 'yes' : 'no', a.operatorChange ? (a.fromOperator ?? '') : '',
+        Number.isFinite(a.costPerMile) ? a.costPerMile : '', Number.isFinite(a.acceptedBid) ? a.acceptedBid : '',
+        Number.isFinite(a.lowestBid) ? a.lowestBid : '', Number.isFinite(a.highestBid) ? a.highestBid : '',
+        Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '',
+        a.contractStart ?? '', a.contractEnd ?? '', Number.isFinite(a.termYears) ? a.termYears : '',
+        a.twoYearExtension == null ? '' : (a.twoYearExtension ? 'yes' : 'no'), a.tranche ?? '',
+        a.vehicle?.raw ?? '', a.jb?.isJoint ? 'yes' : 'no', a.jb?.partners?.join(' ') ?? '', a.notes ?? '']),
     ]);
   });
 }
