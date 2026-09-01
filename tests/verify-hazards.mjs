@@ -75,14 +75,17 @@ const gar = await page.evaluate(() => ({
   pins: document.querySelectorAll('#map .leaflet-marker-icon').length,
   note: document.getElementById('garNote')?.textContent ?? '',
 }));
-F('garage toggle shows all garages (' + gar.pins + ' pins, "' + gar.note.slice(0,40) + '")', gar.pins > 60 && /garages shown/.test(gar.note));
+F('garage toggle shows all garages (' + gar.pins + ' pins, "' + gar.note.slice(0,40) + '")', gar.pins > 60 && /garages in operator colours/.test(gar.note));
+const tags = await page.evaluate(() => [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()));
+F('permanent tags: operating + nearest ("' + tags.join(' | ') + '")',
+  tags.some(t => /Operating from here/.test(t)) && tags.some(t => /Nearest garage · [\d.]+ mi/.test(t)));
 const garPop = await page.evaluate(() => {
   const pins = [...document.querySelectorAll('#map .leaflet-marker-icon')];
   const pin = pins.find(x => /\(BN\)|\(NX\)|\(AR\)|\(HT\)/.test(x.textContent)) ?? pins[pins.length-1];
   pin?.dispatchEvent(new MouseEvent('click', { bubbles:true }));
   return new Promise(res => setTimeout(() => res(document.querySelector('#map .leaflet-popup')?.textContent ?? ''), 700));
 });
-F('garage popup carries distance KPI ("' + garPop.slice(0,60).replace(/\s+/g,' ') + '")', /Distance to route/.test(garPop));
+F('garage popup carries distance + closest stop ("' + garPop.slice(0,60).replace(/\s+/g,' ') + '")', /Distance to route/.test(garPop) && /Measured at/.test(garPop));
 await page.evaluate(() => document.getElementById('closestBtn')?.click()); await page.waitForTimeout(600);
 
 await page.evaluate(() => { document.getElementById('bridgeBtn')?.click(); document.getElementById('incBtn')?.click(); });

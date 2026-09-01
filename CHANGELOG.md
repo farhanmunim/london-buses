@@ -10,7 +10,7 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-29_
 
-- **UX** The route map's garage toggle now shows **every garage in London** in operator colours (previously only each operator's single nearest). Distance to the route — measured at the closest stop — moves to where you ask for it: the hover line, and a "Distance to route" KPI row in the click popup alongside PVR/TVR/capacity. The operating garage keeps its ringed pin, and a note under the map explains the layer.
+- **UX** The route map's garage toggle now shows **every garage in London** in operator colours (previously only each operator's single nearest). Two pins carry permanent pill tags in the classic "Operating from here" design: the operating garage, and the **genuinely nearest garage** to the route ("Nearest garage · 0.87 mi"). Every pin's click popup gains "Distance to route" and "Measured at" (closest stop) KPI rows alongside PVR/TVR/capacity, and the note under the map names the nearest garage's distance and measuring stop.
 
 ---
 
