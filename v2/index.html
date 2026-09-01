@@ -458,7 +458,7 @@ const opColor    = n => { const k = opKey(OP_COLORS, n); return k ? OP_COLORS[k]
 
 /* One garage pin for every map: operator initials over the garage code —
    "GAL / (Q)" — so both identities read at a glance. */
-function garagePinIcon(g, size = 38, tint = null, ring = false){
+function garagePinIcon(g, size = 38, tint = null){
   // tint: focus colour(s) while comparing routes — the pin matches its
   // route's line so "operated from here" reads at a glance. Two focused
   // routes from one garage split the pin diagonally.
@@ -466,7 +466,7 @@ function garagePinIcon(g, size = 38, tint = null, ring = false){
     ? `linear-gradient(135deg, ${tint[0]} 50%, ${tint[1]} 50%)`
     : (Array.isArray(tint) ? tint[0] : tint) ?? opColor(g.operator);
   return L.divIcon({ className:'', iconSize:[size,size], iconAnchor:[size/2,size/2],
-    html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:${ring ? '0 0 0 3px var(--acc), ' : ''}0 2px 8px rgba(0,0,0,.3)">
+    html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
       <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
 }
@@ -1067,14 +1067,15 @@ async function initRouteMap(route, m = {}){
     || (f.properties?.routeId ?? '').toUpperCase() === route.name.toUpperCase());
   const stopRec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name] ?? {};
 
-  /* Operating garage pin(s) — same treatment as the garage view, linked
-     through to the garage page. route-meta may list several codes. */
+  /* Operating garage pin(s) — identified by the permanent "Operating from
+     here" pill (no ring treatment), linked through to the garage page.
+     route-meta may list several codes. */
   const codes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
   const garagePins = (garages ?? []).filter(g =>
     codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
   const opMarkers = new Map();
   for(const g of garagePins){
-    const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 38, null, true), zIndexOffset: 500 })
+    const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34), zIndexOffset: 500 })
       .bindTooltip('Operating from here', { permanent:true, direction:'top', offset:[0,-20], className:'gtag' })
       .bindPopup(() => garagePopupHtml(g, metaAll))
       .addTo(_map);
@@ -1082,7 +1083,7 @@ async function initRouteMap(route, m = {}){
   }
 
   /* "Garages" layer — EVERY garage in London as its operator-coloured pin
-     (the ringed pin stays the operating garage). Distance to this route,
+     (the operating garage keeps its permanent tag). Distance to this route,
      measured at the closest stop, is the hover line and a KPI row in the
      click popup — competitor scanning without the per-operator filter. */
   let closestLayer = null, closestOn = false;
@@ -1132,8 +1133,8 @@ async function initRouteMap(route, m = {}){
     }
     closestLayer.addTo(_map);
     layerNote('garNote', nearestAll?.operating
-      ? `<span>${rows.length} garages in operator colours — the operating garage ${esc(nearestAll.g.name)} (${esc(nearestAll.g.code)}) is also the nearest to route ${esc(route.name)} (${(nearestAll.d/1609.344).toFixed(2)} mi at ${esc(nearestAll.at.name)}). Tap any pin for its distance and details.</span>`
-      : `<span>${rows.length} garages in operator colours — the tagged pin is the nearest to route ${esc(route.name)}${nearest?.at ? ` (${(nearest.d/1609.344).toFixed(2)} mi at ${esc(nearest.at.name)})` : ''}; the ringed pin is the operating garage. Tap any pin for its distance and details.</span>`);
+      ? `<span>${rows.length} garages in operator colours — the operating garage ${esc(nearestAll.g.name)} (${esc(nearestAll.g.code)}) is also the nearest to route ${esc(route.name)} (${(nearestAll.d/1609.344).toFixed(2)} mi at ${esc(nearestAll.at.name)}) — its tag says both. Tap any pin for its distance and details.</span>`
+      : `<span>${rows.length} garages in operator colours — the tagged pin is the nearest to route ${esc(route.name)}${nearest?.at ? ` (${(nearest.d/1609.344).toFixed(2)} mi at ${esc(nearest.at.name)})` : ''}; the operating garage carries its own tag. Tap any pin for its distance and details.</span>`);
   });
   /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
      the route's corridor. Route points are collected once, lazily; distance
