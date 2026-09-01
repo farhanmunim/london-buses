@@ -88,6 +88,7 @@ const garPop = await page.evaluate(() => {
 F('garage popup carries distance + closest stop ("' + garPop.slice(0,60).replace(/\s+/g,' ') + '")', /Distance to route/.test(garPop) && /Measured at/.test(garPop));
 await page.evaluate(() => document.getElementById('closestBtn')?.click()); await page.waitForTimeout(600);
 
+
 await page.evaluate(() => { document.getElementById('bridgeBtn')?.click(); document.getElementById('incBtn')?.click(); });
 await page.waitForTimeout(800);
 const off = await page.evaluate(() => ({
@@ -95,6 +96,17 @@ const off = await page.evaluate(() => ({
   bon: document.getElementById('bridgeBtn')?.classList.contains('on'),
 }));
 F('toggles clear layers + notes', !off.b && !off.i && !off.bon);
+/* route 2: operating garage IS the nearest — no competitor may carry the tag */
+await page.goto('http://127.0.0.1:8905/v2/#/route/2', { waitUntil:'load' }); await page.waitForTimeout(3000);
+await page.evaluate(() => document.getElementById('closestBtn')?.click()); await page.waitForTimeout(1500);
+const own = await page.evaluate(() => ({
+  tags: [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()),
+  note: document.getElementById('garNote')?.textContent ?? '',
+}));
+F('operating==nearest: single combined tag ("' + own.tags.join(' | ') + '")',
+  own.tags.length === 1 && /Operating from here · nearest garage \([\d.]+ mi\)/.test(own.tags[0]));
+F('operating==nearest: note says so ("' + own.note.slice(0,70) + '")', /is also the nearest/.test(own.note));
+
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));
 console.log(`\n${pass}/${pass+fail} hazard checks passed`);

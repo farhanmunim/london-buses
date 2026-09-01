@@ -10,6 +10,8 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 _2026-08-29_
 
+- **FIX** "Nearest garage" is now computed over every garage **including the operating one** — previously, when a route operated from its closest garage (true for 247 of 640 routes), the tag wrongly landed on the second-closest. When the operating garage wins, its pill reads "Operating from here · nearest garage (N mi)" and no competitor is mistagged; the under-map note says so too.
+
 - **UX** The route map's garage toggle now shows **every garage in London** in operator colours (previously only each operator's single nearest). Two pins carry permanent pill tags in the classic "Operating from here" design: the operating garage, and the **genuinely nearest garage** to the route ("Nearest garage · 0.87 mi"). Every pin's click popup gains "Distance to route" and "Measured at" (closest stop) KPI rows alongside PVR/TVR/capacity, and the note under the map names the nearest garage's distance and measuring stop.
 
 ---

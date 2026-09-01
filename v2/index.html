@@ -1072,11 +1072,13 @@ async function initRouteMap(route, m = {}){
   const codes = String(m.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
   const garagePins = (garages ?? []).filter(g =>
     codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
+  const opMarkers = new Map();
   for(const g of garagePins){
-    L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 38, null, true), zIndexOffset: 500 })
+    const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 38, null, true), zIndexOffset: 500 })
       .bindTooltip('Operating from here', { permanent:true, direction:'top', offset:[0,-20], className:'gtag' })
       .bindPopup(() => garagePopupHtml(g, metaAll))
       .addTo(_map);
+    opMarkers.set(String(g.code).toUpperCase(), mk);
   }
 
   /* "Garages" layer — EVERY garage in London as its operator-coloured pin
@@ -1090,22 +1092,32 @@ async function initRouteMap(route, m = {}){
     closestBtn.classList.toggle('on', closestOn);
     if(!closestOn){
       if(closestLayer){ _map.removeLayer(closestLayer); closestLayer = null; }
+      for(const mk of opMarkers.values()) mk.setTooltipContent('Operating from here');
       layerNote('garNote');
       return;
     }
     const pts = [...(stopRec.outbound ?? []), ...(stopRec.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
     closestLayer = L.layerGroup();
+    // Distances for EVERY located garage — the operating one(s) included, so
+    // "nearest" is honest when the route operates from its closest garage.
     const rows = [];
+    const all = [];
     for(const g of garages ?? []){
       if(!garageLocOk(g)) continue;
-      if(codes.includes(String(g.code).toUpperCase())) continue;   // operating garage already pinned + ringed
       let d = Infinity, at = null;
       for(const st of pts){ const dm = haversineM(st.lat, st.lng, g.lat, g.lng); if(dm < d){ d = dm; at = st; } }
-      rows.push({ g, d, at });
+      const rec = { g, d, at, operating: codes.includes(String(g.code).toUpperCase()) };
+      all.push(rec);
+      if(!rec.operating) rows.push(rec);   // operating garage already pinned + ringed
     }
-    // The genuinely nearest garage to the route (any operator) gets the
-    // permanent pill tag — same grammar as "Operating from here".
-    const nearest = rows.reduce((a, x) => (x.at && x.d < (a?.d ?? Infinity) ? x : a), null);
+    const nearestAll = all.reduce((a, x) => (x.at && x.d < (a?.d ?? Infinity) ? x : a), null);
+    // The genuinely nearest garage gets the permanent pill. When that IS the
+    // operating garage, its own tag says so and no competitor is mistagged.
+    const nearest = nearestAll?.operating ? null : nearestAll;
+    if(nearestAll?.operating){
+      opMarkers.get(String(nearestAll.g.code).toUpperCase())
+        ?.setTooltipContent(`Operating from here · nearest garage (${(nearestAll.d/1609.344).toFixed(2)} mi)`);
+    }
     const kv = (l, v) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12.5px">${v}</b></div>`;
     for(const { g, d, at } of rows){
       const mi = Number.isFinite(d) && at ? (d/1609.344).toFixed(2) : null;
@@ -1119,7 +1131,9 @@ async function initRouteMap(route, m = {}){
         .addTo(closestLayer);
     }
     closestLayer.addTo(_map);
-    layerNote('garNote', `<span>${rows.length} garages in operator colours — the tagged pin is the nearest to route ${esc(route.name)}${nearest?.at ? ` (${(nearest.d/1609.344).toFixed(2)} mi at ${esc(nearest.at.name)})` : ''}; the ringed pin is the operating garage. Tap any pin for its distance and details.</span>`);
+    layerNote('garNote', nearestAll?.operating
+      ? `<span>${rows.length} garages in operator colours — the operating garage ${esc(nearestAll.g.name)} (${esc(nearestAll.g.code)}) is also the nearest to route ${esc(route.name)} (${(nearestAll.d/1609.344).toFixed(2)} mi at ${esc(nearestAll.at.name)}). Tap any pin for its distance and details.</span>`
+      : `<span>${rows.length} garages in operator colours — the tagged pin is the nearest to route ${esc(route.name)}${nearest?.at ? ` (${(nearest.d/1609.344).toFixed(2)} mi at ${esc(nearest.at.name)})` : ''}; the ringed pin is the operating garage. Tap any pin for its distance and details.</span>`);
   });
   /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
      the route's corridor. Route points are collected once, lazily; distance
