@@ -6,6 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.24 — CPI-CPA
+
+_2026-08-29_
+
+- **NEW** A **CPI-CPA page** (v2 nav) lists the ONS CPI All Items Index (D7BT, 2015=100) by month with the two contract price adjustment rates derived from it — **P2P** (85% of the year-on-year change, four months lagged) and the **rolling average** (85% of the twelve monthly YoY changes ending the previous month) — plus YoY itself, headline tiles for the latest month, the next ONS release date, and the formulas spelled out. Hover any rate for its full 8-dp value.
+- **NEW** The nightly pipeline gains `fetch-cpi.js`: it pulls the D7BT series straight from ONS, validates it, and derives the rates with arithmetic that is digit-identical to the reference bus-contracts-manager implementation (scale-10 truncating internals, half-up at 8 dp) — verified against its historical values. Served as `data/api/cpi-cpa.json`.
+
+---
+
 ## v2.23.1 — Garages, in full
 
 _2026-08-29_
