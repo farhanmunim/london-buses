@@ -35,6 +35,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const OUT_PATH = path.join(ROOT, 'data', 'api', 'cpi-cpa.json');
 const SERIES_URL = 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23/data';
+// Independent second door to the same series (ONS's CSV generator) — used
+// when the JSON endpoint fails. The Beta API (developer.ons.gov.uk) cannot
+// replace either: its only inflation dataset is CPIH (cpih01), not CPI.
+const SERIES_CSV_URL = 'https://www.ons.gov.uk/generator?format=csv&uri=/economy/inflationandpriceindices/timeseries/d7bt/mm23';
 const SCRIPT = 'cpi';
 
 const SERIES_FROM = '2010-01';        // published rows start here (needs 2009 for its YoY)
@@ -86,10 +90,32 @@ async function fetchSeries() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
-      if (attempt === 3) throw err;
+      if (attempt === 3) {
+        console.warn(`  JSON endpoint failed (${err.message}) — trying the CSV generator fallback`);
+        return fetchSeriesCsv();
+      }
       await new Promise(r => setTimeout(r, attempt * 1500));
     }
   }
+}
+
+/** Fallback: parse the CSV generator into the JSON endpoint's shape. Header
+ * rows are quoted key/value pairs; data rows are ("2026 JUL","142.9") with
+ * annual and quarterly rows interleaved — only monthly rows are kept. */
+async function fetchSeriesCsv() {
+  const res = await fetchWithTimeout(SERIES_CSV_URL, { headers: userAgentHeaders(SCRIPT) }, 30_000);
+  if (!res.ok) throw new Error(`CSV fallback HTTP ${res.status}`);
+  const text = await res.text();
+  const months = [];
+  let releaseDate = null, nextRelease = null;
+  for (const line of text.split('\n')) {
+    const m = line.match(/^"([^"]*)","([^"]*)"/);
+    if (!m) continue;
+    if (m[1] === 'Release date') releaseDate = m[2];
+    else if (m[1] === 'Next release') nextRelease = m[2];
+    else if (/^\d{4} [A-Z]{3}$/.test(m[1])) months.push({ date: m[1], value: m[2] });
+  }
+  return { months, description: { title: 'CPI INDEX 00: ALL ITEMS 2015=100', releaseDate, nextRelease } };
 }
 
 async function main() {
