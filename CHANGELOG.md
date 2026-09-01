@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.23.1 — Garages, in full
+
+_2026-08-29_
+
+- **UX** The route map's garage toggle now shows **every garage in London** in operator colours (previously only each operator's single nearest). Distance to the route — measured at the closest stop — moves to where you ask for it: the hover line, and a "Distance to route" KPI row in the click popup alongside PVR/TVR/capacity. The operating garage keeps its ringed pin, and a note under the map explains the layer.
+
+---
+
 ## v2.23 — Hazards on the map
 
 _2026-08-28_

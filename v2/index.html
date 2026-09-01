@@ -470,7 +470,7 @@ function garagePinIcon(g, size = 38, tint = null, ring = false){
 }
 /* Garage popup used by every map pin: headline numbers, every route as a
    tappable chip, and the detail link. */
-function garagePopupHtml(g, meta){
+function garagePopupHtml(g, meta, extraRows = ''){
   const tvr = tvrOf(g.pvr);
   const props = (g.routes ?? []).map(r => meta?.[r]?.propulsion).filter(Boolean);
   const ev = props.length ? Math.round(props.filter(p => p === 'electric' || p === 'hydrogen').length / props.length * 100) + '%' : '—';
@@ -479,7 +479,7 @@ function garagePopupHtml(g, meta){
     `<a href="#/route/${encodeURIComponent(r)}" style="background:var(--surf2);color:var(--tx);border-radius:6px;padding:1px 6px;font-family:var(--mono);font-weight:600;font-size:10.5px">${esc(r)}</a>`).join('');
   return `<div style="min-width:212px"><b style="font-size:13.5px">${esc(g.name)} (${esc(g.code)})</b>
     <div style="color:var(--tx2);margin:1px 0 8px">${esc(g.operator ?? '')}</div>
-    ${row('PVR', g.pvr ?? '—')}${row('TVR', tvr ?? '—')}${row('Capacity', g.capacity ?? '—')}${row('Zero-emission', ev)}${row('Routes operated', (g.routes ?? []).length)}
+    ${row('PVR', g.pvr ?? '—')}${row('TVR', tvr ?? '—')}${row('Capacity', g.capacity ?? '—')}${row('Zero-emission', ev)}${row('Routes operated', (g.routes ?? []).length)}${extraRows}
     <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:9px 0 5px">Routes operated</div>
     <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:250px;margin-bottom:9px">${chips}</div>
     <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a></div>`;
@@ -832,7 +832,7 @@ async function renderRouteDetail(name){
         <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
         <button class="livebtn iconb" id="stopsBtn" style="margin-left:auto" title="Stops" aria-label="Stops"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
         <button class="livebtn iconb" id="liveBtn" title="Live buses" aria-label="Live buses"><span class="spin"></span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg></button>
-        <button class="livebtn iconb" id="closestBtn" title="Closest garages" aria-label="Closest garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
+        <button class="livebtn iconb" id="closestBtn" title="Garages" aria-label="Garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
         <button class="livebtn iconb" id="bridgeBtn" title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
         <button class="livebtn iconb" id="incBtn" title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
@@ -1077,50 +1077,39 @@ async function initRouteMap(route, m = {}){
       .addTo(_map);
   }
 
-  /* "Closest garages" layer — every operator's nearest garage to this route
-     (measured at the closest stop), competitor pins in operator colours with
-     dashed connectors. The ringed pin stays the operating garage. */
+  /* "Garages" layer — EVERY garage in London as its operator-coloured pin
+     (the ringed pin stays the operating garage). Distance to this route,
+     measured at the closest stop, is the hover line and a KPI row in the
+     click popup — competitor scanning without the per-operator filter. */
   let closestLayer = null, closestOn = false;
   const closestBtn = document.getElementById('closestBtn');
-  function refitBase(){
-    try{
-      let b = lineLayer.getBounds();
-      for(const g of garagePins) b = b.extend([g.lat, g.lng]);
-      _map.fitBounds(b, { padding:[24,24] });
-    }catch(e){}
-  }
   closestBtn?.addEventListener('click', () => {
     closestOn = !closestOn;
     closestBtn.classList.toggle('on', closestOn);
     if(!closestOn){
       if(closestLayer){ _map.removeLayer(closestLayer); closestLayer = null; }
-      refitBase();
+      layerNote('garNote');
       return;
     }
     const pts = [...(stopRec.outbound ?? []), ...(stopRec.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
-    if(!pts.length) return;
-    const best = new Map();
-    for(const g of garages ?? []){
-      if(!garageLocOk(g) || !g.operator) continue;
-      let d = Infinity, at = null;
-      for(const s of pts){ const dm = haversineM(s.lat, s.lng, g.lat, g.lng); if(dm < d){ d = dm; at = s; } }
-      const cur = best.get(g.operator);
-      if(!cur || d < cur.d) best.set(g.operator, { g, d, at });
-    }
     closestLayer = L.layerGroup();
-    let b; try{ b = lineLayer.getBounds(); }catch(e){ b = null; }
-    for(const [op, x] of [...best.entries()].sort((p,q) => p[1].d - q[1].d)){
-      if(codes.includes(String(x.g.code).toUpperCase())) continue;   // operating garage already pinned + ringed
-      L.polyline([[x.g.lat, x.g.lng], [x.at.lat, x.at.lng]],
-        { color: opColor(op), weight: 1.5, opacity: .55, dashArray: '4 5' }).addTo(closestLayer);
-      L.marker([x.g.lat, x.g.lng], { icon: garagePinIcon(x.g, 28) })
-        .bindTooltip(`${esc(op)}’s closest — ${esc(x.g.name)} (${esc(x.g.code)}) · ${(x.d/1609.344).toFixed(2)} mi from ${esc(x.at.name)}`, { direction:'top' })
-        .bindPopup(() => garagePopupHtml(x.g, metaAll))
+    let shown = 0;
+    for(const g of garages ?? []){
+      if(!garageLocOk(g)) continue;
+      if(codes.includes(String(g.code).toUpperCase())) continue;   // operating garage already pinned + ringed
+      let d = Infinity, at = null;
+      for(const st of pts){ const dm = haversineM(st.lat, st.lng, g.lat, g.lng); if(dm < d){ d = dm; at = st; } }
+      const mi = Number.isFinite(d) && at ? (d/1609.344).toFixed(2) : null;
+      L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 26) })
+        .bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}${mi ? ` · ${mi} mi from ${esc(at.name)}` : ''}`, { direction:'top' })
+        .bindPopup(() => garagePopupHtml(g, metaAll, mi
+          ? `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">Distance to route ${esc(route.name)}</span><b style="font-family:var(--mono);font-size:12.5px">${mi} mi</b></div>`
+          : ''))
         .addTo(closestLayer);
-      if(b && x.d <= 12000) b = b.extend([x.g.lat, x.g.lng]);
+      shown++;
     }
     closestLayer.addTo(_map);
-    if(b){ try{ _map.fitBounds(b.pad(0.06)); }catch(e){} }
+    layerNote('garNote', `<span>${shown} garages shown in operator colours — hover or tap one for its distance to route ${esc(route.name)} (measured at the closest stop). The ringed pin is the operating garage.</span>`);
   });
   /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
      the route's corridor. Route points are collected once, lazily; distance
