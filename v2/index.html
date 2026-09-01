@@ -2364,7 +2364,6 @@ async function renderCpi(){
     ['YoY inflation', pct2(latest.yoy), monthLabel(latest.month)],
     ['P2P rate', pct2(latest.p2p), '85% of YoY, 4-month lag'],
     ['Rolling average', pct2(latest.ra), '85% of 12-month avg YoY'],
-    ['Next ONS release', d.nextRelease ?? '—', 'CPI publication'],
   ];
   const tr = r => `<tr>
     <td style="font-weight:600">${esc(monthLabel(r.month))}</td>
@@ -2386,7 +2385,7 @@ async function renderCpi(){
         <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
         <tbody>${rows.map(tr).join('')}</tbody>
       </table></div>
-      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}${d.nextRelease ? ` · next release ${esc(d.nextRelease)}` : ''}.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). YoY here is derived from the published 1-dp index — as the CPA calculation requires — so it can differ from ONS's headline 12-month rate (computed from unrounded indices) by up to 0.1 pp. Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}${d.nextRelease ? ` · next release ${esc(d.nextRelease)}` : ''}.</span></div>
     </div>
   </div>`;
   document.getElementById('cpiExport')?.addEventListener('click', () => {
