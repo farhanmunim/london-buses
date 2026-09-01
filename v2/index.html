@@ -139,6 +139,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .fact .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fact .v{font-family:var(--mono);font-weight:600;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
 .fact .v::-webkit-scrollbar{display:none}
+.facts--wrap .fact .l{white-space:normal;overflow:visible;text-overflow:clip}
+.facts--wrap .fact .v{white-space:normal;overflow:visible}
 .kv{display:flex;flex-direction:column}
 .kv>div{display:flex;justify-content:space-between;gap:14px;padding:9px 14px;border-top:1px solid var(--bd);font-size:13.5px}
 .kv>div:first-child{border-top:none}
@@ -1053,7 +1055,7 @@ async function buildRouteSections(route, m){
         upcoming.twoYearExtension ? '+2 yr option' : null,
       ].filter(Boolean).join(' · ');
       frag.push(`<div class="divn-note" style="margin-top:14px"><span aria-hidden="true">📋</span>
-        <div><b>Coming up for tender</b> — ${upcoming.programmeYear ? `${esc(upcoming.programmeYear)} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tenders" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
+        <div><b>Coming up for tender</b> — ${upcoming.programmeYear ? `${esc(upcoming.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2'))} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tenders" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
       </div>`);
     }
   } catch(e) { /* programme is enrichment — never fatal */ }
@@ -2468,7 +2470,7 @@ function cpmChartHtml(routeName, awards){
       </div>
       <div class="legendrow" style="padding:7px 8px 3px;flex-wrap:wrap">${legend}</div>
     </div>
-    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile at each award (not CPI-indexed) — a colour change marks an operator change; hover a dot for the award. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
+    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile at each award (not indexed against <a href="#/cpi" style="color:var(--acc)">CPI-CPA</a>) — a colour change marks an operator change; hover a dot for the award. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
   </div>`;
 }
 
@@ -2490,16 +2492,16 @@ async function renderTenders(){
     <div id="dhead"><h1 style="margin:2px 0 4px">Tenders</h1>
       <div style="color:var(--tx2);font-size:13.5px">Every published TfL bus tender award — ${all.length.toLocaleString('en-GB')} results from ${esc(years[years.length-1])} to ${esc(years[0])}. Filter, sort by any column, and export.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
-      <input id="tq" type="search" placeholder="Route (exact, e.g. 24) or operator…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <input id="tq" type="search" placeholder="Search route (e.g. 24) or operator" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <span style="display:inline-flex;align-items:center;gap:4px">
         <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
         <button id="topClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       <span style="display:inline-flex;align-items:center;gap:4px">
         <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
         <button id="tyrClear" hidden aria-label="Clear year filter" title="Clear year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
-      <button class="livebtn" id="tExport"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button>
+      <button class="livebtn" id="tExport" title="Downloads every award matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button>
     </div>
-    <div class="facts" id="tKpis" style="margin-top:14px"></div>
+    <div class="facts facts--wrap" id="tKpis" style="margin-top:14px"></div>
     <div class="section"><div class="section-h" id="tCount"></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1150px">
         <thead><tr>
@@ -2519,9 +2521,9 @@ async function renderTenders(){
       <div class="legendrow" style="margin-top:8px"><span>Sources: TfL tender results (bids, operators, vehicle notes — checked after TfL’s ~1pm/~3pm publish windows, append-only) joined with the LBSL tendering programmes (contract start dates, tranches, extension options; 2017/18 onward) and londonbusroutes.net (current contract ends). Contract end = the next contract’s observed start; term = end − start. Nominal £ as awarded.</span></div>
     </div>
     <div class="section"><div class="section-h" style="display:flex;align-items:center;gap:10px">Tendering programme<span id="pCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
-      <button class="livebtn" id="pExport" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button></div>
+      <button class="livebtn" id="pExport" style="margin-left:auto" title="Downloads every programme entry matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-        <input id="pq" type="search" placeholder="Route (exact) or description…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+        <input id="pq" type="search" placeholder="Search route (e.g. 24) or description" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
         <span style="display:inline-flex;align-items:center;gap:4px">
           <select id="pyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
           <button id="pyrClear" hidden aria-label="Clear programme-year filter" title="Clear programme-year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
@@ -2688,7 +2690,7 @@ async function renderTenders(){
       return `<tr${upcoming ? ' style="background:var(--acc-soft)"' : ''}>
         <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(e.route)}</span></td>
         <td style="max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description ?? '')}">${esc(e.description ?? '—')}</td>
-        <td class="num" style="text-align:left">${esc(e.programmeYear ?? '—')}</td>
+        <td class="num" style="text-align:left">${esc(e.programmeYear ? e.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2') : '—')}</td>
         <td class="num">${esc(e.tranche ?? '—')}</td>
         <td class="num" style="text-align:left">${esc(fmtDate(e.issueDate) ?? '—')}</td>
         <td class="num" style="text-align:left">${esc(fmtDate(e.returnDate) ?? '—')}</td>
@@ -2759,11 +2761,10 @@ async function renderCpi(){
     <td class="num" title="${esc(r.p2p ?? '')}">${pct2(r.p2p)}</td>
     <td class="num" title="${esc(r.ra ?? '')}">${pct2(r.ra)}</td></tr>`;
   main.innerHTML = `<div class="wrap">
-    <a class="backrow" href="#/">‹ Routes</a>
     <div id="dhead"><h1 style="margin:2px 0 4px">CPI-CPA</h1>
       <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div>
       ${d.nextRelease ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Next ONS release: ${esc(d.nextRelease)}</div>` : ''}</div>
-    <div class="facts" style="margin-top:14px">${facts.map(([l,v,sub]) =>
+    <div class="facts facts--wrap" style="margin-top:14px">${facts.map(([l,v,sub]) =>
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('')}</div>
     <div class="section"><div class="section-h" style="display:flex;align-items:center;gap:10px">Monthly series · since ${esc(monthLabel(d.months[0].month))}
       <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--acc);text-transform:none;letter-spacing:0">ONS series ↗</a>
@@ -2790,7 +2791,7 @@ async function renderAbout(){
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
-        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures from the <b>Office for National Statistics</b> (D7BT series); live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
       </div>
     </div>

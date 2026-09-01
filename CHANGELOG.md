@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.26.1 — Polish pass
+
+_2026-08-30_
+
+- **UX** Mobile audit: every v2 view verified overflow-free at phone width (a new automated suite keeps it that way); the tender-analysis and CPI KPI tiles now wrap instead of truncating ("MEDIAN £/MI…" is gone).
+- **UX** One vocabulary everywhere: every export button says **Export CSV** (scope on hover), search boxes share the "Search route (e.g. 24) or …" pattern, programme years read 2027/28, and the CPI-CPA page loses its stray back-link.
+- **UX** Honest connections: the £/mile chart's "not indexed" note links the CPI-CPA page, and the About section credits the ONS alongside TfL, DfT, DVLA and londonbusroutes.net.
+
+---
+
 ## v2.26 — Both halves of the tender page
 
 _2026-08-30_

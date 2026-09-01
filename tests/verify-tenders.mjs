@@ -132,7 +132,7 @@ F('£/mile line chart renders (' + (ch?.awards ?? 0) + ' awards, ' + (ch?.steps 
 F('chart sits above the award cards', !!ch?.beforeContract);
 F('hover shows tooltip with £/date/operator ("' + (ch?.tip ?? '').slice(0,40) + '")', !!ch?.tipShown && /£/.test(ch?.tip ?? '') && /\d{2}\/\d{2}\/\d{4}/.test(ch?.tip ?? ''));
 F('legend explains operator-change colouring', /colour change marks an operator change/.test(ch?.legend ?? ''));
-F('not CPI-indexed noted', /not CPI-indexed/.test(ch?.legend ?? ''));
+F('not-CPI-indexed noted with a link to CPI-CPA', /not indexed against/.test(ch?.legend ?? '') && /CPI-CPA/.test(ch?.legend ?? ''));
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));
 console.log(`\n${pass}/${pass+fail} tender checks passed`);

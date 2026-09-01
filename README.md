@@ -8,11 +8,15 @@ Interactive map of every London bus route. Search routes; filter by operator, ga
 
 ## What it does
 
-- Renders the entire London bus network as a colour-coded overview layer
-- Full route detail on click — geometry, stops, direction toggle, operator, vehicle make/model, propulsion, average fleet age, frequency, reliability, previous operator, contract value, contract length, next-tender batch
-- Live service status per route (Good Service / disruption + TfL's reason) and a network-wide summary on the Overview panel; per-route crowding (peak load vs capacity, busiest stop/day/time)
-- Stackable filters (operator, garage, route type, propulsion, frequency, deck, bus stop) that intersect — matching routes are listed in the side panel and highlighted on the map
-- Multi-route comparison mode, per-operator statistics, and an XLSX export of the current view
+Two front-ends share the same data: the original map-first app at `/` and the v2 single-page app at `/v2` (fully mobile-responsive — Routes, Map, Operators, Garages, Stops, Tenders and CPI-CPA).
+
+- Renders the entire London bus network as a colour-coded overview layer, with full route detail on click — geometry, stops, direction toggle, operator, vehicle make/model, propulsion, average fleet age, frequency, previous operator, contract value and length, next-tender batch
+- Route maps layer on demand: stops, **live buses** (BODS GPS), every **garage** with its distance to the route (operating and nearest garages tagged), **low bridges** graded by double-deck clearance, and bus-involved **collisions** as a severity-weighted heatmap (DfT STATS19)
+- **Tenders**: every published TfL award (2003 →) and the full LBSL tendering programme in filterable, paginated tables with filter-aware analysis KPIs (median £/mile and its trend, bids per tender, incumbent retention, lowest-bid win rate); route pages plot the £/mile award history and flag routes coming up for tender
+- **CPI-CPA**: the ONS CPI index (D7BT) by month with the contract price adjustment rates derived from it — P2P (85% of YoY, 4-month lag) and the 12-month rolling average — verified against ONS's reference tables
+- Live service status per route (straight from TfL) with a network-wide summary; per-route crowding (peak load vs capacity, busiest stop/day/time)
+- Stackable filters (operator, garage, route type, propulsion, frequency, deck, bus stop) that intersect; multi-route comparison mode; per-operator statistics
+- CSV exports throughout (route register, tender awards, tendering programme, CPI-CPA series) plus v1's XLSX export
 
 ## How it works
 
