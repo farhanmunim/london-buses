@@ -309,6 +309,7 @@ main.fullbleed{max-width:none;padding:0}
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
       <a href="#/stops" data-nav="stops">Stops</a>
+      <a href="#/tenders" data-nav="tenders">Tenders</a>
       <a href="#/cpi" data-nav="cpi">CPI-CPA</a>
     </nav>
     <div class="topbar-spacer"></div>
@@ -330,6 +331,7 @@ main.fullbleed{max-width:none;padding:0}
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
   <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
+  <a href="#/tenders" data-nav="tenders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tenders</a>
   <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
 </nav>
 
@@ -402,6 +404,7 @@ const D = {
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
   cpi:         () => get('/cpi-cpa'),
+  tendersAll:  () => get('/tenders').then(d => fixOperatorDeep(Object.values(d?.byId ?? {}))),
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
   accidents:   () => get('/accidents').then(d => d ?? null),             // static snapshot — DfT STATS19, bus/coach-involved
   liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
@@ -705,6 +708,7 @@ function navigate(){
   else if(view === 'garages')   renderGarages();
   else if(view === 'garage')    renderGarageDetail(arg);
   else if(view === 'vehicle')   renderVehicleDetail(arg);
+  else if(view === 'tenders')   renderTenders();
   else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
@@ -1027,6 +1031,7 @@ async function buildRouteSections(route, m){
     if(num(a.tranche)) r.push(`<div><span class="k">Tranche</span><span class="v mono">${a.tranche}</span></div>`);
     return r;
   };
+  frag.push(cpmChartHtml(route.name, tn));
   if(rows.length || latest){
     frag.push(`<div class="section"><div class="section-h">Current contract</div><div class="card"><div class="kv">${rows.join('')}${latest ? awardRows(latest).join('') : ''}</div></div></div>`);
   }
@@ -2331,6 +2336,155 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
+/* £/mile tender history — nominal cost per mile at every award, as an SVG
+   line chart. Segments take the colour of the operator running the contract
+   through that period; an award that changes operator gets a ringed marker.
+   Values are NOT CPI-indexed (deliberate — nominal £ as awarded). */
+function cpmChartHtml(routeName, awards){
+  const pts = (awards ?? [])
+    .filter(a => Number.isFinite(a.costPerMile) && a.costPerMile > 0 && a.awardDate && Number.isFinite(Date.parse(a.awardDate)))
+    .map(a => ({ t: Date.parse(a.awardDate), a }))
+    .sort((p,q) => p.t - q.t);
+  if(pts.length < 2) return '';
+  const W = 640, H = 190, L = 44, R = 12, T = 14, B = 26;
+  const t0 = pts[0].t, t1 = pts[pts.length-1].t;
+  const vs = pts.map(p => p.a.costPerMile);
+  let v0 = Math.min(...vs), v1 = Math.max(...vs);
+  const pad = (v1 - v0) * 0.12 || v1 * 0.1;
+  v0 = Math.max(0, v0 - pad); v1 += pad;
+  const X = t => L + (t - t0) / (t1 - t0 || 1) * (W - L - R);
+  const Y = v => T + (1 - (v - v0) / (v1 - v0 || 1)) * (H - T - B);
+  const f2 = v => '£' + v.toFixed(2);
+
+  // year ticks: first, last, and up to 3 in between
+  const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
+  const step = Math.max(1, Math.ceil((y1 - y0) / 4));
+  const ticks = [];
+  for(let y = y0; y <= y1; y += step) ticks.push(y);
+  if(ticks[ticks.length-1] !== y1) ticks.push(y1);
+
+  const seg = [];
+  for(let i = 1; i < pts.length; i++){
+    const from = pts[i-1], to = pts[i];
+    seg.push(`<line x1="${X(from.t).toFixed(1)}" y1="${Y(from.a.costPerMile).toFixed(1)}" x2="${X(to.t).toFixed(1)}" y2="${Y(to.a.costPerMile).toFixed(1)}" stroke="${opColor(from.a.operator)}" stroke-width="2.5" stroke-linecap="round"/>`);
+  }
+  const dots = pts.map((p, i) => {
+    const changed = i > 0 && pts[i-1].a.operator && p.a.operator && pts[i-1].a.operator !== p.a.operator;
+    const tip = [
+      `${fmtDate(p.a.awardDate) ?? p.a.awardDate} — ${p.a.operator ?? 'unknown operator'}`,
+      `${f2(p.a.costPerMile)}/mile${Number.isFinite(p.a.acceptedBid) ? ` · accepted bid £${p.a.acceptedBid.toLocaleString('en-GB')}/yr` : ''}`,
+      changed ? `Operator change (from ${pts[i-1].a.operator})` : null,
+    ].filter(Boolean).join('\n');
+    return `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="${changed ? 6 : 4.5}" fill="${opColor(p.a.operator)}" stroke="${changed ? 'var(--acc)' : 'var(--surf)'}" stroke-width="${changed ? 2.5 : 1.5}"><title>${esc(tip)}</title></circle>`;
+  }).join('');
+
+  const ops = [...new Set(pts.map(p => p.a.operator).filter(Boolean))];
+  const legend = ops.map(o => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px"><i style="width:9px;height:9px;border-radius:50%;background:${opColor(o)};display:inline-block"></i>${esc(o)}</span>`).join('')
+    + `<span style="display:inline-flex;align-items:center;gap:5px"><i style="width:11px;height:11px;border-radius:50%;border:2.5px solid var(--acc);display:inline-block"></i>operator change</span>`;
+
+  return `<div class="section"><div class="section-h">Cost per mile · every award</div>
+    <div class="card" style="padding:12px 8px 6px">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Cost per mile at each tender award for route ${esc(routeName)}">
+        ${[v0, (v0+v1)/2, v1].map(v => `<g><line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="${L-5}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${f2(v)}</text></g>`).join('')}
+        ${ticks.map(y => { const x = X(Date.UTC(y,0,1)); return x >= L && x <= W-R ? `<text x="${x.toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${y}</text>` : ''; }).join('')}
+        ${seg.join('')}${dots}
+      </svg>
+      <div class="legendrow" style="padding:6px 8px 4px;flex-wrap:wrap">${legend}</div>
+    </div>
+    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile as awarded (not CPI-indexed) — hover a point for the award. ${pts.length} priced awards, ${new Date(t0).getUTCFullYear()}–${new Date(t1).getUTCFullYear()}.</span></div>
+  </div>`;
+}
+
+/* ════════════════════ TENDERS — every award, filterable ════════════════ */
+async function renderTenders(){
+  main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
+  const all = (await D.tendersAll() ?? []).filter(a => a.awardDate);
+  if(!all.length){
+    main.innerHTML = `<div class="wrap"><div class="empty">The tender register is unreachable right now — try again shortly.</div></div>`;
+    return;
+  }
+  const ops = [...new Set(all.map(a => a.operator).filter(Boolean))].sort();
+  const years = [...new Set(all.map(a => String(a.awardDate).slice(0,4)))].sort().reverse();
+  const money = v => Number.isFinite(v) ? '£' + v.toLocaleString('en-GB') : '—';
+  const st = { q:'', op:'', yr:'', sort:'date', dir:-1, limit:300 };
+
+  main.innerHTML = `<div class="wrap">
+    <div id="dhead"><h1 style="margin:2px 0 4px">Tenders</h1>
+      <div style="color:var(--tx2);font-size:13.5px">Every published TfL bus tender award — ${all.length.toLocaleString('en-GB')} results from ${esc(years[years.length-1])} to ${esc(years[0])}. Filter, sort by any column, and export.</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
+      <input id="tq" type="search" placeholder="Search route or operator…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
+      <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
+      <button class="livebtn" id="tExport"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button>
+    </div>
+    <div class="section"><div class="section-h" id="tCount"></div>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:760px">
+        <thead><tr>
+          <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="op" style="cursor:pointer">Operator</th>
+          <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
+          <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th><th>Joint</th>
+        </tr></thead>
+        <tbody id="tBody"></tbody>
+      </table></div>
+      <div style="margin-top:10px"><button class="livebtn" id="tMore" hidden>Show all rows</button></div>
+      <div class="legendrow" style="margin-top:8px"><span>Source: TfL tender results, via this site’s data pipeline — checked after TfL’s ~1pm/~3pm publish windows, append-only. Nominal £ as awarded.</span></div>
+    </div>
+  </div>`;
+
+  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1 };
+  const filtered = () => {
+    const q = st.q.trim().toUpperCase();
+    let list = all.filter(a =>
+      (!st.op || a.operator === st.op)
+      && (!st.yr || String(a.awardDate).startsWith(st.yr))
+      && (!q || String(a.route ?? '').toUpperCase().includes(q) || String(a.operator ?? '').toUpperCase().includes(q)));
+    const k = KEY[st.sort];
+    list.sort((x,y) => { const a = k(x), b = k(y); return (a < b ? -1 : a > b ? 1 : 0) * st.dir; });
+    return list;
+  };
+  const routeChips = r => String(r ?? '').split('/').map(x => x.trim()).filter(Boolean)
+    .map(x => `<a class="rchip" style="padding:1px 7px;font-size:11px" href="#/route/${encodeURIComponent(x)}">${esc(x)}</a>`).join(' ');
+  function draw(){
+    const list = filtered();
+    const shown = list.slice(0, st.limit);
+    document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
+      <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
+      <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(a.route)}</span></td>
+      <td>${esc(a.operator ?? '—')}</td>
+      <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
+      <td class="num">${money(a.acceptedBid)}</td>
+      <td class="num">${money(a.lowestBid)}</td>
+      <td class="num">${money(a.highestBid)}</td>
+      <td class="num">${Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '—'}</td>
+      <td>${a.jb?.isJoint ? 'Yes' : ''}</td></tr>`).join('');
+    document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
+    document.getElementById('tMore').hidden = list.length <= st.limit;
+    document.querySelectorAll('#main th[data-sort]').forEach(th => {
+      th.textContent = th.textContent.replace(/ [↓↑]$/, '') + (th.dataset.sort === st.sort ? (st.dir < 0 ? ' ↓' : ' ↑') : '');
+    });
+  }
+  draw();
+  let deb;
+  document.getElementById('tq').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => { st.q = e.target.value; st.limit = 300; draw(); }, 150); });
+  document.getElementById('top').addEventListener('change', e => { st.op = e.target.value; st.limit = 300; draw(); });
+  document.getElementById('tyr').addEventListener('change', e => { st.yr = e.target.value; st.limit = 300; draw(); });
+  document.getElementById('tMore').addEventListener('click', () => { st.limit = Infinity; draw(); });
+  document.querySelectorAll('#main th[data-sort]').forEach(th => th.addEventListener('click', () => {
+    const k = th.dataset.sort;
+    if(st.sort === k) st.dir = -st.dir; else { st.sort = k; st.dir = k === 'op' ? 1 : -1; }
+    draw();
+  }));
+  document.getElementById('tExport').addEventListener('click', () => {
+    downloadCsv('london-bus-tenders.csv', [
+      ['award_date','route','operator','cost_per_mile','accepted_bid','lowest_bid','highest_bid','bids_received','joint_bid'],
+      ...filtered().map(a => [a.awardDate, a.route ?? '', a.operator ?? '', Number.isFinite(a.costPerMile) ? a.costPerMile : '',
+        Number.isFinite(a.acceptedBid) ? a.acceptedBid : '', Number.isFinite(a.lowestBid) ? a.lowestBid : '',
+        Number.isFinite(a.highestBid) ? a.highestBid : '', Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '',
+        a.jb?.isJoint ? 'yes' : 'no']),
+    ]);
+  });
+}
+
 /* ════════════════════ CPI-CPA — ONS index + contract escalation ════════ */
 /* CSV export: quote-escape every field, prefix formula-leading characters
    so a cell can never execute in Excel, CRLF rows, UTF-8 BOM for Excel. */

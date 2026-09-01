@@ -6,6 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.25 — The tender register
+
+_2026-08-29_
+
+- **NEW** A standalone **Tenders page** (v2 nav): every published TfL tender award — 2,500 results back to 2003 — in one table. Search by route or operator, filter by operator and award year, sort by date, operator, £/mile, accepted bid or bids received, and **Export view** downloads the current filtered slice as CSV. First 300 rows render instantly with a show-all control.
+- **NEW** Route pages plot the **full £/mile award history** as a line chart above the contract cards: one point per priced award, segments coloured by the operator running the contract through each period, and awards that changed operator marked with an accent-ringed dot. Hover any point for the date, winner, £/mile and accepted bid. Values are nominal as awarded — deliberately not CPI-indexed (a CPI-CPA-deflated view is a possible future addition).
+
+---
+
 ## v2.24 — CPI-CPA
 
 _2026-08-29_
