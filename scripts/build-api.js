@@ -260,6 +260,42 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     for (const list of Object.values(idx)) list.sort((a, b) => String(a.contract_start_date).localeCompare(String(b.contract_start_date)));
     return idx;
   })();
+  // TfL's award pages carry typos and stray test values; canonicalise the
+  // display operator (operatorRaw keeps the page's exact text). Applied
+  // BEFORE the per-route chronology so operatorChange never fires on a typo.
+  const TENDER_OP_FIX = {
+    'STagecoach East London': 'Stagecoach East London',
+    'Stagecoach Eat London': 'Stagecoach East London',
+    'Fisrt CentreWest': 'First CentreWest',
+    'First London Wst': 'First London West',
+    'Tower Traansit': 'Tower Transit',
+    'Abellio London`': 'Abellio',
+    'Abellio London Limited': 'Abellio',
+    'Abellio London West': 'Abellio West London',
+    'Docklands Minibus': 'Docklands Minibuses',
+    'Docklands': 'Docklands Minibuses',
+    'National Car Parks': 'NCP Challenger',
+    'NCP': 'NCP Challenger',
+    'Arriva (The Shires)': 'Arriva The Shires',
+    'Arriva The Shires Ltd': 'Arriva The Shires',
+    'Arriva (Kent Thameside)': 'Arriva Kent Thameside',
+    'Arriva London North Limited': 'Arriva London',
+    'Arriva London North East': 'Arriva London',
+    'Arriva Wandsworth': 'Arriva London',
+    'TGM Group': 'TGM',
+    'Transport UK London Bus Limited': 'Transport UK London Bus',
+    'London General Transport Services Limited': 'Go-Ahead London',
+    'London General Transport Co Ltd': 'Go-Ahead London',
+    'Metroline (Thorpes)': 'Metroline',
+    'HR Richmond (Quality Line)': 'Quality Line',
+    'Travel London West': 'Travel London',
+    'Travel London Middlesex': 'Travel London',
+    'test': null, 'console.log(1)': null,   // stray artefacts on TfL's pages
+  };
+  const tenderOperator = raw => {
+    const d = displayOperator(raw);
+    return d != null && Object.prototype.hasOwnProperty.call(TENDER_OP_FIX, d) ? TENDER_OP_FIX[d] : d;
+  };
   const byRoute = {};
   const byId = {};
   const num = v => (Number.isFinite(v) && v > 0 ? v : null);
@@ -276,7 +312,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     const award = {
       btID: String(t.bt_id ?? t.btID ?? ''),
       route: t.route_id,
-      operator: displayOperator(t.awarded_operator),
+      operator: tenderOperator(t.awarded_operator),
       operatorRaw: t.awarded_operator ?? null,
       awardDate: t.award_announced_date ?? null,
       numberOfTenderers: num(t.number_of_tenderers),

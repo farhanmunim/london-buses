@@ -6,6 +6,17 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.25.2 — Reading the market
+
+_2026-08-29_
+
+- **NEW** The Tenders page opens with **six analysis KPIs that recompute against the live filters** — filter to an operator or a year and the tiles become that slice's report: median £/mile (and the priced-award count behind it), the £/mile trend (median of the newest 12 months vs the 12 before), bids per tender with the single-bid share, incumbent retention across re-tenders, how often the lowest bid actually won (with the median premium paid when it didn't), and the most-awarded operator in view.
+- **DATA** Tender operators are **canonicalised in the pipeline**: 55 raw variants down to 32 clean names — TfL's own typos fixed ("STagecoach", "Fisrt CentreWest", "Tower Traansit"), legal-suffix variants merged, stray test artefacts dropped — applied before the operator-change chronology so a typo never counts as a change of hands. The page's exact text survives in `operatorRaw`.
+- **UX** Both dropdown filters gain a **✕ clear button** that appears while a filter is active.
+- Reminder of the architecture: the entire tender register is a committed file in the repo (`data/api/tenders.json`) — the page performs no live ingest.
+
+---
+
 ## v2.25.1 — The register, deepened
 
 _2026-08-29_

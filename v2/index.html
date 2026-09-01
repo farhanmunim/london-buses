@@ -2466,10 +2466,15 @@ async function renderTenders(){
       <div style="color:var(--tx2);font-size:13.5px">Every published TfL bus tender award — ${all.length.toLocaleString('en-GB')} results from ${esc(years[years.length-1])} to ${esc(years[0])}. Filter, sort by any column, and export.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="tq" type="search" placeholder="Route (exact, e.g. 24) or operator…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
-      <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
-      <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
+        <button id="topClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
+      <span style="display:inline-flex;align-items:center;gap:4px">
+        <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
+        <button id="tyrClear" hidden aria-label="Clear year filter" title="Clear year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       <button class="livebtn" id="tExport"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button>
     </div>
+    <div class="facts" id="tKpis" style="margin-top:14px"></div>
     <div class="section"><div class="section-h" id="tCount"></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1150px">
         <thead><tr>
@@ -2503,8 +2508,52 @@ async function renderTenders(){
   };
   const routeChips = r => String(r ?? '').split('/').map(x => x.trim()).filter(Boolean)
     .map(x => `<a class="rchip" style="padding:1px 7px;font-size:11px" href="#/route/${encodeURIComponent(x)}">${esc(x)}</a>`).join(' ');
+
+  /* KPI tiles — recomputed against the CURRENT filter, so filtering to an
+     operator or a year turns the page into that slice's analysis. */
+  const median = arr => { if(!arr.length) return null; const a = [...arr].sort((x,y)=>x-y); const m = a.length>>1; return a.length%2 ? a[m] : (a[m-1]+a[m])/2; };
+  function kpis(list){
+    const priced = list.filter(a => Number.isFinite(a.costPerMile) && a.costPerMile > 0);
+    const medAll = median(priced.map(a => a.costPerMile));
+
+    // £/mile trend: median of the newest 12 months in the slice vs the 12 before
+    const newest = list[0]?.awardDate ? Date.parse(String(list.reduce((m,a)=>a.awardDate>m?a.awardDate:m, '0000').slice(0,10))) : NaN;
+    const inWin = (a, from, to) => { const t = Date.parse(a.awardDate); return t > from && t <= to; };
+    const YR = 3.15576e10;
+    const w1 = priced.filter(a => inWin(a, newest - YR, newest)).map(a => a.costPerMile);
+    const w0 = priced.filter(a => inWin(a, newest - 2*YR, newest - YR)).map(a => a.costPerMile);
+    const trend = (w1.length >= 5 && w0.length >= 5) ? (median(w1) / median(w0) - 1) * 100 : null;
+
+    const withBids = list.filter(a => Number.isFinite(a.numberOfTenderers) && a.numberOfTenderers > 0);
+    const avgBids = withBids.length ? withBids.reduce((s,a)=>s+a.numberOfTenderers,0) / withBids.length : null;
+    const singleShare = withBids.length ? withBids.filter(a => a.numberOfTenderers === 1).length / withBids.length * 100 : null;
+
+    const contested = list.filter(a => a.fromOperator);
+    const retained = contested.length ? contested.filter(a => !a.operatorChange).length / contested.length * 100 : null;
+
+    const bothBids = list.filter(a => Number.isFinite(a.acceptedBid) && Number.isFinite(a.lowestBid));
+    const lowestWon = bothBids.length ? bothBids.filter(a => a.acceptedBid <= a.lowestBid).length / bothBids.length * 100 : null;
+    const premiums = bothBids.filter(a => a.acceptedBid > a.lowestBid).map(a => (a.acceptedBid / a.lowestBid - 1) * 100);
+
+    const wins = {};
+    for(const a of list) if(a.operator) wins[a.operator] = (wins[a.operator] ?? 0) + 1;
+    const top = Object.entries(wins).sort((x,y) => y[1] - x[1])[0];
+
+    const f1 = v => v == null ? '—' : v.toFixed(1);
+    const tiles = [
+      ['Median £/mile', medAll != null ? '£' + medAll.toFixed(2) : '—', `${priced.length.toLocaleString('en-GB')} priced awards`],
+      ['£/mile trend', trend != null ? (trend >= 0 ? '+' : '') + trend.toFixed(1) + '%' : '—', 'median, newest 12 mo vs prior 12'],
+      ['Bids per tender', avgBids != null ? avgBids.toFixed(1) : '—', singleShare != null ? `${f1(singleShare)}% single-bid` : 'competition'],
+      ['Incumbent retained', retained != null ? f1(retained) + '%' : '—', `${contested.length.toLocaleString('en-GB')} re-tenders`],
+      ['Won by lowest bid', lowestWon != null ? f1(lowestWon) + '%' : '—', premiums.length ? `else +${f1(median(premiums))}% median premium` : 'accepted = lowest'],
+      ['Most awards', top ? top[0] : '—', top ? `${top[1].toLocaleString('en-GB')} in this view` : ''],
+    ];
+    document.getElementById('tKpis').innerHTML = tiles.map(([l,v,sub]) =>
+      `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('');
+  }
   function draw(){
     const list = filtered();
+    kpis(list);
     const shown = list.slice(0, st.limit);
     const vehCell = a => {
       const v = a.vehicle;
@@ -2536,8 +2585,14 @@ async function renderTenders(){
   draw();
   let deb;
   document.getElementById('tq').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => { st.q = e.target.value; st.limit = 300; draw(); }, 150); });
-  document.getElementById('top').addEventListener('change', e => { st.op = e.target.value; st.limit = 300; draw(); });
-  document.getElementById('tyr').addEventListener('change', e => { st.yr = e.target.value; st.limit = 300; draw(); });
+  const syncClears = () => {
+    document.getElementById('topClear').hidden = !st.op;
+    document.getElementById('tyrClear').hidden = !st.yr;
+  };
+  document.getElementById('top').addEventListener('change', e => { st.op = e.target.value; st.limit = 300; syncClears(); draw(); });
+  document.getElementById('tyr').addEventListener('change', e => { st.yr = e.target.value; st.limit = 300; syncClears(); draw(); });
+  document.getElementById('topClear').addEventListener('click', () => { st.op = ''; document.getElementById('top').value = ''; syncClears(); draw(); });
+  document.getElementById('tyrClear').addEventListener('click', () => { st.yr = ''; document.getElementById('tyr').value = ''; syncClears(); draw(); });
   document.getElementById('tMore').addEventListener('click', () => { st.limit = Infinity; draw(); });
   document.querySelectorAll('#main th[data-sort]').forEach(th => th.addEventListener('click', () => {
     const k = th.dataset.sort;

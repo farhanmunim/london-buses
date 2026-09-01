@@ -40,6 +40,25 @@ const t = await page.evaluate(() => ({
 F('tenders page renders all awards ("' + t.count + '", ' + t.rows + ' rows shown)',
   t.count.includes(total.toLocaleString('en-GB')) && t.rows === 300 && t.navOn);
 
+const k0 = await page.evaluate(() => [...document.querySelectorAll('#tKpis .fact')].map(f => f.textContent.replace(/\s+/g,' ').trim()));
+F('KPI tiles render (' + k0.length + '): ' + (k0[0] ?? '').slice(0,40),
+  k0.length === 6 && /£\d/.test(k0[0]) && /Median/.test(k0[0]) && k0.some(x => /Incumbent retained/.test(x)) && k0.some(x => /Won by lowest/.test(x)));
+
+await page.selectOption('#top', 'Metroline'); await page.waitForTimeout(400);
+const kM = await page.evaluate(() => ({
+  kpis: [...document.querySelectorAll('#tKpis .fact')].map(f => f.textContent),
+  clearShown: !document.getElementById('topClear').hidden,
+}));
+F('KPIs recompute on filter (Most awards → Metroline)', kM.kpis.some(x => /Most awards/.test(x) && /Metroline/.test(x)));
+await page.click('#topClear'); await page.waitForTimeout(400);
+const cleared = await page.evaluate(() => ({
+  val: document.getElementById('top').value,
+  hidden: document.getElementById('topClear').hidden,
+  count: document.getElementById('tCount').textContent,
+}));
+F('operator clear button works (shown-on-filter, resets to "' + cleared.count.slice(0,12) + '")',
+  kM.clearShown && cleared.val === '' && cleared.hidden && !/\(of /.test(cleared.count));
+
 await page.fill('#tq', '24'); await page.waitForTimeout(500);
 const q = await page.evaluate(() => ({
   count: document.getElementById('tCount')?.textContent ?? '',
