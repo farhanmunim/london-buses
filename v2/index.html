@@ -2375,7 +2375,8 @@ async function renderCpi(){
   main.innerHTML = `<div class="wrap">
     <a class="backrow" href="#/">‹ Routes</a>
     <div id="dhead"><h1 style="margin:2px 0 4px">CPI-CPA</h1>
-      <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div></div>
+      <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div>
+      ${d.nextRelease ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Next ONS release: ${esc(d.nextRelease)}</div>` : ''}</div>
     <div class="facts" style="margin-top:14px">${facts.map(([l,v,sub]) =>
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('')}</div>
     <div class="section"><div class="section-h" style="display:flex;align-items:center;gap:10px">Monthly series · since ${esc(monthLabel(d.months[0].month))}
@@ -2385,7 +2386,7 @@ async function renderCpi(){
         <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
         <tbody>${rows.map(tr).join('')}</tbody>
       </table></div>
-      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}${d.nextRelease ? ` · next release ${esc(d.nextRelease)}` : ''}.</span></div>
     </div>
   </div>`;
   document.getElementById('cpiExport')?.addEventListener('click', () => {

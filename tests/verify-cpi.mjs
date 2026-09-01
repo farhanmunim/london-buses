@@ -50,6 +50,9 @@ const raPct  = (Number(latest.ra) * 100).toFixed(2) + '%';
 F('first table row is the latest month with P2P ' + p2pPct + ' / RA ' + raPct,
   r.firstRow.includes(latest.cpi) && r.firstRow.includes(p2pPct) && r.firstRow.includes(raPct));
 F('formulas + ONS source stated', /0\.85/.test(r.legend) && /ONS/.test(r.legend));
+const nextRel = data.nextRelease ?? '';
+F('next ONS release surfaced prominently (' + JSON.stringify(nextRel) + ')',
+  !nextRel || (await page.evaluate(nr => document.getElementById('main').textContent.split(nr).length - 1, nextRel)) >= 2);
 /* export buttons produce real CSVs */
 const [dl] = await Promise.all([
   page.waitForEvent('download', { timeout: 8000 }),
