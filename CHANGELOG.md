@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.26 — Both halves of the tender page
+
+_2026-08-30_
+
+- **NEW** The Tenders page now carries **both halves of TfL's forms page**: below the award results sits the full **LBSL tendering programme** — 1,265 entries across every programme year since 2017/18 — with route, description, programme year, tranche, issue/return dates, estimated award, contract start, vehicle spec and the two-year-extension option. Its own exact-route/description search, programme-year filter with clear, view export, and **rows with a future contract start highlighted** (123 upcoming today).
+- **NEW** Route pages **flag upcoming tenders**: a route appearing in the programme with its contract start still ahead gets a "Coming up for tender" notice above the £/mile chart — programme year, tranche, issue/return dates, estimated award, start date and vehicle spec, linked through to the programme table.
+- **UX** Both tables are now **paginated** (50 rows a page) instead of one long scroll, with page position and prev/next controls; filters reset to page 1.
+
+---
+
 ## v2.25.2 — Reading the market
 
 _2026-08-29_

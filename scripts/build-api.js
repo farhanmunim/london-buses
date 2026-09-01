@@ -385,6 +385,35 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   console.log(`tenders.json — ${Object.keys(byId).length} awards · ${Object.keys(byRoute).length} routes with award history`);
 }
 
+/* ── tender-programme.json — the other half of TfL's forms page ──────── */
+{
+  const tp = tryRead(DATA('source/tender-programme.json'));
+  const entries = [];
+  for (const y of tp?.years ?? []) for (const e of y.entries ?? []) {
+    if (!e?.route_id) continue;
+    entries.push({
+      programmeYear: e.programme_year ?? null,
+      tranche: e.tranche ? (Number(e.tranche) || e.tranche) : null,
+      route: String(e.route_id).toUpperCase(),
+      description: e.route_description ?? null,
+      issueDate: e.tender_issue_date ?? null,
+      returnDate: e.tender_return_date ?? null,
+      awardEstimated: e.award_estimated ?? null,
+      contractStart: e.contract_start_date ?? null,
+      vehicleType: e.vehicle_type ?? null,
+      twoYearExtension: e.two_year_extension ?? null,
+    });
+  }
+  entries.sort((a, b) => String(b.contractStart ?? b.issueDate ?? '').localeCompare(String(a.contractStart ?? a.issueDate ?? '')));
+  write(API('tender-programme.json'), {
+    generatedAt: now,
+    source: 'LBSL tendering programmes (content.tfl.gov.uk PDFs, one per financial year)',
+    count: entries.length,
+    entries,
+  });
+  console.log(`tender-programme.json — ${entries.length} programme entries`);
+}
+
 /* ── routes-overview.json (v2 property contract) ─────────────────────── */
 {
   const gj = read(DATA('routes-overview.geojson'));
@@ -453,6 +482,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     'fleet':            { source: 'TfL arrivals sweep + DVLA VES', cadence: 'twice daily' },
     'vehicles':         { source: 'TfL arrivals sweep + DVLA VES', cadence: 'twice daily' },
     'tenders':          { source: 'TfL tender results (13923/13796.aspx)', cadence: 'twice daily (after ~1pm/3pm publishes)' },
+    'tender-programme': { source: 'LBSL tendering programme PDFs', cadence: 'nightly (TfL republishes ~monthly)' },
     'line-status':      { source: 'TfL Unified API · /Line/{ids}/Status', cadence: 'several times daily' },
     'route-diversions': { source: 'TfL Unified API · /Line/{ids}/Status (disruptions)', cadence: 'several times daily' },
     'crowding':         { source: 'seeded snapshot (TfL BUSTO)', cadence: 'static' },

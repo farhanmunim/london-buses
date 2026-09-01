@@ -38,7 +38,7 @@ const t = await page.evaluate(() => ({
   navOn: !!document.querySelector('[data-nav="tenders"].on'),
 }));
 F('tenders page renders all awards ("' + t.count + '", ' + t.rows + ' rows shown)',
-  t.count.includes(total.toLocaleString('en-GB')) && t.rows === 300 && t.navOn);
+  t.count.includes(total.toLocaleString('en-GB')) && t.rows === 50 && t.navOn);
 
 const k0 = await page.evaluate(() => [...document.querySelectorAll('#tKpis .fact')].map(f => f.textContent.replace(/\s+/g,' ').trim()));
 F('KPI tiles render (' + k0.length + '): ' + (k0[0] ?? '').slice(0,40),
@@ -82,6 +82,33 @@ const [dl] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }
 const csv = readFileSync(await dl.path(), 'utf8');
 F('export view downloads (' + dl.suggestedFilename() + ', ' + (csv.split('\r\n').length-1) + ' rows)',
   dl.suggestedFilename() === 'london-bus-tenders.csv' && csv.includes('cost_per_mile') && csv.split('\r\n').length - 1 === total);
+
+/* programme table */
+const pr = await page.evaluate(() => ({
+  rows: document.querySelectorAll('#pBody tr').length,
+  count: document.getElementById('pCount')?.textContent ?? '',
+  page: document.getElementById('pPage')?.textContent ?? '',
+  upHighlighted: [...document.querySelectorAll('#pBody tr')].some(tr => tr.getAttribute('style')?.includes('acc-soft')),
+}));
+F('programme table renders paginated ("' + pr.count.trim() + '", ' + pr.rows + ' rows, ' + pr.page + ')',
+  pr.rows === 50 && /1,265 entries/.test(pr.count) && /upcoming/.test(pr.count) && /Page 1 of/.test(pr.page));
+await page.click('#pNext'); await page.waitForTimeout(300);
+const pr2 = await page.evaluate(() => document.getElementById('pPage')?.textContent ?? '');
+F('programme pagination advances (' + pr2 + ')', /Page 2 of/.test(pr2));
+await page.fill('#pq', '482'); await page.waitForTimeout(400);
+const pr3 = await page.evaluate(() => [...document.querySelectorAll('#pBody tr td:first-child')].map(td => td.textContent.trim()));
+F('programme route search exact (' + [...new Set(pr3)].join('|') + ')', pr3.length > 0 && pr3.every(r => r === '482'));
+await page.fill('#pq', ''); await page.waitForTimeout(300);
+
+/* awards pagination */
+await page.click('#tNext'); await page.waitForTimeout(300);
+const tp2 = await page.evaluate(() => document.getElementById('tPage')?.textContent ?? '');
+F('awards pagination advances (' + tp2 + ')', /Page 2 of 50/.test(tp2));
+
+/* upcoming-tender flag on route page */
+await page.goto('http://127.0.0.1:8909/v2/#/route/482', { waitUntil:'load' }); await page.waitForTimeout(2500);
+const flag = await page.evaluate(() => [...document.querySelectorAll('.divn-note')].map(n => n.textContent).find(t => /Coming up for tender/.test(t)) ?? '');
+F('route page flags upcoming tender ("' + flag.replace(/\s+/g,' ').slice(0,60) + '")', /Coming up for tender/.test(flag) && /contract starts/.test(flag));
 
 /* route page chart */
 await page.goto('http://127.0.0.1:8909/v2/#/route/88', { waitUntil:'load' }); await page.waitForTimeout(3000);
