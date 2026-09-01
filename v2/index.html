@@ -1392,7 +1392,7 @@ async function renderNetworkMap(){
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
         <div class="nm-body" id="nmInfo" hidden></div>
-        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmReset" hidden>Reset all</button></div>
+        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record — filters are ignored">Export CSV</button><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
       </div>
     </div>`;
 
@@ -1784,6 +1784,19 @@ async function renderNetworkMap(){
   document.getElementById('nmGaragesAll').addEventListener('click', () => {
     st.garagesAll = !st.garagesAll;
     syncGarages();
+  });
+  // Export EVERY route's full record — deliberately ignores the active
+  // search pills and filters (the CSV is the whole network, always).
+  document.getElementById('nmExport').addEventListener('click', () => {
+    const num = v => (Number.isFinite(v) ? v : '');
+    downloadCsv('london-bus-routes.csv', [
+      ['route','type','operator','company','garage_code','garage_name','pvr','tvr','vehicle_model','propulsion','length_km','contract_start','contract_end'],
+      ...(routes ?? []).map(r => {
+        const m = meta?.[r.name] ?? {};
+        return [r.name, m.type ?? r.type ?? '', m.operator ?? '', m.company ?? '', m.garage ?? '', m.garageName ?? '',
+          num(m.pvr), num(m.tvr), m.fleet ?? '', m.propulsion ?? '', num(m.lengthKm), m.contractStart ?? '', m.contractEnd ?? ''];
+      }),
+    ]);
   });
   document.getElementById('nmReset').addEventListener('click', () => {
     st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.op.clear();
@@ -2319,6 +2332,21 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
 
 /* ════════════════════ ABOUT ════════════════════ */
 /* ════════════════════ CPI-CPA — ONS index + contract escalation ════════ */
+/* CSV export: quote-escape every field, prefix formula-leading characters
+   so a cell can never execute in Excel, CRLF rows, UTF-8 BOM for Excel. */
+function downloadCsv(filename, rows){
+  const cell = v => {
+    let t = v == null ? '' : String(v);
+    if(/^[=+\-@\t\r]/.test(t)) t = "'" + t;
+    return '"' + t.replaceAll('"', '""') + '"';
+  };
+  const csv = '\ufeff' + rows.map(r => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const monthLabel = ym => { const m = /^(\d{4})-(\d{2})$/.exec(ym ?? ''); return m ? `${MONTH_NAMES[+m[2]-1]} ${m[1]}` : ym; };
 const pct2 = v => v == null ? '—' : (Number(v) * 100).toFixed(2) + '%';
@@ -2350,14 +2378,22 @@ async function renderCpi(){
       <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div></div>
     <div class="facts" style="margin-top:14px">${facts.map(([l,v,sub]) =>
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('')}</div>
-    <div class="section"><div class="section-h">Monthly series · since ${esc(monthLabel(d.months[0].month))}</div>
+    <div class="section"><div class="section-h" style="display:flex;align-items:center;gap:10px">Monthly series · since ${esc(monthLabel(d.months[0].month))}
+      <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--acc);text-transform:none;letter-spacing:0">ONS series ↗</a>
+      <button class="livebtn" id="cpiExport" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table">
         <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
         <tbody>${rows.map(tr).join('')}</tbody>
       </table></div>
-      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: ${esc(d.source ?? 'ONS')}${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}.</span></div>
     </div>
   </div>`;
+  document.getElementById('cpiExport')?.addEventListener('click', () => {
+    downloadCsv('cpi-cpa.csv', [
+      ['month','cpi_index','yoy_change','p2p_rate','ra_rate'],
+      ...d.months.map(r => [r.month, r.cpi, r.yoy ?? '', r.p2p ?? '', r.ra ?? '']),
+    ]);
+  });
 }
 
 async function renderAbout(){
