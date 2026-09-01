@@ -40,13 +40,14 @@ const t = await page.evaluate(() => ({
 F('tenders page renders all awards ("' + t.count + '", ' + t.rows + ' rows shown)',
   t.count.includes(total.toLocaleString('en-GB')) && t.rows === 300 && t.navOn);
 
-await page.fill('#tq', '88'); await page.waitForTimeout(500);
+await page.fill('#tq', '24'); await page.waitForTimeout(500);
 const q = await page.evaluate(() => ({
   count: document.getElementById('tCount')?.textContent ?? '',
-  firstRoute: document.querySelector('#tBody tr td:nth-child(2)')?.textContent ?? '',
+  routes: [...document.querySelectorAll('#tBody tr td:nth-child(2)')].map(td => td.textContent.trim()),
 }));
-F('search filters ("' + q.count + '", first route "' + q.firstRoute.trim() + '")',
-  /\(of /.test(q.count) && /88/.test(q.firstRoute));
+F('route search is exact ("' + q.count + '", routes: ' + [...new Set(q.routes)].slice(0,4).join(' | ') + ')',
+  /\(of /.test(q.count) && q.routes.length > 0
+  && q.routes.every(r => r.split(/\s+/).some(t => t === '24') || /24/.test(r) === false || r.split(/\s+/).every(t => ['24','N24'].includes(t))));
 
 await page.fill('#tq', ''); await page.waitForTimeout(400);
 await page.selectOption('#top', 'Metroline'); await page.waitForTimeout(400);
@@ -68,19 +69,23 @@ await page.goto('http://127.0.0.1:8909/v2/#/route/88', { waitUntil:'load' }); aw
 const ch = await page.evaluate(() => {
   const sec = [...document.querySelectorAll('#main .section-h')].find(h => /Cost per mile/.test(h.textContent))?.closest('.section');
   if(!sec) return null;
+  const hits = sec.querySelectorAll('.cpm-hit');
+  hits[hits.length-1]?.dispatchEvent(new PointerEvent('pointerover', { bubbles:true }));
+  const tipEl = sec.querySelector('.cpm-tip');
   return {
-    dots: sec.querySelectorAll('svg circle').length,
-    segs: sec.querySelectorAll('svg line[stroke-width="2.5"]').length,
-    tip: sec.querySelector('svg circle title')?.textContent ?? '',
+    awards: hits.length,
+    steps: sec.querySelectorAll('svg line[stroke-width="2"]').length,
+    tipShown: tipEl && !tipEl.hidden,
+    tip: tipEl?.textContent ?? '',
     legend: sec.textContent,
     beforeContract: [...document.querySelectorAll('#main .section-h')].findIndex(h => /Cost per mile/.test(h.textContent))
       < [...document.querySelectorAll('#main .section-h')].findIndex(h => /Current contract/.test(h.textContent)),
   };
 });
-F('£/mile chart renders (' + (ch?.dots ?? 0) + ' awards, ' + (ch?.segs ?? 0) + ' segments)', !!ch && ch.dots >= 2 && ch.segs === ch.dots - 1);
+F('£/mile step chart renders (' + (ch?.awards ?? 0) + ' awards, ' + (ch?.steps ?? 0) + ' step lines)', !!ch && ch.awards >= 2 && ch.steps === 2 * ch.awards - 1);
 F('chart sits above the award cards', !!ch?.beforeContract);
-F('point tooltip carries date/operator/£ ("' + (ch?.tip ?? '').split('\n')[0] + '")', /£/.test(ch?.tip ?? '') && /—/.test(ch?.tip ?? ''));
-F('legend explains operator change', /operator change/.test(ch?.legend ?? ''));
+F('hover shows tooltip with £/date/operator ("' + (ch?.tip ?? '').slice(0,40) + '")', !!ch?.tipShown && /£/.test(ch?.tip ?? '') && /\d{2}\/\d{2}\/\d{4}/.test(ch?.tip ?? ''));
+F('legend + step semantics explained', /colour change at a step is an operator change/.test(ch?.legend ?? ''));
 F('not CPI-indexed noted', /not CPI-indexed/.test(ch?.legend ?? ''));
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));

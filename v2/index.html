@@ -156,6 +156,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .livebtn.iconb{padding:7px;gap:0;margin-left:0;color:var(--tx2)}
 .gtag{background:var(--surf)!important;color:var(--tx)!important;border:1px solid var(--bd)!important;border-radius:6px!important;box-shadow:var(--sh)!important;font-size:10.5px!important;font-weight:600!important;padding:3px 8px!important}
 .gtag::before{border-top-color:var(--bd)!important}
+.cpmwrap{position:relative}
+.cpm-tip{position:absolute;pointer-events:none;background:var(--surf);color:var(--tx);border:1px solid var(--bd);border-radius:8px;box-shadow:var(--sh);font-size:11.5px;line-height:1.5;padding:7px 10px;white-space:nowrap;z-index:5;transform:translate(-50%,-100%)}
+.cpm-tip b{font-size:12px}
 .livebtn.iconb.on{color:var(--acc)}
 .livebtn .spin{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:none}
 .livebtn.loading .spin{display:block}
@@ -1042,6 +1045,22 @@ async function buildRouteSections(route, m){
   }
 
   el.innerHTML = frag.join('');
+  /* £/mile chart hover/focus tooltip (delegated; works on touch via tap) */
+  const cw = el.querySelector('.cpmwrap');
+  if(cw){
+    const tipEl = cw.querySelector('.cpm-tip');
+    const show = h => {
+      tipEl.innerHTML = h.dataset.tip;
+      tipEl.hidden = false;
+      const x = Math.min(Math.max(parseFloat(h.dataset.x), 14), 86);
+      tipEl.style.left = x + '%';
+      tipEl.style.top = `calc(${h.dataset.y}% - 12px)`;
+    };
+    cw.addEventListener('pointerover', e => { const h = e.target.closest('.cpm-hit'); if(h) show(h); });
+    cw.addEventListener('pointerout',  e => { if(e.target.closest('.cpm-hit')) tipEl.hidden = true; });
+    cw.addEventListener('focusin',  e => { const h = e.target.closest('.cpm-hit'); if(h) show(h); });
+    cw.addEventListener('focusout', e => { if(e.target.closest('.cpm-hit')) tipEl.hidden = true; });
+  }
   document.getElementById('regMoreBtn')?.addEventListener('click', e => {
     document.getElementById('regMore').hidden = false;
     e.currentTarget.remove();
@@ -2336,9 +2355,11 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
-/* £/mile tender history — nominal cost per mile at every award, as an SVG
-   line chart. Segments take the colour of the operator running the contract
-   through that period; an award that changes operator gets a ringed marker.
+/* £/mile tender history — a STEP chart: the awarded price holds until the
+   next award, so the line runs flat and jumps at each new contract (a
+   diagonal would invent growth that never happened). Steps wear the colour
+   of the incumbent operator, so an operator change reads as the colour
+   break at the riser; markers sit at award dates with a surface ring.
    Values are NOT CPI-indexed (deliberate — nominal £ as awarded). */
 function cpmChartHtml(routeName, awards){
   const pts = (awards ?? [])
@@ -2346,52 +2367,88 @@ function cpmChartHtml(routeName, awards){
     .map(a => ({ t: Date.parse(a.awardDate), a }))
     .sort((p,q) => p.t - q.t);
   if(pts.length < 2) return '';
-  const W = 640, H = 190, L = 44, R = 12, T = 14, B = 26;
-  const t0 = pts[0].t, t1 = pts[pts.length-1].t;
+  // Chart-local colours: brand colour where one exists; operators outside
+  // the brand palette get DISTINCT fallback shades in order of appearance
+  // (two unknowns sharing one grey would hide an operator change).
+  const FALLBACKS = ['#475569', '#a16207', '#be185d', '#0e7490', '#4d7c0f'];
+  const colorOf = (() => {
+    const assigned = new Map(); let fi = 0;
+    return o => {
+      if(!o) return '#57534e';
+      if(assigned.has(o)) return assigned.get(o);
+      const c = opColor(o);
+      const col = c !== '#57534e' ? c : FALLBACKS[fi++ % FALLBACKS.length];
+      assigned.set(o, col);
+      return col;
+    };
+  })();
+  const W = 640, H = 180, L = 40, R = 14, T = 12, B = 24;
+  const tEnd = Math.max(pts[pts.length-1].t, Date.now());
+  const t0 = pts[0].t;
   const vs = pts.map(p => p.a.costPerMile);
-  let v0 = Math.min(...vs), v1 = Math.max(...vs);
-  const pad = (v1 - v0) * 0.12 || v1 * 0.1;
-  v0 = Math.max(0, v0 - pad); v1 += pad;
-  const X = t => L + (t - t0) / (t1 - t0 || 1) * (W - L - R);
-  const Y = v => T + (1 - (v - v0) / (v1 - v0 || 1)) * (H - T - B);
-  const f2 = v => '£' + v.toFixed(2);
 
-  // year ticks: first, last, and up to 3 in between
-  const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
-  const step = Math.max(1, Math.ceil((y1 - y0) / 4));
-  const ticks = [];
-  for(let y = y0; y <= y1; y += step) ticks.push(y);
-  if(ticks[ticks.length-1] !== y1) ticks.push(y1);
+  // clean y ticks: pick a round step (0.5/1/2/5…) covering the value range
+  const lo = Math.min(...vs), hi = Math.max(...vs);
+  const span = (hi - lo) || hi * 0.2;
+  const step = [0.2,0.25,0.5,1,2,2.5,5,10,20,50][[0.2,0.25,0.5,1,2,2.5,5,10,20,50].findIndex(st => span / st <= 4)] ?? 50;
+  const v0 = Math.floor(lo / step) * step;
+  const v1 = Math.ceil(hi / step) * step + (hi === Math.ceil(hi / step) * step ? 0 : 0);
+  const yticks = [];
+  for(let v = v0; v <= v1 + 1e-9; v += step) yticks.push(v);
+  const X = t => L + (t - t0) / (tEnd - t0 || 1) * (W - L - R);
+  const Y = v => T + (1 - (v - v0) / ((v1 - v0) || 1)) * (H - T - B);
+  const money = v => '£' + (step < 1 ? v.toFixed(2) : v.toFixed(0));
 
-  const seg = [];
-  for(let i = 1; i < pts.length; i++){
-    const from = pts[i-1], to = pts[i];
-    seg.push(`<line x1="${X(from.t).toFixed(1)}" y1="${Y(from.a.costPerMile).toFixed(1)}" x2="${X(to.t).toFixed(1)}" y2="${Y(to.a.costPerMile).toFixed(1)}" stroke="${opColor(from.a.operator)}" stroke-width="2.5" stroke-linecap="round"/>`);
+  // x ticks: first year, last year, up to 3 between
+  const y0 = new Date(t0).getUTCFullYear(), yN = new Date(tEnd).getUTCFullYear();
+  const ystep = Math.max(1, Math.ceil((yN - y0) / 4));
+  const xticks = [];
+  for(let y = y0; y <= yN; y += ystep) xticks.push(y);
+
+  // step path segments: flat run at each award's price to the next award
+  // (or to today for the current contract), riser at each award date.
+  const segs = [];
+  for(let i = 0; i < pts.length; i++){
+    const cur = pts[i], next = pts[i+1];
+    const c = colorOf(cur.a.operator);
+    const xA = X(cur.t), xB = X(next ? next.t : tEnd);
+    const y = Y(cur.a.costPerMile);
+    segs.push(`<line x1="${xA.toFixed(1)}" y1="${y.toFixed(1)}" x2="${xB.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${c}" stroke-width="2" stroke-linecap="round"/>`);
+    if(next) segs.push(`<line x1="${xB.toFixed(1)}" y1="${y.toFixed(1)}" x2="${xB.toFixed(1)}" y2="${Y(next.a.costPerMile).toFixed(1)}" stroke="${colorOf(next.a.operator)}" stroke-width="2" stroke-linecap="round"/>`);
   }
-  const dots = pts.map((p, i) => {
+  const dots = pts.map(p =>
+    `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="4" fill="${colorOf(p.a.operator)}" stroke="var(--surf)" stroke-width="2" pointer-events="none"/>`).join('');
+  // Invisible, generous hit targets carry the tooltip payload — native SVG
+  // <title> is too unreliable (and absent on touch) to be the hover layer.
+  const hits = pts.map((p, i) => {
     const changed = i > 0 && pts[i-1].a.operator && p.a.operator && pts[i-1].a.operator !== p.a.operator;
-    const tip = [
-      `${fmtDate(p.a.awardDate) ?? p.a.awardDate} — ${p.a.operator ?? 'unknown operator'}`,
-      `${f2(p.a.costPerMile)}/mile${Number.isFinite(p.a.acceptedBid) ? ` · accepted bid £${p.a.acceptedBid.toLocaleString('en-GB')}/yr` : ''}`,
-      changed ? `Operator change (from ${pts[i-1].a.operator})` : null,
-    ].filter(Boolean).join('\n');
-    return `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="${changed ? 6 : 4.5}" fill="${opColor(p.a.operator)}" stroke="${changed ? 'var(--acc)' : 'var(--surf)'}" stroke-width="${changed ? 2.5 : 1.5}"><title>${esc(tip)}</title></circle>`;
+    const html = `<b>£${p.a.costPerMile.toFixed(2)}/mile</b> · ${esc(fmtDate(p.a.awardDate) ?? p.a.awardDate)}<br>${esc(p.a.operator ?? 'Unknown operator')}`
+      + (Number.isFinite(p.a.acceptedBid) ? `<br>Accepted bid £${p.a.acceptedBid.toLocaleString('en-GB')}/yr` : '')
+      + (changed ? `<br><span style="color:var(--acc);font-weight:600">Operator change</span> — from ${esc(pts[i-1].a.operator)}` : '');
+    return `<circle class="cpm-hit" cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="14" fill="transparent" style="cursor:pointer" data-x="${(X(p.t)/W*100).toFixed(2)}" data-y="${(Y(p.a.costPerMile)/H*100).toFixed(2)}" data-tip="${esc(html)}" tabindex="0" role="img" aria-label="${esc(fmtDate(p.a.awardDate) ?? '')} £${p.a.costPerMile.toFixed(2)} per mile, ${esc(p.a.operator ?? '')}"/>`;
   }).join('');
 
+  // end label: the price currently in force, at the line's end (selective)
+  const last = pts[pts.length-1];
+  const endLabel = `<text x="${(W - R).toFixed(1)}" y="${(Y(last.a.costPerMile) - 7).toFixed(1)}" text-anchor="end" font-size="10.5" font-weight="600" fill="var(--tx)" font-family="var(--mono)">£${last.a.costPerMile.toFixed(2)}</text>`;
+
   const ops = [...new Set(pts.map(p => p.a.operator).filter(Boolean))];
-  const legend = ops.map(o => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px"><i style="width:9px;height:9px;border-radius:50%;background:${opColor(o)};display:inline-block"></i>${esc(o)}</span>`).join('')
-    + `<span style="display:inline-flex;align-items:center;gap:5px"><i style="width:11px;height:11px;border-radius:50%;border:2.5px solid var(--acc);display:inline-block"></i>operator change</span>`;
+  const legend = ops.map(o => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;color:var(--tx2)"><i style="width:10px;height:2px;border-radius:1px;background:${colorOf(o)};display:inline-block"></i>${esc(o)}</span>`).join('');
 
   return `<div class="section"><div class="section-h">Cost per mile · every award</div>
-    <div class="card" style="padding:12px 8px 6px">
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Cost per mile at each tender award for route ${esc(routeName)}">
-        ${[v0, (v0+v1)/2, v1].map(v => `<g><line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="${L-5}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${f2(v)}</text></g>`).join('')}
-        ${ticks.map(y => { const x = X(Date.UTC(y,0,1)); return x >= L && x <= W-R ? `<text x="${x.toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${y}</text>` : ''; }).join('')}
-        ${seg.join('')}${dots}
+    <div class="card" style="padding:14px 10px 8px">
+      <div class="cpmwrap">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Awarded cost per mile over time for route ${esc(routeName)} — each step holds until the next award">
+        ${yticks.map(v => `<g><line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--bd)" stroke-width="1"/><text x="${L-6}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${money(v)}</text></g>`).join('')}
+        ${xticks.map(y => { const x = X(Date.UTC(y,0,1)); return x >= L - 1 && x <= W - R + 1 ? `<text x="${x.toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="9.5" fill="var(--mu)" font-family="var(--mono)">${y}</text>` : ''; }).join('')}
+        ${segs.join('')}${dots}${endLabel}
+        ${hits}
       </svg>
-      <div class="legendrow" style="padding:6px 8px 4px;flex-wrap:wrap">${legend}</div>
+      <div class="cpm-tip" hidden></div>
+      </div>
+      <div class="legendrow" style="padding:7px 8px 3px;flex-wrap:wrap">${legend}</div>
     </div>
-    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile as awarded (not CPI-indexed) — hover a point for the award. ${pts.length} priced awards, ${new Date(t0).getUTCFullYear()}–${new Date(t1).getUTCFullYear()}.</span></div>
+    <div class="legendrow" style="margin-top:7px"><span>Each step holds the awarded price until the next contract; a colour change at a step is an operator change (hover a dot for the award). Nominal £/mile as awarded, not CPI-indexed. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
   </div>`;
 }
 
@@ -2412,7 +2469,7 @@ async function renderTenders(){
     <div id="dhead"><h1 style="margin:2px 0 4px">Tenders</h1>
       <div style="color:var(--tx2);font-size:13.5px">Every published TfL bus tender award — ${all.length.toLocaleString('en-GB')} results from ${esc(years[years.length-1])} to ${esc(years[0])}. Filter, sort by any column, and export.</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
-      <input id="tq" type="search" placeholder="Search route or operator…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <input id="tq" type="search" placeholder="Route (exact, e.g. 24) or operator…" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
       <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
       <button class="livebtn" id="tExport"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export view</button>
@@ -2434,10 +2491,14 @@ async function renderTenders(){
   const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1 };
   const filtered = () => {
     const q = st.q.trim().toUpperCase();
+    // Routes match EXACTLY (typing "24" means route 24, not 124/240/N241 —
+    // a combined award like "24/N24" matches on either token); operators
+    // still match by substring.
+    const routeHit = a => String(a.route ?? '').toUpperCase().split('/').some(t => t.trim() === q);
     let list = all.filter(a =>
       (!st.op || a.operator === st.op)
       && (!st.yr || String(a.awardDate).startsWith(st.yr))
-      && (!q || String(a.route ?? '').toUpperCase().includes(q) || String(a.operator ?? '').toUpperCase().includes(q)));
+      && (!q || routeHit(a) || String(a.operator ?? '').toUpperCase().includes(q)));
     const k = KEY[st.sort];
     list.sort((x,y) => { const a = k(x), b = k(y); return (a < b ? -1 : a > b ? 1 : 0) * st.dir; });
     return list;
