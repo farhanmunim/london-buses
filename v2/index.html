@@ -203,6 +203,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .prose p{margin-bottom:10px}
 .prose b{color:var(--tx)}
 .prose a{color:var(--acc);font-weight:500}
+table.cpi-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+.cpi-table th{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:9px 14px 7px}
+.cpi-table td{padding:6.5px 14px;border-top:1px solid var(--bd)}
+.cpi-table .num{text-align:right;font-family:var(--mono)}
+.cpi-table tbody tr:first-child td{background:var(--acc-soft);font-weight:600}
 table.fresh{width:100%;border-collapse:collapse;font-size:12.5px}
 table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
 table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--tx2)}
@@ -304,6 +309,7 @@ main.fullbleed{max-width:none;padding:0}
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
       <a href="#/stops" data-nav="stops">Stops</a>
+      <a href="#/cpi" data-nav="cpi">CPI-CPA</a>
     </nav>
     <div class="topbar-spacer"></div>
     <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
@@ -324,6 +330,7 @@ main.fullbleed{max-width:none;padding:0}
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
   <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
+  <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
 </nav>
 
 <script type="module">
@@ -394,6 +401,7 @@ const D = {
   stops:       () => get('/route-stops').then(d => d?.routes ?? {}),      // ~1 MB gz — lazy, route detail only
   overview:    () => get('/routes-overview'),                              // GeoJSON — lazy, map only
   vehiclesReg: () => get('/vehicles').then(d => fixOperatorDeep(d?.byReg ?? {})),
+  cpi:         () => get('/cpi-cpa'),
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
   accidents:   () => get('/accidents').then(d => d ?? null),             // static snapshot — DfT STATS19, bus/coach-involved
   liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
@@ -558,6 +566,7 @@ const S = {
   FLEET:   'TfL arrivals sweeps + DVLA, via this site’s data pipeline|Sampled ~midday, ~midnight and overnight',
   DIVN:    'TfL service status, diversion notices|Refreshed ~6×/day',
   TENDER:  'TfL tender award results, via this site’s data pipeline|Checked after TfL’s ~1pm/~3pm publishes',
+  ONS:     'ONS CPI All Items Index (D7BT, 2015=100)|Checked nightly — ONS publishes monthly',
   CURATED: 'Curated data — published for a few flagship routes only|Refreshed nightly',
   LIVE:    'TfL live status, straight from TfL|~30 s fresh',
   ARRIVE:  'TfL Countdown predictions, straight from TfL|~30 s fresh',
@@ -696,6 +705,7 @@ function navigate(){
   else if(view === 'garages')   renderGarages();
   else if(view === 'garage')    renderGarageDetail(arg);
   else if(view === 'vehicle')   renderVehicleDetail(arg);
+  else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
 }
@@ -2308,6 +2318,48 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
 }
 
 /* ════════════════════ ABOUT ════════════════════ */
+/* ════════════════════ CPI-CPA — ONS index + contract escalation ════════ */
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const monthLabel = ym => { const m = /^(\d{4})-(\d{2})$/.exec(ym ?? ''); return m ? `${MONTH_NAMES[+m[2]-1]} ${m[1]}` : ym; };
+const pct2 = v => v == null ? '—' : (Number(v) * 100).toFixed(2) + '%';
+async function renderCpi(){
+  main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
+  const d = await D.cpi();
+  if(!d?.months?.length){
+    main.innerHTML = `<div class="wrap"><div class="empty">The CPI-CPA dataset is unreachable right now — try again shortly.</div></div>`;
+    return;
+  }
+  const rows = [...d.months].reverse();   // newest first
+  const latest = rows[0];
+  const facts = [
+    ['CPI index', latest.cpi, `${monthLabel(latest.month)} · 2015 = 100`],
+    ['YoY inflation', pct2(latest.yoy), monthLabel(latest.month)],
+    ['P2P rate', pct2(latest.p2p), '85% of YoY, 4-month lag'],
+    ['Rolling average', pct2(latest.ra), '85% of 12-month avg YoY'],
+    ['Next ONS release', d.nextRelease ?? '—', 'CPI publication'],
+  ];
+  const tr = r => `<tr>
+    <td style="font-weight:600">${esc(monthLabel(r.month))}</td>
+    <td class="num">${esc(r.cpi)}</td>
+    <td class="num" title="${esc(r.yoy ?? '')}">${pct2(r.yoy)}</td>
+    <td class="num" title="${esc(r.p2p ?? '')}">${pct2(r.p2p)}</td>
+    <td class="num" title="${esc(r.ra ?? '')}">${pct2(r.ra)}</td></tr>`;
+  main.innerHTML = `<div class="wrap">
+    <a class="backrow" href="#/">‹ Routes</a>
+    <div id="dhead"><h1 style="margin:2px 0 4px">CPI-CPA</h1>
+      <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div></div>
+    <div class="facts" style="margin-top:14px">${facts.map(([l,v,sub]) =>
+      `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('')}</div>
+    <div class="section"><div class="section-h">Monthly series · since ${esc(monthLabel(d.months[0].month))}</div>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table">
+        <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
+        <tbody>${rows.map(tr).join('')}</tbody>
+      </table></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). Source: ${esc(d.source ?? 'ONS')}${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}.</span></div>
+    </div>
+  </div>`;
+}
+
 async function renderAbout(){
   main.innerHTML = `
     <h1 class="h1">About</h1>

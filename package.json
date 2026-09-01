@@ -25,7 +25,8 @@
     "audit-vehicle-data": "node scripts/audit-vehicle-data.js",
     "audit-summary": "node scripts/audit-summary.js",
     "fetch-line-status": "node scripts/fetch-line-status.js",
-    "build-api": "node scripts/build-api.js"
+    "build-api": "node scripts/build-api.js",
+    "fetch-cpi": "node scripts/fetch-cpi.js"
   },
   "engines": {
     "node": ">=18"
