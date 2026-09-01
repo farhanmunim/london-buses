@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-28T06:15:13.958Z",
+  "generatedAt": "2026-09-01T04:00:00.979Z",
   "count": 76,
   "garages": {
     "A": {
@@ -59,7 +59,7 @@
       "address": "High Street, London, SW19 1DN",
       "lat": 51.416567,
       "lon": -0.181662,
-      "pvr": 143,
+      "pvr": 126,
       "capacity": 217
     },
     "AO": {
@@ -109,7 +109,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 166,
+      "pvr": 170,
       "capacity": 201
     },
     "BK": {
@@ -149,7 +149,7 @@
       "address": "Fairfield Road, Bow, London, E3 2QP",
       "lat": 51.53235,
       "lon": -0.023324,
-      "pvr": 95,
+      "pvr": 91,
       "capacity": 125
     },
     "BX": {
@@ -169,7 +169,7 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 100,
+      "pvr": 102,
       "capacity": 147
     },
     "CT": {
@@ -259,7 +259,7 @@
       "address": "Wellington Road, Fulwell, Middlesex, TW2 5NX",
       "lat": 51.433889,
       "lon": -0.35139,
-      "pvr": 123,
+      "pvr": 124,
       "capacity": 160
     },
     "G": {
@@ -369,7 +369,7 @@
       "address": "Oak Farm, Farnborough Hill, Green Street Green, Orpington, Kent, BR6 6DA",
       "lat": 51.356558,
       "lon": 0.087681,
-      "pvr": 88,
+      "pvr": 86,
       "capacity": 228
     },
     "MG": {
@@ -449,7 +449,7 @@
       "address": "Blackpool Road, Peckham, London, SE15 3SE",
       "lat": 51.46574,
       "lon": -0.061565,
-      "pvr": 61,
+      "pvr": 58,
       "capacity": 82
     },
     "PV": {
@@ -559,7 +559,7 @@
       "address": "Kangley Bridge Road, Lower Sydenham, London, SE26 5AQ",
       "lat": 51.426275,
       "lon": -0.035919,
-      "pvr": 57,
+      "pvr": 72,
       "capacity": 97
     },
     "SO": {
@@ -579,7 +579,7 @@
       "address": "Binfield Road, London, SW4 6ST",
       "lat": 51.474125,
       "lon": -0.123662,
-      "pvr": 148,
+      "pvr": 146,
       "capacity": 213
     },
     "T": {
@@ -619,7 +619,7 @@
       "address": "The Old Tram Depot, Stanley Road, Twickenham, Middlesex, TW2 5NP",
       "lat": 51.437063,
       "lon": -0.347578,
-      "pvr": 127,
+      "pvr": 126,
       "capacity": 155
     },
     "TH": {

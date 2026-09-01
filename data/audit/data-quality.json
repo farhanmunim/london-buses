@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-28T06:15:14.726Z",
+  "generatedAt": "2026-09-01T04:00:01.816Z",
   "summary": {
     "critical": 0,
-    "warn": 7,
+    "warn": 20,
     "info": 4
   },
   "issues": [
@@ -12,7 +12,7 @@
       "id": "23",
       "field": "vehicleAgeYears",
       "expected": "<=12 for electric",
-      "actual": 13.2,
+      "actual": 12.5,
       "note": "electric London fleets are post-2015"
     },
     {
@@ -27,11 +27,11 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "60",
-      "field": "vehicleAgeYears",
-      "expected": "<=12 for electric",
-      "actual": 14.9,
-      "note": "electric London fleets are post-2015"
+      "id": "110",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.09",
+      "note": "fleetSize=34 pvr=11"
     },
     {
       "severity": "WARN",
@@ -54,11 +54,101 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "161",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.50",
+      "note": "fleetSize=56 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "200",
+      "field": "make↔model",
+      "expected": "SWITCH for \"MetroDecker EV 10.5m\"",
+      "actual": "WRIGHTBUS",
+      "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "206",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.18",
+      "note": "fleetSize=35 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "213",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.50",
+      "note": "fleetSize=49 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "222",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.14",
+      "note": "fleetSize=44 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "249",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.21",
+      "note": "fleetSize=45 pvr=14"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "292",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.8,
+      "note": "electric London fleets are post-2015"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "430",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.09",
+      "note": "fleetSize=34 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "436",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.15",
+      "note": "fleetSize=41 pvr=13"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "483",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.58",
-      "note": "fleetSize=43 pvr=12"
+      "actual": "4.42",
+      "note": "fleetSize=53 pvr=12"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "485",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 15,
+      "note": "electric London fleets are post-2015"
     },
     {
       "severity": "WARN",
@@ -68,6 +158,24 @@
       "expected": "SWITCH for \"MetroCity EV 8.7m\"",
       "actual": "ALEXANDER DENNIS",
       "note": "make contradicts a manufacturer-complete model — fleet make likely contaminated"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "U3",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.09",
+      "note": "fleetSize=34 pvr=11"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "U4",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.08",
+      "note": "fleetSize=37 pvr=12"
     },
     {
       "severity": "INFO",
@@ -84,7 +192,7 @@
         "deck": 731,
         "ewtOrOtp": 0,
         "mileageMps": 0,
-        "age": 618
+        "age": 619
       },
       "note": "of 747"
     },
@@ -132,9 +240,18 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 14334,
+        "totalObs": 17370,
         "missingFleet": 0
       },
+      "note": ""
+    },
+    {
+      "severity": "WARN",
+      "scope": "fresh",
+      "id": "data/source/tenders.json",
+      "field": "generatedAt",
+      "expected": "<=7d old",
+      "actual": "112.5d",
       "note": ""
     }
   ]
