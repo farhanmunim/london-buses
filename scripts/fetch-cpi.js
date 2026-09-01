@@ -148,6 +148,28 @@ async function main() {
     });
   }
 
+  // Tamper guard: CPI is not normally revised (ONS policy — corrections are
+  // rare, announced events). A historical value that differs from what we
+  // have committed is therefore treated as upstream corruption: the run
+  // refuses to overwrite and the committed file keeps serving. A genuine,
+  // announced ONS correction is accepted by re-running with
+  // CPI_ACCEPT_REVISIONS=1. The trailing month is exempt — it is this
+  // publication's new row, not history.
+  const prev = (() => { try { return JSON.parse(fs.readFileSync(OUT_PATH, 'utf8')); } catch { return null; } })();
+  if (prev?.months?.length) {
+    const prevCpi = new Map(prev.months.map(m => [m.month, m.cpi]));
+    const newest = latest;
+    const changed = months.filter(m => m.month !== newest && prevCpi.has(m.month) && prevCpi.get(m.month) !== m.cpi);
+    if (changed.length && process.env.CPI_ACCEPT_REVISIONS !== '1') {
+      for (const m of changed.slice(0, 12)) {
+        console.error(`  REVISED: ${m.month} committed=${prevCpi.get(m.month)} upstream=${m.cpi}`);
+      }
+      throw new Error(`${changed.length} historical CPI value(s) differ from the committed series — refusing to overwrite. `
+        + 'If ONS has announced a genuine correction, re-run with CPI_ACCEPT_REVISIONS=1.');
+    }
+    if (changed.length) console.warn(`  Accepting ${changed.length} upstream revision(s) (CPI_ACCEPT_REVISIONS=1).`);
+  }
+
   const out = {
     generatedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     source: 'ONS · CPI All Items Index (D7BT, 2015=100), series mm23',
