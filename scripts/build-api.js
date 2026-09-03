@@ -405,10 +405,15 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     });
   }
   entries.sort((a, b) => String(b.contractStart ?? b.issueDate ?? '').localeCompare(String(a.contractStart ?? a.issueDate ?? '')));
+  // One source PDF per programme year — a compact year→URL map beats
+  // repeating the same ~70-char URL on every one of the 1,300+ entries.
+  const sources = {};
+  for (const y of tp?.years ?? []) if (y.programme_year && y.source_url) sources[y.programme_year] = y.source_url;
   write(API('tender-programme.json'), {
     generatedAt: now,
     source: 'LBSL tendering programmes (content.tfl.gov.uk PDFs, one per financial year)',
     count: entries.length,
+    sources,
     entries,
   });
   console.log(`tender-programme.json — ${entries.length} programme entries`);

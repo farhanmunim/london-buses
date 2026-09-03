@@ -15,6 +15,9 @@ _2026-09-03_
 - **DATA** Service status + diversions refresh **every 2 hours** (07:41–21:41 UTC, 8×/day, up from 6), and fleet sweeps run **every 8 hours** (07:20/15:20/23:20 UTC, up from twice daily) — sized so total data commits stay ≈12/day, comfortably inside Cloudflare Pages' 500 builds/month free tier.
 - **DATA** The **2028/29 tendering programme** is in (66 entries, tranches 1032–1057, 1,331 programme entries total) — and programme years are now **discovered automatically**: the fetcher probes every financial year through two years out under both of TfL's filename patterns, so each September's new programme (and any future filename rename) lands without a code change. The hourly tender workflow now refreshes the programme too, not just nightly.
 - **FIX** TfL's letter-only tender line items (like the 2028/29 `SCS` contract) parse correctly instead of swallowing their tranche number as the route.
+- **UX** The Tenders page is now **tabbed** — Awards and Programme sit behind two pills with entry counts, so the programme is discoverable without scrolling past 2,500 awards; `#/tenders/programme` deep-links the second tab (route pages' upcoming-tender flags land there).
+- **NEW** Every table row links its **original TfL source** — each award to its result page on tfl.gov.uk, each programme entry to its programme-year PDF — in the table and in both CSV exports.
+- **UX** The programme search also matches **tranche numbers** (e.g. 1032).
 - **UX** Both tender tables now paginate at **20 rows a page** (down from 50) for easier scanning, especially on phones.
 
 ---

@@ -84,6 +84,30 @@ const csv = readFileSync(await dl.path(), 'utf8');
 F('export view downloads (' + dl.suggestedFilename() + ', ' + (csv.split('\r\n').length-1) + ' rows)',
   dl.suggestedFilename() === 'london-bus-tenders.csv' && csv.includes('cost_per_mile') && csv.split('\r\n').length - 1 === total);
 
+/* source link on awards rows */
+const asrc = await page.evaluate(() => {
+  const a = document.querySelector('#tBody tr td:last-child a');
+  return a ? a.getAttribute('href') : '';
+});
+F('award rows link their TfL result page (' + asrc.slice(0, 46) + '…)', /^https:\/\/tfl\.gov\.uk\/forms\/13796\.aspx\?btID=\d+$/.test(asrc));
+
+/* tabs — programme hidden until its tab is selected */
+const tabs0 = await page.evaluate(() => ({
+  awardsShown: !document.getElementById('tabAwards').hidden,
+  progHidden: document.getElementById('tabProg').hidden,
+  labelA: document.getElementById('tabA').textContent,
+  labelP: document.getElementById('tabP').textContent,
+}));
+await page.click('#tabP'); await page.waitForTimeout(200);
+const tabs1 = await page.evaluate(() => ({
+  awardsHidden: document.getElementById('tabAwards').hidden,
+  progShown: !document.getElementById('tabProg').hidden,
+  hash: location.hash,
+}));
+F('tabs split awards/programme (' + tabs0.labelA + ' | ' + tabs0.labelP + ' → ' + tabs1.hash + ')',
+  tabs0.awardsShown && tabs0.progHidden && /Awards · 2,5\d\d/.test(tabs0.labelA) && /Programme · 1,\d{3}/.test(tabs0.labelP)
+  && tabs1.awardsHidden && tabs1.progShown && tabs1.hash === '#/tenders/programme');
+
 /* programme table */
 const pr = await page.evaluate(() => ({
   rows: document.querySelectorAll('#pBody tr').length,
@@ -100,12 +124,31 @@ F('programme pagination advances (' + pr2 + ')', /Page 2 of/.test(pr2));
 await page.fill('#pq', '482'); await page.waitForTimeout(400);
 const pr3 = await page.evaluate(() => [...document.querySelectorAll('#pBody tr td:first-child')].map(td => td.textContent.trim()));
 F('programme route search exact (' + [...new Set(pr3)].join('|') + ')', pr3.length > 0 && pr3.every(r => r === '482'));
+
+/* programme tranche search + per-row PDF source link */
+await page.fill('#pq', '1032'); await page.waitForTimeout(400);
+const tr1 = await page.evaluate(() => ({
+  tranches: [...document.querySelectorAll('#pBody tr td:nth-child(4)')].map(td => td.textContent.trim()),
+  src: document.querySelector('#pBody tr td:last-child a')?.getAttribute('href') ?? '',
+}));
+F('programme tranche search (' + [...new Set(tr1.tranches)].join('|') + ') + PDF link (' + tr1.src.slice(-42) + ')',
+  tr1.tranches.length > 0 && tr1.tranches.every(t => t === '1032')
+  && /^https:\/\/content\.tfl\.gov\.uk\/uploads\/forms\/.+\.pdf$/.test(tr1.src));
 await page.fill('#pq', ''); await page.waitForTimeout(300);
 
-/* awards pagination */
+/* awards pagination (back on the awards tab) */
+await page.click('#tabA'); await page.waitForTimeout(200);
 await page.click('#tNext'); await page.waitForTimeout(300);
 const tp2 = await page.evaluate(() => document.getElementById('tPage')?.textContent ?? '');
 F('awards pagination advances (' + tp2 + ')', /Page 2 of \d+/.test(tp2) && parseInt(tp2.match(/of (\d+)/)?.[1] ?? '0', 10) === Math.ceil(total / 20));
+
+/* deep link straight to the programme tab */
+await page.goto('http://127.0.0.1:8909/v2/#/tenders/programme', { waitUntil:'load' }); await page.waitForTimeout(2500);
+const deep = await page.evaluate(() => ({
+  progShown: !document.getElementById('tabProg').hidden,
+  awardsHidden: document.getElementById('tabAwards').hidden,
+}));
+F('#/tenders/programme deep-links the programme tab', deep.progShown && deep.awardsHidden);
 
 /* upcoming-tender flag on route page */
 await page.goto('http://127.0.0.1:8909/v2/#/route/482', { waitUntil:'load' }); await page.waitForTimeout(2500);
