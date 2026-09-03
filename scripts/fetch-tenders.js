@@ -9,8 +9,14 @@
  *
  * Each btID maps to one historical award event. ~2500 in total, going back to
  * the early 2000s. Awards are immutable -- once a row is in the cache we never
- * re-fetch it, so steady-state weekly runs only pull the handful of new btIDs
+ * re-fetch it, so steady-state runs only pull the handful of new btIDs
  * TfL added since last run.
+ *
+ * WAF note: since 2026-08-28 tfl.gov.uk/forms/* sits behind a Cloudflare
+ * managed challenge (cf-mitigated: challenge) that 403s every plain HTTP
+ * client. When plain-fetch discovery is blocked the crawl falls back to
+ * headless Chromium (playwright-core; system Chrome on CI runners), which
+ * clears the challenge non-interactively and then crawls sequentially.
  *
  * Output: data/source/tenders.json (force-committed across runs)
  *   {
@@ -67,9 +73,63 @@ async function fetchText(url, retries = 3) {
   }
 }
 
+// Browser-mode crawling. TfL put tfl.gov.uk/forms/* behind a Cloudflare
+// managed challenge (response carries `cf-mitigated: challenge`; first seen
+// 2026-08-28) that 403s every plain HTTP client regardless of headers — the
+// challenge needs a real JS-executing browser to pass. When plain-fetch
+// discovery is blocked, the whole crawl retries through headless Chromium
+// (playwright-core + the CI runner's system Chrome). The challenge clears
+// once per context, so subsequent navigations in the same context are
+// ordinary page loads.
+let _browser = null, _page = null;
+
+async function browserStart() {
+  const { chromium } = await import('playwright-core');
+  const candidates = [
+    process.env.TENDERS_BROWSER ? { executablePath: process.env.TENDERS_BROWSER } : null,
+    { channel: 'chrome' },                        // GitHub runners: preinstalled Chrome stable
+    { executablePath: '/opt/pw-browsers/chromium' },
+  ].filter(Boolean);
+  const proxy = process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined;
+  let lastErr = null;
+  for (const opts of candidates) {
+    try { _browser = await chromium.launch({ headless: true, proxy, ...opts }); break; }
+    catch (err) { lastErr = err; }
+  }
+  if (!_browser) throw lastErr ?? new Error('no Chromium available for browser-mode fetch');
+  const ctx = await _browser.newContext({ locale: 'en-GB', viewport: { width: 1366, height: 900 } });
+  _page = await ctx.newPage();
+}
+
+async function browserStop() {
+  try { await _browser?.close(); } catch { /* already gone */ }
+  _browser = _page = null;
+}
+
+// Navigate and return the settled DOM. waitSelector rides through the
+// challenge interstitial's auto-reload; when it never appears the content
+// is returned anyway and the caller's parser decides.
+async function browserFetchHtml(url, waitSelector, timeoutMs = 60_000) {
+  await _page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+  if (waitSelector) await _page.waitForSelector(waitSelector, { timeout: timeoutMs }).catch(() => {});
+  return await _page.content();
+}
+
+async function discoverTenderIdsBrowser() {
+  const html = await browserFetchHtml(DISCOVERY_URL, '#BusTenderSearch_ddl_btID');
+  if (!html.includes('id="BusTenderSearch_ddl_btID"')) {
+    throw new Error('challenge not cleared (dropdown absent from rendered page)');
+  }
+  return parseDiscoveryHtml(html);
+}
+
 // Discovery: pull every option value from the route dropdown
 async function discoverTenderIds() {
   const html = await fetchText(DISCOVERY_URL);
+  return parseDiscoveryHtml(html);
+}
+
+function parseDiscoveryHtml(html) {
   const ids = [];
   const seen = new Set();
   // Only options inside the route-id dropdown (not the tranche/date dropdowns)
@@ -232,31 +292,48 @@ function flushCache(cache, totalKnown, newThisRun) {
 async function main() {
   console.log(`Discovering tender IDs from ${DISCOVERY_URL} ...`);
   let allIds;
+  let browserMode = false;
   try {
     allIds = await discoverTenderIds();
   } catch (err) {
-    // Awards are immutable and append-only, so a blocked discovery loses
-    // nothing permanent — with a warm cache this run is a graceful no-op
-    // rather than a red workflow email. The data-quality audit warns when
-    // tenders.json's generatedAt goes stale, so a *persistent* WAF block
-    // still surfaces. A cold start (no cache) must fail loudly.
-    const cached = loadCache();
-    if (Object.keys(cached.tenders).length) {
-      console.warn(`  Discovery blocked (${err.message}) — serving ${Object.keys(cached.tenders).length} cached awards, no refresh this run.`);
-      return;
+    // Plain fetch is 403'd by the Cloudflare challenge — fall back to a
+    // real headless browser, which passes the challenge non-interactively.
+    console.warn(`  Plain-fetch discovery blocked (${err.message}) — retrying via headless Chromium.`);
+    try {
+      await browserStart();
+      allIds = await discoverTenderIdsBrowser();
+      browserMode = true;
+      console.log('  Browser-mode discovery succeeded (Cloudflare challenge cleared).');
+    } catch (err2) {
+      await browserStop();
+      // Awards are immutable and append-only, so a blocked discovery loses
+      // nothing permanent — with a warm cache this run is a graceful no-op
+      // rather than a red workflow email. The data-quality audit warns when
+      // tenders.json's generatedAt goes stale, so a *persistent* block
+      // still surfaces. A cold start (no cache) must fail loudly.
+      const cached = loadCache();
+      if (Object.keys(cached.tenders).length) {
+        console.warn(`  Browser discovery also failed (${err2.message}) — serving ${Object.keys(cached.tenders).length} cached awards, no refresh this run.`);
+        return;
+      }
+      throw err2;
     }
-    throw err;
   }
   console.log(`  ${allIds.length} tender IDs in dropdown`);
 
   const cache = loadCache();
   const known = new Set(Object.keys(cache.tenders).map(s => parseInt(s, 10)));
-  const toFetch = allIds.filter(({ id }) => !known.has(id)).slice(0, MAX_PER_RUN);
-  console.log(`Cache holds ${known.size} tenders; ${toFetch.length} new this run (cap ${MAX_PER_RUN})`);
+  // Browser mode is one sequential page — cap the backlog per run so a
+  // large catch-up spreads over a few scheduled runs instead of hitting
+  // the workflow timeout. Steady state (a handful of new btIDs) never hits it.
+  const cap = browserMode ? Math.min(MAX_PER_RUN, 250) : MAX_PER_RUN;
+  const toFetch = allIds.filter(({ id }) => !known.has(id)).slice(0, cap);
+  console.log(`Cache holds ${known.size} tenders; ${toFetch.length} new this run (cap ${cap}${browserMode ? ', browser mode' : ''})`);
 
   if (!toFetch.length) {
     console.log('Cache fully warm -- nothing to fetch.');
     flushCache(cache, allIds.length, 0);
+    await browserStop();
     return;
   }
 
@@ -280,7 +357,9 @@ async function main() {
       if (wait > 0) await new Promise(r => setTimeout(r, wait));
 
       try {
-        const html = await fetchText(RESULT_URL(id));
+        const html = browserMode
+          ? await browserFetchHtml(RESULT_URL(id), 'table.tenderResults', 45_000)
+          : await fetchText(RESULT_URL(id));
         const parsed = parseTenderHtml(html, id);
         if (parsed) {
           // Prefer the dropdown label as canonical route_id when the result
@@ -301,10 +380,12 @@ async function main() {
       }
     }
   }
-  await Promise.all(Array.from({ length: CONC }, worker));
+  // A browser context is a single page — navigations must be sequential.
+  await Promise.all(Array.from({ length: browserMode ? 1 : CONC }, worker));
 
   flushCache(cache, allIds.length, fetched);
+  await browserStop();
   console.log(`Done: ok=${fetched}  err=${errored}  total cached=${Object.keys(cache.tenders).length}`);
 }
 
-main().catch(err => { console.error('Fatal:', err); process.exit(1); });
+main().catch(async err => { await browserStop(); console.error('Fatal:', err); process.exit(1); });
