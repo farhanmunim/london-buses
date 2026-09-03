@@ -46,6 +46,13 @@ jobs:
       - name: Fetch tender awards
         run: node scripts/fetch-tenders.js
 
+      - name: Fetch tendering programme
+        # content.tfl.gov.uk is not behind the forms WAF; unchanged years
+        # short-circuit on Last-Modified so this is seconds when quiet.
+        # Programme years are auto-discovered (through current year + 2),
+        # so a newly published programme lands the same day.
+        run: node scripts/fetch-tender-programme.js
+
       - name: Rebuild served API
         run: node scripts/build-api.js
 
@@ -53,10 +60,11 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Only commit when the award cache itself moved — build-api rewrites
-          # timestamps on every run, so gating on tenders.json avoids a no-op
-          # commit (and a Cloudflare build) when TfL published nothing new.
-          git add -f data/source/tenders.json || true
+          # Only commit when a source cache itself moved — build-api rewrites
+          # timestamps on every run, so gating on the source files avoids a
+          # no-op commit (and a Cloudflare build) when TfL published nothing
+          # new. Both fetchers write content-stably (no timestamp-only churn).
+          git add -f data/source/tenders.json data/source/tender-programme.json || true
           if git diff --cached --quiet; then
             echo "No new tender awards"
           else

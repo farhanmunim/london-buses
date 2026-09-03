@@ -8,10 +8,14 @@
  *   content.tfl.gov.uk/uploads/forms/{YYYY-YYYY}-lbsl-tendering-programme.pdf  (≤2026/27)
  *   content.tfl.gov.uk/uploads/forms/{YYYY-YYYY}-tendering-programme.pdf       (2027/28+)
  *
- * 11 financial years discovered (2017/18 through 2027/28). From 2027/28 TfL
- * dropped the `lbsl-` segment from the filename. Each PDF is small
- * (~80-400 KB) so the whole crawl is sub-minute and worth re-running weekly
- * to catch TfL's mid-year programme updates.
+ * Programme years are probed automatically from 2017/18 through the
+ * financial year starting two calendar years out, so a newly published
+ * programme (TfL releases each September) is picked up without a code
+ * change; unpublished years 404 and are skipped. From 2027/28 TfL dropped
+ * the `lbsl-` segment from the filename — both slug variants are probed so
+ * another rename can't silently hide a year. Each PDF is small (~80-400 KB)
+ * so the whole crawl is sub-minute and worth re-running frequently to catch
+ * TfL's mid-year programme updates.
  *
  * PDF table layout (8 columns):
  *   Tranche | Routes | Route Details | Tender Issue | Tender Return | Contract Award | Contract Start | Vehicles
@@ -49,21 +53,31 @@ const ROOT      = path.resolve(__dirname, '..');
 const OUT_PATH  = path.join(ROOT, 'data', 'source', 'tender-programme.json');
 const SCRIPT    = 'tender-programme';
 
-// Programme years to fetch -- expand the upper bound when TfL publishes a
-// new financial-year programme (typically September each year).
-const YEARS = [
-  '2017-2018', '2018-2019', '2019-2020', '2020-2021', '2021-2022',
-  '2022-2023', '2023-2024', '2024-2025', '2025-2026', '2026-2027',
-  '2027-2028',
-];
+// Programme years to fetch -- generated, never hand-maintained. TfL has
+// published one programme per financial year since 2017/18 and typically
+// releases the NEXT year's programme each September, so probing through the
+// financial year starting two calendar years out picks a new programme up
+// automatically on its first run after publication (an unpublished year is
+// just a 404, handled as a graceful "not published yet" below).
+const FIRST_YEAR = 2017;
+const YEARS = (() => {
+  const last = new Date().getUTCFullYear() + 2;
+  const out = [];
+  for (let y = FIRST_YEAR; y <= last; y++) out.push(`${y}-${y + 1}`);
+  return out;
+})();
 
 // TfL serves the programme PDFs from content.tfl.gov.uk. From 2027-2028 the
 // filename dropped the historical `lbsl-` segment (the programme is no longer
-// branded "LBSL"), so the slug is year-dependent.
-const PDF_URL = (yr) => {
+// branded "LBSL"), so the slug is year-dependent — and since TfL has renamed
+// the pattern once already, every year gets BOTH slugs as candidates (likely
+// one first) so another rename degrades to an extra 404 probe, not a miss.
+const PDF_URLS = (yr) => {
   const startYear = parseInt(yr.slice(0, 4), 10);
-  const slug = startYear >= 2027 ? `${yr}-tendering-programme` : `${yr}-lbsl-tendering-programme`;
-  return `https://content.tfl.gov.uk/uploads/forms/${slug}.pdf`;
+  const slugs = startYear >= 2027
+    ? [`${yr}-tendering-programme`, `${yr}-lbsl-tendering-programme`]
+    : [`${yr}-lbsl-tendering-programme`, `${yr}-tendering-programme`];
+  return slugs.map(s => `https://content.tfl.gov.uk/uploads/forms/${s}.pdf`);
 };
 
 // ── HTTP fetch ──────────────────────────────────────────────────────────────
@@ -119,6 +133,14 @@ function isTrancheCell(s) { return typeof s === 'string' && TRANCHE_RE.test(s); 
 // itself a route), never by shape.
 function looksLikeRouteId(s) {
   return typeof s === 'string' && ROUTE_RE.test(s) && !isDateCell(s);
+}
+// TfL also tenders letter-only line items (first seen: "SCS" in the 2028/29
+// programme). A short all-caps token in route position is such a service
+// code — without this, the tranche+route disambiguation misfires and the
+// tranche number gets recorded as the route. Kept to 2-4 caps so real
+// descriptions (mixed case, spaces) and the 'x' extension marker never match.
+function looksLikeRouteToken(s) {
+  return looksLikeRouteId(s) || (typeof s === 'string' && /^[A-Z]{2,4}$/.test(s.trim()));
 }
 // Strip a trailing two-year-extension marker (' x' / ' *') from a route cell.
 function stripExtMarker(s) {
@@ -181,7 +203,7 @@ function parsePage(rows, programmeYear, sourceUrl, pdfModifiedAt) {
     // 95 …), which collides with tranche-number shape, so shape alone can't
     // tell them apart; position does.
     let idx = 0;
-    if (isTrancheCell(cells[idx]) && looksLikeRouteId(stripExtMarker(cells[idx + 1]).id)) {
+    if (isTrancheCell(cells[idx]) && looksLikeRouteToken(stripExtMarker(cells[idx + 1]).id)) {
       currentTranche = cells[idx];
       idx++;
     }
@@ -190,7 +212,7 @@ function parsePage(rows, programmeYear, sourceUrl, pdfModifiedAt) {
     // inline suffix on the route cell ("263/N271 x", the definer-row layout)
     // or a separate following cell ("G1", "x", the continuation layout).
     const { id: routeId, ext: inlineExt } = stripExtMarker(cells[idx]);
-    if (!routeId || !looksLikeRouteId(routeId)) {
+    if (!routeId || !looksLikeRouteToken(routeId)) {
       // Couldn't find a recognisable route id -- skip
       continue;
     }
@@ -252,16 +274,21 @@ async function main() {
   const prior      = loadPriorYears();
 
   for (const year of YEARS) {
-    const url = PDF_URL(year);
     process.stdout.write(`  ${year} ... `);
+    const cached = prior.get(year);
+    // Candidate URLs: the URL that worked last run first (it's authoritative
+    // for closed years), then the remaining slug variants.
+    const candidates = cached?.source_url
+      ? [cached.source_url, ...PDF_URLS(year).filter(u => u !== cached.source_url)]
+      : PDF_URLS(year);
 
-    // Skip-if-unchanged: HEAD first. Closed financial years never change once
-    // the year has rolled over, so almost every run hits this fast path for
-    // 9 of 10 years. The active year (and any year TfL re-published mid-cycle)
-    // falls through to the full fetch + parse.
-    if (!force && prior.has(year)) {
-      const head = await fetchPdfModified(url);
-      const cached = prior.get(year);
+    // Skip-if-unchanged: HEAD the known URL first. Closed financial years
+    // never change once the year has rolled over, so almost every run hits
+    // this fast path. The active year (and any year TfL re-published
+    // mid-cycle) falls through to the full fetch + parse. A 404 on the known
+    // URL is NOT a skip — it falls through so the other slug gets probed.
+    if (!force && cached) {
+      const head = await fetchPdfModified(candidates[0]);
       if (head.status === 200 && head.lastModified && cached.pdf_modified_at === head.lastModified) {
         out.years.push(cached);
         totalEntries += cached.entry_count ?? cached.entries?.length ?? 0;
@@ -270,16 +297,19 @@ async function main() {
         console.log(`unchanged (Last-Modified ${head.lastModified}) — using cache`);
         continue;
       }
-      if (head.status === 404) { console.log('not published yet'); continue; }
     }
 
-    let download;
-    try {
-      download = await fetchPdf(url);
-    } catch (err) {
-      console.log(`fetch failed: ${err.message}`);
-      continue;
+    let url = null, download = null, fetchErr = null;
+    for (const cand of candidates) {
+      try {
+        const dl = await fetchPdf(cand);          // null on 404 → try next slug
+        if (dl) { url = cand; download = dl; break; }
+      } catch (err) {
+        fetchErr = err;
+        break;
+      }
     }
+    if (fetchErr) { console.log(`fetch failed: ${fetchErr.message}`); continue; }
     if (!download) { console.log('not published yet'); continue; }
 
     let pages;
@@ -310,8 +340,24 @@ async function main() {
   out.totalEntries = totalEntries;
   out.yearsWithData = yearsWithData;
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
-  fs.writeFileSync(OUT_PATH, JSON.stringify(sanitizeRecord(out)), 'utf8');
-  console.log(`\nWrote ${totalEntries} entries across ${yearsWithData} years to ${OUT_PATH}`);
+  // Content-stable write: this fetcher now also runs from the hourly tender
+  // workflow, whose commit step is change-gated on this file — rewriting an
+  // identical payload with a fresh generatedAt would turn every quiet run
+  // into a commit (and a Cloudflare Pages build). Compare everything except
+  // the timestamp and skip the write when nothing real moved.
+  const sanitized = sanitizeRecord(out);
+  const stable = (o) => JSON.stringify({ ...o, generatedAt: null });
+  let unchanged = false;
+  if (fs.existsSync(OUT_PATH)) {
+    try { unchanged = stable(JSON.parse(fs.readFileSync(OUT_PATH, 'utf8'))) === stable(sanitized); }
+    catch { /* unreadable prior file — rewrite it */ }
+  }
+  if (unchanged) {
+    console.log(`\n${totalEntries} entries across ${yearsWithData} years — unchanged, not rewriting ${OUT_PATH}`);
+  } else {
+    fs.writeFileSync(OUT_PATH, JSON.stringify(sanitized), 'utf8');
+    console.log(`\nWrote ${totalEntries} entries across ${yearsWithData} years to ${OUT_PATH}`);
+  }
 }
 
 main().catch(err => { console.error('Fatal:', err); process.exit(1); });

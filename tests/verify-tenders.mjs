@@ -14,6 +14,7 @@ const srv = createServer((req, res) => {
 }).listen(8909);
 const tenders = JSON.parse(readFileSync(join(ROOT, 'data/api/tenders.json')));
 const total = Object.values(tenders.byId).filter(a => a.awardDate).length;
+const progTotal = JSON.parse(readFileSync(join(ROOT, 'data/api/tender-programme.json'))).entries.length;
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium' });
 const page = await (await browser.newContext({ viewport:{width:1280,height:900}, acceptDownloads:true })).newPage();
@@ -91,7 +92,8 @@ const pr = await page.evaluate(() => ({
   upHighlighted: [...document.querySelectorAll('#pBody tr')].some(tr => tr.getAttribute('style')?.includes('acc-soft')),
 }));
 F('programme table renders paginated ("' + pr.count.trim() + '", ' + pr.rows + ' rows, ' + pr.page + ')',
-  pr.rows === 20 && /1,265 entries/.test(pr.count) && /upcoming/.test(pr.count) && /Page 1 of 64/.test(pr.page));
+  pr.rows === 20 && pr.count.includes(progTotal.toLocaleString('en-GB') + ' entries') && /upcoming/.test(pr.count)
+  && new RegExp('Page 1 of ' + Math.ceil(progTotal / 20)).test(pr.page));
 await page.click('#pNext'); await page.waitForTimeout(300);
 const pr2 = await page.evaluate(() => document.getElementById('pPage')?.textContent ?? '');
 F('programme pagination advances (' + pr2 + ')', /Page 2 of/.test(pr2));
