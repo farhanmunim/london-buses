@@ -2485,7 +2485,7 @@ async function renderTenders(){
   const ops = [...new Set(all.map(a => a.operator).filter(Boolean))].sort();
   const years = [...new Set(all.map(a => String(a.awardDate).slice(0,4)))].sort().reverse();
   const money = v => Number.isFinite(v) ? '£' + v.toLocaleString('en-GB') : '—';
-  const PAGE = 50;
+  const PAGE = 20;
   const st = { q:'', op:'', yr:'', sort:'date', dir:-1, page:0 };
 
   main.innerHTML = `<div class="wrap">
