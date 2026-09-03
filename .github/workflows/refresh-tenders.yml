@@ -1,13 +1,16 @@
 name: Intraday Tender Refresh
 
-# Tender award sweep, twice each afternoon. TfL generally publishes new
-# award results around 1pm and 3pm UK time; 12:20 + 15:20 UTC covers both
-# publish windows year-round (13:20/16:20 BST in summer, 12:20/15:20 GMT in
-# winter — the second run always lands after both windows). Awards are
-# immutable and keyed by btID, so a run with nothing new commits nothing.
+# Tender award sweep, hourly through the working day (07:20–20:20 UTC).
+# TfL generally publishes new award results around 1pm and 3pm UK time, but
+# GitHub cron slips badly on this repo (slots observed firing 1–3h late or
+# skipped outright), so a wide hourly window is what actually guarantees
+# same-day pickup. The extra runs are free on both budgets: Actions minutes
+# are unlimited on a public repo, and the commit step below is gated on the
+# award cache actually changing, so a run with nothing new triggers no
+# Cloudflare Pages build. Awards are immutable and keyed by btID.
 on:
   schedule:
-    - cron: "20 12,15 * * *"
+    - cron: "20 7-20 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,7 +23,10 @@ concurrency:
 jobs:
   tenders:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Browser-mode catch-up (Cloudflare-challenge fallback in
+    # fetch-tenders.js crawls sequentially, capped at 250 pages/run) can
+    # take ~15 min — leave headroom over the plain-fetch fast path.
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository

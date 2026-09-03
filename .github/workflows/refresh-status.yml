@@ -1,12 +1,16 @@
 name: Intraday Status Refresh
 
-# Service status + diversion register, several times daily. One TfL call
-# (/Line/Mode/bus/Status?detail=true) feeds data/api/line-status.json and
-# data/api/route-diversions.json. Minutes off the hour boundary — GitHub
-# delays or skips scheduled jobs that fire on the hour (peak load).
+# Service status + diversion register, every 2 hours through the day
+# (07:41–21:41 UTC, 8 runs). One TfL call (/Line/Mode/bus/Status?detail=true)
+# feeds data/api/line-status.json and data/api/route-diversions.json.
+# Nearly every run commits (status text moves constantly), so each run is
+# ~1 Cloudflare Pages build — 8/day is the ceiling that keeps total data
+# commits ≈12/day ≈ 374 builds/month against the 500/month free tier.
+# Minutes off the hour boundary — GitHub delays or skips scheduled jobs
+# that fire on the hour (peak load).
 on:
   schedule:
-    - cron: "41 6,9,12,15,18,21 * * *"
+    - cron: "41 7-21/2 * * *"
   workflow_dispatch:
 
 permissions:

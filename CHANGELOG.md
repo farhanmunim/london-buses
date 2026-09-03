@@ -6,6 +6,17 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.27 — Fresher everything
+
+_2026-09-03_
+
+- **FIX** Tender awards were **silently frozen since May**: TfL put its forms pages behind a Cloudflare challenge in late August that 403s every non-browser client, and each "successful" refresh run was quietly serving the cached 2,501 awards. The fetcher now falls back to a real headless browser (which clears the challenge) whenever plain fetching is blocked, so new awards flow again.
+- **DATA** Tender award checks now run **hourly through the day** (07:20–20:20 UTC, up from two afternoon slots) — GitHub's scheduler slips slots by hours and sometimes drops them, so a wide hourly window is what actually guarantees same-day pickup of TfL's ~1pm/~3pm publishes. Runs still commit only when something genuinely changed.
+- **DATA** Service status + diversions refresh **every 2 hours** (07:41–21:41 UTC, 8×/day, up from 6), and fleet sweeps run **every 8 hours** (07:20/15:20/23:20 UTC, up from twice daily) — sized so total data commits stay ≈12/day, comfortably inside Cloudflare Pages' 500 builds/month free tier.
+- **UX** Both tender tables now paginate at **20 rows a page** (down from 50) for easier scanning, especially on phones.
+
+---
+
 ## v2.26.1 — Polish pass
 
 _2026-08-30_

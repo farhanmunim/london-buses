@@ -1,15 +1,17 @@
 name: Intraday Fleet Sweep
 
-# Incremental fleet observation, twice daily: ~midday and ~midnight UK
-# (11:20 + 23:20 UTC ≈ 12:20/00:20 BST, 11:20/23:20 GMT). Each sweep reads
-# TfL /Line/{id}/Arrivals for every route (registrations of buses out right
-# now) and accumulates into data/source/route-vehicles.json; new
-# registrations get a DVLA VES lookup into the sticky vehicle-fleet cache.
-# Together with the 03:17 nightly run (which catches the night network)
-# this replaces the retired 24/7 fleet monitoring with incremental samples.
+# Incremental fleet observation, three times daily every 8 hours
+# (07:20/15:20/23:20 UTC ≈ morning peak, school-run afternoon, and late
+# evening in UK time). Each sweep reads TfL /Line/{id}/Arrivals for every
+# route (registrations of buses out right now) and accumulates into
+# data/source/route-vehicles.json; new registrations get a DVLA VES lookup
+# into the sticky vehicle-fleet cache. Together with the 03:17 nightly run
+# (which catches the night network) this replaces the retired 24/7 fleet
+# monitoring with incremental samples. Each sweep almost always commits
+# (~1 Cloudflare Pages build), so 3/day is sized against the 500/month tier.
 on:
   schedule:
-    - cron: "20 11,23 * * *"
+    - cron: "20 7,15,23 * * *"
   workflow_dispatch:
 
 permissions:
