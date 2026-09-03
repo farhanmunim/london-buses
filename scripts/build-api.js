@@ -370,7 +370,26 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     }
     for (let i = 0; i < asc.length; i++) {
       const a = asc[i], nextA = asc[i + 1];
-      a.contractEnd = nextA?.contractStart ?? (nextA ? null : (metaRoutes[name]?.contractEnd ?? null));
+      let end = nextA?.contractStart ?? null;
+      if (!nextA) {
+        // Newest award: route-meta carries the CURRENT contract's projected
+        // end — attach it only when that contract is demonstrably this
+        // award's (starts match within 60 days), or when there is no start
+        // to check against. Without the guard, a future-dated win inherits
+        // the OUTGOING contract's end (negative/zero terms), and an old
+        // award that was never re-tendered in the register inherits a much
+        // newer contract's end (11–12-year phantom terms).
+        const meta = metaRoutes[name];
+        const startsMatch = a.contractStart && meta?.contractStart
+          && Math.abs(Date.parse(a.contractStart) - Date.parse(meta.contractStart)) <= 60 * 864e5;
+        if (!a.contractStart || startsMatch) end = meta?.contractEnd ?? null;
+      }
+      // Superseded/duplicate-cycle guard: an observed "end" at, before, or
+      // within 90 days of the start is the same handover seen through two
+      // programme-PDF revisions, or a re-award that replaced this contract
+      // before it ran — either way not a contract term.
+      if (end && a.contractStart && Date.parse(end) - Date.parse(a.contractStart) < 90 * 864e5) end = null;
+      a.contractEnd = end;
       if (a.contractStart && a.contractEnd)
         a.termYears = Math.round((Date.parse(a.contractEnd) - Date.parse(a.contractStart)) / 3.15576e10 * 10) / 10;
     }
