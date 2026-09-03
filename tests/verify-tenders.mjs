@@ -32,11 +32,11 @@ let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
 /* tenders page */
-await page.goto('http://127.0.0.1:8909/v2/#/tenders', { waitUntil:'load' }); await page.waitForTimeout(2500);
+await page.goto('http://127.0.0.1:8909/v2/#/tender', { waitUntil:'load' }); await page.waitForTimeout(2500);
 const t = await page.evaluate(() => ({
   count: document.getElementById('tCount')?.textContent ?? '',
   rows: document.querySelectorAll('#tBody tr').length,
-  navOn: !!document.querySelector('[data-nav="tenders"].on'),
+  navOn: !!document.querySelector('[data-nav="tender"].on'),
 }));
 F('tenders page renders all awards ("' + t.count + '", ' + t.rows + ' rows shown)',
   t.count.includes(total.toLocaleString('en-GB')) && t.rows === 20 && t.navOn);
@@ -106,7 +106,7 @@ const tabs1 = await page.evaluate(() => ({
 }));
 F('tabs split awards/programme (' + tabs0.labelA + ' | ' + tabs0.labelP + ' → ' + tabs1.hash + ')',
   tabs0.awardsShown && tabs0.progHidden && /Awards · 2,5\d\d/.test(tabs0.labelA) && /Programme · 1,\d{3}/.test(tabs0.labelP)
-  && tabs1.awardsHidden && tabs1.progShown && tabs1.hash === '#/tenders/programme');
+  && tabs1.awardsHidden && tabs1.progShown && tabs1.hash === '#/tender/programme');
 
 /* programme table */
 const pr = await page.evaluate(() => ({
@@ -143,12 +143,18 @@ const tp2 = await page.evaluate(() => document.getElementById('tPage')?.textCont
 F('awards pagination advances (' + tp2 + ')', /Page 2 of \d+/.test(tp2) && parseInt(tp2.match(/of (\d+)/)?.[1] ?? '0', 10) === Math.ceil(total / 20));
 
 /* deep link straight to the programme tab */
-await page.goto('http://127.0.0.1:8909/v2/#/tenders/programme', { waitUntil:'load' }); await page.waitForTimeout(2500);
+await page.goto('http://127.0.0.1:8909/v2/#/tender/programme', { waitUntil:'load' }); await page.waitForTimeout(2500);
 const deep = await page.evaluate(() => ({
   progShown: !document.getElementById('tabProg').hidden,
   awardsHidden: document.getElementById('tabAwards').hidden,
 }));
-F('#/tenders/programme deep-links the programme tab', deep.progShown && deep.awardsHidden);
+F('#/tender/programme deep-links the programme tab', deep.progShown && deep.awardsHidden);
+
+/* legacy plural slug redirects */
+await page.goto('http://127.0.0.1:8909/v2/#/tenders', { waitUntil:'load' }); await page.waitForTimeout(2500);
+const legacy = await page.evaluate(() => ({ hash: location.hash, rows: document.querySelectorAll('#tBody tr').length }));
+F('legacy #/tenders redirects to #/tender (' + legacy.hash + ', ' + legacy.rows + ' rows)',
+  legacy.hash === '#/tender' && legacy.rows === 20);
 
 /* upcoming-tender flag on route page */
 await page.goto('http://127.0.0.1:8909/v2/#/route/482', { waitUntil:'load' }); await page.waitForTimeout(2500);

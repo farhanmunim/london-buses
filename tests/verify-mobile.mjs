@@ -28,7 +28,7 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-const views = ['#/', '#/route/482', '#/route/88', '#/tenders', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
+const views = ['#/', '#/route/482', '#/route/88', '#/tender', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
 for (const v of views){
   await page.goto('http://127.0.0.1:8911/v2/' + v, { waitUntil:'load' });
   await page.waitForTimeout(v.includes('map') || v.includes('route/') ? 4000 : 2000);
@@ -46,7 +46,7 @@ const nav = await page.evaluate(() => {
 });
 F(`bottom nav fits (${nav.n} tabs, min ${Math.round(nav.minW)}px, right ${Math.round(nav.maxRight)}, ${nav.clipped} clipped)`, nav.maxRight <= 376 && nav.minW >= 44 && nav.clipped === 0);
 const kpiClip = await page.evaluate(async () => {
-  location.hash = '#/tenders'; await new Promise(r => setTimeout(r, 1500));
+  location.hash = '#/tender'; await new Promise(r => setTimeout(r, 1500));
   return [...document.querySelectorAll('#tKpis .fact .l')].filter(el => el.scrollWidth > el.clientWidth + 1).length;
 });
 F(`KPI labels never truncate on mobile (${kpiClip} clipped)`, kpiClip === 0);

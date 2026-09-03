@@ -315,7 +315,7 @@ main.fullbleed{max-width:none;padding:0}
       <a href="#/operators" data-nav="operators">Operators</a>
       <a href="#/garages" data-nav="garages">Garages</a>
       <a href="#/stops" data-nav="stops">Stops</a>
-      <a href="#/tenders" data-nav="tenders">Tenders</a>
+      <a href="#/tender" data-nav="tender">Tender</a>
       <a href="#/cpi" data-nav="cpi">CPI-CPA</a>
     </nav>
     <div class="topbar-spacer"></div>
@@ -337,7 +337,7 @@ main.fullbleed{max-width:none;padding:0}
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
   <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
   <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
-  <a href="#/tenders" data-nav="tenders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tenders</a>
+  <a href="#/tender" data-nav="tender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tender</a>
   <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
 </nav>
 
@@ -715,7 +715,8 @@ function navigate(){
   else if(view === 'garages')   renderGarages();
   else if(view === 'garage')    renderGarageDetail(arg);
   else if(view === 'vehicle')   renderVehicleDetail(arg);
-  else if(view === 'tenders')   renderTenders(arg);
+  else if(view === 'tender')    renderTenders(arg);
+  else if(view === 'tenders')   { location.replace('#/tender' + (arg ? '/' + encodeURIComponent(arg) : '')); return; }   // legacy plural slug
   else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
@@ -1056,7 +1057,7 @@ async function buildRouteSections(route, m){
         upcoming.twoYearExtension ? '+2 yr option' : null,
       ].filter(Boolean).join(' · ');
       frag.push(`<div class="divn-note" style="margin-top:14px"><span aria-hidden="true">📋</span>
-        <div><b>Coming up for tender</b> — ${upcoming.programmeYear ? `${esc(upcoming.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2'))} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tenders/programme" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
+        <div><b>Coming up for tender</b> — ${upcoming.programmeYear ? `${esc(upcoming.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2'))} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tender/programme" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
       </div>`);
     }
   } catch(e) { /* programme is enrichment — never fatal */ }
@@ -2490,7 +2491,7 @@ async function renderTenders(tab){
   const st = { q:'', op:'', yr:'', sort:'date', dir:-1, page:0 };
 
   main.innerHTML = `<div class="wrap">
-    <div id="dhead"><h1 style="margin:2px 0 4px">Tenders</h1>
+    <div id="dhead"><h1 style="margin:2px 0 4px">Tender</h1>
       <div style="color:var(--tx2);font-size:13.5px">Both halves of TfL's tendering: published <b>awards</b> (${all.length.toLocaleString('en-GB')} results, ${esc(years[years.length-1])}–${esc(years[0])}) and the forward <b>programme</b> of routes coming up for tender. Filter, sort, and export either.</div></div>
     <div style="display:flex;gap:6px;margin-top:14px" role="tablist" aria-label="Tender tables">
       <button class="livebtn tabpill" id="tabA" role="tab" aria-selected="true">Awards · ${all.length.toLocaleString('en-GB')}</button>
@@ -2550,7 +2551,7 @@ async function renderTenders(tab){
     </div>
   </div>`;
 
-  /* Tabs — awards | programme. #/tenders/programme deep-links the second
+  /* Tabs — awards | programme. #/tender/programme deep-links the second
      tab (the route pages' "Tendering programme" link lands there); switching
      rewrites the hash without re-rendering. */
   const setTab = (which) => {
@@ -2561,7 +2562,7 @@ async function renderTenders(tab){
     document.getElementById('tabP').classList.toggle('on', !a);
     document.getElementById('tabA').setAttribute('aria-selected', String(a));
     document.getElementById('tabP').setAttribute('aria-selected', String(!a));
-    history.replaceState(null, '', a ? '#/tenders' : '#/tenders/programme');
+    history.replaceState(null, '', a ? '#/tender' : '#/tender/programme');
   };
   setTab(tab === 'programme' ? 'programme' : 'awards');
   document.getElementById('tabA').addEventListener('click', () => setTab('awards'));
