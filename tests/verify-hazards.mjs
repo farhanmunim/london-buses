@@ -31,7 +31,7 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-await page.goto('http://127.0.0.1:8905/v2/#/route/1', { waitUntil:'load' }); await page.waitForTimeout(3500);
+await page.goto('http://127.0.0.1:8905/#/route/1', { waitUntil:'load' }); await page.waitForTimeout(3500);
 
 const btns = await page.evaluate(() => ['stopsBtn','liveBtn','closestBtn','bridgeBtn','incBtn'].map(id => {
   const b = document.getElementById(id);
@@ -97,7 +97,7 @@ const off = await page.evaluate(() => ({
 }));
 F('toggles clear layers + notes', !off.b && !off.i && !off.bon);
 /* route 2: operating garage IS the nearest — no competitor may carry the tag */
-await page.goto('http://127.0.0.1:8905/v2/#/route/2', { waitUntil:'load' }); await page.waitForTimeout(3000);
+await page.goto('http://127.0.0.1:8905/#/route/2', { waitUntil:'load' }); await page.waitForTimeout(3000);
 await page.evaluate(() => document.getElementById('closestBtn')?.click()); await page.waitForTimeout(1500);
 const own = await page.evaluate(() => ({
   tags: [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()),

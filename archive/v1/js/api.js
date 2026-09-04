@@ -15,11 +15,11 @@
  * All responses are cached in memory for the session.
  */
 
-const BASE    = './data';
+const BASE    = '/data';   // absolute: the archived copy lives under /archive/v1/ but reads the live pipeline
 
 // The faux-API root. Override via `globalThis.LB_API_BASE` before module
 // load (e.g. to point a preview build at another deployment's data).
-const API_BASE = globalThis.LB_API_BASE ?? './data/api';
+const API_BASE = globalThis.LB_API_BASE ?? '/data/api';
 
 // In-memory cache
 const _cache = new Map();

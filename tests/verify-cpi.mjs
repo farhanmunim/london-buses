@@ -33,7 +33,7 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-await page.goto('http://127.0.0.1:8906/v2/#/cpi', { waitUntil:'load' }); await page.waitForTimeout(2000);
+await page.goto('http://127.0.0.1:8906/#/cpi', { waitUntil:'load' }); await page.waitForTimeout(2000);
 const r = await page.evaluate(() => ({
   h1: document.querySelector('#main h1')?.textContent ?? '',
   facts: [...document.querySelectorAll('#main .fact')].map(f => f.textContent),
@@ -64,7 +64,7 @@ F('CPI export downloads CSV (' + dl.suggestedFilename() + ', ' + cpiCsv.split('\
   dl.suggestedFilename() === 'cpi-cpa.csv' && cpiCsv.includes('month') && cpiCsv.includes(latest.cpi) && cpiCsv.split('\r\n').length === data.months.length + 1);
 F('ONS link present', await page.evaluate(() => !!document.querySelector('#main a[href*="ons.gov.uk"]')));
 
-await page.goto('http://127.0.0.1:8906/v2/#/map', { waitUntil:'load' }); await page.waitForTimeout(5000);
+await page.goto('http://127.0.0.1:8906/#/map', { waitUntil:'load' }); await page.waitForTimeout(5000);
 const [dl2] = await Promise.all([
   page.waitForEvent('download', { timeout: 8000 }),
   page.click('#nmExport'),

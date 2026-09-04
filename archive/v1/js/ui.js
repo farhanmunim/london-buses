@@ -78,7 +78,7 @@ Promise.all([
 
 // Overview GeoJSON (the heavy one) — fetched last so it doesn't starve the
 // lighter metadata requests above.
-fetch('./data/routes-overview.geojson', { priority: 'low' })
+fetch('/data/routes-overview.geojson', { priority: 'low' })
   .then(r => r.json())
   .then(overview => {
     renderOverview(overview);
@@ -150,7 +150,7 @@ updateNetworkLiveStatus();
 // The hover tip breaks the sources down.
 function updateFooterDates() {
   Promise.all([
-    fetch('./data/build-meta.json').then(r => r.json()).catch(() => null),
+    fetch('/data/build-meta.json').then(r => r.json()).catch(() => null),
     fetchManifest(),
   ]).then(([meta, manifest]) => {
     const fmt   = d => `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;

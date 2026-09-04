@@ -1,0 +1,9 @@
+# Cloudflare Pages redirects.
+# v2 was promoted to the site root (2026-09-04); the old /v2 URLs redirect
+# home — hash fragments (#/route/24 etc.) survive redirects client-side, so
+# deep links keep working. The old app is archived under /archive/v1/ and
+# its changelog page follows it.
+/v2 / 301
+/v2/ / 301
+/v2/index.html / 301
+/changelog.html /archive/v1/changelog.html 301

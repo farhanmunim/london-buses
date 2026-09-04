@@ -6,6 +6,15 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.28 — v2 is the app
+
+_2026-09-04_
+
+- **NEW** **v2 is now the main app at `/`.** The original map-first app is archived, fully working, at `/archive/v1/` (it reads the same live data pipeline); every old `/v2` link redirects home with deep links intact, and `/changelog.html` follows the archive. Sitemap, response headers and the whole test battery moved with them.
+- **UX** The mobile bottom bar is decongested: five roomy destinations (Routes, Map, Operators, Garages, Stops) plus a **More** tab holding Tender, CPI-CPA and About in a small sheet — it lights up when any of its pages is active, and closes on navigation, outside tap or Escape. Desktop navigation is unchanged.
+
+---
+
 ## v2.27 — Fresher everything
 
 _2026-09-03_

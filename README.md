@@ -8,7 +8,7 @@ Interactive map of every London bus route. Search routes; filter by operator, ga
 
 ## What it does
 
-Two front-ends share the same data: the original map-first app at `/` and the v2 single-page app at `/v2` (fully mobile-responsive — Routes, Map, Operators, Garages, Stops, Tenders and CPI-CPA).
+The main app at `/` is a fully mobile-responsive single-page app — Routes, Map, Operators, Garages, Stops, Tender and CPI-CPA. The original map-first app is preserved read-only at `/archive/v1/` (old `/v2` links redirect to `/`).
 
 - Renders the entire London bus network as a colour-coded overview layer, with full route detail on click — geometry, stops, direction toggle, operator, vehicle make/model, propulsion, average fleet age, frequency, previous operator, contract value and length, next-tender batch
 - Route maps layer on demand: stops, **live buses** (BODS GPS), every **garage** with its distance to the route (operating and nearest garages tagged), **low bridges** graded by double-deck clearance, and bus-involved **collisions** as a severity-weighted heatmap (DfT STATS19)

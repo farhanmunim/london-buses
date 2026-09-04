@@ -50,12 +50,12 @@ const checks = {}; let pass = 0, fail = 0;
 const F = (k, ok) => { checks[k] = ok; console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
 /* ── v2: routes list from local data ── */
-await page.goto('http://127.0.0.1:8902/v2/#/', { waitUntil:'load' }); await page.waitForTimeout(2500);
+await page.goto('http://127.0.0.1:8902/#/', { waitUntil:'load' }); await page.waitForTimeout(2500);
 const nRoutes = await page.evaluate(() => document.querySelectorAll('#main a.rnum, #main .rrow').length);
 F('v2 routes list renders from /data/api (' + nRoutes + ' rows)', nRoutes > 300);
 
 /* ── v2: route detail — facts, tender bids, no reliability sections ── */
-await page.goto('http://127.0.0.1:8902/v2/#/route/88', { waitUntil:'load' }); await page.waitForTimeout(3500);
+await page.goto('http://127.0.0.1:8902/#/route/88', { waitUntil:'load' }); await page.waitForTimeout(3500);
 const detail = await page.evaluate(() => ({
   facts: document.querySelectorAll('#dfacts .fact').length,
   text: document.getElementById('main').textContent,
@@ -67,7 +67,7 @@ F('v2 QSI/tracked surfaces gone', !/Tracked reliability|Excess wait time|TfL QSI
 F('v2 live status from TfL direct ("' + detail.status.slice(0,20) + '")', /Good Service/.test(detail.status));
 
 /* ── v2: map view draws overview from local geojson ── */
-await page.goto('http://127.0.0.1:8902/v2/#/map', { waitUntil:'load' }); await page.waitForTimeout(6000);
+await page.goto('http://127.0.0.1:8902/#/map', { waitUntil:'load' }); await page.waitForTimeout(6000);
 const mapOk = await page.evaluate(() => ({
   el: !!document.getElementById('netmap'),
   layers: document.querySelectorAll('#netmap canvas, #netmap path').length,
@@ -76,7 +76,7 @@ const mapOk = await page.evaluate(() => ({
 F('v2 network map draws (' + mapOk.layers + ' layers, "' + mapOk.count + '")', mapOk.el && mapOk.layers > 0 && /\d+ routes/.test(mapOk.count));
 
 /* ── v1: home + route card ── */
-await page.goto('http://127.0.0.1:8902/', { waitUntil:'load' }); await page.waitForTimeout(4500);
+await page.goto('http://127.0.0.1:8902/archive/v1/', { waitUntil:'load' }); await page.waitForTimeout(4500);
 const v1 = await page.evaluate(() => ({
   textLen: document.body.innerText.length,
   hasKpis: !!document.querySelector('.rc-kpis'),

@@ -6,9 +6,10 @@ const ROOT = '/home/user/london-buses';
 const srv = createServer((req, res) => {
   try{
     const p = join(ROOT, decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/\/$/, '/index.html'));
+    const body = readFileSync(p);
     res.writeHead(200, { 'content-type': { '.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.geojson':'application/json','.xlsx':'application/octet-stream' }[extname(p)] ?? 'application/octet-stream' });
-    res.end(readFileSync(p));
-  }catch(e){ res.writeHead(404); res.end('nf'); }
+    res.end(body);
+  }catch(e){ try{ res.writeHead(404); }catch{} res.end('nf'); }
 }).listen(8903);
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const page = await (await browser.newContext({ viewport:{width:1380,height:900} })).newPage();
@@ -21,11 +22,11 @@ await page.route('**://unpkg.com/**', r => {
   return r.abort();
 });
 let pass=0, fail=0; const F=(k,ok)=>{ console.log((ok?'PASS':'FAIL')+'  '+k); ok?pass++:fail++; };
-await page.goto('http://127.0.0.1:8903/', {waitUntil:'load'}); await page.waitForTimeout(3500);
+await page.goto('http://127.0.0.1:8903/archive/v1/', {waitUntil:'load'}); await page.waitForTimeout(3500);
 F('v1: no Roadmap button or text', await page.evaluate(() => !document.getElementById('roadmap-btn') && !/roadmap/i.test(document.body.innerText)));
 F('v1: About button still present', await page.evaluate(() => !!document.querySelector('#about-btn, [id*=about]')));
 F('v1: routes render (sidebar count)', await page.evaluate(() => document.body.innerText.length > 500));
-await page.goto('http://127.0.0.1:8903/changelog.html', {waitUntil:'load'}); await page.waitForTimeout(1500);
+await page.goto('http://127.0.0.1:8903/archive/v1/changelog.html', {waitUntil:'load'}); await page.waitForTimeout(1500);
 F('changelog: loads, no Roadmap button', await page.evaluate(() => !document.getElementById('roadmap-btn') && document.body.innerText.includes('Changelog')));
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));

@@ -56,7 +56,7 @@ const F = (k, ok) => { checks[k] = ok; console.log((ok?'PASS':'FAIL') + '  ' + k
 
 /* ── stop board: render → outage → reconnect → recovery ── */
 const stopId = JSON.parse(payload('arrivals.json')).data[0].naptanId;
-await page.goto('http://127.0.0.1:8901/v2/#/stop/' + stopId, { waitUntil:'load' }); await page.waitForTimeout(3500);
+await page.goto('http://127.0.0.1:8901/#/stop/' + stopId, { waitUntil:'load' }); await page.waitForTimeout(3500);
 const rows0 = await page.evaluate(() => document.querySelectorAll('#arrBoard > div').length);
 F('board renders arrivals (' + rows0 + ' rows)', rows0 > 0);
 const next0 = await page.evaluate(() => document.getElementById('nextUpd')?.textContent ?? '');
@@ -75,7 +75,7 @@ const after = await page.evaluate(() => document.getElementById('nextUpd')?.text
 F('board recovers ("' + after + '")', /next update in \d+ s|updating/.test(after));
 
 /* ── route page: status 502 degrades to snapshot; live buses sticky ── */
-await page.goto('http://127.0.0.1:8901/v2/#/route/25', { waitUntil:'load' }); await page.waitForTimeout(3500);
+await page.goto('http://127.0.0.1:8901/#/route/25', { waitUntil:'load' }); await page.waitForTimeout(3500);
 const statusTxt = await page.evaluate(() => document.getElementById('dstatus')?.textContent.trim() ?? '');
 F('status falls back to snapshot when live 502s ("' + statusTxt.slice(0,30) + '")', statusTxt.length > 0);
 await page.evaluate(() => document.getElementById('liveBtn')?.click()); await page.waitForTimeout(2500);
