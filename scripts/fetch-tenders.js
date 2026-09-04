@@ -91,9 +91,16 @@ async function browserStart() {
     { executablePath: '/opt/pw-browsers/chromium' },
   ].filter(Boolean);
   const proxy = process.env.HTTPS_PROXY ? { server: process.env.HTTPS_PROXY } : undefined;
+  // Cloudflare's challenge scores automation fingerprints: navigator.webdriver
+  // (removed by disabling Blink's AutomationControlled feature) and the
+  // HeadlessChrome UA. CI sets TENDERS_HEADFUL=1 and runs under xvfb-run so
+  // a real headful Chrome renders the page — headless mode stayed flagged
+  // ("challenge not cleared") on GitHub runners even with a clean IP.
+  const headless = !process.env.TENDERS_HEADFUL;
+  const args = ['--disable-blink-features=AutomationControlled'];
   let lastErr = null;
   for (const opts of candidates) {
-    try { _browser = await chromium.launch({ headless: true, proxy, ...opts }); break; }
+    try { _browser = await chromium.launch({ headless, args, proxy, ...opts }); break; }
     catch (err) { lastErr = err; }
   }
   if (!_browser) throw lastErr ?? new Error('no Chromium available for browser-mode fetch');
@@ -118,7 +125,13 @@ async function browserFetchHtml(url, waitSelector, timeoutMs = 60_000) {
 async function discoverTenderIdsBrowser() {
   const html = await browserFetchHtml(DISCOVERY_URL, '#BusTenderSearch_ddl_btID');
   if (!html.includes('id="BusTenderSearch_ddl_btID"')) {
-    throw new Error('challenge not cleared (dropdown absent from rendered page)');
+    // Diagnose what Cloudflare actually served so a persistent failure in
+    // CI logs says whether we're stuck on the interstitial ("Just a
+    // moment..."), got a block page, or something else entirely.
+    const title = await _page.title().catch(() => '?');
+    const text = (await _page.evaluate(() => document.body?.innerText ?? '').catch(() => ''))
+      .replace(/\s+/g, ' ').slice(0, 160);
+    throw new Error(`challenge not cleared (title "${title}"; body: ${text})`);
   }
   return parseDiscoveryHtml(html);
 }

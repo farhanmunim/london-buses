@@ -11,6 +11,15 @@ name: Intraday Tender Refresh
 on:
   schedule:
     - cron: "20 7-20 * * *"
+  # GitHub's cron is best-effort and on this repo severely degraded (slots
+  # observed slipping 1-5h or dropping entirely — 2 of 14 hourly slots fired
+  # on 2026-09-03). workflow_run is event-driven and fires reliably, so the
+  # tender sweep also piggy-backs on every completed status/fleet refresh;
+  # the shared concurrency group serializes them, and the change-gated
+  # commit keeps the extra runs free of Cloudflare builds.
+  workflow_run:
+    workflows: ["Intraday Status Refresh", "Intraday Fleet Sweep"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -44,7 +53,12 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Fetch tender awards
-        run: node scripts/fetch-tenders.js
+        # Headful Chrome under a virtual display: Cloudflare's challenge
+        # flags headless automation (navigator.webdriver, HeadlessChrome
+        # UA), so the browser fallback needs a real rendering session.
+        env:
+          TENDERS_HEADFUL: "1"
+        run: xvfb-run -a node scripts/fetch-tenders.js
 
       - name: Fetch tendering programme
         # content.tfl.gov.uk is not behind the forms WAF; unchanged years
