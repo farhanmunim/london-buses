@@ -353,7 +353,7 @@ main.fullbleed{max-width:none;padding:0}
 
 <script type="module">
 /* ════════════════════════════════════════════════════════════════════════
-   London Buses v2 — single-file app, all data from this site’s own pipeline (data/api/*.json) plus TfL’s live endpoints.
+   London Buses — single-file app, all data from this site’s own pipeline (data/api/*.json) plus TfL’s live endpoints.
    One file on purpose: the farhan.app zone edge-caches js/css for 4 h,
    which has repeatedly served mixed old/new module graphs mid-deploy.
    HTML is served max-age=0, so a single file can never version-skew.
@@ -2854,12 +2854,12 @@ async function renderCpi(){
 async function renderAbout(){
   main.innerHTML = `
     <h1 class="h1">About</h1>
-    <div class="sub">London Buses v2 — search and explore every TfL bus route, operator and garage.</div>
+    <div class="sub">London Buses — search and explore every TfL bus route, operator and garage.</div>
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
         <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures from the <b>Office for National Statistics</b> (D7BT series); live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
-        <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="../">Classic map app ›</a></p>
+        <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
     <div class="section"><div class="section-h">Data freshness</div>
