@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-04T08:13:03Z",
-  "route_count": 676,
+  "generated_at_utc": "2026-09-05T08:02:20Z",
+  "route_count": 675,
   "routes": {
     "1": [
       {
@@ -1270,6 +1270,10 @@
         "towards": "Angel Islington, Moorgate Or Holborn"
       },
       {
+        "id": "490008743N",
+        "towards": "Moorgate"
+      },
+      {
         "id": "490010130N",
         "towards": "Angel Islington"
       },
@@ -2376,10 +2380,6 @@
       },
       {
         "id": "490004144W",
-        "towards": "Hackney Or Shoreditch"
-      },
-      {
-        "id": "490007242W",
         "towards": "Hackney Or Shoreditch"
       },
       {
@@ -7672,10 +7672,6 @@
       },
       {
         "id": "490012005E",
-        "towards": "Seven Kings"
-      },
-      {
-        "id": "490009219E",
         "towards": "Seven Kings"
       },
       {
@@ -18062,6 +18058,10 @@
         "towards": "Bank, Barbican Or London Bridge"
       },
       {
+        "id": "490008743N",
+        "towards": "Moorgate"
+      },
+      {
         "id": "490010130N",
         "towards": "Angel Islington"
       },
@@ -27422,8 +27422,8 @@
         "towards": "Chadwell Heath, Newbury Park Or the Brewery"
       },
       {
-        "id": "490014452P",
-        "towards": "Chadwell Heath, Collier Row Or Newbury Pk"
+        "id": "490014452E",
+        "towards": "The Brewery And Queens Hospital"
       },
       {
         "id": "490011659L",
@@ -43717,10 +43717,6 @@
         "towards": "Bank, Barbican Or London Bridge"
       },
       {
-        "id": "490000225W",
-        "towards": "Aldwych, Bank Or Blackfriars"
-      },
-      {
         "id": "490010199E",
         "towards": "Waterloo, Blackfriars Or London Bridge"
       },
@@ -43759,6 +43755,10 @@
       {
         "id": "490000073G",
         "towards": "Peckham, Pimlico, Camberwell Or Kennington"
+      },
+      {
+        "id": "490000073P",
+        "towards": "Kennington And Vauxhall"
       },
       {
         "id": "490010223S1",
@@ -57999,31 +57999,24 @@
         "towards": "Beckton Or Dagenham Ford's"
       },
       {
-        "id": "490019471E"
+        "id": "490000059E",
+        "towards": "Beckton Or Dagenham Ford's"
       },
       {
-        "id": "490000058B",
-        "towards": "Rainham"
+        "id": "490013298J",
+        "towards": "Beckton Or Dagenham Ford's"
       },
       {
-        "id": "490009581S",
-        "towards": "Rainham"
+        "id": "490003388S",
+        "towards": "Beckton Or Dagenham Ford's"
       },
       {
-        "id": "490011392S",
-        "towards": "Dagenham Asda"
+        "id": "490010462S",
+        "towards": "Beckton Or Dagenham Ford's"
       },
       {
-        "id": "490006741S",
-        "towards": "Dagenham Asda"
-      },
-      {
-        "id": "490011579S",
-        "towards": "Dagenham Asda"
-      },
-      {
-        "id": "490010666S",
-        "towards": "Dagenham Asda"
+        "id": "490003565E2",
+        "towards": "Ford Main Works, Becontree Or Rainham"
       },
       {
         "id": "490010667E",
@@ -61090,8 +61083,8 @@
         "towards": "Pinner Or Harrow Weald"
       },
       {
-        "id": "490006271E",
-        "towards": "Harrow"
+        "id": "490010376N",
+        "towards": "Pinner Or Harrow Weald"
       },
       {
         "id": "490012288N",
@@ -61142,6 +61135,10 @@
       },
       {
         "id": "490010376S",
+        "towards": "Harrow"
+      },
+      {
+        "id": "490006271E",
         "towards": "Harrow"
       },
       {
@@ -85785,6 +85782,34 @@
     ],
     "259": [
       {
+        "id": "490010364S",
+        "towards": "Edmonton Green"
+      },
+      {
+        "id": "490010278S",
+        "towards": "Edmonton Green"
+      },
+      {
+        "id": "490005881S",
+        "towards": "Edmonton Green"
+      },
+      {
+        "id": "490013770S",
+        "towards": "Edmonton Green"
+      },
+      {
+        "id": "490006933S",
+        "towards": "Tottenham"
+      },
+      {
+        "id": "490004180S",
+        "towards": "Tottenham Or North Middlesex Hospital"
+      },
+      {
+        "id": "490004181W",
+        "towards": "Enfield, Tottenham Or North Middlesex Hospital"
+      },
+      {
         "id": "490009983G",
         "towards": "Tottenham Or North Middlesex Hospital"
       },
@@ -85915,90 +85940,6 @@
       {
         "id": "490003991V",
         "towards": "Kings Cross Or Kentish Town"
-      },
-      {
-        "id": "490007005S",
-        "towards": "Kings Cross Or Kentish Town"
-      },
-      {
-        "id": "490008231S",
-        "towards": "Kings Cross Or Kentish Town"
-      },
-      {
-        "id": "490000035A",
-        "towards": "Kings Cross"
-      },
-      {
-        "id": "490007615H",
-        "towards": "Angel Islington Or Kings Cross"
-      },
-      {
-        "id": "490001043L",
-        "towards": "Angel Islington Or Kings Cross"
-      },
-      {
-        "id": "490012865S",
-        "towards": "Angel Islington Or Kings Cross"
-      },
-      {
-        "id": "490015324S",
-        "towards": "Angel Islington Or Kings Cross"
-      },
-      {
-        "id": "490004811S",
-        "towards": "Euston Or Chancery Lane"
-      },
-      {
-        "id": "490008714S",
-        "towards": "Euston Or Chancery Lane"
-      },
-      {
-        "id": "490001171H",
-        "towards": "Euston Or Holborn"
-      },
-      {
-        "id": "490010929L",
-        "towards": "Chancery Lane Or Farringdon Station"
-      },
-      {
-        "id": "490004354N",
-        "towards": "Camden Town Or Holloway"
-      },
-      {
-        "id": "490001171G",
-        "towards": "Archway Or Holloway"
-      },
-      {
-        "id": "490014553J",
-        "towards": "Holloway Or Euston"
-      },
-      {
-        "id": "490008714N",
-        "towards": "Holloway Nags Head"
-      },
-      {
-        "id": "490004811N",
-        "towards": "Holloway Nags Head"
-      },
-      {
-        "id": "490015324N",
-        "towards": "Camden Town Or Holloway Nags Head"
-      },
-      {
-        "id": "490007008N",
-        "towards": "Camden Town Or Holloway Nags Head"
-      },
-      {
-        "id": "490001043K",
-        "towards": "Camden Town Or Holloway Nags Head"
-      },
-      {
-        "id": "490007615G",
-        "towards": "Camden Town Or Holloway"
-      },
-      {
-        "id": "490000035D",
-        "towards": "Archway, Hornsey Or Finsbury Park"
       },
       {
         "id": "490010399N",
@@ -86149,7 +86090,36 @@
         "towards": "Ponders End Or Bush Hill Park"
       },
       {
-        "id": "490009983A"
+        "id": "490009983B",
+        "towards": "Ponders End Or Bush Hill Park"
+      },
+      {
+        "id": "490009983P",
+        "towards": "Bush Hill Park Or Ponders End"
+      },
+      {
+        "id": "490004180N1",
+        "towards": "Ponders End Or Bush Hill Park"
+      },
+      {
+        "id": "490006043N",
+        "towards": "Ponders End"
+      },
+      {
+        "id": "490008387N",
+        "towards": "Ponders End"
+      },
+      {
+        "id": "490013770N",
+        "towards": "Ponders End Or Waltham Cross"
+      },
+      {
+        "id": "490005881N",
+        "towards": "Waltham Cross"
+      },
+      {
+        "id": "490007087N",
+        "towards": "Enfield Town Or Waltham Cross"
       }
     ],
     "260": [
@@ -92272,6 +92242,10 @@
         "towards": "Edmonton Or Enfield Town"
       },
       {
+        "id": "490015441N",
+        "towards": "Enfield Or Edmonton"
+      },
+      {
         "id": "490015441J",
         "towards": "Edmonton Or Bush Hill Park"
       },
@@ -92281,6 +92255,10 @@
       },
       {
         "id": "490010364S",
+        "towards": "Edmonton Green"
+      },
+      {
+        "id": "490010278S",
         "towards": "Edmonton Green"
       },
       {
@@ -92368,67 +92346,48 @@
         "towards": "Manor House Or Stamford Hill"
       },
       {
-        "id": "490019455S",
-        "towards": "Manor House"
+        "id": "490015081Q",
+        "towards": "Stoke Newington"
       },
       {
-        "id": "490007439S",
-        "towards": "Manor House"
+        "id": "490001264W",
+        "towards": "Stoke Newington"
       },
       {
-        "id": "490012432W",
-        "towards": "Manor House"
+        "id": "490012433S",
+        "towards": "Stoke Newington"
       },
       {
-        "id": "490008123S",
-        "towards": "Manor House"
+        "id": "490006456F",
+        "towards": "Stoke Newington"
       },
       {
-        "id": "490014012S",
-        "towards": "Manor House"
+        "id": "490023084Y",
+        "towards": "Seven Sisters"
       },
       {
-        "id": "490003306W",
-        "towards": "Finsbury Park"
+        "id": "490012524H",
+        "towards": "Manor House Or Seven Sisters"
       },
       {
-        "id": "490014812W",
-        "towards": "Finsbury Park"
+        "id": "490006456E",
+        "towards": "Turnpike Lane Or Seven Sisters"
       },
       {
-        "id": "490000142G"
+        "id": "490012433N",
+        "towards": "Tottenham Or Wood Green"
       },
       {
-        "id": "490000142F",
-        "towards": "Tottenham"
+        "id": "490015852N",
+        "towards": "Wood Green Or Edmonton"
       },
       {
-        "id": "490014812E",
-        "towards": "Tottenham Or Stamford Hill"
+        "id": "490001264OB",
+        "towards": "Wood Green Or Edmonton"
       },
       {
-        "id": "490003306E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490014012E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490008123N",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490012432N",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490015855N",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490004037BE",
-        "towards": "Tottenham"
+        "id": "490015081O",
+        "towards": "Edmonton, Wood Green Or Northumberland Park"
       },
       {
         "id": "490000201J",
@@ -92447,8 +92406,8 @@
         "towards": "Edmonton, Wood Green Or Northumberland Park"
       },
       {
-        "id": "490001040J",
-        "towards": "Turnpike Lane Or Northumberland Park"
+        "id": "490018845N",
+        "towards": "Edmonton"
       },
       {
         "id": "490009360N",
@@ -92505,6 +92464,10 @@
       {
         "id": "490009983P",
         "towards": "Bush Hill Park Or Ponders End"
+      },
+      {
+        "id": "490004180N1",
+        "towards": "Ponders End Or Bush Hill Park"
       },
       {
         "id": "490006043N",
@@ -101082,6 +101045,10 @@
     ],
     "310": [
       {
+        "id": "490023084SE",
+        "towards": "Seven Sisters"
+      },
+      {
         "id": "490012524H",
         "towards": "Manor House Or Seven Sisters"
       },
@@ -101126,52 +101093,56 @@
         "towards": "Holloway Nags Head"
       },
       {
-        "id": "490011623P",
+        "id": "490000083S",
         "towards": "Holloway Nags Head"
       },
       {
-        "id": "490013693N",
-        "towards": "Archway, Crouch End Or Wood Green"
+        "id": "490006889W",
+        "towards": "Holloway, Nags Head"
       },
       {
-        "id": "490007752CS",
-        "towards": "Archway, Crouch End Or Wood Green"
+        "id": "490003929S",
+        "towards": "Camden Town, Kings Cross Or Tufnell Park"
       },
       {
-        "id": "490012591CP",
+        "id": "490008368S",
+        "towards": "Camden Town, Kings Cross Or Tufnell Park"
+      },
+      {
+        "id": "490008296N",
+        "towards": "Tufnell Park Or Barnsbury"
+      },
+      {
+        "id": "490008296L",
+        "towards": "Archway Or Finsbury Park"
+      },
+      {
+        "id": "490013836F",
         "towards": "Archway"
       },
       {
-        "id": "490003261W",
+        "id": "490009808O",
         "towards": "Archway"
       },
       {
-        "id": "490008366W",
-        "towards": "Archway"
+        "id": "490014333N",
+        "towards": "Highgate Village Or Muswell Hill"
       },
       {
-        "id": "490006698N",
-        "towards": "Archway Or Crouch End"
+        "id": "490001302T",
+        "towards": "Highgate Or Highgate Village"
       },
       {
-        "id": "490008365W",
-        "towards": "Archway"
+        "id": "490006550P",
+        "towards": "Highgate Village Or Muswell Hill"
       },
       {
-        "id": "490010119S",
-        "towards": "Highgate Village"
+        "id": "490000008Y",
+        "towards": "Highgate Village Or Muswell Hill"
       },
       {
-        "id": "490005752S",
-        "towards": "Archway And Highgate Village"
-      },
-      {
-        "id": "490003363N",
-        "towards": "Highgate Village"
-      },
-      {
-        "id": "490000008W",
-        "towards": "Highgate Village Or Tufnell Park"
+        "id": "490000008NW",
+        "towards": "Highgate Village, Tufnell Park Or Crouch End"
       },
       {
         "id": "490014625A",
@@ -101306,44 +101277,44 @@
         "towards": "Finsbury Park Or Holloway Nags Head"
       },
       {
-        "id": "490003363M",
-        "towards": "Crouch End Or Finsbury Park"
+        "id": "490000008R",
+        "towards": "Holloway Nags Head"
       },
       {
-        "id": "490005752N",
-        "towards": "Crouch End Or Finsbury Park"
+        "id": "490001302S",
+        "towards": "Nags Head Holloway"
       },
       {
-        "id": "490013023N",
-        "towards": "Crouch End Or Finsbury Park"
+        "id": "490003201S",
+        "towards": "Highbury Corner Or Kings Cross"
       },
       {
-        "id": "490008365E",
-        "towards": "Finsbury Park"
+        "id": "490014778Q",
+        "towards": "Highbury Corner Or Kings Cross"
       },
       {
-        "id": "490008365S",
-        "towards": "Archway, Finsbury Park Or Kings Cross"
+        "id": "490008296G",
+        "towards": "Finsbury Park, Highbury Corner Or Kings Cross"
       },
       {
-        "id": "490007751S",
-        "towards": "Finsbury Park Or Kings Cross"
+        "id": "490008296H",
+        "towards": "Finsbury Park Or Hornsey Rise"
       },
       {
-        "id": "490003261E",
-        "towards": "Finsbury Park"
+        "id": "490008367J",
+        "towards": "Finsbury Park Or Hornsey Rise"
       },
       {
-        "id": "490012591CO",
-        "towards": "Finsbury Park"
+        "id": "490006272E",
+        "towards": "Manor House Or Highbury"
       },
       {
-        "id": "490003160CT",
-        "towards": "Finsbury Park"
+        "id": "490000083X",
+        "towards": "Manor House Or Highbury Corner"
       },
       {
-        "id": "490013693S",
-        "towards": "Finsbury Park"
+        "id": "490000083R",
+        "towards": "Manor House Or Highbury Corner"
       },
       {
         "id": "490015078L",
@@ -136507,6 +136478,10 @@
         "towards": "Manor House Or Stamford Hill"
       },
       {
+        "id": "490016825W",
+        "towards": "Manor House"
+      },
+      {
         "id": "490019454S",
         "towards": "Manor House Or Stamford Hill"
       },
@@ -140973,10 +140948,6 @@
         "towards": "Chase Cross, Collier Row Or Gidea Park"
       },
       {
-        "id": "490014452P",
-        "towards": "Chadwell Heath, Collier Row Or Newbury Pk"
-      },
-      {
         "id": "490009810N",
         "towards": "Gallows Corner Or Chase Cross"
       },
@@ -141506,127 +141477,6 @@
       {
         "id": "490007095N2",
         "towards": "Brentwood"
-      }
-    ],
-    "592": [
-      {
-        "id": "490001249F",
-        "towards": "Chislehurst Or Foots Cray"
-      },
-      {
-        "id": "490015177H",
-        "towards": "Chislehurst Or Foots Cray"
-      },
-      {
-        "id": "490005743M",
-        "towards": "Chislehurst Or Foots Cray"
-      },
-      {
-        "id": "490012140T",
-        "towards": "Albany Park Or Foots Cray"
-      },
-      {
-        "id": "490005299Y",
-        "towards": "Bexley, Orpington Or Swanley"
-      },
-      {
-        "id": "490008885E",
-        "towards": "Bexley, Orpington Or Swanley"
-      },
-      {
-        "id": "490009854E",
-        "towards": "Bexley, Orpington Or Swanley"
-      },
-      {
-        "id": "490011463E",
-        "towards": "Bexley Or Swanley"
-      },
-      {
-        "id": "490012143E",
-        "towards": "Bexley Or Swanley"
-      },
-      {
-        "id": "490010734E",
-        "towards": "Bexley Or Swanley"
-      },
-      {
-        "id": "490015422E",
-        "towards": "Bexley Or Swanley"
-      },
-      {
-        "id": "490003662N",
-        "towards": "Bexley"
-      },
-      {
-        "id": "490006482N",
-        "towards": "Bexley"
-      },
-      {
-        "id": "490010858N",
-        "towards": "Bexley"
-      },
-      {
-        "id": "490004578N",
-        "towards": "Bexleyheath"
-      },
-      {
-        "id": "490010083N",
-        "towards": "Bexleyheath"
-      },
-      {
-        "id": "490010083S",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490004579S",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490010858S",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490006482S",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490003662S",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490015422W",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490012143W",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490011463W",
-        "towards": "Sidcup"
-      },
-      {
-        "id": "490009854W",
-        "towards": "Blackfen, Eltham Or Queen Mary's Hospital"
-      },
-      {
-        "id": "490008885W",
-        "towards": "Blckfen, Eltham Or Queen Mary's Hospital"
-      },
-      {
-        "id": "490005299Z",
-        "towards": "Blackfen, Eltham Or Queen Mary's Hospital"
-      },
-      {
-        "id": "490012140V",
-        "towards": "Blackfen Or Eltham"
-      },
-      {
-        "id": "490005743N",
-        "towards": "Bexleyheath, Blackfen Or Eltham"
-      },
-      {
-        "id": "490015534D"
       }
     ],
     "601": [
@@ -162076,10 +161926,6 @@
       },
       {
         "id": "490004144W",
-        "towards": "Hackney Or Shoreditch"
-      },
-      {
-        "id": "490007242W",
         "towards": "Hackney Or Shoreditch"
       },
       {
@@ -184831,6 +184677,14 @@
         "towards": "Aldgate Or Liverpool Street"
       },
       {
+        "id": "490000013D",
+        "towards": "Aldgate Or Liverpool Street"
+      },
+      {
+        "id": "490015079E",
+        "towards": "Whitechapel"
+      },
+      {
         "id": "490009037N",
         "towards": "Shoreditch"
       },
@@ -201397,10 +201251,6 @@
         "towards": "Hackney Or Shoreditch"
       },
       {
-        "id": "490007242W",
-        "towards": "Hackney Or Shoreditch"
-      },
-      {
         "id": "490000022B",
         "towards": "Hackney Or Shoreditch"
       },
@@ -201447,6 +201297,10 @@
       {
         "id": "490015124Z",
         "towards": "Tottenham Court Road"
+      },
+      {
+        "id": "490000225T",
+        "towards": "Aldwych Or Tottenham Court Road"
       },
       {
         "id": "490001067R",
@@ -201535,6 +201389,10 @@
       {
         "id": "490001067Q",
         "towards": "Bank Or London Bridge"
+      },
+      {
+        "id": "490000225S",
+        "towards": "Bank, Barbican Or London Bridge"
       },
       {
         "id": "49000225SY",
@@ -202645,8 +202503,8 @@
         "towards": "Romford Town Centre"
       },
       {
-        "id": "490014452P",
-        "towards": "Chadwell Heath, Collier Row Or Newbury Pk"
+        "id": "490014452E",
+        "towards": "The Brewery And Queens Hospital"
       },
       {
         "id": "490011659L",

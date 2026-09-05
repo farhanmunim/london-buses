@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-04T08:22:28.900Z",
-  "count": 76,
+  "generatedAt": "2026-09-05T08:12:17.832Z",
+  "count": 77,
   "garages": {
     "A": {
       "code": "A",
@@ -79,7 +79,7 @@
       "address": "Philip Lane, Tottenham, London, N15 4JB",
       "lat": 51.588722,
       "lon": -0.072359,
-      "pvr": 139,
+      "pvr": 129,
       "capacity": 200
     },
     "AV": {
@@ -89,7 +89,7 @@
       "address": "Kingsley Road, Hounslow, TW3 1PA",
       "lat": 51.471985,
       "lon": -0.355561,
-      "pvr": 88,
+      "pvr": 83,
       "capacity": 140
     },
     "AW": {
@@ -111,6 +111,16 @@
       "lon": -0.133069,
       "pvr": 170,
       "capacity": 201
+    },
+    "BF": {
+      "code": "BF",
+      "name": "Byfleet",
+      "operator": "Falcon Coaches",
+      "address": "20a Wintersells Road, Byfleet, Surrey, KT14 7LF",
+      "lat": 51.349772,
+      "lon": -0.479059,
+      "pvr": 2,
+      "capacity": null
     },
     "BK": {
       "code": "BK",
@@ -309,7 +319,7 @@
       "address": "467 High Road, Harrow Weald, Middlesex, HA3 6EJ",
       "lat": 51.605644,
       "lon": -0.340525,
-      "pvr": 74,
+      "pvr": 68,
       "capacity": 73
     },
     "HK": {
@@ -319,7 +329,7 @@
       "address": "Mare Street, South Hackney, London, E8 4RH",
       "lat": 51.53572,
       "lon": -0.057655,
-      "pvr": 108,
+      "pvr": 107,
       "capacity": 130
     },
     "HO": {
@@ -499,7 +509,7 @@
       "address": "Unit 2, Albright Industrial Estate, Ferry Lane, Rainham, Essex, RM13 9BU",
       "lat": 51.515664,
       "lon": 0.18476,
-      "pvr": 114,
+      "pvr": 128,
       "capacity": 150
     },
     "RR": {
@@ -509,7 +519,7 @@
       "address": "51 River Road, London, IG11 0DA",
       "lat": 51.523066,
       "lon": 0.096456,
-      "pvr": 205,
+      "pvr": 190,
       "capacity": 250
     },
     "S": {
@@ -549,7 +559,7 @@
       "address": "Factory Road, Silvertown, London, E16 2EL",
       "lat": 51.500553,
       "lon": 0.054502,
-      "pvr": 11,
+      "pvr": 26,
       "capacity": 100
     },
     "SM": {
@@ -569,7 +579,7 @@
       "address": "331 Pinner Road, Harrow, HA1 4HN",
       "lat": 51.584292,
       "lon": -0.358842,
-      "pvr": 75,
+      "pvr": 80,
       "capacity": null
     },
     "SW": {
@@ -659,7 +669,7 @@
       "address": "Kingston Road, Tolworth, KT5 9NU",
       "lat": 51.375857,
       "lon": -0.278685,
-      "pvr": 77,
+      "pvr": 75,
       "capacity": 115
     },
     "UB": {
@@ -679,7 +689,7 @@
       "address": "51 Wallingford Road, Cowley, UB8 2RW",
       "lat": 51.536817,
       "lon": -0.48901,
-      "pvr": 82,
+      "pvr": 87,
       "capacity": 90
     },
     "V": {
