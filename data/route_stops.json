@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-06T08:12:59Z",
-  "route_count": 670,
+  "generated_at_utc": "2026-09-07T08:36:08Z",
+  "route_count": 672,
   "routes": {
     "1": [
       {
@@ -142440,6 +142440,184 @@
         "towards": "Harrow, Wembley Or Hendon"
       }
     ],
+    "608": [
+      {
+        "id": "490007095N1",
+        "towards": "Harold Hill"
+      },
+      {
+        "id": "490006738N",
+        "towards": "Harold Hill and Noak Hill"
+      },
+      {
+        "id": "490008036N",
+        "towards": "Harold Hill"
+      },
+      {
+        "id": "490010143N",
+        "towards": "Harold Hill"
+      },
+      {
+        "id": "490007354N",
+        "towards": "Harold Hill and Noak Hill"
+      },
+      {
+        "id": "490012895E",
+        "towards": "Harold Hill Or Noak Hill"
+      },
+      {
+        "id": "490004992E",
+        "towards": "Harold Hill Or Noak Hill"
+      },
+      {
+        "id": "490006762E",
+        "towards": "Harold Hill Or Noak Hill"
+      },
+      {
+        "id": "490005187E",
+        "towards": "Harold Hill, Harold Wood Or Noak Hill"
+      },
+      {
+        "id": "490007828S",
+        "towards": "Harold Wood"
+      },
+      {
+        "id": "490007827S",
+        "towards": "Harold Wood"
+      },
+      {
+        "id": "490007301E",
+        "towards": "Harold Wood"
+      },
+      {
+        "id": "490011852E",
+        "towards": "Brentwood Or Harold Wood"
+      },
+      {
+        "id": "490013497S",
+        "towards": "Harold Wood"
+      },
+      {
+        "id": "490012819E",
+        "towards": "Dagnam Park Square"
+      },
+      {
+        "id": "490013159E",
+        "towards": "Dagnam Park Square"
+      },
+      {
+        "id": "490006711S",
+        "towards": "Harold Wood"
+      },
+      {
+        "id": "150037001002",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "1500IM839",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "150037001006",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "150037001008",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "1500BDBT",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "150037002004",
+        "towards": "Brentwood"
+      },
+      {
+        "id": "150037002006"
+      },
+      {
+        "id": "1500IM212B"
+      },
+      {
+        "id": "1500IM1438B"
+      },
+      {
+        "id": "1500IM212"
+      },
+      {
+        "id": "490009748W",
+        "towards": "Romford"
+      },
+      {
+        "id": "490006711N",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490011536W",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490012819N1",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490013497N",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490010726W",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490007301W",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490007827N",
+        "towards": "Noak Hill"
+      },
+      {
+        "id": "490007828N",
+        "towards": "Noak Hill"
+      },
+      {
+        "id": "490005187W",
+        "towards": "Noak Hill Or Gallows Corner"
+      },
+      {
+        "id": "490006762W",
+        "towards": "Noak Hill Or Gallows Corner"
+      },
+      {
+        "id": "490004992W",
+        "towards": "Noak Hill Or Gallows Corner"
+      },
+      {
+        "id": "490012895W",
+        "towards": "Gallows Corner Or Noak Hill"
+      },
+      {
+        "id": "490007354S",
+        "towards": "Gallows Corner"
+      },
+      {
+        "id": "490010143S",
+        "towards": "Romford"
+      },
+      {
+        "id": "490008036S",
+        "towards": "Romford"
+      },
+      {
+        "id": "490006738S",
+        "towards": "Romford Or Gidea Park"
+      },
+      {
+        "id": "490007095S1",
+        "towards": "Romford Or Gidea Park"
+      }
+    ],
     "612": [
       {
         "id": "490011990N",
@@ -146398,6 +146576,379 @@
       {
         "id": "40004402064B",
         "towards": "Sunbury"
+      }
+    ],
+    "638": [
+      {
+        "id": "490003099N",
+        "towards": "Hayes"
+      },
+      {
+        "id": "490005545N",
+        "towards": "Bromley Or Orpington"
+      },
+      {
+        "id": "490008289W1",
+        "towards": "Bromley Or Orpington"
+      },
+      {
+        "id": "490001145C",
+        "towards": "Bromley Or Orpington"
+      },
+      {
+        "id": "490007941D",
+        "towards": "Bromley Or Orpington"
+      },
+      {
+        "id": "490007949S2",
+        "towards": "Bromley South"
+      },
+      {
+        "id": "490005758N",
+        "towards": "Bromley South"
+      },
+      {
+        "id": "490013498N",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490009774N",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490007282N",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490003644E",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490004376N",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490004897E",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490011304D",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490012775E",
+        "towards": "Bromley North"
+      },
+      {
+        "id": "490001037A",
+        "towards": "Chislehurst, Downham Or Grove Park"
+      },
+      {
+        "id": "490004410V",
+        "towards": "Downham Or Sundridge"
+      },
+      {
+        "id": "490008665Q",
+        "towards": "Chislehurst, Downham Or Grove Park"
+      },
+      {
+        "id": "4900004408P",
+        "towards": "Downham, Grove Park Or Shortlands"
+      },
+      {
+        "id": "490004425N",
+        "towards": "Elmstead Woods, Downham Or Grove Park"
+      },
+      {
+        "id": "490015515B",
+        "towards": "Elmstead Woods, Catford Or Grove Park"
+      },
+      {
+        "id": "490010031N",
+        "towards": "Elmstead Woods, Catford Or Grove Park"
+      },
+      {
+        "id": "490009279N",
+        "towards": "Elmstead Woods, Catford Or Grove Park"
+      },
+      {
+        "id": "490010750N",
+        "towards": "Catford Or Grove Park"
+      },
+      {
+        "id": "490012325E",
+        "towards": "Lee Green Or Mottingham"
+      },
+      {
+        "id": "490010263N",
+        "towards": "Lee Green Or Mottingham"
+      },
+      {
+        "id": "490013782N",
+        "towards": "Lee Green Or Mottingham"
+      },
+      {
+        "id": "490008993N",
+        "towards": "Lee Green Or Mottingham"
+      },
+      {
+        "id": "490001124E",
+        "towards": "Lee Green Or Mottingham"
+      },
+      {
+        "id": "490015553G",
+        "towards": "Chislehurst Or Mottingham"
+      },
+      {
+        "id": "490013403E",
+        "towards": "Chislehurst Or Mottingham"
+      },
+      {
+        "id": "490007683E",
+        "towards": "Chislehurst"
+      },
+      {
+        "id": "490006538E",
+        "towards": "Chislehurst"
+      },
+      {
+        "id": "490010067S",
+        "towards": "Chislehurst Or Grove Park"
+      },
+      {
+        "id": "490010064S",
+        "towards": "Chislehurst Or Grove Park"
+      },
+      {
+        "id": "490011447S",
+        "towards": "Chislehurst Or Grove Park"
+      },
+      {
+        "id": "490006521S",
+        "towards": "Chislehurst"
+      },
+      {
+        "id": "490010478E",
+        "towards": "Chislehurst"
+      },
+      {
+        "id": "490013496S",
+        "towards": "Petts Wood"
+      },
+      {
+        "id": "490003139H",
+        "towards": "Petts Wood"
+      },
+      {
+        "id": "490010817K",
+        "towards": "Petts Wood"
+      },
+      {
+        "id": "490005205P",
+        "towards": "Bromley, Petts Wood Or Sidcup"
+      },
+      {
+        "id": "490015269S",
+        "towards": "Sidcup"
+      },
+      {
+        "id": "490003427E",
+        "towards": "Sidcup"
+      },
+      {
+        "id": "490003735E",
+        "towards": "Sidcup"
+      },
+      {
+        "id": "490009041HK",
+        "towards": "Bexleyheath"
+      },
+      {
+        "id": "490016701S",
+        "towards": "Orpington"
+      },
+      {
+        "id": "490002267ZZ",
+        "towards": "Chislehurst"
+      },
+      {
+        "id": "490009041HL",
+        "towards": "Bickley Or New Eltham"
+      },
+      {
+        "id": "490003735W",
+        "towards": "Bickley Or New Eltham"
+      },
+      {
+        "id": "490003427W",
+        "towards": "Bickley Or New Eltham"
+      },
+      {
+        "id": "490005205R",
+        "towards": "Bickley Or New Eltham"
+      },
+      {
+        "id": "490005205N",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490011196L",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490005204J",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490013496N",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490010478W",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490006521N",
+        "towards": "Eltham Or Grove Park"
+      },
+      {
+        "id": "490011447N",
+        "towards": "Eltham"
+      },
+      {
+        "id": "490010064N",
+        "towards": "Eltham"
+      },
+      {
+        "id": "490010067N",
+        "towards": "Grove Park"
+      },
+      {
+        "id": "490006538W",
+        "towards": "Grove Park"
+      },
+      {
+        "id": "490007683W",
+        "towards": "Grove Park"
+      },
+      {
+        "id": "490013403W",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490015553F",
+        "towards": "Catford"
+      },
+      {
+        "id": "490001124B",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490008993S",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490013782S",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490010263S",
+        "towards": "Bromley"
+      },
+      {
+        "id": "490012325W",
+        "towards": "Bromley South"
+      },
+      {
+        "id": "490010750S",
+        "towards": "Bromley South"
+      },
+      {
+        "id": "490009279W",
+        "towards": "Bromley Common Or Hayes"
+      },
+      {
+        "id": "490010031S",
+        "towards": "Bromley Common Or Hayes"
+      },
+      {
+        "id": "490015515S",
+        "towards": "Bromley Common Or Hayes"
+      },
+      {
+        "id": "490001036D",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490008665T",
+        "towards": "Beckenham, Bromley Common Or Hayes"
+      },
+      {
+        "id": "4900006507W",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490001037X",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "4900012775K",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490011304L",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490004897W",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490004376W",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490003644W",
+        "towards": "Beckenham Or Hayes"
+      },
+      {
+        "id": "490009774S",
+        "towards": "Coney Hall"
+      },
+      {
+        "id": "490013498S",
+        "towards": "Coney Hall"
+      },
+      {
+        "id": "490005758S",
+        "towards": "Coney Hall"
+      },
+      {
+        "id": "490007949S1",
+        "towards": "Coney Hall"
+      },
+      {
+        "id": "490007941A",
+        "towards": "Addington Village, Keston Or West Wickham"
+      },
+      {
+        "id": "490001145B",
+        "towards": "Addington Village, Keston Or West Wickham"
+      },
+      {
+        "id": "490008289W2",
+        "towards": "Addington Village, Keston Or West Wickham"
+      },
+      {
+        "id": "490005545S",
+        "towards": "Addington Village, Keston Or West Wickham"
+      },
+      {
+        "id": "490003097E",
+        "towards": "Keston"
+      },
+      {
+        "id": "490003736N"
       }
     ],
     "639": [
