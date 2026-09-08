@@ -50,6 +50,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
    follow the theme too. */
 input,select,textarea{font:inherit;color:inherit;caret-color:var(--acc)}
 input::placeholder,textarea::placeholder{color:var(--mu);opacity:1}
+/* WebKit autofill paints its own dark-on-pale text that `color` can't touch —
+   -webkit-text-fill-color is the only override it respects. */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--tx);caret-color:var(--tx);
+  transition:background-color 999999s ease-out}
 svg{display:block}
 ::selection{background:#fecaca;color:#1c1917}
 :root[data-theme="dark"] ::selection{background:#7f1d1d;color:#f0eeec}
