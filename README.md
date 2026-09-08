@@ -2,7 +2,7 @@
 
 Interactive map of every London bus route. Search routes; filter by operator, garage, route type, propulsion, frequency, deck, or bus stop; view route details and stops; and compare multiple routes side-by-side.
 
-**Live site: [london-buses.farhan.app](https://london-buses.farhan.app)** · Open source under the [MIT License](LICENSE)
+**Live site: [london-buses.farhan.app](https://london-buses.farhan.app)** · [How it all works (docs)](https://london-buses.farhan.app/docs.html) · Open source under the [MIT License](LICENSE)
 
 ## What it does
 

@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How it works · London Buses</title>
+<meta name="description" content="Plain-English documentation for the London Buses project: how the app, the data pipeline and the hosting work, end to end — detailed enough to rebuild it from scratch." />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+/* Same design tokens as the app (index.html) so the page feels native. */
+:root{
+  --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
+  --bd:#e7e5e4; --bd2:#d6d3d1;
+  --tx:#1c1917; --tx2:#57534e; --mu:#716b65;
+  --acc:#dc2626; --acc-soft:#fef2f2;
+  --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --r:12px; --sh:0 1px 2px rgba(28,25,23,.05); --maxw:820px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
+  --bd:#2b2725; --bd2:#3d3835;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#8a847d;
+  --acc:#ef4444; --acc-soft:#3a1515;
+  --sh:0 1px 2px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.65}
+a{color:var(--acc);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.86em;background:var(--surf2);border:1px solid var(--bd);border-radius:5px;padding:1px 5px;overflow-wrap:break-word}
+pre{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);padding:14px 16px;overflow-x:auto;margin:12px 0}
+pre code{background:none;border:none;padding:0;white-space:pre}
+.topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb, var(--surf) 92%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.topbar-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;color:var(--tx)}
+.brand:hover{text-decoration:none}
+.brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
+.topbar-in .right{margin-left:auto;font-size:13px}
+main{max-width:var(--maxw);margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:10px 0 4px}
+.sub{color:var(--tx2);font-size:14px;margin-bottom:20px}
+h2{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:36px 0 10px;padding-top:8px;border-top:1px solid var(--bd)}
+h3{font-size:15px;font-weight:700;margin:20px 0 6px}
+p{margin:0 0 12px;color:var(--tx);max-width:72ch}
+p.muted,li.muted{color:var(--tx2)}
+ul,ol{margin:0 0 14px 22px}
+li{margin-bottom:6px;max-width:70ch}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 16px}
+th{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd2)}
+td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:top}
+td:first-child{white-space:nowrap;font-weight:600}
+.tablewrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r);background:var(--surf);box-shadow:var(--sh)}
+.tablewrap table{margin:0}
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px;margin:12px 0}
+.toc{columns:2;gap:24px;font-size:13.5px}
+@media(max-width:560px){.toc{columns:1}}
+.toc a{display:block;padding:2.5px 0;color:var(--tx2)}
+.toc a:hover{color:var(--acc)}
+.note{background:var(--acc-soft);border:1px solid color-mix(in srgb, var(--acc) 28%, transparent);border-radius:var(--r);padding:11px 14px;font-size:13.5px;margin:12px 0}
+.footer{margin-top:40px;text-align:center;font-size:12px;color:var(--mu);line-height:1.8}
+b{font-weight:700}
+</style>
+<script>
+/* Same theme boot as the app: stored choice wins, else system preference. */
+(function(){
+  let t = null; try { t = localStorage.getItem('v2-theme'); } catch(e){}
+  if(t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+  <a class="brand" href="/"><span class="brand-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><circle cx="8.5" cy="14.5" r=".9" fill="#fff"/><circle cx="15.5" cy="14.5" r=".9" fill="#fff"/></svg></span>London Buses</a>
+  <span class="right"><a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">GitHub ↗</a></span>
+</div></div>
+
+<main>
+<h1>How this project works</h1>
+<p class="sub">Everything about London Buses, start to end, in plain words — and in enough detail that you (or an AI agent) could rebuild it from scratch. Shorter overview in the <a href="https://github.com/farhanmunim/london-buses#readme" rel="noopener">README</a>; deep per-field data notes in <a href="https://github.com/farhanmunim/london-buses/blob/main/data.md" rel="noopener">data.md</a>.</p>
+
+<div class="card"><div class="toc">
+  <a href="#what">1. What this is</a>
+  <a href="#idea">2. The big idea</a>
+  <a href="#repo">3. What's in the repository</a>
+  <a href="#frontend">4. The frontend</a>
+  <a href="#pipeline">5. The data pipeline</a>
+  <a href="#sources">6. Data sources and keys</a>
+  <a href="#api">7. The faux-API</a>
+  <a href="#schedules">8. Refresh schedules</a>
+  <a href="#live">9. Live data</a>
+  <a href="#honest">10. Keeping the data honest</a>
+  <a href="#testing">11. Testing</a>
+  <a href="#hosting">12. Hosting and deploys</a>
+  <a href="#replicate">13. Rebuild it from scratch</a>
+  <a href="#glossary">14. Glossary</a>
+</div></div>
+
+<h2 id="what">1. What this is</h2>
+<p>London Buses is a website that lets you explore every bus route in London: search routes, see them on a map, check live arrivals and live bus positions, browse operators and garages, and dig into contract data — who runs each route, what it cost, and when it comes up for tender again.</p>
+<p>It is an independent project, not affiliated with Transport for London. All the data comes from public sources.</p>
+
+<h2 id="idea">2. The big idea</h2>
+<p>There is <b>no server</b>. The whole platform is one Git repository:</p>
+<ul>
+  <li><b>GitHub Actions is the scheduler and the computer.</b> Workflows run on a timetable, fetch data from public sources, check it, and commit the results back to the repository.</li>
+  <li><b>Git is the database.</b> Every dataset is a JSON file in the repo. History is free — every past state of the data is a commit.</li>
+  <li><b>Cloudflare Pages is the host.</b> It serves the repository as a static site. The JSON files under <code>data/api/</code> act as the site's "API" — the browser just fetches them like any other file. We call this the <b>faux-API</b>.</li>
+  <li><b>Live things stay live.</b> Arrivals, live bus positions and service status are never stored — the browser fetches them directly from TfL, or through one tiny edge function (see <a href="#live">section 9</a>).</li>
+</ul>
+<p class="muted">Why this design? It costs nothing to run, there is nothing to keep online or patch, and every data change is reviewable in Git history.</p>
+
+<h2 id="repo">3. What's in the repository</h2>
+<div class="tablewrap"><table>
+  <tr><th>Path</th><th>What it is</th></tr>
+  <tr><td><code>index.html</code></td><td>The entire app — HTML, CSS and JavaScript in one file. No framework, no build step.</td></tr>
+  <tr><td><code>data/api/</code></td><td>The faux-API: the JSON files the app reads (see <a href="#api">section 7</a>).</td></tr>
+  <tr><td><code>data/</code></td><td>Primary datasets the pipeline builds (route classifications, overview GeoJSON, garages, stops…).</td></tr>
+  <tr><td><code>data/source/</code></td><td>Raw fetched material and sticky caches (DVLA vehicle cache, tender awards, PDF parses…).</td></tr>
+  <tr><td><code>data/route-overrides.json</code></td><td>Hand-written corrections. Anything set here beats scraped data — used when an upstream source is wrong.</td></tr>
+  <tr><td><code>scripts/</code></td><td>The pipeline: one script per fetch/build step, run in order by <code>scripts/refresh.js</code>.</td></tr>
+  <tr><td><code>.github/workflows/</code></td><td>Four scheduled workflows that run the pipeline (see <a href="#schedules">section 8</a>).</td></tr>
+  <tr><td><code>functions/api/live/vehicles.js</code></td><td>The one piece of server code: a Cloudflare Pages Function that proxies live bus GPS.</td></tr>
+  <tr><td><code>tests/</code></td><td>Browser test suites (Playwright) that mock all external feeds.</td></tr>
+  <tr><td><code>_headers</code>, <code>_redirects</code></td><td>Cloudflare Pages config: response headers and old-URL redirects.</td></tr>
+  <tr><td><code>archive/v1/</code></td><td>The original map-first app, kept working read-only.</td></tr>
+  <tr><td><code>data.md</code>, <code>audit.md</code>, <code>CHANGELOG.md</code></td><td>Deep data reference, audit notes, release history.</td></tr>
+</table></div>
+
+<h2 id="frontend">4. The frontend</h2>
+<p>The app is a single-page app written in plain JavaScript inside <code>index.html</code>. There is no bundler and no framework — you can read the whole thing top to bottom.</p>
+<ul>
+  <li><b>Routing:</b> the URL hash decides the view — <code>#/</code> routes list, <code>#/route/25</code>, <code>#/map</code>, <code>#/stops</code>, <code>#/stop/&lt;id&gt;</code>, <code>#/operators</code>, <code>#/operator/&lt;name&gt;</code>, <code>#/garages</code>, <code>#/garage/&lt;code&gt;</code>, <code>#/vehicle/&lt;reg&gt;</code>, <code>#/tender</code>, <code>#/cpi</code>, <code>#/about</code>. A <code>hashchange</code> listener calls <code>navigate()</code>, which renders the right view into <code>&lt;main&gt;</code>.</li>
+  <li><b>Data layer:</b> a small <code>D</code> object wraps <code>fetch()</code> for each faux-API file and caches the promise, so each dataset is downloaded once per visit.</li>
+  <li><b>Safety around async:</b> every navigation bumps a token (<code>navToken</code>); renderers re-check it after each <code>await</code> so a slow fetch from an old view can never overwrite the current one. All polling timers register in one list that is cleared on navigation, and the Leaflet map is destroyed on navigation too.</li>
+  <li><b>Maps:</b> <a href="https://leafletjs.com" rel="noopener">Leaflet</a> with CARTO basemap tiles (light and dark variants). Route lines come from the overview GeoJSON; optional layers add stops, live buses, garages, low bridges and collision heatmaps.</li>
+  <li><b>Theming:</b> CSS custom properties define a light and a dark palette; a tiny script sets <code>data-theme</code> before first paint from the stored choice or the system preference. <code>color-scheme</code> is declared per theme so native widgets follow.</li>
+  <li><b>Escaping:</b> every remote string that lands in <code>innerHTML</code> goes through one <code>esc()</code> helper. CSV exports also guard against spreadsheet formula injection.</li>
+</ul>
+
+<h2 id="pipeline">5. The data pipeline</h2>
+<p><code>npm run refresh</code> runs <code>scripts/refresh.js</code>, which executes 17 steps in order. Steps 1–12 <b>fetch</b>; steps 13–16 <b>build</b>; step 17 is the quality gate. Fetch steps may fail softly (the last good data stays); build steps must succeed; a failed audit aborts everything so bad data is never committed.</p>
+<div class="tablewrap"><table>
+  <tr><th>#</th><th>Script</th><th>What it does</th></tr>
+  <tr><td>1</td><td><code>fetch-data.js</code></td><td>Downloads TfL's route-geometry ZIP and writes one GeoJSON per route (both directions).</td></tr>
+  <tr><td>2</td><td><code>fetch-route-destinations.js</code></td><td>TfL API → route names and destinations.</td></tr>
+  <tr><td>3</td><td><code>fetch-route-stops.js</code></td><td>TfL API → the ordered stop list per route, plus one big stop directory.</td></tr>
+  <tr><td>4</td><td><code>fetch-garages.js</code></td><td>Garage list (londonbusroutes.net) geocoded via postcodes.io, with OSM as fallback.</td></tr>
+  <tr><td>5</td><td><code>fetch-frequencies.js</code></td><td>TfL timetables → is each route high- or low-frequency.</td></tr>
+  <tr><td>6</td><td><code>fetch-route-details.js</code></td><td>Scrapes operator, garage, PVR, vehicle type and contract dates per route (community reference site).</td></tr>
+  <tr><td>7</td><td><code>fetch-vehicle-fleet.js</code></td><td>TfL's iBus registration list joined with DVLA lookups (make, fuel, age) — sticky 90-day cache so only new vehicles are queried.</td></tr>
+  <tr><td>8</td><td><code>fetch-route-vehicles.js</code></td><td>Samples TfL live arrivals to see which actual vehicles worked each route today.</td></tr>
+  <tr><td>9</td><td><code>fetch-tenders.js</code></td><td>Every published TfL tender award since 2003. Awards never change, so only new IDs are fetched.</td></tr>
+  <tr><td>10</td><td><code>fetch-tender-programme.js</code></td><td>Parses TfL's annual tendering-programme PDFs → which routes come up for tender and when.</td></tr>
+  <tr><td>11</td><td><code>fetch-line-status.js</code></td><td>Snapshot of service status and the diversion register (the live feed still wins in the browser).</td></tr>
+  <tr><td>12</td><td><code>fetch-cpi.js</code></td><td>ONS CPI index (series D7BT) and the contract-price-adjustment rates derived from it.</td></tr>
+  <tr><td>13</td><td><code>build-classifications.js</code></td><td>Joins everything into one master record per route (type, deck, propulsion, operator, garage, PVR, fleet stats, contract history). Applies <code>route-overrides.json</code> last — manual fixes always win.</td></tr>
+  <tr><td>14</td><td><code>build-overview.js</code></td><td>Simplifies all route geometry into one network-wide GeoJSON the map can draw at once.</td></tr>
+  <tr><td>15</td><td><code>build-garage-locations.js</code></td><td>Garage coordinates in the shape the frontend wants.</td></tr>
+  <tr><td>16</td><td><code>build-api.js</code></td><td>Assembles the faux-API: reshapes the primary datasets into <code>data/api/*.json</code> plus a manifest. Any field it cannot derive this run keeps its last good value.</td></tr>
+  <tr><td>17</td><td><code>audit-data.js</code></td><td>Data-quality gate: per-field plausibility checks on every record. Critical failures abort the run, so nothing broken is committed.</td></tr>
+</table></div>
+
+<h2 id="sources">6. Data sources and keys</h2>
+<div class="tablewrap"><table>
+  <tr><th>Source</th><th>Used for</th><th>Key needed?</th></tr>
+  <tr><td>TfL Unified API</td><td>Routes, stops, timetables, live arrivals, service status</td><td><code>BUS_API_KEY</code> (free tier)</td></tr>
+  <tr><td>TfL geometry ZIP</td><td>Route line geometry</td><td>No</td></tr>
+  <tr><td>TfL iBus open data</td><td>Every bus registration + operator</td><td>No</td></tr>
+  <tr><td>DVLA Vehicle Enquiry</td><td>Make, fuel type, age per registration</td><td><code>DVLA_API_KEY</code> (free tier)</td></tr>
+  <tr><td>DfT Bus Open Data (BODS)</td><td>Live bus GPS positions</td><td><code>BODS_API_KEY</code> (free; used only by the edge function)</td></tr>
+  <tr><td>TfL tender pages + programme PDFs</td><td>Contract awards and upcoming tenders</td><td>No</td></tr>
+  <tr><td>ONS</td><td>CPI index for contract price adjustment</td><td>No</td></tr>
+  <tr><td>londonbusroutes.net</td><td>Operator, garage, PVR, vehicle type (community reference)</td><td>No</td></tr>
+  <tr><td>postcodes.io / OSM</td><td>Geocoding garages</td><td>No</td></tr>
+  <tr><td>DfT STATS19, TfL datastore, TfL BUSTO</td><td>Collisions, low bridges, crowding (seeded snapshots)</td><td>No</td></tr>
+</table></div>
+<p>Keys live in a local <code>.env</code> (copy <code>.env.example</code>) and in GitHub Actions secrets. They never reach the browser. The frontend needs <b>no keys at all</b> — it runs entirely from the committed JSON.</p>
+
+<h2 id="api">7. The faux-API</h2>
+<p>The app reads these files from <code>data/api/</code> (all plain JSON, all committed):</p>
+<div class="tablewrap"><table>
+  <tr><th>File</th><th>Contents</th></tr>
+  <tr><td><code>routes.json</code></td><td>Every route id, name and type (regular / night / 24-hour / school).</td></tr>
+  <tr><td><code>route-meta.json</code></td><td>Per route: operator, company, garage, PVR/TVR, vehicle type, propulsion, length, contract dates.</td></tr>
+  <tr><td><code>routes-overview.json</code></td><td>Simplified network geometry for the big map.</td></tr>
+  <tr><td><code>route-stops.json</code></td><td>Ordered stops per route.</td></tr>
+  <tr><td><code>route-bboxes.json</code></td><td>Bounding box per route (the live-vehicle proxy uses it to filter GPS).</td></tr>
+  <tr><td><code>garages.json</code></td><td>Garages: code, name, operator, location, capacity, routes based there.</td></tr>
+  <tr><td><code>fleet.json</code> / <code>vehicles.json</code></td><td>Observed vehicles per route / details per registration.</td></tr>
+  <tr><td><code>tenders.json</code> / <code>tender-programme.json</code></td><td>Award history per route / the forward tendering programme.</td></tr>
+  <tr><td><code>line-status.json</code> / <code>route-diversions.json</code></td><td>Status + diversion snapshots (fallback when live fails).</td></tr>
+  <tr><td><code>cpi-cpa.json</code></td><td>CPI series + derived contract price adjustment rates.</td></tr>
+  <tr><td><code>crowding.json</code> / <code>crowding-profile.json</code></td><td>Peak-load data per route.</td></tr>
+  <tr><td><code>bridges.json</code> / <code>accidents.json</code></td><td>Low-bridge register / collision records for the map layers.</td></tr>
+  <tr><td><code>manifest.json</code></td><td>Per-dataset source, fetch time, row count and cadence — powers the About page's freshness table.</td></tr>
+</table></div>
+
+<h2 id="schedules">8. Refresh schedules</h2>
+<p>Four workflows share one concurrency group so runs never overlap. They only commit — and the site only redeploys — when the data actually changed. Cron times are UTC; the app's About page shows them in London time (GMT/BST).</p>
+<div class="tablewrap"><table>
+  <tr><th>Workflow</th><th>Schedule (UTC)</th><th>Refreshes</th></tr>
+  <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full 17-step pipeline (name is historical).</td></tr>
+  <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status + diversion register.</td></tr>
+  <tr><td><code>refresh-fleet.yml</code></td><td>07:20 / 15:20 / 23:20</td><td>Arrivals sweep + DVLA fleet data.</td></tr>
+  <tr><td><code>refresh-tenders.yml</code></td><td>hourly 07:20–20:20, plus chained off every other run</td><td>Tender awards + programme.</td></tr>
+</table></div>
+<p class="muted">GitHub's cron can slip a slot by minutes to hours, which is why the tender check also chains off the other workflows' completions (the <code>workflow_run</code> event fires reliably even when cron slots are dropped).</p>
+
+<h2 id="live">9. Live data</h2>
+<p>Three things are live and never stored:</p>
+<ul>
+  <li><b>Arrivals boards</b> — the browser calls TfL's Unified API directly (it allows cross-origin requests without a key at browser rates). Boards count down every second and re-sync every ~30 s.</li>
+  <li><b>Route status</b> — fetched from TfL on view and re-polled every 60 s, with the committed snapshot as fallback if the live call fails.</li>
+  <li><b>Live bus positions</b> — the DfT BODS GPS feed needs a secret key and blocks cross-origin calls, so the browser calls <code>/api/live/vehicles?line=25</code> instead. That's a ~90-line Cloudflare Pages Function which adds the key, filters the feed to the route's bounding box, and caches at the edge for 10 seconds so heavy use never hammers BODS.</li>
+</ul>
+<p>All live surfaces are built to survive a flaky feed: last-good data stays on screen with a quiet "reconnecting…" note, and polling backs off and recovers on its own.</p>
+
+<h2 id="honest">10. Keeping the data honest</h2>
+<ul>
+  <li><b>Last-known-good everywhere.</b> If a source is down, every builder falls back to the previous value. A flaky scrape never blanks a field.</li>
+  <li><b>Sticky caches.</b> Immutable facts (DVLA records, tender awards) are cached and only new items are fetched.</li>
+  <li><b>Manual overrides.</b> <code>data/route-overrides.json</code> pins hand-verified corrections that beat any scraped value — for example, route 660's vehicle type, which the upstream reference still lists wrongly.</li>
+  <li><b>Cross-checks.</b> <code>audit-vehicle-data.js</code> compares our per-route vehicle verdicts against independent sources (bustimes.org, DVLA, TfL arrivals) and writes disagreement reports to <code>data/audit/</code>.</li>
+  <li><b>A hard quality gate.</b> The final pipeline step checks every record for plausibility (types, ranges, referential joins). Critical problems abort the run before anything is committed.</li>
+</ul>
+
+<h2 id="testing">11. Testing</h2>
+<p>The suites in <code>tests/</code> run the real app in headless Chromium (Playwright) with every external feed mocked, so they pass offline and never depend on TfL being up. They cover mobile layout and overflow, the dark/light banner, tender tables and analysis, CPI maths against ONS reference values, hazard layers, live-feed resilience (outage → recovery), and the migration guarantees (no calls to retired hosts). Run one with <code>node tests/verify-&lt;name&gt;.mjs</code>.</p>
+
+<h2 id="hosting">12. Hosting and deploys</h2>
+<ul>
+  <li><b>Cloudflare Pages</b> builds from <code>main</code>: every push (code or data commit) becomes a deploy. There is no build step — Pages just serves the files.</li>
+  <li><b><code>_headers</code></b> sets security headers and makes JS/CSS revalidate on every load (no fingerprinted filenames, so revalidation keeps returning browsers consistent after deploys).</li>
+  <li><b><code>_redirects</code></b> keeps old URLs working (<code>/v2</code> → <code>/</code>; the old changelog → the archive).</li>
+  <li><b>Budget:</b> schedules are sized so data commits stay around ~12/day — comfortably inside Pages' 500 free builds/month with room for code pushes.</li>
+</ul>
+
+<h2 id="replicate">13. Rebuild it from scratch</h2>
+<p>The recipe, in order. Nothing here is magic — each step is ordinary Git, JSON and static hosting.</p>
+<ol>
+  <li><b>Fork or clone</b> <a href="https://github.com/farhanmunim/london-buses" rel="noopener">the repository</a>. It already contains working data, so the site runs immediately with no keys.</li>
+  <li><b>Serve it locally:</b> <code>npm install</code>, then any static file server (<code>npx serve .</code>) from the repo root. Open the served <code>index.html</code> — everything works from the committed JSON.</li>
+  <li><b>Get keys</b> (only needed to refresh data): a TfL Unified API key, a DVLA Vehicle Enquiry key, and a DfT BODS key. All free. Copy <code>.env.example</code> to <code>.env</code> and fill them in.</li>
+  <li><b>Run the pipeline:</b> <code>npm run refresh</code>. Watch the 17 steps; the audit at the end must pass. Individual steps can be run alone (see <code>package.json</code> scripts).</li>
+  <li><b>Host it:</b> create a Cloudflare Pages project pointed at your repo, production branch <code>main</code>, no build command, output directory <code>/</code>. Set <code>BODS_API_KEY</code> as a Pages environment variable so the live-vehicles function works.</li>
+  <li><b>Schedule it:</b> add the two API keys as GitHub Actions secrets (<code>BUS_API_KEY</code>, <code>DVLA_API_KEY</code>). The four workflows in <code>.github/workflows/</code> then keep the data fresh automatically. Public repos get unlimited Actions minutes.</li>
+  <li><b>Fix data by hand when needed:</b> add an entry to <code>data/route-overrides.json</code>, run <code>npm run build-classifications &amp;&amp; npm run build-overview &amp;&amp; npm run build-api</code>, and commit. Overrides survive every future refresh.</li>
+  <li><b>Verify:</b> run the suites in <code>tests/</code> (they need Playwright's Chromium; the tests download nothing and mock all feeds).</li>
+</ol>
+<div class="note">Building a similar project for another city? The shape transfers directly: find the transit agency's open API and any supplementary registers, write one fetch script per source with last-known-good fallbacks and a sticky cache for immutable facts, join everything into one record per route, serve the result as static JSON, and let scheduled CI commit changes. The frontend only ever reads flat JSON, so it doesn't care where the data came from.</div>
+
+<h2 id="glossary">14. Glossary</h2>
+<div class="tablewrap"><table>
+  <tr><td>PVR</td><td>Peak Vehicle Requirement — how many buses a route needs at the busiest time of day.</td></tr>
+  <tr><td>TVR</td><td>Total Vehicle Requirement — PVR plus spare buses (engineering cover).</td></tr>
+  <tr><td>Deck</td><td>Double-decker or single-decker.</td></tr>
+  <tr><td>Propulsion</td><td>What powers the bus: diesel, hybrid, electric or hydrogen.</td></tr>
+  <tr><td>Tender / award</td><td>TfL contracts each route to an operator through competitive bidding; the published result is the award.</td></tr>
+  <tr><td>Tranche</td><td>A numbered batch of routes tendered together.</td></tr>
+  <tr><td>£/mile</td><td>The award's cost per contracted live mile — the headline price of running the route.</td></tr>
+  <tr><td>CPI-CPA</td><td>Contract Price Adjustment: TfL contracts rise with 85% of CPI inflation, via a point-to-point or rolling-average formula.</td></tr>
+  <tr><td>iBus</td><td>TfL's on-bus tracking system; its open data lists every vehicle's registration and operator.</td></tr>
+  <tr><td>BODS</td><td>The DfT Bus Open Data Service — the national live bus GPS feed.</td></tr>
+  <tr><td>Faux-API</td><td>This project's term for committed JSON files served statically but consumed like an API.</td></tr>
+</table></div>
+
+<div class="footer">
+  <a href="/">← Back to the app</a> · <a href="https://github.com/farhanmunim/london-buses" rel="noopener">Source on GitHub ↗</a><br>
+  MIT-licensed code · data remains subject to its sources' own terms (TfL open data, OGL v3.0, ODbL).
+</div>
+</main>
+</body>
+</html>
