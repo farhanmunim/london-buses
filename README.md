@@ -24,7 +24,7 @@ Scheduled GitHub Actions workflows fetch every dataset from its public source, v
 
 ### Refresh schedule
 
-All times UTC; a run commits (and the site redeploys) only when the data actually changed. The About page in the app shows the same schedule live, with last-updated and next-check times per dataset.
+Cron times below are UTC (that's what GitHub Actions schedules run in — London wall-clock is one hour later during BST). A run commits (and the site redeploys) only when the data actually changed. The About page in the app shows the same schedule live in London time (GMT/BST), with last-updated and next-check times per dataset.
 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|

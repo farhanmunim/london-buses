@@ -2951,7 +2951,7 @@ async function renderAbout(){
     </div>
     <div class="section"><div class="section-h">Scheduled pipelines</div>
       <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
-      <div class="legendrow" style="margin-top:7px"><span>Refreshed by scheduled GitHub Actions (times UTC; GitHub's scheduler can slip a slot by a few minutes to a few hours). A run commits — and the site redeploys — only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check.</span></div>
+      <div class="legendrow" style="margin-top:7px"><span>Refreshed by scheduled GitHub Actions — times shown in London time (GMT/BST); GitHub's scheduler can slip a slot by a few minutes to a few hours. A run commits — and the site redeploys — only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check.</span></div>
     </div>
     <div class="section"><div class="section-h">Static snapshots</div>
       <div class="card"><table class="fresh">
@@ -2967,11 +2967,17 @@ async function renderAbout(){
   /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
      nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps
      07:20/15:20/23:20, tender checks hourly 07:20–20:20 (all UTC). */
+  /* The crons fire at fixed UTC times, but we show London wall-clock
+     (Europe/London), so the displayed times shift by an hour between GMT
+     and BST automatically. */
+  const lonFmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/London', hour:'2-digit', minute:'2-digit', hour12:false });
+  const lon = d => lonFmt.format(d);
+  const lonAt = (h, m) => { const n = new Date(); return lon(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), h, m))); };
   const SCHED = {
-    nightly: { label:'nightly · 03:17 UTC',                    hours:[3],                          minute:17 },
-    status:  { label:'every 2 h · 07:41–21:41 UTC',            hours:[7,9,11,13,15,17,19,21],      minute:41 },
-    fleet:   { label:'every 8 h · 07:20/15:20/23:20 UTC',      hours:[7,15,23],                    minute:20 },
-    tenders: { label:'hourly · 07:20–20:20 UTC',               hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
+    nightly: { label:`nightly · ${lonAt(3,17)} London time`,                        hours:[3],                          minute:17 },
+    status:  { label:`every 2 h · ${lonAt(7,41)}–${lonAt(21,41)} London time`,      hours:[7,9,11,13,15,17,19,21],      minute:41 },
+    fleet:   { label:`every 8 h · ${lonAt(7,20)}/${lonAt(15,20)}/${lonAt(23,20)} London time`, hours:[7,15,23],         minute:20 },
+    tenders: { label:`hourly · ${lonAt(7,20)}–${lonAt(20,20)} London time`,         hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
   };
   const nextRun = sc => {
     const now = new Date();
@@ -2991,8 +2997,7 @@ async function renderAbout(){
   };
   const nextTxt = sc => {
     const t = nextRun(sc); if(!t) return '—';
-    const hhmm = String(t.getUTCHours()).padStart(2,'0') + ':' + String(t.getUTCMinutes()).padStart(2,'0');
-    return `in ~${rel(t.toISOString())} (${hhmm} UTC)`;
+    return `in ~${rel(t.toISOString())} (${lon(t)} London)`;
   };
   const ds = mf?.datasets ?? {};
   const newest = keys => keys.map(k => ds[k]?.fetchedAt).filter(Boolean).sort().pop() ?? null;
