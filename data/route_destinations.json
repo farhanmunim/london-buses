@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-07T08:27:02Z",
+  "generated_at_utc": "2026-09-08T08:12:34Z",
   "route_count": 672,
   "routes": {
     "1": {
@@ -552,16 +552,18 @@
       }
     },
     "39": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Clapham Junction",
-        "qualifier": "",
+        "qualifier": "Clapham Junction Stn / the Falcon",
         "full": "Clapham Junction"
       },
       "inbound": {
-        "destination": "Putney",
-        "qualifier": "",
-        "full": "Putney"
+        "destination": "Putney Bridge",
+        "qualifier": "Putney Bridge Station",
+        "full": "Putney Bridge"
       }
     },
     "40": {
@@ -1288,6 +1290,11 @@
         "destination": "Trafalgar Square",
         "qualifier": "Whitehall / Trafalgar Square",
         "full": "Trafalgar Square"
+      },
+      "inbound": {
+        "destination": "Wood Green",
+        "qualifier": "Wood Green Station / River Park Road",
+        "full": "Wood Green"
       }
     },
     "92": {
@@ -1304,16 +1311,18 @@
       }
     },
     "93": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Putney",
-        "qualifier": "",
-        "full": "Putney"
+        "destination": "Putney Bridge",
+        "qualifier": "Putney Bridge Station",
+        "full": "Putney Bridge"
       },
       "inbound": {
         "destination": "North Cheam",
-        "qualifier": "",
-        "full": "North Cheam"
+        "qualifier": "Priory Road",
+        "full": "North Cheam, Priory Road"
       }
     },
     "94": {
@@ -3363,18 +3372,16 @@
       }
     },
     "236": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
+        "destination": "Finsbury Park",
+        "qualifier": "",
+        "full": "Finsbury Park"
+      },
+      "inbound": {
         "destination": "Hackney Wick",
         "qualifier": "",
         "full": "Hackney Wick"
-      },
-      "inbound": {
-        "destination": "Finsbury Park Station",
-        "qualifier": "Finsbury Park Interchange",
-        "full": "Finsbury Park Station, Finsbury Park Interchange"
       }
     },
     "237": {
@@ -5598,32 +5605,28 @@
       }
     },
     "411": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Molesey",
-        "qualifier": "Central Square",
-        "full": "West Molesey, Central Square"
+        "destination": "Kingston",
+        "qualifier": "",
+        "full": "Kingston"
       },
       "inbound": {
-        "destination": "Kingston",
-        "qualifier": "Cromwell Road Bus Station",
-        "full": "Kingston, Cromwell Road Bus Station"
+        "destination": "West Molesey",
+        "qualifier": "",
+        "full": "West Molesey"
       }
     },
     "412": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Croydon",
-        "qualifier": "Park Street",
-        "full": "West Croydon, Park Street"
+        "destination": "Croydon Katharine Street",
+        "qualifier": "",
+        "full": "Croydon Katharine Street"
       },
       "inbound": {
         "destination": "Purley",
-        "qualifier": "Purley High Street",
+        "qualifier": "",
         "full": "Purley"
       }
     },
@@ -7366,93 +7369,81 @@
       }
     },
     "B11": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "South Thamesmead, Yarnton Way",
-        "qualifier": "St Andrew's Parish Church",
-        "full": "South Thamesmead, Yarnton Way, St Andrew's Parish Church"
+        "destination": "Bexleyheath Bus Garage",
+        "qualifier": "",
+        "full": "Bexleyheath Bus Garage"
       },
       "inbound": {
-        "destination": "Bexleyheath, Bus Garage",
+        "destination": "Thamesmead South",
         "qualifier": "",
-        "full": "Bexleyheath, Bus Garage"
+        "full": "Thamesmead South"
       }
     },
     "B12": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Joyden's Wood",
-        "qualifier": "St Mary's Road",
-        "full": "Joyden's Wood, St Mary's Road"
+        "destination": "Erith",
+        "qualifier": "",
+        "full": "Erith"
       },
       "inbound": {
-        "destination": "Erith",
-        "qualifier": "Erith Town Centre / Riverside",
-        "full": "Erith"
+        "destination": "Joydens Wood",
+        "qualifier": "",
+        "full": "Joydens Wood"
       }
     },
     "B13": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "New Eltham",
-        "qualifier": "New Eltham Station / Southwood Road",
-        "full": "New Eltham"
+        "destination": "Bexleyheath",
+        "qualifier": "",
+        "full": "Bexleyheath"
       },
       "inbound": {
-        "destination": "Bexleyheath, Shopping Centre",
-        "qualifier": "Bexleyheath Library",
-        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
+        "destination": "New Eltham",
+        "qualifier": "",
+        "full": "New Eltham"
       }
     },
     "B14": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Orpington Station",
+        "destination": "Bexleyheath",
         "qualifier": "",
-        "full": "Orpington Station"
+        "full": "Bexleyheath"
       },
       "inbound": {
-        "destination": "Bexleyheath, Shopping Centre",
-        "qualifier": "Bexleyheath Library",
-        "full": "Bexleyheath, Shopping Centre, Bexleyheath Library"
+        "destination": "Orpington",
+        "qualifier": "",
+        "full": "Orpington"
       }
     },
     "B15": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Horn Park",
-        "qualifier": "Horncastle Road",
-        "full": "Horn Park, Horncastle Road"
+        "destination": "Bexleyheath",
+        "qualifier": "",
+        "full": "Bexleyheath"
       },
       "inbound": {
-        "destination": "Bexleyheath, Shopping Centre",
-        "qualifier": "Friswell Place",
-        "full": "Bexleyheath, Shopping Centre, Friswell Place"
+        "destination": "Horn Park Alnwick Road",
+        "qualifier": "",
+        "full": "Horn Park Alnwick Road"
       }
     },
     "B16": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Kidbrooke",
-        "qualifier": "Wingfield School",
-        "full": "Kidbrooke, Wingfield School"
+        "destination": "Bexleyheath Bus Garage",
+        "qualifier": "",
+        "full": "Bexleyheath Bus Garage"
       },
       "inbound": {
-        "destination": "Bexleyheath, Bus Garage",
+        "destination": "Kidbrooke",
         "qualifier": "",
-        "full": "Bexleyheath, Bus Garage"
+        "full": "Kidbrooke"
       }
     },
     "BL1": {
