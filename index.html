@@ -268,8 +268,6 @@ main.fullbleed{max-width:none;padding:0}
 @media(min-width:760px){.netmap-wrap{height:calc(100dvh - 53px)}}
 #netmap{position:absolute;inset:0;background:var(--surf2);z-index:0}
 [hidden]{display:none!important}
-.sunset-banner{background:#fef3c7;color:#92400e;border-bottom:1px solid #fcd34d;font-size:12.5px;font-weight:600;line-height:1.45;text-align:center;padding:7px 14px}
-:root[data-theme="dark"] .sunset-banner{background:#33260b;color:#fcd34d;border-bottom-color:#5c4a16}
 .netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:color-mix(in srgb, var(--surf) 97%, transparent);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
 @media(min-width:760px){.netmap-panel{right:auto;width:342px}}
 .nm-search{display:flex;align-items:center;gap:9px;padding:11px 13px}
@@ -325,7 +323,6 @@ main.fullbleed{max-width:none;padding:0}
 </head>
 <body>
 
-<div class="sunset-banner" role="status">This project will be sunset soon &mdash; watch this space for more information.</div>
 <header class="topbar">
   <div class="topbar-in">
     <a class="brand" href="#/">
@@ -2940,9 +2937,10 @@ async function renderAbout(){
     <div class="sub">London Buses — search and explore every TfL bus route, operator and garage.</div>
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
-        <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
-        <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures from the <b>Office for National Statistics</b> (D7BT series); live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
-        <p><b>Open source.</b> The whole platform — app, data pipeline and scheduled workflows — lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed; the data remains subject to its sources' own licences (TfL open data terms, OGL v3.0, ODbL). Issues and pull requests welcome. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
+        <p>An independent project. <b>Not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
+        <p>Every number on this site comes from its own open data pipeline. GitHub Actions fetches, checks and commits the datasets. The site serves them as static JSON.</p>
+        <p><b>Sources.</b> Routes, stops, geometry, status, crowding and live arrivals come from <b>Transport for London</b> — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures come from the <b>Office for National Statistics</b> (D7BT series). Live bus positions come from the DfT Bus Open Data Service. Vehicle details come from the DVLA. These contain public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights are from TfL's height-restrictions register. Collision records are from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR are courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p><b>Open source.</b> The whole platform lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed. The data stays under its sources' own licences. Issues and pull requests welcome. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
