@@ -6,6 +6,7 @@ node_modules/
 # `*.env` covers files like dev.env / prod.env at any depth.
 .env*
 *.env
+!.env.example
 *.pem
 *.key
 secrets.json

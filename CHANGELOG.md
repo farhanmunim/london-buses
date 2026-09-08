@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.29 — Open source
+
+_2026-09-08_
+
+- **NEW** **The project is public.** Code is MIT-licensed (`LICENSE` — data stays under its sources' own terms: TfL open data, OGL v3.0, ODbL); the README drops the private-project notice and gains a refresh-schedule table, contributing notes and licence details; `.env.example` is now actually committed (it was caught by the `.env*` gitignore pattern while the README told contributors to copy it); the About page links the repository.
+- **UX** **The About page now says when every dataset refreshes.** Live surfaces (arrivals, bus positions, route status) are marked LIVE with their real polling rhythm; every scheduled pipeline shows its cadence, last-updated time and the next scheduled check (computed from the actual workflow schedules, all UTC); static snapshots (bridges, collisions, crowding) are labelled as such.
+- **FIX** The manifest's cadence strings for fleet sweeps and tender checks caught up with the v2.27 schedule changes (every 8 h and hourly, not "twice daily").
+
+---
+
 ## v2.28.1 — Audit pass: dark mode, data corrections, hardening
 
 _2026-09-08_

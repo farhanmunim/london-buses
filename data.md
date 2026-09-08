@@ -1,7 +1,9 @@
 # Data Pipeline — London Buses
 
 Definitive reference for every datapoint in this project: where it comes from, how
-it is cleaned, how blanks get filled, and what to watch out for.
+it is cleaned, how blanks get filled, and what to watch out for. The project is
+open source ([README](README.md) · [MIT licence](LICENSE) — code only; the data
+stays under its sources' own terms, listed in §1 below).
 
 **Cadence:** GitHub Actions is the scheduler (this repo is the whole data platform — Actions = compute, git = database, Cloudflare Pages serves `data/api/*.json` as the API). Four workflows share one `data-refresh` concurrency group: **nightly full refresh** 03:17 UTC (`weekly-refresh.yml` — historical filename; renaming would orphan its run history) — the night-hours slot also gives the arrivals sweep night-network coverage; **status intraday** every 2h, 07:41–21:41 UTC (`refresh-status.yml` — line status + diversion register only, 8 runs/day); **tenders** hourly 07:20–20:20 UTC *plus* a `workflow_run` chain off every completed status/fleet refresh (`refresh-tenders.yml` — TfL publishes awards ~1pm/~3pm UK, but GitHub cron slips slots by 1–5h and drops most of them, so event-driven chaining is what actually guarantees same-day pickup; runs rarely commit, so the extra runs cost no Cloudflare builds); **fleet sweeps** every 8h at 07:20/15:20/23:20 UTC (`refresh-fleet.yml` — incremental arrivals samples replacing the retired 24/7 monitoring). All commit only when content changed. Budget: nightly 1 + status 8 + fleet 3 + tenders ~0.3 ≈ 12.3 data commits/day ≈ 374 Cloudflare Pages builds/month, leaving ~125 of the 500/month free tier for code pushes and manual runs.
 **Orchestrator:** `scripts/refresh.js` — runs the 16 pipeline steps in sequence; network-bound fetch steps soft-fail so one flaky source doesn't abort the week. Pure build steps hard-fail. Step 16 (`audit-data.js`) is a hard-fail data-quality gate so broken data can't be committed.

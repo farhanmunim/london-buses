@@ -234,7 +234,8 @@ table.cpi-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:5
 .cpi-table tbody tr:first-child td{background:var(--acc-soft);font-weight:600}
 table.fresh{width:100%;border-collapse:collapse;font-size:12.5px}
 table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
-table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--tx2)}
+table.fresh td+td{text-align:right;font-family:var(--mono);color:var(--tx2)}
+table.fresh td.desc{text-align:left;font-family:var(--sans);color:var(--tx2);font-size:12px;line-height:1.5}
 .footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
 
 /* UK-plate styling for vehicle registrations */
@@ -2936,19 +2937,85 @@ async function renderAbout(){
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
         <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures from the <b>Office for National Statistics</b> (D7BT series); live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p><b>Open source.</b> The whole platform — app, data pipeline and scheduled workflows — lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed; the data remains subject to its sources' own licences (TfL open data terms, OGL v3.0, ODbL). Issues and pull requests welcome.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
-    <div class="section"><div class="section-h">Data freshness</div>
-      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="2" style="color:var(--mu)">Loading…</td></tr></table></div>
+    <div class="section"><div class="section-h">Live feeds</div>
+      <div class="card"><table class="fresh">
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Straight from TfL Countdown — re-syncs every ~30 s while a stop board is open.</td></tr>
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">DfT Bus Open Data GPS — every ~15–20 s while the live layer is on.</td></tr>
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Straight from TfL — checked on view, re-polled every 60 s.</td></tr>
+      </table></div>
+      <div class="legendrow" style="margin-top:7px"><span>Live feeds are never stored — the browser reads them directly, with the last committed snapshot as fallback.</span></div>
     </div>
-    <div class="footer">Data may be incomplete or out of date — verify before acting on it.</div>`;
+    <div class="section"><div class="section-h">Scheduled pipelines</div>
+      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
+      <div class="legendrow" style="margin-top:7px"><span>Refreshed by scheduled GitHub Actions (times UTC; GitHub's scheduler can slip a slot by a few minutes to a few hours). A run commits — and the site redeploys — only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check.</span></div>
+    </div>
+    <div class="section"><div class="section-h">Static snapshots</div>
+      <div class="card"><table class="fresh">
+        <tr><td>Low bridges</td><td class="desc">TfL height-restrictions register — seeded snapshot.</td></tr>
+        <tr><td>Collisions</td><td class="desc">DfT STATS19, bus/coach-involved 2021–2025 — seeded snapshot.</td></tr>
+        <tr><td>Crowding</td><td class="desc">TfL BUSTO 2025–2026 — seeded snapshot.</td></tr>
+      </table></div>
+    </div>
+    <div class="footer">Data may be incomplete or out of date — verify before acting on it.<br><a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank" style="color:var(--acc);font-weight:600">Source on GitHub ↗</a></div>`;
   const mf = await D.manifest();
   if(gone(tok)) return;
-  const rows = Object.entries(mf?.datasets ?? {})
-    .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','crowding','route-diversions'].includes(k))
-    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(fmtDate(v.fetchedAt) ?? '—')}${v.status && v.status!=='ok' ? ' ⚠️' : ''}</td></tr>`);
-  document.getElementById('freshTable').innerHTML = rows.join('') || '<tr><td colspan="2" style="color:var(--mu)">Manifest unavailable.</td></tr>';
+
+  /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
+     nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps
+     07:20/15:20/23:20, tender checks hourly 07:20–20:20 (all UTC). */
+  const SCHED = {
+    nightly: { label:'nightly · 03:17 UTC',                    hours:[3],                          minute:17 },
+    status:  { label:'every 2 h · 07:41–21:41 UTC',            hours:[7,9,11,13,15,17,19,21],      minute:41 },
+    fleet:   { label:'every 8 h · 07:20/15:20/23:20 UTC',      hours:[7,15,23],                    minute:20 },
+    tenders: { label:'hourly · 07:20–20:20 UTC',               hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
+  };
+  const nextRun = sc => {
+    const now = new Date();
+    for(let d = 0; d <= 1; d++){
+      for(const h of sc.hours){
+        const t = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + d, h, sc.minute));
+        if(t > now) return t;
+      }
+    }
+    return null;
+  };
+  const rel = iso => {
+    const t = new Date(iso).getTime();
+    if(!Number.isFinite(t)) return null;
+    const m = Math.round(Math.abs(Date.now() - t) / 60000);
+    return m < 60 ? `${m} min` : m < 2880 ? `${Math.round(m/60)} h` : `${Math.round(m/1440)} d`;
+  };
+  const nextTxt = sc => {
+    const t = nextRun(sc); if(!t) return '—';
+    const hhmm = String(t.getUTCHours()).padStart(2,'0') + ':' + String(t.getUTCMinutes()).padStart(2,'0');
+    return `in ~${rel(t.toISOString())} (${hhmm} UTC)`;
+  };
+  const ds = mf?.datasets ?? {};
+  const newest = keys => keys.map(k => ds[k]?.fetchedAt).filter(Boolean).sort().pop() ?? null;
+  const warn = keys => keys.some(k => ds[k]?.status && ds[k].status !== 'ok') ? ' ⚠️' : '';
+  const GROUPS = [
+    { name:'Routes, stops & geometry',   keys:['routes','routes-overview','route-stops'], sc:SCHED.nightly },
+    { name:'Operators, garages & PVR',   keys:['route-meta','garages'],                   sc:SCHED.nightly },
+    { name:'Service status & diversions',keys:['line-status','route-diversions'],         sc:SCHED.status },
+    { name:'Fleet observations (DVLA)',  keys:['fleet','vehicles'],                       sc:SCHED.fleet },
+    { name:'Tender awards',              keys:['tenders'],                                sc:SCHED.tenders },
+    { name:'Tendering programme',        keys:['tender-programme'],                       sc:SCHED.tenders },
+    { name:'CPI-CPA (ONS)',              keys:['cpi-cpa'],                                sc:SCHED.nightly },
+  ];
+  document.getElementById('freshTable').innerHTML =
+    `<tr><th style="text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Dataset</th>
+      <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Last updated</th>
+      <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Next check</th></tr>` +
+    GROUPS.map(g => {
+      const at = newest(g.keys);
+      return `<tr><td>${esc(g.name)}<div style="font-size:11px;color:var(--mu)">${esc(g.sc.label)}</div></td>
+        <td>${at ? `${esc(rel(at))} ago${warn(g.keys)}<div style="font-size:11px;color:var(--mu)">${esc(fmtDate(at) ?? '')}</div>` : '—'}</td>
+        <td>${esc(nextTxt(g.sc))}</td></tr>`;
+    }).join('');
 }
 
 /* boot — desktops land on the Map (the map is the point of a big screen);
