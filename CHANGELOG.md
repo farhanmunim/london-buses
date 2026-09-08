@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.30 — Full docs, plainer words, banner gone
+
+_2026-09-08_
+
+- **NEW** **The docs now cover everything.** `/docs.html` grew from 14 to 16 sections and now walks through every major part of the project: GitHub (repo layout, branches, secrets, data commits), the app and its views, where the data comes from, how it's made (all 17 pipeline steps), where it's stored, the faux-API, the four automations and their safety nets, live data, Cloudflare (Pages, the edge function, config files), deployment (triggers, build budget, caching, rollback), data honesty, testing, a rebuild-from-scratch recipe, and a glossary.
+- **UX** **All documentation now reads in plain language.** Short, simple sentences across the docs page, the README and the About page. Same detail, less jargon.
+- **UX** **The sunset banner is gone** from every page — the main app, the 404 page and the archived v1 pages (which keep only their "Archived v1" note). The banner test suite now verifies its absence.
+
+---
+
 ## v2.29 — Open source
 
 _2026-09-08_
