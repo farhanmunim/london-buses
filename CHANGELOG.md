@@ -6,6 +6,30 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.29 — Open source
+
+_2026-09-08_
+
+- **NEW** **The project is public.** Code is MIT-licensed (`LICENSE` — data stays under its sources' own terms: TfL open data, OGL v3.0, ODbL); the README drops the private-project notice and gains a refresh-schedule table, contributing notes and licence details; `.env.example` is now actually committed (it was caught by the `.env*` gitignore pattern while the README told contributors to copy it); the About page links the repository.
+- **UX** **The About page now says when every dataset refreshes.** Live surfaces (arrivals, bus positions, route status) are marked LIVE with their real polling rhythm; every scheduled pipeline shows its cadence, last-updated time and the next scheduled check (computed from the actual workflow schedules, all UTC); static snapshots (bridges, collisions, crowding) are labelled as such.
+- **FIX** The manifest's cadence strings for fleet sweeps and tender checks caught up with the v2.27 schedule changes (every 8 h and hourly, not "twice daily").
+
+---
+
+## v2.28.1 — Audit pass: dark mode, data corrections, hardening
+
+_2026-09-08_
+
+- **DATA** **Route 660's vehicle corrected to electric.** londonbusroutes.net still lists the pre-Dec-2021 B5LH/Gemini 3 hybrid, but the route has run a BYD D8UR-DD/Enviro400EV City (Stagecoach 84157, LG71DPK — DVLA fuel type ELECTRICITY, matching the 2024 award's electric spec) since December 2021. Pinned via a manual route override so future scrapes can't regress it.
+- **FIX** **Dark mode form controls actually follow the theme.** Inputs never inherited a text colour, so search fields typed near-black-on-black in dark mode; `color-scheme` is now declared per theme so selects, dropdown lists, autofill and native widgets render dark too. Text selection, the search focus ring, the diversion note, the EXP chip, propulsion tags and the crowding bars all gained proper dark variants instead of light-only hard-coded colours.
+- **FIX** **Slow fetches can no longer clobber the wrong view.** Every async renderer now carries a navigation token and bails after each await once the user has moved on — previously a route page resolving late could overwrite the view you'd navigated to, double-bind filter chips and sort headers into no-ops, double the arrivals tickers, or paint live buses/bridges/incidents onto another view's map. Leaflet maps are also destroyed on every navigation instead of lingering until the next map view.
+- **FIX** Escaping tightened on the network-map route tooltip, route-type class attributes and the stops list's line names; programme PDF links only render for `https:` URLs; the vehicle page's `javascript:` back href is a real button; the network map no longer crashes when the route list fetch fails.
+- **UX** Muted label text now meets WCAG AA contrast in both themes; all six search inputs have accessible names; each view sets its own document title so history entries and tabs are tellable apart; route list and stop searches are debounced (~90 ms) so typing doesn't rebuild hundreds of rows per keystroke.
+- **UX** The route page's Deck tile falls back to the rostered vehicle's DD/SD fleet code when no recent DVLA observation exists (school routes with PVR 1 showed "—").
+- **DATA** Leaflet's CDN assets are now pinned with subresource-integrity hashes (matching Leaflet's published 1.9.4 checksums).
+
+---
+
 ## v2.28 — v2 is the app
 
 _2026-09-04_

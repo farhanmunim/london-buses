@@ -33,7 +33,13 @@
       "pvr": 18,
       "frequency": "high"
     },
-    "_N128_note": "N128 is the night branding of the 128 (24-hour service per londonbusroutes.net). Pipeline now auto-inherits via routes.htm href-share detection, but this explicit entry pins the operator in case the scrape fails.",
+    "_660_note": "660 was re-equipped with a BYD D8UR-DD/Enviro400EV City (electric, Stagecoach 84157 LG71DPK) in Dec 2021, but londonbusroutes.net still lists the old B5LH/Gemini 3 hybrid. Cross-checked via bustimes.org fleet page, DVLA fuel type (ELECTRICITY) and the 2024 tender award propulsion (electric). Verified 2026-09-08.",
+  "660": {
+   "vehicleType": "DD/Enviro400EV City",
+   "propulsion": "electric",
+   "make": "BYD"
+  },
+  "_N128_note": "N128 is the night branding of the 128 (24-hour service per londonbusroutes.net). Pipeline now auto-inherits via routes.htm href-share detection, but this explicit entry pins the operator in case the scrape fails.",
     "N128": {
       "operator": "Stagecoach London"
     },

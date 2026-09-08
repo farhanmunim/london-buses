@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js" integrity="sha384-mFKkGiGvT5vo1fEyGCD3hshDdKmW3wzXW/x+fWriYJArD0R3gawT6lMvLboM22c0" crossorigin="anonymous"></script>
 <style>
 /* ── Design tokens — minimal SaaS, light-only ──────────────────────────── */
 :root{
   --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
   --bd:#e7e5e4; --bd2:#d6d3d1;
-  --tx:#1c1917; --tx2:#57534e; --mu:#8b857f;
+  --tx:#1c1917; --tx2:#57534e; --mu:#716b65;   /* --mu ≥4.5:1 on bg and surf (WCAG AA for the small labels that use it) */
   --acc:#dc2626; --acc-soft:#fef2f2;
   --good:#16a34a; --warn:#d97706; --bad:#dc2626;
   --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
@@ -26,26 +26,38 @@
   --maxw:1080px;
   --tab-h:58px;
   --tipbg:#1c1917; --skel-hi:#eeedec;
+  color-scheme:light;
 }
 /* Dark theme — the boot script stamps data-theme before first paint, from
    the stored choice or the system preference. */
 :root[data-theme="dark"]{
   --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
   --bd:#2b2725; --bd2:#3d3835;
-  --tx:#f0eeec; --tx2:#b5aea8; --mu:#7c766f;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#8a847d;
   --acc:#ef4444; --acc-soft:#3a1515;
   --good:#2fbf5f; --warn:#f59e0b; --bad:#ef4444;
   --sh:0 1px 2px rgba(0,0,0,.45);
   --tipbg:#332f2c; --skel-hi:#2c2825;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
 body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.45;min-height:100dvh}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-input{font:inherit}
+/* Form controls don't inherit color from body — without this, dark mode
+   renders near-black UA text in the search inputs. Placeholder + caret
+   follow the theme too. */
+input,select,textarea{font:inherit;color:inherit;caret-color:var(--acc)}
+input::placeholder,textarea::placeholder{color:var(--mu);opacity:1}
+/* WebKit autofill paints its own dark-on-pale text that `color` can't touch —
+   -webkit-text-fill-color is the only override it respects. */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--tx);caret-color:var(--tx);
+  transition:background-color 999999s ease-out}
 svg{display:block}
-::selection{background:#fecaca}
+::selection{background:#fecaca;color:#1c1917}
+:root[data-theme="dark"] ::selection{background:#7f1d1d;color:#f0eeec}
 
 /* ── App shell ─────────────────────────────────────────────────────────── */
 .topbar{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--surf) 92%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
@@ -87,6 +99,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .searchwrap{position:sticky;top:53px;z-index:50;background:var(--bg);padding:2px 0 10px;margin:0 -2px;}
 .search{display:flex;align-items:center;gap:9px;background:var(--surf);border:1px solid var(--bd2);border-radius:var(--r);padding:11px 14px;box-shadow:var(--sh)}
 .search:focus-within{border-color:var(--tx);box-shadow:0 0 0 3px rgba(28,25,23,.06)}
+:root[data-theme="dark"] .search:focus-within{box-shadow:0 0 0 3px rgba(240,238,236,.08)}
 .search input{flex:1;border:none;outline:none;background:none;font-size:16px;min-width:0}
 .search input::placeholder{color:var(--mu)}
 .search svg{color:var(--mu);flex:none}
@@ -115,6 +128,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .rmeta .ga{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rtag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px;background:var(--surf2);color:var(--tx2)}
 .rtag.electric{background:#dcfce7;color:#15803d}.rtag.hydrogen{background:#cffafe;color:#0e7490}.rtag.hybrid{background:#e0e7ff;color:#4338ca}
+:root[data-theme="dark"] .rtag.electric{background:#12351f;color:#4ade80}
+:root[data-theme="dark"] .rtag.hydrogen{background:#0b3440;color:#22d3ee}
+:root[data-theme="dark"] .rtag.hybrid{background:#232a52;color:#a5b4fc}
 .rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu);position:relative}
 .rrow .pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
 .warn-dot{position:absolute;top:1px;right:-4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
@@ -172,9 +188,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .livebtn.loading .spin{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 .divn-note{display:flex;gap:9px;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:11px 13px;font-size:13px;color:#92400e;margin-top:12px}
+:root[data-theme="dark"] .divn-note{background:#33260b;border-color:#5c4a16;color:#fcd34d}
 .divn-note b{font-weight:700}
 .bars{display:flex;align-items:flex-end;gap:3px;height:44px}
 .bars>div{flex:1;background:#fca5a5;border-radius:3px 3px 0 0;min-height:3px;position:relative}
+:root[data-theme="dark"] .bars>div{background:#61302c}
 .bars>div.hi{background:var(--acc)}
 .minibar{height:7px;border-radius:999px;background:var(--surf2);overflow:hidden}
 .minibar>i{display:block;height:100%;border-radius:999px;background:var(--acc)}
@@ -221,7 +239,8 @@ table.cpi-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:5
 .cpi-table tbody tr:first-child td{background:var(--acc-soft);font-weight:600}
 table.fresh{width:100%;border-collapse:collapse;font-size:12.5px}
 table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
-table.fresh td:last-child{text-align:right;font-family:var(--mono);color:var(--tx2)}
+table.fresh td+td{text-align:right;font-family:var(--mono);color:var(--tx2)}
+table.fresh td.desc{text-align:left;font-family:var(--sans);color:var(--tx2);font-size:12px;line-height:1.5}
 .footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
 
 /* UK-plate styling for vehicle registrations */
@@ -274,6 +293,7 @@ main.fullbleed{max-width:none;padding:0}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
 .nm-term{transform:translate(-50%,-50%);display:inline-block;color:#fff;border:1.5px solid #fff;border-radius:7px;padding:1px 5px;font-family:var(--mono);font-weight:700;font-size:9.5px;white-space:nowrap;box-shadow:0 2px 7px rgba(0,0,0,.35)}
 .expchip{display:inline-block;vertical-align:1px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px}
+:root[data-theme="dark"] .expchip{background:#33260b;color:#fcd34d;border-color:#5c4a16}
 .nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -703,10 +723,19 @@ const main = document.getElementById('main');
 const routesViewState = { q:'', type:null, op:null, prop:null };  // survives back-nav
 let liveTimers = [];   // every polling surface registers here — all killed on nav
 const addLiveTimer = t => { liveTimers.push(t); return t; };
+/* Every navigation bumps navToken. Async renderers capture it at entry and
+   bail after each await when it has moved on — otherwise a slow fetch from
+   the previous view overwrites the current one, re-binds its listeners
+   (double-toggling filters into no-ops) or registers its poll timers into
+   the new view's list. */
+let navToken = 0;
+const gone = tok => tok !== navToken;
 
 function navigate(){
+  navToken++;
   for(const t of liveTimers) clearInterval(t);
   liveTimers = [];
+  if(_map){ _map.remove(); _map = null; }   // free the previous view's Leaflet instance
   const h = location.hash.replace(/^#\/?/, '');
   const [seg, arg] = h.split('/').map(decodeURIComponent);
   const view = seg === '' ? 'routes' : seg;
@@ -720,6 +749,12 @@ function navigate(){
   if(moreSheet && !moreSheet.hidden){ moreSheet.hidden = true; document.getElementById('moreTab')?.setAttribute('aria-expanded','false'); }
   window.scrollTo(0, 0);
   main.classList.toggle('fullbleed', view === 'map');
+  // Per-view titles so history entries and tabs are tellable apart.
+  const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
+    garages:'Garages', tender:'Tender', cpi:'CPI-CPA', about:'About',
+    route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
+    garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
+  document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
   if(view === 'routes')         renderRoutes();
   else if(view === 'map')       renderNetworkMap();
   else if(view === 'route')     renderRouteDetail(arg);
@@ -794,11 +829,12 @@ D.lineStatus().then(ls => {
 
 /* ════════════════════ ROUTES (home) ════════════════════ */
 async function renderRoutes(){
+  const tok = navToken;
   main.innerHTML = `
     <div class="searchwrap">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-        <input id="q" placeholder="Search a route, e.g. 25 or N73" autocomplete="off" inputmode="search" value="${esc(routesViewState.q)}" />
+        <input id="q" aria-label="Search routes" placeholder="Search a route, e.g. 25 or N73" autocomplete="off" inputmode="search" value="${esc(routesViewState.q)}" />
         <button class="clear" id="qClear" aria-label="Clear search" ${routesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
       <div class="chips" id="chips"></div>
@@ -807,6 +843,7 @@ async function renderRoutes(){
     <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
 
   const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
+  if(gone(tok)) return;
   if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The route data is unreachable right now — try again shortly.</div>'; return; }
   const disrupted = new Set((lineStatus?.rows ?? []).filter(r => r.severity !== 10).map(r => r.route));
 
@@ -842,11 +879,11 @@ async function renderRoutes(){
       const m = meta[r.name] ?? {};
       const ga = [m.garageName, m.garage ? `(${m.garage})` : null].filter(Boolean).join(' ');
       return `<a class="rrow" href="#/route/${encodeURIComponent(r.name)}">
-        <span class="rnum ${r.type}">${esc(r.name)}</span>
+        <span class="rnum ${esc(r.type)}">${esc(r.name)}</span>
         <span class="rmeta">
           <span class="op">${esc(m.operator ?? '—')}
             ${m.propulsion ? `<span class="rtag ${m.propulsion}">${esc(m.propulsion)}</span>` : ''}
-            ${r.type !== 'regular' ? `<span class="rtag">${TYPE_LABEL[r.type] ?? r.type}</span>` : ''}
+            ${r.type !== 'regular' ? `<span class="rtag">${esc(TYPE_LABEL[r.type] ?? r.type)}</span>` : ''}
           </span>
           <span class="ga">${esc(ga || '—')}</span>
         </span>
@@ -869,16 +906,18 @@ async function renderRoutes(){
     rerender();
   });
   const q = document.getElementById('q'), qClear = document.getElementById('qClear');
+  let qT = null;   // short debounce — rebuilding ~700 rows per keystroke janks mobile
   q.addEventListener('input', () => {
     routesViewState.q = q.value;
     qClear.hidden = !q.value;
-    rerender();
+    clearTimeout(qT); qT = setTimeout(rerender, 90);
   });
   qClear.addEventListener('click', () => { q.value=''; routesViewState.q=''; qClear.hidden=true; rerender(); q.focus(); });
 }
 
 /* ════════════════════ ROUTE DETAIL ════════════════════ */
 async function renderRouteDetail(name){
+  const tok = navToken;
   const id = String(name ?? '').toUpperCase();
   main.innerHTML = `
     <a class="backrow" href="#/">‹ All routes</a>
@@ -900,6 +939,7 @@ async function renderRouteDetail(name){
     <div id="dsections"></div>`;
 
   const [routes, meta] = await Promise.all([D.routes(), D.meta()]);
+  if(gone(tok)) return;
   const route = routes?.find(r => r.name.toUpperCase() === id);
   const m = meta?.[route?.name] ?? meta?.[id] ?? {};
   if(!route){
@@ -912,7 +952,7 @@ async function renderRouteDetail(name){
   /* header */
   document.getElementById('dhead').outerHTML = `
     <div class="dhead">
-      <span class="dnum ${route.type}">${esc(route.name)}</span>
+      <span class="dnum ${esc(route.type)}">${esc(route.name)}</span>
       <div class="dtitle">
         <h1 id="dTermini">${esc(m.operator ?? 'London bus route')}</h1>
         <div class="sub2">${[
@@ -928,11 +968,13 @@ async function renderRouteDetail(name){
      stays open */
   async function refreshStatus(){
     const raw = await D.liveStatus(route.name);
+    if(gone(tok)) return;   // navigated away (another route detail has its own #dstatus)
     const host = document.getElementById('dstatus');
     if(!host) return;   // navigated away
     let st = pickStatus(route.name, raw?.data?.[0]?.lineStatuses);
     if(!st){
       const snap = await D.lineStatus();
+      if(gone(tok)) return;
       const row = snap?.rows?.find(r => r.route === route.name);
       if(row) st = { status: row.status, reason: row.reason || null, severity: row.severity };
     }
@@ -956,10 +998,16 @@ async function renderRouteDetail(name){
   if(m.fleet) facts.push(['Vehicle', stripTags(m.fleet)]);
   document.getElementById('dfacts').innerHTML =
     facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join('')
-    + `<div class="fact"><div class="l">Deck</div><div class="v" id="deckVal">—</div></div>`;
+    + `<div class="fact"><div class="l">Deck</div><div class="v" id="deckVal">${
+      /* Seed from the rostered-vehicle fleet code (DD/SD markers) so routes with
+         no recent DVLA observations (school runs, PVR 1) still get a verdict;
+         the observed-vehicle count overwrites this when a sample exists. */
+      /\b(?:DD|ZEDD|HDD)\b/.test(m.fleet ?? '') ? 'Double deck'
+        : /\b(?:SD|ZESD|HSD)\b/.test(m.fleet ?? '') ? 'Single deck' : '—'}</div></div>`;
 
   /* diversion note */
   D.diversions().then(divs => {
+    if(gone(tok)) return;
     const dv = divs?.[route.name];
     if(!dv?.reasons?.length && !dv?.disruptions?.length) return;
     const reason = dv.disruptions?.[0]?.reason ?? '';
@@ -971,13 +1019,14 @@ async function renderRouteDetail(name){
   });
 
   /* the rest of the page */
-  buildRouteSections(route, m);
+  buildRouteSections(route, m, tok);
 
   /* map — lazy heavy payloads */
-  initRouteMap(route, m);
+  initRouteMap(route, m, tok);
 
   /* termini in header once stops arrive */
   D.stops().then(stops => {
+    if(gone(tok) || !document.getElementById('dTermini')) return;
     const rec = stops?.[route.name.toLowerCase()] ?? stops?.[route.name];
     const out = rec?.outbound ?? [];
     if(out.length >= 2){
@@ -989,7 +1038,7 @@ async function renderRouteDetail(name){
 }
 
 
-async function buildRouteSections(route, m){
+async function buildRouteSections(route, m, tok){
   const el = document.getElementById('dsections');
   const frag = [];
 
@@ -997,6 +1046,7 @@ async function buildRouteSections(route, m){
 
   /* Crowding */
   const cr = await D.crowding();
+  if(gone(tok)) return;
   const crRec = cr?.routes?.[route.name];
   if(crRec && num(crRec.peakVC)){
     const bandLabel = cr.bands?.find(b => b.key === crRec.band)?.label ?? title(crRec.band ?? '');
@@ -1014,9 +1064,11 @@ async function buildRouteSections(route, m){
 
   /* Fleet */
   const fl = (await D.fleet())?.[route.name];
+  if(gone(tok)) return;
   // Deck type from the observed vehicles — the registry knows each bus.
   if(fl?.regs?.length){
     D.vehiclesReg().then(reg => {
+      if(gone(tok)) return;
       const decks = fl.regs.map(r => reg?.[r]?.deck).filter(Boolean);
       if(!decks.length) return;
       const dd = decks.filter(d => d === 'double').length, sd = decks.length - dd;
@@ -1045,6 +1097,7 @@ async function buildRouteSections(route, m){
 
   /* Contract & tendering — latest and previous awards as individual lines */
   const tn = (await D.tenders())?.[route.name] ?? [];
+  if(gone(tok)) return;
   const latest = tn[0], prev = tn[1];
   const rows = [];
   if(m.operator)   rows.push(`<div><span class="k">Operator</span><span class="v"><a href="#/operator/${encodeURIComponent(m.operator)}" style="color:var(--acc);font-weight:500">${esc(m.operator)}</a></span></div>`);
@@ -1077,16 +1130,18 @@ async function buildRouteSections(route, m){
      with a contract start still ahead. */
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const upcoming = (await D.programme())
+    const prog = await D.programme();
+    if(gone(tok)) return;
+    const upcoming = prog
       .filter(e => String(e.route).toUpperCase().split('/').some(t => t.trim() === route.name.toUpperCase())
         && e.contractStart && e.contractStart >= today)
       .sort((a, b) => String(a.contractStart).localeCompare(String(b.contractStart)))[0];
     if(upcoming){
       const bits = [
-        upcoming.issueDate ? `tenders issued ${fmtDate(upcoming.issueDate)}` : null,
-        upcoming.returnDate ? `returns ${fmtDate(upcoming.returnDate)}` : null,
+        fmtDate(upcoming.issueDate) ? `tenders issued ${fmtDate(upcoming.issueDate)}` : null,
+        fmtDate(upcoming.returnDate) ? `returns ${fmtDate(upcoming.returnDate)}` : null,
         upcoming.awardEstimated ? `award estimated ${esc(upcoming.awardEstimated)}` : null,
-        `new contract starts <b>${fmtDate(upcoming.contractStart)}</b>`,
+        fmtDate(upcoming.contractStart) ? `new contract starts <b>${fmtDate(upcoming.contractStart)}</b>` : null,
         upcoming.vehicleType ? esc(upcoming.vehicleType) : null,
         upcoming.twoYearExtension ? '+2 yr option' : null,
       ].filter(Boolean).join(' · ');
@@ -1146,7 +1201,7 @@ async function buildRouteSections(route, m){
 
 /* ── Route map ────────────────────────────────────────────────────────── */
 let _map = null;
-async function initRouteMap(route, m = {}){
+async function initRouteMap(route, m = {}, tok = navToken){
   const el = document.getElementById('map');
   if(_map){ _map.remove(); _map = null; }
   _map = makeMap(el);
@@ -1157,6 +1212,7 @@ async function initRouteMap(route, m = {}){
   let liveOn = false, stopsOn = false;
 
   const [ov, stops, garages, metaAll] = await Promise.all([D.overview(), D.stops(), D.garages(), D.meta()]);
+  if(gone(tok)) return;
   if(location.hash !== `#/route/${encodeURIComponent(route.name)}` && !decodeURIComponent(location.hash).endsWith('/'+route.name)) return;
 
   const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === route.name.toUpperCase()
@@ -1271,7 +1327,7 @@ async function initRouteMap(route, m = {}){
     bridgeBtn.classList.toggle('on', bridgeOn);
     if(!bridgeOn){ if(bridgeLayer){ _map.removeLayer(bridgeLayer); bridgeLayer = null; } layerNote('bridgeNote'); return; }
     const all = await D.bridges();
-    if(!bridgeOn) return;   // toggled off while loading
+    if(gone(tok) || !bridgeOn) return;   // navigated away or toggled off while loading
     const near = (all ?? []).filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng) && nearRoute(b.lat, b.lng, 300));
     bridgeLayer = L.layerGroup();
     const prow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
@@ -1308,7 +1364,7 @@ async function initRouteMap(route, m = {}){
     incBtn.classList.toggle('on', incOn);
     if(!incOn){ if(incLayer){ _map.removeLayer(incLayer); incLayer = null; } layerNote('incNote'); return; }
     const snap = await D.accidents();
-    if(!incOn) return;
+    if(gone(tok) || !incOn) return;
     const near = (snap?.accidents ?? []).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lng) && nearRoute(a.lat, a.lng, 150));
     incLayer = L.layerGroup();
     const canvas = L.canvas({ padding:.5 });
@@ -1394,6 +1450,7 @@ async function initRouteMap(route, m = {}){
   async function pollBuses(first){
     if(first) liveBtn.classList.add('loading');
     const [raw, reg] = await Promise.all([D.liveVehicles(route.name), D.vehiclesReg()]);
+    if(gone(tok)) return;
     liveBtn.classList.remove('loading');
     busNextIn = raw ? nextPollS(raw, 15) : 8;
     if(!liveOn) return;
@@ -1450,13 +1507,14 @@ const netmapState = {
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
 async function renderNetworkMap(){
+  const tok = navToken;
   main.innerHTML = `
     <div class="netmap-wrap">
       <div id="netmap"></div>
       <div class="netmap-panel" id="nmPanel">
         <div class="nm-search">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-          <input id="nmq" placeholder="Search routes — 25, N38, X68…" autocomplete="off" enterkeyhint="go" />
+          <input id="nmq" aria-label="Search routes on the map" placeholder="Search routes — 25, N38, X68…" autocomplete="off" enterkeyhint="go" />
           <button class="clear" id="nmqClear" aria-label="Clear search" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
         <div class="nm-sugg" id="nmSugg" hidden></div>
@@ -1483,8 +1541,8 @@ async function renderNetworkMap(){
     </div>`;
 
   const [ov, meta, routes, garages] = await Promise.all([D.overview(), D.meta(), D.routes(), D.garages()]);
-  if(!document.getElementById('netmap')) return;
-  if(!ov?.features?.length){ document.getElementById('nmCount').textContent = 'The map data is unreachable right now.'; return; }
+  if(gone(tok) || !document.getElementById('netmap')) return;
+  if(!ov?.features?.length || !routes){ document.getElementById('nmCount').textContent = 'The map data is unreachable right now.'; return; }
 
   if(_map){ _map.remove(); _map = null; }
   _map = makeMap(document.getElementById('netmap'));
@@ -1678,7 +1736,7 @@ async function renderNetworkMap(){
       // click that would silently add a route.
       const active = focused || !st.pills.length;
       ly.options.interactive = active;
-      if(active && !ly.getTooltip()) ly.bindTooltip(`Route ${name}`, { sticky:true, direction:'top' });
+      if(active && !ly.getTooltip()) ly.bindTooltip(`Route ${esc(name)}`, { sticky:true, direction:'top' });
       else if(!active && ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
       if(focused) ly.bringToFront();
     });
@@ -1748,7 +1806,7 @@ async function renderNetworkMap(){
       return `<div class="netmap-card" style="border-left:4px solid ${focusColor(p)}">
         <button class="close" data-rm="${esc(p)}" aria-label="Remove ${esc(p)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <div style="display:flex;align-items:center;gap:9px">
-          <span class="rnum ${t}" style="min-width:40px;height:27px;font-size:13px">${esc(p)}</span>
+          <span class="rnum ${esc(t)}" style="min-width:40px;height:27px;font-size:13px">${esc(p)}</span>
           <div style="min-width:0;font-size:12px;color:var(--tx2)">
             <b style="color:var(--tx);font-size:12.5px">${esc(m.operator ?? '')}</b><br>
             ${[TYPE_LABEL[t], m.garageName ? `${m.garageName} (${m.garage})` : null, num(m.pvr) ? `PVR ${m.pvr}` : null].filter(Boolean).map(esc).join(' · ')}
@@ -1799,7 +1857,7 @@ async function renderNetworkMap(){
     suggBox.hidden = false;
     suggBox.innerHTML = sugg.length
       ? sugg.map((r,i) => `<button class="nm-sug${i===suggIdx?' act':''}" data-add="${esc(r.up)}">
-          <span class="rnum ${r.type}">${esc(r.name)}</span>
+          <span class="rnum ${esc(r.type)}">${esc(r.name)}</span>
           <span class="op">${esc((r.op || '').replace(' London',''))}</span>
           <span class="ty">${esc(TYPE_LABEL[r.type] ?? '')}</span></button>`).join('')
       : `<div class="nm-nores">No route matches “${esc(nmq.value.trim())}”.</div>`;
@@ -1900,9 +1958,11 @@ async function renderNetworkMap(){
 
 /* ════════════════════ OPERATORS ════════════════════ */
 async function renderOperators(){
+  const tok = navToken;
   main.innerHTML = `<h1 class="h1">Operators</h1><div class="sub">Who runs London’s buses — routes, fleet size and electrification.</div>
     <div class="oplist" id="oplist">${'<div class="skel" style="height:120px"></div>'.repeat(6)}</div>`;
   const [meta, garages] = await Promise.all([D.meta(), D.garages()]);
+  if(gone(tok)) return;
   const agg = new Map();
   for(const [name, m] of Object.entries(meta ?? {})){
     if(!m?.operator) continue;
@@ -1936,8 +1996,10 @@ async function renderOperators(){
 
 /* ── Operator detail — drill: operator → garages → routes → map ─────────── */
 async function renderOperatorDetail(op){
+  const tok = navToken;
   main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="skel" style="height:140px"></div>`;
   const [meta, garages, routes] = await Promise.all([D.meta(), D.garages(), D.routes()]);
+  if(gone(tok)) return;
   const myRoutes = (routes ?? []).filter(r => meta?.[r.name]?.operator === op).sort((a,b)=>cmpRoute(a.name,b.name));
   if(!myRoutes.length){ main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="empty">No routes found for “${esc(op)}”.</div>`; return; }
   const myGarages = (garages ?? []).filter(g => g.operator === op).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
@@ -1979,16 +2041,18 @@ async function renderOperatorDetail(op){
 /* ════════════════════ GARAGES ════════════════════ */
 const garagesViewState = { q:'' };
 async function renderGarages(){
+  const tok = navToken;
   main.innerHTML = `
     <h1 class="h1">Garages</h1><div class="sub">Every operating garage on the TfL network.</div>
     <div class="searchwrap"><div class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-      <input id="gq" placeholder="Search by name or code" autocomplete="off" value="${esc(garagesViewState.q)}" />
+      <input id="gq" aria-label="Search garages" placeholder="Search by name or code" autocomplete="off" value="${esc(garagesViewState.q)}" />
       <button class="clear" id="gqClear" aria-label="Clear search" ${garagesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div></div>
     <div class="count-note" id="gCount"></div>
     <div class="glist" id="glist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
   const garages = await D.garages();
+  if(gone(tok)) return;
   if(!garages?.length){ document.getElementById('glist').innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
   const rerender = () => {
     const q = garagesViewState.q.trim().toLowerCase();
@@ -2010,8 +2074,10 @@ async function renderGarages(){
 }
 
 async function renderGarageDetail(code){
+  const tok = navToken;
   main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="skel" style="height:120px"></div>`;
   const [garages, meta] = await Promise.all([D.garages(), D.meta()]);
+  if(gone(tok)) return;
   const g = garages?.find(x => x.code?.toUpperCase() === String(code ?? '').toUpperCase());
   if(!g){ main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="empty">Garage “${esc(code)}” not found.</div>`; return; }
   const tvr = tvrOf(g.pvr);
@@ -2047,19 +2113,20 @@ async function renderGarageDetail(code){
     <div class="section"><div class="section-h">On the map</div><div id="map"></div>
       <div class="legendrow" style="margin-top:8px"><span>Every route based at ${esc(g.name)} — tap a line to open it.</span></div>
     </div>`;
-  initGarageMap(g);
+  initGarageMap(g, tok);
 }
 
 /* Garage map — the garage pin plus every route based there, each line in its
    own colour (the validated comparison palette), tappable through to the
    route page. */
 const GARAGE_MAP_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
-async function initGarageMap(g){
+async function initGarageMap(g, tok = navToken){
   const el = document.getElementById('map');
   if(!el) return;
   if(_map){ _map.remove(); _map = null; }
   _map = makeMap(el);
   const ov = await D.overview();
+  if(gone(tok)) return;
   if(!document.getElementById('map')) return; // navigated away mid-load
   const mine = new Map();
   (g.routes ?? []).forEach((r,i) => mine.set(String(r).toUpperCase(), GARAGE_MAP_COLORS[i % GARAGE_MAP_COLORS.length]));
@@ -2100,12 +2167,13 @@ const haversineM = (aLat,aLng,bLat,bLng) => {
 const fmtDist = m => m < 950 ? `${Math.round(m/10)*10} m` : `${(m/1000).toFixed(1)} km`;
 
 async function renderStops(){
+  const tok = navToken;
   main.innerHTML = `
     <h1 class="h1">Bus stops</h1><div class="sub">Find any stop and see live arrival times, straight from TfL Countdown.</div>
     <div class="searchwrap">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-        <input id="sq" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
+        <input id="sq" aria-label="Search stops" placeholder="Search a stop, e.g. Angel Station" autocomplete="off" value="${esc(stopsViewState.q)}" />
         <button class="clear" id="sqClear" aria-label="Clear search" ${stopsViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         <button class="livebtn" id="nearBtn" style="margin:0;flex:none"><span class="spin"></span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Near me</button>
@@ -2114,13 +2182,14 @@ async function renderStops(){
     <div class="count-note" id="sCount"></div>
     <div class="glist" id="slist"><div class="empty" id="sHint">Loading the stop directory…</div></div>`;
   const reg = await stopRegistry();
+  if(gone(tok)) return;
   if(!reg?.size){ const l=document.getElementById('slist'); if(l) l.innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
   const all = [...reg.values()];
 
   const rowHtml = (s, dist) => `
     <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
       <span class="avatar" style="background:var(--acc);border-radius:50%;width:32px;height:32px;font-size:${s.letter?'13px;font-weight:800':'10px'}">${esc(s.letter ?? [...s.lines].length)}</span>
-      <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).join(' · ')}${s.lines.size>8?' …':''}</span></span>
+      <span class="g-nm"><b>${esc(s.name)}</b><span>${[...s.lines].sort(cmpRoute).slice(0,8).map(esc).join(' · ')}${s.lines.size>8?' …':''}</span></span>
       ${dist != null ? `<span class="g-pvr"><b style="font-size:12.5px">${fmtDist(dist)}</b>away</span>` : ''}
     </a>`;
 
@@ -2139,7 +2208,8 @@ async function renderStops(){
   };
   rerender();
   const sq = document.getElementById('sq'), sqClear = document.getElementById('sqClear');
-  sq.addEventListener('input', () => { stopsViewState.q = sq.value; sqClear.hidden = !sq.value; rerender(); });
+  let sqT = null;   // ~20k stop names per keystroke — debounce the rebuild
+  sq.addEventListener('input', () => { stopsViewState.q = sq.value; sqClear.hidden = !sq.value; clearTimeout(sqT); sqT = setTimeout(rerender, 90); });
   sqClear.addEventListener('click', () => { sq.value=''; stopsViewState.q=''; sqClear.hidden=true; rerender(); sq.focus(); });
 
   /* Near me — device location → closest stops, sorted by distance */
@@ -2175,8 +2245,10 @@ async function renderStops(){
 }
 
 async function renderStopDetail(id){
+  const tok = navToken;
   main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="skel" style="height:120px"></div>`;
   const reg = await stopRegistry();
+  if(gone(tok)) return;
   const s = reg?.get(id);
   main.innerHTML = `
     <a class="backrow" href="#/stops">‹ Stop search</a>
@@ -2204,6 +2276,7 @@ async function renderStopDetail(id){
   let nextIn = 0;
   async function poll(){
     const raw = await D.arrivals(id);
+    if(gone(tok)) return;   // another stop board may own #arrBoard by now
     nextIn = raw ? nextPollS(raw, 30) : 8;     // failed fetch → quick quiet retry
     const el = board(); if(!el) return;   // navigated away
     // A transient failure must not wipe a good board: dues are absolute
@@ -2285,12 +2358,15 @@ async function renderStopDetail(id){
 
 /* ════════════════════ VEHICLE ════════════════════ */
 async function renderVehicleDetail(regArg){
+  const tok = navToken;
   const [regPart, qs] = String(regArg ?? '').split('?');
   const ctx = new URLSearchParams(qs ?? '');
   const ctxStop = ctx.get('stop'), ctxLine = ctx.get('line');
   const R = String(regPart ?? '').toUpperCase();
-  main.innerHTML = `<a class="backrow" href="javascript:history.back()">‹ Back</a><div class="skel" style="height:140px"></div>`;
+  main.innerHTML = `<button class="backrow" id="vBack" style="background:none;border:none;cursor:pointer">‹ Back</button><div class="skel" style="height:140px"></div>`;
+  document.getElementById('vBack')?.addEventListener('click', () => history.back());
   const v = (await D.vehiclesReg())?.[R] ?? null;
+  if(tok !== navToken) return;   // note: `gone` is a local boolean in this view
   const facts = [];
   if(v?.make) facts.push(['Make', title(v.make)]);
   if(v?.body) facts.push(['Body', v.body]);
@@ -2344,7 +2420,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
   }
 
   const first = await findBus();
-  if(!document.getElementById('vLiveSec')) return;   // navigated away
+  if(tok !== navToken || !document.getElementById('vLiveSec')) return;   // navigated away
   const note = document.getElementById('vLiveNote');
   if(!first){
     document.getElementById('map').remove();
@@ -2367,6 +2443,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
   let stopLL = null;
   if(ctxStop){
     const reg = await stopRegistry();     // cached — the user came through the stops flow
+    if(tok !== navToken) return;
     const s = reg?.get(ctxStop);
     if(s && _map){
       stopLL = [s.lat, s.lng];
@@ -2512,8 +2589,10 @@ function cpmChartHtml(routeName, awards){
 
 /* ════════════════════ TENDERS — every award, filterable ════════════════ */
 async function renderTenders(tab){
+  const tok = navToken;
   main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
   const all = (await D.tendersAll() ?? []).filter(a => a.awardDate);
+  if(gone(tok)) return;
   if(!all.length){
     main.innerHTML = `<div class="wrap"><div class="empty">The tender register is unreachable right now — try again shortly.</div></div>`;
     return;
@@ -2533,7 +2612,7 @@ async function renderTenders(tab){
     </div>
     <div id="tabAwards">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
-      <input id="tq" type="search" placeholder="Search route (e.g. 24) or operator" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <input id="tq" type="search" aria-label="Search tender awards" placeholder="Search route (e.g. 24) or operator" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <span style="display:inline-flex;align-items:center;gap:4px">
         <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
         <button id="topClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
@@ -2566,7 +2645,7 @@ async function renderTenders(tab){
     <div class="section" style="margin-top:14px"><div class="section-h" style="display:flex;align-items:center;gap:10px">Tendering programme<span id="pCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
       <button class="livebtn" id="pExport" style="margin-left:auto" title="Downloads every programme entry matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-        <input id="pq" type="search" placeholder="Search route (e.g. 24), tranche or description" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+        <input id="pq" type="search" aria-label="Search tendering programme" placeholder="Search route (e.g. 24), tranche or description" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
         <span style="display:inline-flex;align-items:center;gap:4px">
           <select id="pyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
           <button id="pyrClear" hidden aria-label="Clear programme-year filter" title="Clear programme-year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
@@ -2733,6 +2812,7 @@ async function renderTenders(tab){
 
   /* ── Tendering programme table (the forward half of TfL's forms page) ── */
   const prog = await D.programme();
+  if(gone(tok)) return;
   document.getElementById('tabP').textContent = `Programme · ${prog.length.toLocaleString('en-GB')}`;
   const pYears = [...new Set(prog.map(e => e.programmeYear).filter(Boolean))].sort().reverse();
   document.getElementById('pyr').innerHTML = '<option value="">All programmes</option>' + pYears.map(y => `<option>${esc(y)}</option>`).join('');
@@ -2764,7 +2844,7 @@ async function renderTenders(tab){
         <td class="num" style="text-align:left">${upcoming ? '<b>' : ''}${esc(fmtDate(e.contractStart) ?? '—')}${upcoming ? '</b>' : ''}</td>
         <td>${esc(e.vehicleType ?? '—')}</td>
         <td>${e.twoYearExtension == null ? '—' : (e.twoYearExtension ? 'Yes' : 'No')}</td>
-        <td>${e.sourceUrl ? `<a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener" title="The ${esc(e.programmeYear ?? '')} programme PDF on content.tfl.gov.uk" style="color:var(--acc);white-space:nowrap">PDF ↗</a>` : '—'}</td></tr>`;
+        <td>${e.sourceUrl && /^https:\/\//.test(e.sourceUrl) ? `<a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener" title="The ${esc(e.programmeYear ?? '')} programme PDF on content.tfl.gov.uk" style="color:var(--acc);white-space:nowrap">PDF ↗</a>` : '—'}</td></tr>`;
     }).join('');
     const up = list.filter(e => e.contractStart && e.contractStart >= today).length;
     document.getElementById('pCount').textContent = ` · ${list.length.toLocaleString('en-GB')} entries${up ? ` · ${up} upcoming` : ''}`;
@@ -2807,8 +2887,10 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 const monthLabel = ym => { const m = /^(\d{4})-(\d{2})$/.exec(ym ?? ''); return m ? `${MONTH_NAMES[+m[2]-1]} ${m[1]}` : ym; };
 const pct2 = v => v == null ? '—' : (Number(v) * 100).toFixed(2) + '%';
 async function renderCpi(){
+  const tok = navToken;
   main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
   const d = await D.cpi();
+  if(gone(tok)) return;
   if(!d?.months?.length){
     main.innerHTML = `<div class="wrap"><div class="empty">The CPI-CPA dataset is unreachable right now — try again shortly.</div></div>`;
     return;
@@ -2852,6 +2934,7 @@ async function renderCpi(){
 }
 
 async function renderAbout(){
+  const tok = navToken;
   main.innerHTML = `
     <h1 class="h1">About</h1>
     <div class="sub">London Buses — search and explore every TfL bus route, operator and garage.</div>
@@ -2859,18 +2942,90 @@ async function renderAbout(){
       <div class="prose">
         <p>An independent project, <b>not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
         <p>Every number on this site comes from its own open data pipeline: GitHub Actions fetches, validates and commits the datasets, and the site serves them as static JSON. Upstream sources: <b>Transport for London</b> (routes, stops, geometry, service status, diversions, crowding, live arrivals) — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures from the <b>Office for National Statistics</b> (D7BT series); live bus positions from the DfT Bus Open Data Service; vehicle details from the DVLA — contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights from TfL's height-restrictions register (London Datastore, EPOWR); collision records from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p><b>Open source.</b> The whole platform — app, data pipeline and scheduled workflows — lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed; the data remains subject to its sources' own licences (TfL open data terms, OGL v3.0, ODbL). Issues and pull requests welcome.</p>
         <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
-    <div class="section"><div class="section-h">Data freshness</div>
-      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="2" style="color:var(--mu)">Loading…</td></tr></table></div>
+    <div class="section"><div class="section-h">Live feeds</div>
+      <div class="card"><table class="fresh">
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Straight from TfL Countdown — re-syncs every ~30 s while a stop board is open.</td></tr>
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">DfT Bus Open Data GPS — every ~15–20 s while the live layer is on.</td></tr>
+        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Straight from TfL — checked on view, re-polled every 60 s.</td></tr>
+      </table></div>
+      <div class="legendrow" style="margin-top:7px"><span>Live feeds are never stored — the browser reads them directly, with the last committed snapshot as fallback.</span></div>
     </div>
-    <div class="footer">Data may be incomplete or out of date — verify before acting on it.</div>`;
+    <div class="section"><div class="section-h">Scheduled pipelines</div>
+      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
+      <div class="legendrow" style="margin-top:7px"><span>Refreshed by scheduled GitHub Actions — times shown in London time (GMT/BST); GitHub's scheduler can slip a slot by a few minutes to a few hours. A run commits — and the site redeploys — only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check.</span></div>
+    </div>
+    <div class="section"><div class="section-h">Static snapshots</div>
+      <div class="card"><table class="fresh">
+        <tr><td>Low bridges</td><td class="desc">TfL height-restrictions register — seeded snapshot.</td></tr>
+        <tr><td>Collisions</td><td class="desc">DfT STATS19, bus/coach-involved 2021–2025 — seeded snapshot.</td></tr>
+        <tr><td>Crowding</td><td class="desc">TfL BUSTO 2025–2026 — seeded snapshot.</td></tr>
+      </table></div>
+    </div>
+    <div class="footer">Data may be incomplete or out of date — verify before acting on it.<br><a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank" style="color:var(--acc);font-weight:600">Source on GitHub ↗</a></div>`;
   const mf = await D.manifest();
-  const rows = Object.entries(mf?.datasets ?? {})
-    .filter(([k]) => ['routes','route-meta','route-stops','garages','fleet','tenders','crowding','route-diversions'].includes(k))
-    .map(([k,v]) => `<tr><td>${esc(k)}</td><td>${esc(fmtDate(v.fetchedAt) ?? '—')}${v.status && v.status!=='ok' ? ' ⚠️' : ''}</td></tr>`);
-  document.getElementById('freshTable').innerHTML = rows.join('') || '<tr><td colspan="2" style="color:var(--mu)">Manifest unavailable.</td></tr>';
+  if(gone(tok)) return;
+
+  /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
+     nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps
+     07:20/15:20/23:20, tender checks hourly 07:20–20:20 (all UTC). */
+  /* The crons fire at fixed UTC times, but we show London wall-clock
+     (Europe/London), so the displayed times shift by an hour between GMT
+     and BST automatically. */
+  const lonFmt = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/London', hour:'2-digit', minute:'2-digit', hour12:false });
+  const lon = d => lonFmt.format(d);
+  const lonAt = (h, m) => { const n = new Date(); return lon(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), h, m))); };
+  const SCHED = {
+    nightly: { label:`nightly · ${lonAt(3,17)} London time`,                        hours:[3],                          minute:17 },
+    status:  { label:`every 2 h · ${lonAt(7,41)}–${lonAt(21,41)} London time`,      hours:[7,9,11,13,15,17,19,21],      minute:41 },
+    fleet:   { label:`every 8 h · ${lonAt(7,20)}/${lonAt(15,20)}/${lonAt(23,20)} London time`, hours:[7,15,23],         minute:20 },
+    tenders: { label:`hourly · ${lonAt(7,20)}–${lonAt(20,20)} London time`,         hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
+  };
+  const nextRun = sc => {
+    const now = new Date();
+    for(let d = 0; d <= 1; d++){
+      for(const h of sc.hours){
+        const t = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + d, h, sc.minute));
+        if(t > now) return t;
+      }
+    }
+    return null;
+  };
+  const rel = iso => {
+    const t = new Date(iso).getTime();
+    if(!Number.isFinite(t)) return null;
+    const m = Math.round(Math.abs(Date.now() - t) / 60000);
+    return m < 60 ? `${m} min` : m < 2880 ? `${Math.round(m/60)} h` : `${Math.round(m/1440)} d`;
+  };
+  const nextTxt = sc => {
+    const t = nextRun(sc); if(!t) return '—';
+    return `in ~${rel(t.toISOString())} (${lon(t)} London)`;
+  };
+  const ds = mf?.datasets ?? {};
+  const newest = keys => keys.map(k => ds[k]?.fetchedAt).filter(Boolean).sort().pop() ?? null;
+  const warn = keys => keys.some(k => ds[k]?.status && ds[k].status !== 'ok') ? ' ⚠️' : '';
+  const GROUPS = [
+    { name:'Routes, stops & geometry',   keys:['routes','routes-overview','route-stops'], sc:SCHED.nightly },
+    { name:'Operators, garages & PVR',   keys:['route-meta','garages'],                   sc:SCHED.nightly },
+    { name:'Service status & diversions',keys:['line-status','route-diversions'],         sc:SCHED.status },
+    { name:'Fleet observations (DVLA)',  keys:['fleet','vehicles'],                       sc:SCHED.fleet },
+    { name:'Tender awards',              keys:['tenders'],                                sc:SCHED.tenders },
+    { name:'Tendering programme',        keys:['tender-programme'],                       sc:SCHED.tenders },
+    { name:'CPI-CPA (ONS)',              keys:['cpi-cpa'],                                sc:SCHED.nightly },
+  ];
+  document.getElementById('freshTable').innerHTML =
+    `<tr><th style="text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Dataset</th>
+      <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Last updated</th>
+      <th style="text-align:right;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Next check</th></tr>` +
+    GROUPS.map(g => {
+      const at = newest(g.keys);
+      return `<tr><td>${esc(g.name)}<div style="font-size:11px;color:var(--mu)">${esc(g.sc.label)}</div></td>
+        <td>${at ? `${esc(rel(at))} ago${warn(g.keys)}<div style="font-size:11px;color:var(--mu)">${esc(fmtDate(at) ?? '')}</div>` : '—'}</td>
+        <td>${esc(nextTxt(g.sc))}</td></tr>`;
+    }).join('');
 }
 
 /* boot — desktops land on the Map (the map is the point of a big screen);
