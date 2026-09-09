@@ -6,6 +6,14 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.31 — Tranche in the awards table
+
+_2026-09-09_
+
+- **NEW** The **awards table has a Tranche column** — sortable, and the search box now matches tranche numbers exactly (e.g. searching 845 finds that tranche's four awards). The programme table already had both. Tranches come from the joined tendering programmes, so they appear on awards from 2017/18 onward; older awards show "—". The CSV export already carried the field.
+
+---
+
 ## v2.30 — Full docs, plainer words, banner gone
 
 _2026-09-08_
