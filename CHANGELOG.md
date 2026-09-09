@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.31.2 — Repo cleanup
+
+_2026-09-09_
+
+- **FIX** **The garage-capacity tooling is back where its script expects it.** `capacity/` (the DVSA licence data and its extraction bookmarklet) had been swept into `archive/v1/` when v1 was archived, which silently broke `npm run build-garage-capacity`. Moved back to the repo root and re-run — the capacity file now covers garages added since May.
+- **DATA** Deleted files nothing uses any more: the `bus-contracts-manager` reference zip (its CPI arithmetic was replicated into `fetch-cpi.js` long ago), the internal `audit.md` prompt scratchpad, the broken `scripts/smoke-test.mjs` (it required a package that was never a dependency), and the raw text dump from the retired route-performance pipeline.
+- **DATA** `data.md` no longer documents the retired QSI/EWT/OTP/MPS pipeline's files and fields — only the one-line note that it was retired remains.
+
+---
+
 ## v2.31.1 — Analytics everywhere, external links in new tabs
 
 _2026-09-09_
