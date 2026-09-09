@@ -24,7 +24,7 @@ for(const [url, scheme, wantArchiveNote] of [
 ]){
   const ctx = await browser.newContext({ viewport:{width:1280,height:900}, colorScheme: scheme });
   const page = await ctx.newPage();
-  await page.route(/atlas\.farhan\.app|unpkg|cartocdn|openstreetmap\.org|fonts\./, r => r.abort());
+  await page.route(/atlas\.farhan\.app|unpkg|cartocdn|openstreetmap\.org|fonts\.|googletagmanager/, r => r.abort());
   await page.goto('http://127.0.0.1:8902'+url, { waitUntil:'domcontentloaded' }); await page.waitForTimeout(1200);
   const b = await page.evaluate(() => {
     const el = document.querySelector('.sunset-banner');
