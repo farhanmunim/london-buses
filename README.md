@@ -10,7 +10,7 @@ The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender and CPI-CPA
 
 - Draws the whole network as one colour-coded map. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender.
 - Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, and bus-involved **collisions** as a heatmap.
-- **Tender**: every published TfL award since 2003, plus the forward tendering programme. Filterable tables with analysis numbers (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
+- **Tender**: every published TfL award since 2003, plus the forward tendering programme. Both tables are searchable by route, operator or tranche, with analysis numbers computed for the current filter (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
 - **CPI-CPA**: the ONS CPI index by month and the contract price adjustment rates derived from it. Verified against ONS reference tables.
 - Live service status per route, straight from TfL. Per-route crowding: peak load, busiest stop, busiest time.
 - Stackable filters, multi-route comparison, per-operator statistics, CSV exports throughout.

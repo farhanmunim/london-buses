@@ -2609,7 +2609,7 @@ async function renderTenders(tab){
     </div>
     <div id="tabAwards">
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
-      <input id="tq" type="search" aria-label="Search tender awards" placeholder="Search route (e.g. 24) or operator" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <input id="tq" type="search" aria-label="Search tender awards" placeholder="Search route (e.g. 24), operator or tranche" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <span style="display:inline-flex;align-items:center;gap:4px">
         <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
         <button id="topClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
@@ -2620,12 +2620,13 @@ async function renderTenders(tab){
     </div>
     <div class="facts facts--wrap" id="tKpis" style="margin-top:14px"></div>
     <div class="section"><div class="section-h" id="tCount"></div>
-      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1210px">
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1280px">
         <thead><tr>
           <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="op" style="cursor:pointer">Operator</th>
           <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
           <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th>
           <th data-sort="start" style="cursor:pointer">Start</th><th>End</th><th class="num" data-sort="term" style="cursor:pointer">Term</th>
+          <th class="num" data-sort="tranche" style="cursor:pointer">Tranche</th>
           <th>Vehicle</th><th>Joint with</th><th>Source</th>
         </tr></thead>
         <tbody id="tBody"></tbody>
@@ -2678,7 +2679,7 @@ async function renderTenders(tab){
   document.getElementById('tabA').addEventListener('click', () => setTab('awards'));
   document.getElementById('tabP').addEventListener('click', () => setTab('programme'));
 
-  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1, start: a => a.contractStart ?? '', term: a => a.termYears ?? -1 };
+  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1, start: a => a.contractStart ?? '', term: a => a.termYears ?? -1, tranche: a => Number.isFinite(a.tranche) ? a.tranche : -1 };
   const filtered = () => {
     const q = st.q.trim().toUpperCase();
     // Routes match EXACTLY (typing "24" means route 24, not 124/240/N241 —
@@ -2688,7 +2689,8 @@ async function renderTenders(tab){
     let list = all.filter(a =>
       (!st.op || a.operator === st.op)
       && (!st.yr || String(a.awardDate).startsWith(st.yr))
-      && (!q || routeHit(a) || String(a.operator ?? '').toUpperCase().includes(q)));
+      && (!q || routeHit(a) || String(a.tranche ?? '') === q
+          || String(a.operator ?? '').toUpperCase().includes(q)));
     const k = KEY[st.sort];
     list.sort((x,y) => { const a = k(x), b = k(y); return (a < b ? -1 : a > b ? 1 : 0) * st.dir; });
     return list;
@@ -2763,6 +2765,7 @@ async function renderTenders(tab){
       <td class="num" style="text-align:left">${esc(fmtDate(a.contractStart) ?? '—')}</td>
       <td class="num" style="text-align:left">${esc(fmtDate(a.contractEnd) ?? '—')}</td>
       <td class="num">${Number.isFinite(a.termYears) ? a.termYears + ' yr' + (a.twoYearExtension ? ' <span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2</span>' : '') : (a.twoYearExtension ? '<span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2 opt</span>' : '—')}</td>
+      <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
       <td>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
       <td>${a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
