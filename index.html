@@ -181,6 +181,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 #map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:var(--surf2);position:relative;z-index:0}
 @media(min-width:760px){#map{height:380px}}
 .mapctl{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.mapctl button:disabled{opacity:.45;cursor:default}
 .seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
 .seg button{font-size:12.5px;font-weight:600;color:var(--tx2);border-radius:7px;padding:5px 12px}
 .seg button.on{background:var(--surf);color:var(--tx);box-shadow:var(--sh)}
@@ -882,7 +883,9 @@ async function renderRoutes(){
       if(st.prop && m.propulsion !== st.prop) return false;
       return true;
     }).sort((a,b) => cmpRoute(a.name, b.name));
-    document.getElementById('countNote').textContent =
+    const cn = document.getElementById('countNote');
+    if(!cn) return '';   // debounced rerender fired after navigating away
+    cn.textContent =
       `${list.length} route${list.length===1?'':'s'}${q||st.type||st.op||st.prop ? ' match' : ''}`;
     if(!list.length) return '<div class="empty">No routes match.</div>';
     return list.map(r => {
@@ -936,12 +939,12 @@ async function renderRouteDetail(name){
     <div id="dfacts" class="facts">${'<div class="skel" style="height:52px"></div>'.repeat(6)}</div>
     <div class="section"><div class="section-h">Map</div><div id="map"></div>
       <div class="mapctl">
-        <div class="seg" id="dirSeg"><button data-d="outbound" class="on">Outbound</button><button data-d="inbound">Inbound</button></div>
-        <button class="livebtn iconb" id="stopsBtn" style="margin-left:auto" title="Stops" aria-label="Stops"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
-        <button class="livebtn iconb" id="liveBtn" title="Live buses" aria-label="Live buses"><span class="spin"></span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg></button>
-        <button class="livebtn iconb" id="closestBtn" title="Garages" aria-label="Garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
-        <button class="livebtn iconb" id="bridgeBtn" title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
-        <button class="livebtn iconb" id="incBtn" title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
+        <div class="seg" id="dirSeg"><button data-d="outbound" class="on" disabled>Outbound</button><button data-d="inbound" disabled>Inbound</button></div>
+        <button class="livebtn iconb" id="stopsBtn" disabled style="margin-left:auto" title="Stops" aria-label="Stops"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></button>
+        <button class="livebtn iconb" id="liveBtn" disabled title="Live buses" aria-label="Live buses"><span class="spin"></span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg></button>
+        <button class="livebtn iconb" id="closestBtn" disabled title="Garages" aria-label="Garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
+        <button class="livebtn iconb" id="bridgeBtn" disabled title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
+        <button class="livebtn iconb" id="incBtn" disabled title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -1075,19 +1078,6 @@ async function buildRouteSections(route, m, tok){
   /* Fleet */
   const fl = (await D.fleet())?.[route.name];
   if(gone(tok)) return;
-  // Deck type from the observed vehicles — the registry knows each bus.
-  if(fl?.regs?.length){
-    D.vehiclesReg().then(reg => {
-      if(gone(tok)) return;
-      const decks = fl.regs.map(r => reg?.[r]?.deck).filter(Boolean);
-      if(!decks.length) return;
-      const dd = decks.filter(d => d === 'double').length, sd = decks.length - dd;
-      const el = document.getElementById('deckVal');
-      if(el) el.textContent = dd && sd ? `Mixed · ${dd} DD / ${sd} SD` : dd ? 'Double deck' : 'Single deck';
-      const kv = document.getElementById('deckRow');
-      if(kv) kv.querySelector('.v').textContent = dd && sd ? `Mixed — ${dd} double, ${sd} single` : dd ? `Double deck (${dd})` : `Single deck (${sd})`;
-    });
-  }
   if(fl && (fl.count > 0 || m.fleet)){
     const rows = [];
     if(m.fleet) rows.push(`<div><span class="k">Rostered vehicle</span><span class="v">${esc(stripTags(m.fleet))}</span></div>`);
@@ -1172,6 +1162,25 @@ async function buildRouteSections(route, m, tok){
   }
 
   el.innerHTML = frag.join('');
+
+  /* Deck type from the observed vehicles — the registry knows each bus.
+     Registered AFTER the innerHTML write above: with a cache-warm vehicles
+     promise the callback fires on the next microtask, and #deckRow only
+     exists once the Fleet card is in the DOM (registering earlier left the
+     row stuck at "—" on every cache-warm visit). */
+  if(fl?.regs?.length){
+    D.vehiclesReg().then(reg => {
+      if(gone(tok)) return;
+      const decks = fl.regs.map(r => reg?.[r]?.deck).filter(Boolean);
+      if(!decks.length) return;
+      const dd = decks.filter(d => d === 'double').length, sd = decks.length - dd;
+      const dv = document.getElementById('deckVal');
+      if(dv) dv.textContent = dd && sd ? `Mixed · ${dd} DD / ${sd} SD` : dd ? 'Double deck' : 'Single deck';
+      const kv = document.getElementById('deckRow');
+      if(kv) kv.querySelector('.v').textContent = dd && sd ? `Mixed — ${dd} double, ${sd} single` : dd ? `Double deck (${dd})` : `Single deck (${sd})`;
+    });
+  }
+
   /* £/mile chart hover/focus tooltip (delegated; works on touch via tap) */
   const cw = el.querySelector('.cpmwrap');
   if(cw){
@@ -1196,6 +1205,7 @@ async function buildRouteSections(route, m, tok){
   /* crowding profile (lazy) */
   if(document.getElementById('crowdProf')){
     D.crowdProf().then(cp => {
+      if(gone(tok) || !document.getElementById('crowdProf')) return;
       const prof = cp?.[route.name]?.loadProfile;
       if(!prof || prof.length < 5) return;
       const bars = prof.map(p =>
@@ -1507,6 +1517,12 @@ async function initRouteMap(route, m = {}, tok = navToken){
       }
     } else if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
   });
+
+  /* All handlers are bound — wake the controls up. They ship disabled so a
+     click during the data fetch is visibly inert rather than silently
+     dropped (the cause of "the bridges toggle doesn't work" on slow
+     connections). */
+  document.querySelectorAll('.mapctl button[disabled]').forEach(b => b.removeAttribute('disabled'));
 }
 
 /* ════════════════════ NETWORK MAP ════════════════════ */
@@ -2444,7 +2460,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = navToken){
 
   const line = String(first.publishedLine ?? ctxLine ?? candidates[0]).toUpperCase();
   D.overview().then(ov => {
-    if(!_map) return;
+    if(tok !== navToken || !_map) return;   // never paint this vehicle's line onto the next view's map
     const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === line);
     if(feats.length) L.geoJSON({type:'FeatureCollection',features:feats},
       { style:{ color:'#dc2626', weight:4, opacity:.6, lineCap:'round', lineJoin:'round' } }).addTo(_map);
