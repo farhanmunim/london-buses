@@ -10,6 +10,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous" />
+<!-- Google Analytics (same property as the archived v1). Hash navigation
+     sends its own page_view from navigate(), so send_page_view is off to
+     avoid double-counting the first view. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-J5GKHJN7K6"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-J5GKHJN7K6', { send_page_view: false });
+</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js" integrity="sha384-mFKkGiGvT5vo1fEyGCD3hshDdKmW3wzXW/x+fWriYJArD0R3gawT6lMvLboM22c0" crossorigin="anonymous"></script>
 <style>
@@ -560,7 +570,7 @@ function makeMap(el){
   baseTiles(map);
   // Visible OSM + CARTO credit is the condition of the free basemap tier.
   L.control.attribution({ prefix:false })
-    .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener">CARTO</a>')
+    .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>')
     .addTo(map);
   return map;
 }
@@ -752,6 +762,9 @@ function navigate(){
     route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
+  // One page_view per hash navigation (initial load included — send_page_view
+  // is disabled in the config above so this is the single source of truth).
+  if(typeof gtag === 'function') gtag('event', 'page_view', { page_location: location.href, page_title: document.title });
   if(view === 'routes')         renderRoutes();
   else if(view === 'map')       renderNetworkMap();
   else if(view === 'route')     renderRouteDetail(arg);
@@ -2657,7 +2670,7 @@ async function renderTenders(tab){
         <span id="pPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="pNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: LBSL tendering programme PDFs (one per financial year, republished ~monthly) — the forward half of <a href="https://tfl.gov.uk/forms/13923.aspx" rel="noopener" style="color:var(--acc)">TfL’s tender page</a>. The PDF link on each row opens that programme year’s original document. Routes with a contract start in the future are highlighted; the same flag appears on their route pages.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>Source: LBSL tendering programme PDFs (one per financial year, republished ~monthly) — the forward half of <a href="https://tfl.gov.uk/forms/13923.aspx" rel="noopener" style="color:var(--acc)" target="_blank">TfL’s tender page</a>. The PDF link on each row opens that programme year’s original document. Routes with a contract start in the future are highlighted; the same flag appears on their route pages.</span></div>
     </div>
     </div>
   </div>`;
@@ -2940,11 +2953,11 @@ async function renderAbout(){
     <div class="sub">London Buses — search and explore every TfL bus route, operator and garage.</div>
     <div class="card" style="padding:16px" id="aboutCard">
       <div class="prose">
-        <p>An independent project. <b>Not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener">tfl.gov.uk</a>.</p>
+        <p>An independent project. <b>Not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
         <p>Every number on this site comes from its own open data pipeline. GitHub Actions fetches, checks and commits the datasets. The site serves them as static JSON.</p>
-        <p><b>Sources.</b> Routes, stops, geometry, status, crowding and live arrivals come from <b>Transport for London</b> — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures come from the <b>Office for National Statistics</b> (D7BT series). Live bus positions come from the DfT Bus Open Data Service. Vehicle details come from the DVLA. These contain public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener">Open Government Licence v3.0</a>. Low-bridge heights are from TfL's height-restrictions register. Collision records are from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR are courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener">CARTO</a>.</p>
+        <p><b>Sources.</b> Routes, stops, geometry, status, crowding and live arrivals come from <b>Transport for London</b> — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures come from the <b>Office for National Statistics</b> (D7BT series). Live bus positions come from the DfT Bus Open Data Service. Vehicle details come from the DVLA. These contain public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Low-bridge heights are from TfL's height-restrictions register. Collision records are from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR are courtesy of londonbusroutes.net (community reference). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>.</p>
         <p><b>Open source.</b> The whole platform lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed. The data stays under its sources' own licences. Issues and pull requests welcome. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
-        <p>Built by <a href="https://farhan.app" rel="noopener">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
+        <p>Built by <a href="https://farhan.app" rel="noopener" target="_blank">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
     <div class="section"><div class="section-h">Live feeds</div>

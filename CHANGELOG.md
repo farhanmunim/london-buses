@@ -6,6 +6,16 @@ Tags: **NEW** new feature · **FIX** bug fix · **DATA** data & coverage · **UX
 
 ---
 
+## v2.31.1 — Analytics everywhere, external links in new tabs
+
+_2026-09-09_
+
+- **FIX** **Google Analytics now covers every page.** The main app had no tag at all (only the archived v1 did). The same property is now on the app, the docs page and the 404 page. The app sends one page_view per hash navigation — the automatic first-load view is disabled so nothing double-counts.
+- **UX** **Every external link opens in a new tab** (with `rel="noopener"`), across the app, the docs, the 404 page and the archived v1 pages. Internal links still open in place.
+- **FIX** The test suites mock the analytics host like every other external feed, so timing-sensitive checks aren't skewed by its load.
+
+---
+
 ## v2.31 — Tranche in the awards table
 
 _2026-09-09_

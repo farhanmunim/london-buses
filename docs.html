@@ -9,6 +9,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-J5GKHJN7K6"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-J5GKHJN7K6');
+</script>
 <style>
 /* Same design tokens as the app (index.html) so the page feels native. */
 :root{
@@ -82,7 +89,7 @@ b{font-weight:700}
 
 <main>
 <h1>How this project works</h1>
-<p class="sub">The full picture, in plain words. What the app does, where the data comes from, how GitHub and Cloudflare fit together, and how to rebuild the whole thing. Deep per-field notes live in <a href="https://github.com/farhanmunim/london-buses/blob/main/data.md" rel="noopener">data.md</a>.</p>
+<p class="sub">The full picture, in plain words. What the app does, where the data comes from, how GitHub and Cloudflare fit together, and how to rebuild the whole thing. Deep per-field notes live in <a href="https://github.com/farhanmunim/london-buses/blob/main/data.md" rel="noopener" target="_blank">data.md</a>.</p>
 
 <div class="card"><div class="toc">
   <a href="#what">1. What this is</a>
@@ -165,7 +172,7 @@ b{font-weight:700}
   <li><b>Routing:</b> the URL hash picks the view. A <code>hashchange</code> listener calls <code>navigate()</code>, which renders into <code>&lt;main&gt;</code>.</li>
   <li><b>Data layer:</b> one small object wraps <code>fetch()</code> for each faux-API file. Each file downloads once per visit.</li>
   <li><b>Async safety:</b> each navigation bumps a token. Renderers check it after every <code>await</code>. A slow fetch from an old view can never overwrite the current one. Timers are cleared and maps destroyed on every navigation.</li>
-  <li><b>Maps:</b> <a href="https://leafletjs.com" rel="noopener">Leaflet</a> with CARTO tiles, light and dark. Optional layers: stops, live buses, garages, low bridges, collision heatmap.</li>
+  <li><b>Maps:</b> <a href="https://leafletjs.com" rel="noopener" target="_blank">Leaflet</a> with CARTO tiles, light and dark. Optional layers: stops, live buses, garages, low bridges, collision heatmap.</li>
   <li><b>Theming:</b> CSS variables define both palettes. A tiny script sets the theme before first paint, from the saved choice or the system setting.</li>
   <li><b>Safety:</b> every remote string that reaches <code>innerHTML</code> goes through one escape helper. CSV exports guard against formula injection. The Leaflet CDN files are pinned with integrity hashes.</li>
 </ul>
@@ -295,7 +302,7 @@ b{font-weight:700}
 <h2 id="replicate">15. Rebuild it from scratch</h2>
 <p>The full recipe, in order. Nothing here is magic. It is ordinary Git, JSON and static hosting.</p>
 <ol>
-  <li><b>Fork or clone</b> <a href="https://github.com/farhanmunim/london-buses" rel="noopener">the repository</a>. It ships with working data, so the site runs immediately with no keys.</li>
+  <li><b>Fork or clone</b> <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">the repository</a>. It ships with working data, so the site runs immediately with no keys.</li>
   <li><b>Serve it locally.</b> <code>npm install</code>, then any static server (<code>npx serve .</code>) from the repo root. Open the site. Everything works from the committed JSON.</li>
   <li><b>Get keys</b> (only needed to refresh data): a TfL API key, a DVLA key, and a BODS key. All free. Copy <code>.env.example</code> to <code>.env</code> and fill them in.</li>
   <li><b>Run the pipeline.</b> <code>npm run refresh</code>. Watch the 17 steps. The audit at the end must pass. Each step can also run alone — see <code>package.json</code>.</li>
@@ -322,7 +329,7 @@ b{font-weight:700}
 </table></div>
 
 <div class="footer">
-  <a href="/">← Back to the app</a> · <a href="https://github.com/farhanmunim/london-buses" rel="noopener">Source on GitHub ↗</a><br>
+  <a href="/">← Back to the app</a> · <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">Source on GitHub ↗</a><br>
   MIT-licensed code · data remains subject to its sources' own terms (TfL open data, OGL v3.0, ODbL).
 </div>
 </main>
