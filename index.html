@@ -2404,14 +2404,14 @@ async function renderVehicleDetail(regArg){
       <div class="legendrow" style="margin-top:7px"><span id="vLiveNote">Looking for this bus in the live feed…</span></div>
     </div>
     `;
-  initVehicleLiveMap(R, v, ctxLine, ctxStop);
+  initVehicleLiveMap(R, v, ctxLine, ctxStop, tok);
 }
 
 /* Vehicle live-location map — find the bus in the live GPS feed (trying the
    arrival-context line first, then every route the register has seen it on),
    then draw it against its route's line and, when the user arrived from a
    stop's arrivals board, that stop. Polls every 15 s while the page is open. */
-async function initVehicleLiveMap(R, v, ctxLine, ctxStop){
+async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = navToken){
   const sec = document.getElementById('vLiveSec');
   const candidates = [...new Set([ctxLine, ...(v?.routes ?? [])].filter(Boolean).map(x => String(x).toUpperCase()))];
   if(!sec || !candidates.length) return;
