@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-11T08:29:00.775Z",
+  "generatedAt": "2026-09-12T08:23:56.237Z",
   "count": 77,
   "garages": {
     "A": {
@@ -489,7 +489,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 212,
+      "pvr": 211,
       "capacity": 245
     },
     "RA": {
