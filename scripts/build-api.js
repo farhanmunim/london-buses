@@ -536,7 +536,20 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       cadence: DATASET_META[key]?.cadence ?? null,
     };
   }
-  write(API('manifest.json'), { generatedAt: now, datasets: sortKeys(datasets) });
+  // The manifest's per-dataset fetchedAt stamps ARE content — they're the
+  // freshness rows the UI shows — so the generic write() (which strips
+  // fetchedAt before comparing) would leave them stale whenever only
+  // timestamps moved. Compare ignoring just the manifest's own generatedAt.
+  // A dataset's fetchedAt only advances when that dataset's content changed
+  // (their writes are content-stable), so this adds no commits of its own.
+  {
+    const manifest = { generatedAt: now, datasets: sortKeys(datasets) };
+    const prev = tryRead(API('manifest.json'));
+    const stable = m => JSON.stringify({ ...m, generatedAt: null });
+    if (!prev || stable(prev) !== stable(manifest)) {
+      fs.writeFileSync(API('manifest.json'), JSON.stringify(manifest) + '\n', 'utf8');
+    }
+  }
   console.log(`manifest.json — ${Object.keys(datasets).length} datasets`);
 }
 

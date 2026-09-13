@@ -131,7 +131,12 @@ function parseRouteXml(xmlContent, routeId, dateToken) {
     return null;
   }
 
-  const nodes = doc?.TransXChange?.Route_Geometry ?? doc?.Route_Geometry;
+  // The envelope element has changed once already (TransXChange →
+  // rg:Network_Data, first seen in the 2026 ZIPs), so fall back to scanning
+  // every root key for one that carries Route_Geometry children rather than
+  // hard-coding the current name.
+  const envelope = doc && Object.values(doc).find(v => v && typeof v === 'object' && v.Route_Geometry);
+  const nodes = doc?.TransXChange?.Route_Geometry ?? doc?.Route_Geometry ?? envelope?.Route_Geometry;
   const rawNodes = Array.isArray(nodes) ? nodes : nodes ? [nodes] : [];
 
   if (!rawNodes.length) return null;
@@ -241,6 +246,15 @@ function processZip(zipBuffer, dateToken, frozen = new Set()) {
   }
 
   console.log(`  Written: ${written} routes, skipped: ${skipped}, held on diversion freeze: ${held}`);
+
+  // A ZIP full of route XMLs that yields zero writes means the parser no
+  // longer understands the schema (this happened silently when the envelope
+  // element changed: months of "successful" runs advanced the watermark
+  // while extracting nothing). Fail hard so the watermark is NOT updated
+  // and the next run retries loudly instead of wedging on a stale cache.
+  if (written === 0) {
+    throw new Error(`geometry extract produced 0 routes from ${entries.length} ZIP entries — schema change? Watermark not advanced.`);
+  }
 
   // Write index
   const routeIds = fs.readdirSync(ROUTES_DIR)

@@ -129,9 +129,25 @@ async function main() {
       const stopIds = [];
       const seenStops = new Set();
       const serviceTypes = new Set();
+      // Direction attribution map from the line's own routeSections:
+      // destinationName → direction. The direction field on StopPoint route
+      // entries contradicts /Line/{id}/Route on a small set of routes (41,
+      // 92, 218, B13… — verified against /Route/Sequence terminals), and the
+      // sections are the ones consistent with the stop sequences we serve,
+      // so a section match wins over the entry's own direction field.
+      const dirByDestName = new Map();
+      const sectionDest = { outbound: new Map(), inbound: new Map() };
       for (const l of lineArr) {
         for (const sec of (l.routeSections ?? [])) {
           if (sec.serviceType) serviceTypes.add(cleanText(sec.serviceType));
+          const secDir = normaliseDirection(sec.direction);
+          const dk = compareKey(cleanText(sec.destinationName));
+          if (dk && (secDir === 'outbound' || secDir === 'inbound')) {
+            if (dirByDestName.has(dk) && dirByDestName.get(dk) !== secDir) dirByDestName.set(dk, null); // ambiguous (loop) — fall back
+            else if (!dirByDestName.has(dk)) dirByDestName.set(dk, secDir);
+            const name = cleanText(sec.destinationName);
+            sectionDest[secDir].set(name, (sectionDest[secDir].get(name) ?? 0) + 1);
+          }
           for (const sid of [sec.originator, sec.destination]) {
             const s = cleanText(sid);
             if (!s || seenStops.has(s)) continue;
@@ -153,7 +169,8 @@ async function main() {
           const lineId = String(e.lineId ?? e.lineName ?? '').toUpperCase();
           if (lineId !== id) continue;
           if (e.isActive === false) continue;
-          const dir = normaliseDirection(e.direction);
+          const secDir = dirByDestName.get(compareKey(cleanText(e.destinationName)));
+          const dir = secDir ?? normaliseDirection(e.direction);
           if (!(dir in dirPairs)) continue;
           const primary = cleanText(e.vehicleDestinationText);
           let qualifier = cleanText(e.destinationName);
@@ -176,6 +193,16 @@ async function main() {
         const sorted = [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
         const [primary, qualifier] = JSON.parse(sorted[0][0]);
         entry[dir] = { destination: primary, qualifier, full: buildFull(primary, qualifier) };
+        got = true;
+      }
+      // A direction the StopPoint aggregation missed (no blind text at its
+      // terminals — e.g. 214/672/91 inbound) still has an authoritative
+      // destination in the line's own routeSections; use it rather than
+      // leaving the direction blank.
+      for (const dir of ['outbound', 'inbound']) {
+        if (entry[dir] || !sectionDest[dir].size) continue;
+        const name = [...sectionDest[dir].entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0];
+        entry[dir] = { destination: name, qualifier: '', full: name };
         got = true;
       }
       if (got) routes[id] = entry;

@@ -592,9 +592,18 @@ function aggregateRouteFleet(routeId) {
     .sort((a, b) => b[1] - a[1])
     .map(([make, count]) => ({ make, count, share: Math.round((count / total) * 100) / 100 }));
 
+  // Headline make is the DAY-WEIGHTED mode (as data.md documents): a reg
+  // seen 20 distinct days outweighs one seen 2. The unweighted mode let a
+  // block of low-recurrence cover buses (each just clearing MIN_CORE_DAYS)
+  // outvote the actual allocation — e.g. route 117: 21 ADL regs at 2-3 days
+  // each beat 8 Citaros at 19-23 days each.
+  const makesByDays = {};
+  for (const s of fleetSamples) if (s.make) makesByDays[s.make] = (makesByDays[s.make] ?? 0) + s.days;
+
   return {
-    make:            modeOf(makes),
+    make:            modeOf(makesByDays),
     propulsion:      dominantProp,
+    propulsionCounts: propCounts,
     vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
     fleetSize:       fleetSamples.length,
     fleetConfidence,
@@ -621,9 +630,21 @@ try {
   // First run, or file missing — nothing to preserve.
 }
 
-// Read all route GeoJSON files
+// Read the route GeoJSON files for CURRENT TfL-served routes only. The
+// geometry ZIP ships more ids than TfL actually serves (contract-internal
+// UL*/DL* school ids, X-suffixed trial variants) and withdrawn routes'
+// files linger on disk, so "every file in data/routes/" is the wrong
+// universe — it grew to 792 vs TfL's 675. route_stops.json is rebuilt from
+// TfL /Line/Mode/bus every refresh (last-known-good on failure), so its key
+// set IS the served network, including hard-coded extras like 969.
+const servedRoutes = (() => {
+  try {
+    return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'route_stops.json'), 'utf8')).routes ?? {}).map(r => r.toUpperCase()));
+  } catch { return null; }   // unreadable → classify every file, as before
+})();
 const routeFiles = fs.readdirSync(ROUTES_DIR)
   .filter(f => f.endsWith('.geojson') && f !== 'index.json')
+  .filter(f => !servedRoutes || servedRoutes.has(f.replace('.geojson', '').toUpperCase()))
   .sort();
 
 console.log(`Classifying ${routeFiles.length} routes...`);
@@ -752,6 +773,24 @@ for (const file of routeFiles) {
   let propulsion;
   if (lbrProp && lbrProp !== 'diesel') {
     propulsion = lbrProp;
+    // …but LBR fleet strings go stale after a conversion, and DVLA's
+    // ELECTRICITY register is unambiguous in BOTH directions (hybrids
+    // register as HEAVY OIL/DIESEL, never as ELECTRICITY — the cache holds
+    // zero 'hybrid'). So with a confident core fleet:
+    //   • LBR 'hybrid' + DVLA-dominant electric → the route converted to
+    //     electric (e.g. route 18's BYDs) — believe DVLA.
+    //   • LBR 'electric' + zero ELECTRICITY regs in the core fleet → the
+    //     route is NOT electric (e.g. route 23 running B5LH/ADL diesels
+    //     against a stale 'MetroDecker EV' row) — believe DVLA. The
+    //     hybrid-vs-diesel split stays uncertain either way; dominant
+    //     DVLA is strictly less wrong than 'electric'.
+    // Hydrogen claims are left alone (fuel-cell regs are too rare/odd in
+    // DVLA to overrule the explicit FCEV fleet codes).
+    const propCounts = fleetAgg?.propulsionCounts ?? {};
+    if (dvlaObs >= HIGH_CONF_OBS) {
+      if (lbrProp === 'hybrid' && dvlaProp === 'electric') propulsion = 'electric';
+      else if (lbrProp === 'electric' && dvlaProp && dvlaProp !== 'electric' && !(propCounts.electric > 0)) propulsion = dvlaProp;
+    }
   } else if (dvlaProp && dvlaObs >= HIGH_CONF_OBS) {
     propulsion = dvlaProp;
   } else {
