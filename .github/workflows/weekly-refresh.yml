@@ -124,6 +124,7 @@ jobs:
           # once written so steady-state runs only add the handful of new
           # btIDs TfL has published since last time.
           git add -f data/source/tenders.json               || true
+          git add -f data/source/fandom-tenders.json        || true
 
           # Persist the upcoming-tender programme parse. Small (~100 KB); TfL
           # republishes the programme PDFs ~monthly during the planning year

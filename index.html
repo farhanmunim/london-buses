@@ -2681,11 +2681,14 @@ async function renderTenders(tab){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
         <input id="pq" type="search" aria-label="Search tendering programme" placeholder="Search route (e.g. 24), tranche or description" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
         <span style="display:inline-flex;align-items:center;gap:4px">
+          <select id="pop" aria-label="Filter by current operator" title="Which operator currently runs the route(s) in each entry" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
+          <button id="popClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
+        <span style="display:inline-flex;align-items:center;gap:4px">
           <select id="pyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
           <button id="pyrClear" hidden aria-label="Clear programme-year filter" title="Clear programme-year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       </div>
-      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1040px">
-        <thead><tr><th>Route</th><th>Description</th><th>Programme</th><th class="num">Tranche</th><th>Issued</th><th>Returns</th><th>Est. award</th><th>Contract start</th><th>Vehicle</th><th>+2 yr</th><th>Source</th></tr></thead>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1180px">
+        <thead><tr><th>Route</th><th title="Which operator currently runs the route — from the live route registry, not the programme PDF">Operator</th><th>Description</th><th>Programme</th><th class="num">Tranche</th><th>Issued</th><th>Returns</th><th>Est. award</th><th>Contract start</th><th>Vehicle</th><th>+2 yr</th><th>Source</th></tr></thead>
         <tbody id="pBody"></tbody>
       </table></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
@@ -2792,7 +2795,7 @@ async function renderTenders(tab){
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(a.route)}</span></td>
-      <td>${esc(a.operator ?? '—')}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
+      <td>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
@@ -2805,7 +2808,7 @@ async function renderTenders(tab){
       <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
       <td>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
-      <td>${a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
+      <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — source page on london-bus-routes.fandom.com" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tPage').textContent = `Page ${st.page + 1} of ${pages}`;
     document.getElementById('tPrev').disabled = st.page === 0;
@@ -2844,22 +2847,37 @@ async function renderTenders(tab){
         a.contractStart ?? '', a.contractEnd ?? '', Number.isFinite(a.termYears) ? a.termYears : '',
         a.twoYearExtension == null ? '' : (a.twoYearExtension ? 'yes' : 'no'), a.tranche ?? '',
         a.vehicle?.raw ?? '', a.jb?.isJoint ? 'yes' : 'no', a.jb?.partners?.join(' ') ?? '', a.notes ?? '',
-        a.btID ? `https://tfl.gov.uk/forms/13796.aspx?btID=${a.btID}` : '']),
+        a.provisional ? `https://london-bus-routes.fandom.com/wiki/Tender_Results_${(a.awardDate ?? '').slice(0,4)}` : a.btID ? `https://tfl.gov.uk/forms/13796.aspx?btID=${a.btID}` : '']),
     ]);
   });
 
   /* ── Tendering programme table (the forward half of TfL's forms page) ── */
-  const prog = await D.programme();
+  const [prog, pMeta] = await Promise.all([D.programme(), D.meta()]);
   if(gone(tok)) return;
   document.getElementById('tabP').textContent = `Programme · ${prog.length.toLocaleString('en-GB')}`;
+  /* CURRENT operator of each entry's route(s) — from the live route registry,
+     not the programme PDF (which never names one). A combined entry like
+     "649/650/651" takes the first token that resolves; night ids that don't
+     exist standalone (e.g. an "N15" folded into 15) fall back to the base id.
+     Withdrawn or not-yet-running routes resolve to nothing and show "—". */
+  for(const e of prog){
+    e.currentOperator = null;
+    for(const t of String(e.route ?? '').toUpperCase().split('/').map(x => x.trim()).filter(Boolean)){
+      const m = pMeta[t] ?? (t.startsWith('N') ? pMeta[t.slice(1)] : null);
+      if(m?.operator){ e.currentOperator = m.operator; break; }
+    }
+  }
+  const pOps = [...new Set(prog.map(e => e.currentOperator).filter(Boolean))].sort();
+  document.getElementById('pop').innerHTML = '<option value="">All operators</option>' + pOps.map(o => `<option>${esc(o)}</option>`).join('');
   const pYears = [...new Set(prog.map(e => e.programmeYear).filter(Boolean))].sort().reverse();
   document.getElementById('pyr').innerHTML = '<option value="">All programmes</option>' + pYears.map(y => `<option>${esc(y)}</option>`).join('');
   const today = new Date().toISOString().slice(0, 10);
-  const pst = { q:'', yr:'', page:0 };
+  const pst = { q:'', op:'', yr:'', page:0 };
   const pFiltered = () => {
     const q = pst.q.trim().toUpperCase();
     return prog.filter(e =>
-      (!pst.yr || e.programmeYear === pst.yr)
+      (!pst.op || e.currentOperator === pst.op)
+      && (!pst.yr || e.programmeYear === pst.yr)
       && (!q || String(e.route).toUpperCase().split('/').some(t => t.trim() === q)
           || String(e.tranche ?? '').toUpperCase() === q
           || String(e.description ?? '').toUpperCase().includes(q)));
@@ -2873,6 +2891,7 @@ async function renderTenders(tab){
       const upcoming = e.contractStart && e.contractStart >= today;
       return `<tr${upcoming ? ' style="background:var(--acc-soft)"' : ''}>
         <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(e.route)}</span></td>
+        <td>${esc(e.currentOperator ?? '—')}</td>
         <td style="max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description ?? '')}">${esc(e.description ?? '—')}</td>
         <td class="num" style="text-align:left">${esc(e.programmeYear ? e.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2') : '—')}</td>
         <td class="num">${esc(e.tranche ?? '—')}</td>
@@ -2893,14 +2912,16 @@ async function renderTenders(tab){
   pDraw();
   let pdeb;
   document.getElementById('pq').addEventListener('input', e => { clearTimeout(pdeb); pdeb = setTimeout(() => { pst.q = e.target.value; pst.page = 0; pDraw(); }, 150); });
+  document.getElementById('pop').addEventListener('change', e => { pst.op = e.target.value; pst.page = 0; document.getElementById('popClear').hidden = !pst.op; pDraw(); });
+  document.getElementById('popClear').addEventListener('click', () => { pst.op = ''; document.getElementById('pop').value = ''; document.getElementById('popClear').hidden = true; pDraw(); });
   document.getElementById('pyr').addEventListener('change', e => { pst.yr = e.target.value; pst.page = 0; document.getElementById('pyrClear').hidden = !pst.yr; pDraw(); });
   document.getElementById('pyrClear').addEventListener('click', () => { pst.yr = ''; document.getElementById('pyr').value = ''; document.getElementById('pyrClear').hidden = true; pDraw(); });
   document.getElementById('pPrev').addEventListener('click', () => { pst.page = Math.max(0, pst.page - 1); pDraw(); });
   document.getElementById('pNext').addEventListener('click', () => { pst.page = pst.page + 1; pDraw(); });
   document.getElementById('pExport').addEventListener('click', () => {
     downloadCsv('london-bus-tender-programme.csv', [
-      ['programme_year','tranche','route','description','tender_issue_date','tender_return_date','award_estimated','contract_start','vehicle_type','two_year_extension','source_url'],
-      ...pFiltered().map(e => [e.programmeYear ?? '', e.tranche ?? '', e.route, e.description ?? '', e.issueDate ?? '', e.returnDate ?? '', e.awardEstimated ?? '', e.contractStart ?? '', e.vehicleType ?? '', e.twoYearExtension == null ? '' : (e.twoYearExtension ? 'yes' : 'no'), e.sourceUrl ?? '']),
+      ['programme_year','tranche','route','current_operator','description','tender_issue_date','tender_return_date','award_estimated','contract_start','vehicle_type','two_year_extension','source_url'],
+      ...pFiltered().map(e => [e.programmeYear ?? '', e.tranche ?? '', e.route, e.currentOperator ?? '', e.description ?? '', e.issueDate ?? '', e.returnDate ?? '', e.awardEstimated ?? '', e.contractStart ?? '', e.vehicleType ?? '', e.twoYearExtension == null ? '' : (e.twoYearExtension ? 'yes' : 'no'), e.sourceUrl ?? '']),
     ]);
   });
 }

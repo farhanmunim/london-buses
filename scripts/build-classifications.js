@@ -349,13 +349,21 @@ const TENDER_OP_GROUP = {
   'London General': 'Go-Ahead', 'London Central': 'Go-Ahead', 'Blue Triangle': 'Go-Ahead',
   'Docklands Buses': 'Go-Ahead', 'Metrobus': 'Go-Ahead', 'East Thames Buses': 'Go-Ahead', 'East Thames': 'Go-Ahead',
   'Selkent': 'Stagecoach', 'East London': 'Stagecoach',
-  'London United': 'RATP', 'London Sovereign': 'RATP', 'Sovereign': 'RATP', 'Quality Line': 'RATP', 'NSL': 'RATP',
+  // RATP-era names fold into First, matching operator-aliases.json (RATP Dev
+  // sold its London operations to FirstGroup in Feb 2025).
+  'London United': 'First', 'London Sovereign': 'First', 'Sovereign': 'First', 'Quality Line': 'First', 'NSL': 'First',
+  'RATP': 'First', 'RATP Dev': 'First',
   'CentreWest': 'First',
-  'Travel London': 'Abellio',
+  // RATP Dev Transit London's awards appear as "London Transit" on TfL's
+  // pages; FirstGroup acquired the business Feb 2025 (see operator-aliases).
+  'London Transit': 'First',
+  // Abellio London rebranded Transport UK London Bus in 2023 (same company);
+  // Travel London was its pre-2009 name. One lineage, one parent.
+  'Travel London': 'Transport UK', 'Abellio': 'Transport UK',
   'National Car Parks': 'NCP',
 };
 const TENDER_OP_PREFIXES = [
-  ['Arriva ', 'Arriva'], ['Abellio ', 'Abellio'], ['Stagecoach ', 'Stagecoach'],
+  ['Arriva ', 'Arriva'], ['Abellio ', 'Transport UK'], ['Stagecoach ', 'Stagecoach'],
   ['First ', 'First'], ['Metroline ', 'Metroline'], ['Go-Ahead ', 'Go-Ahead'],
   // The Tower-Transit-acquired Hotspur Lane operations rebranded to
   // "Transport UK London" / "Transport UK West London" on the tender form
@@ -744,9 +752,13 @@ for (const file of routeFiles) {
   // We still keep `details.deck` as a fallback for vehicle strings not yet
   // in the lookup; for school routes (uniformly single-deck minibuses /
   // coaches in London) default to 'single' last.
+  // The school-route 'single' default must rank BELOW last-known-good (it
+  // is applied in the final assembly below, after lastRec.deck): plenty of
+  // school routes genuinely run double-deckers, and when the scrape is
+  // missing this default would otherwise overwrite their preserved deck.
   const deck        = fallback?.deck
                    ?? details.deck
-                   ?? (type === 'school' ? 'single' : null);
+                   ?? null;
 
   // ── Propulsion precedence ───────────────────────────────────────────────
   // Naive "DVLA always wins" was wrong: with fleetSize 1–3 (typical right
@@ -767,7 +779,15 @@ for (const file of routeFiles) {
   //     electric mid-week).
   //   • Otherwise → fall through to LBR / vehicle-lookup / last-known-good.
   const HIGH_CONF_OBS = 5;
-  const lbrProp  = details.propulsion;
+  // The LBR verdict is this run's scrape, else the vehicle-lookup implied
+  // one, else the LAST-KNOWN-GOOD verdict — when route_details.json is
+  // missing/partial (scrape failed, or a run without it), the previous
+  // verdict must keep standing in for LBR here, BEFORE the DVLA branch
+  // below gets a say. Without this, every hybrid/hydrogen route collapses
+  // to DVLA's 'diesel' (DVLA registers hybrids as HEAVY OIL and fuel-cells
+  // inconsistently) — exactly the mass-flattening the last-known-good
+  // philosophy exists to prevent.
+  const lbrProp  = details.propulsion ?? fallback?.propulsion ?? lastGood[routeId]?.propulsion ?? null;
   const dvlaProp = fleetAgg?.propulsion;
   const dvlaObs  = fleetAgg?.fleetSize ?? 0;
   let propulsion;
@@ -869,7 +889,7 @@ for (const file of routeFiles) {
     type:        override.type        ?? type,
     isPrefix:    override.isPrefix    ?? isPrefix,
     lengthBand:  override.lengthBand  ?? lengthBand,
-    deck:        override.deck        ?? deck        ?? lastRec.deck        ?? null,
+    deck:        override.deck        ?? deck        ?? lastRec.deck        ?? (type === 'school' ? 'single' : null),
     vehicleType: override.vehicleType ?? vehicleType ?? lastRec.vehicleType ?? null,
     propulsion:  override.propulsion  ?? propulsion  ?? lastRec.propulsion  ?? null,
     operator:    override.operator    ?? operator    ?? lastRec.operator    ?? null,

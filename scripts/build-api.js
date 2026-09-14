@@ -298,9 +298,21 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   };
   const byRoute = {};
   const byId = {};
+  const tokenCopies = {};   // btID → per-route-token copies, in route-id order
   const num = v => (Number.isFinite(v) && v > 0 ? v : null);
+  // TfL's register double-publishes the odd bulletin under two btIDs (11
+  // byte-identical pairs as of 2026-09, e.g. 2396/2397 = 220/N220) and
+  // carries a few literal "test" pages. Keep the first (lowest-btID) copy of
+  // any identical award and drop the test rows — they inflated the served
+  // count and showed twice in the route history.
+  const seenAward = new Set();
   for (const [btId, t] of Object.entries(src)) {
     t.bt_id = t.bt_id ?? btId;
+    if (String(t.route_id ?? '').trim().toLowerCase() === 'test') continue;
+    const dupKey = JSON.stringify([t.route_id, t.award_announced_date, t.awarded_operator, t.accepted_bid,
+                                   t.lowest_bid, t.highest_bid, t.cost_per_mile, t.number_of_tenderers, t.notes]);
+    if (seenAward.has(dupKey)) continue;
+    seenAward.add(dupKey);
     const jointRaw = t.joint_bids && t.joint_bids !== 'N/A' ? String(t.joint_bids) : null;
     const jointTotal = jointRaw ? Number(jointRaw.match(/totalling\s*£\s*([\d,]+)/i)?.[1]?.replace(/,/g, '') ?? NaN) : NaN;
     // Partner route numbers — with the monetary clause stripped first so
@@ -334,9 +346,65 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       tranche: null,
     };
     byId[award.btID] = award;
-    for (const name of String(t.route_id ?? '').split('/').map(s => s.trim().toUpperCase()).filter(Boolean))
-      (byRoute[name] ??= []).push(award);
+    // Fan out a COPY per route token. The per-route enrichment below joins
+    // each token to ITS programme row — a multi-route award like 299/389/399
+    // can legitimately match different tranches/starts per route, and a
+    // shared object turned that into last-write-wins contamination (route
+    // 299 showed tranche 904 with 389/399's start date — a pair that exists
+    // in no source). byId is reconciled from the primary token afterwards.
+    for (const name of String(t.route_id ?? '').split('/').map(s => s.trim().toUpperCase()).filter(Boolean)) {
+      const copy = { ...award };
+      (tokenCopies[award.btID] ??= []).push(copy);
+      (byRoute[name] ??= []).push(copy);
+    }
   }
+  // ── Supplementary provisional awards (community-reported) ─────────────
+  // TfL's register lags months behind the weekly award bulletins; the
+  // fandom Tender Results pages track them same-week and cross-checked at
+  // 100% on winner / ~99% on date+accepted bid. Add ONLY awards TfL hasn't
+  // published yet (no route-token + ±21-day date overlap with a TfL row),
+  // flagged provisional — once the TfL page appears its row wins and the
+  // provisional one drops out on the next build. Only the trusted fields
+  // are carried (winner, date, current operator, PVR, vehicles, accepted
+  // bid); lowest/highest/cost-per-mile stay null by design.
+  {
+    const fandom = tryRead(DATA('source/fandom-tenders.json'));
+    let added = 0;
+    for (const [i, e] of (fandom?.entries ?? []).entries()) {
+      if (!e?.award_date || !e?.route_id) continue;
+      const tokens = String(e.route_id).split('/').map(s => s.trim().toUpperCase()).filter(Boolean);
+      const dupe = tokens.some(tok => (byRoute[tok] ?? []).some(a =>
+        a.awardDate && Math.abs(Date.parse(a.awardDate) - Date.parse(e.award_date)) <= 21 * 864e5));
+      if (dupe) continue;
+      const award = {
+        btID: `P${i}`,                        // provisional key — no TfL btID yet
+        provisional: true,
+        route: e.route_id,
+        operator: tenderOperator(e.awarded_operator),
+        operatorRaw: e.awarded_operator ?? null,
+        awardDate: e.award_date,
+        numberOfTenderers: null,
+        acceptedBid: num(e.accepted_bid),
+        lowestBid: null, highestBid: null,
+        costPerMile: null,
+        contractedMilesPA: null,
+        jointBid: null, jb: { isJoint: false, partners: [], total: null, raw: null },
+        notes: 'Provisional — community-reported award (london-bus-routes.fandom.com); TfL result page not yet published.',
+        vehicle: e.vehicles ? { basis: null, propulsion: null, deck: null, raw: e.vehicles } : null,
+        tranche: null,
+        pvr: e.pvr ?? null,
+      };
+      byId[award.btID] = award;
+      for (const tok of tokens) {
+        const copy = { ...award };
+        (tokenCopies[award.btID] ??= []).push(copy);
+        (byRoute[tok] ??= []).push(copy);
+      }
+      added++;
+    }
+    if (added) console.log(`tenders.json — +${added} provisional awards from fandom feed`);
+  }
+
   for (const list of Object.values(byRoute))
     list.sort((a, b) => String(b.awardDate ?? '').localeCompare(String(a.awardDate ?? '')));
 
@@ -370,6 +438,20 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     }
     for (let i = 0; i < asc.length; i++) {
       const a = asc[i], nextA = asc[i + 1];
+      // Newest award with no programme join (TfL never listed the route in
+      // an LBSL programme PDF — Superloop launches, new routes like 310):
+      // the route page already shows the LBR-scraped current-contract start,
+      // so the awards table showing a blank start (and, via the guard below,
+      // an end with no start) was an inconsistency, not honesty. Adopt the
+      // route-meta start when it can only be this award's contract: it
+      // postdates the award by at most 3 years.
+      if (!nextA && !a.contractStart && a.awardDate) {
+        const ms = metaRoutes[name]?.contractStart;
+        if (ms) {
+          const gap = Date.parse(ms) - Date.parse(a.awardDate);
+          if (gap >= 0 && gap <= 3 * 365.25 * 864e5) a.contractStart = ms;
+        }
+      }
       let end = nextA?.contractStart ?? null;
       if (!nextA) {
         // Newest award: route-meta carries the CURRENT contract's projected
@@ -393,6 +475,18 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       if (a.contractStart && a.contractEnd)
         a.termYears = Math.round((Date.parse(a.contractEnd) - Date.parse(a.contractStart)) / 3.15576e10 * 10) / 10;
     }
+  }
+  // Reconcile byId from the PRIMARY route token's enriched copy (first token
+  // of the award's route id — e.g. 299 for "299/389/399"), so the flat table
+  // row always matches that route's page instead of whichever token happened
+  // to be enriched last. 477 of 480 multi-route awards have identical copies
+  // anyway; for the divergent ones the primary token is the deterministic,
+  // source-faithful choice.
+  for (const [btID, copies] of Object.entries(tokenCopies)) {
+    const primary = copies[0];
+    if (!primary) continue;
+    for (const f of ['fromOperator', 'operatorChange', 'contractStart', 'tranche', 'vehicle', 'twoYearExtension', 'contractEnd', 'termYears'])
+      if (f in primary) byId[btID][f] = primary[f];
   }
   write(API('tenders.json'), {
     generatedAt: now,

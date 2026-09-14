@@ -85,11 +85,12 @@ F('export view downloads (' + dl.suggestedFilename() + ', ' + (csv.split('\r\n')
   dl.suggestedFilename() === 'london-bus-tenders.csv' && csv.includes('cost_per_mile') && csv.split('\r\n').length - 1 === total);
 
 /* source link on awards rows */
-const asrc = await page.evaluate(() => {
-  const a = document.querySelector('#tBody tr td:last-child a');
-  return a ? a.getAttribute('href') : '';
-});
-F('award rows link their TfL result page (' + asrc.slice(0, 46) + '…)', /^https:\/\/tfl\.gov\.uk\/forms\/13796\.aspx\?btID=\d+$/.test(asrc));
+const srcLinks = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:last-child a')].map(a => a.getAttribute('href')));
+const tflSrc  = srcLinks.find(h => /tfl\.gov\.uk/.test(h)) ?? '';
+const wikiSrc = srcLinks.find(h => /fandom\.com/.test(h)) ?? '';
+F('award rows link their TfL result page (' + tflSrc.slice(0, 46) + '…)', /^https:\/\/tfl\.gov\.uk\/forms\/13796\.aspx\?btID=\d+$/.test(tflSrc));
+F('provisional rows link their wiki source page (' + wikiSrc.slice(0, 60) + ')',
+  !wikiSrc || /^https:\/\/london-bus-routes\.fandom\.com\/wiki\/Tender_Results_\d{4}$/.test(wikiSrc));
 
 /* tabs — programme hidden until its tab is selected */
 const tabs0 = await page.evaluate(() => ({
@@ -128,13 +129,35 @@ F('programme route search exact (' + [...new Set(pr3)].join('|') + ')', pr3.leng
 /* programme tranche search + per-row PDF source link */
 await page.fill('#pq', '1032'); await page.waitForTimeout(400);
 const tr1 = await page.evaluate(() => ({
-  tranches: [...document.querySelectorAll('#pBody tr td:nth-child(4)')].map(td => td.textContent.trim()),
+  tranches: [...document.querySelectorAll('#pBody tr td:nth-child(5)')].map(td => td.textContent.trim()),
   src: document.querySelector('#pBody tr td:last-child a')?.getAttribute('href') ?? '',
 }));
 F('programme tranche search (' + [...new Set(tr1.tranches)].join('|') + ') + PDF link (' + tr1.src.slice(-42) + ')',
   tr1.tranches.length > 0 && tr1.tranches.every(t => t === '1032')
   && /^https:\/\/content\.tfl\.gov\.uk\/uploads\/forms\/.+\.pdf$/.test(tr1.src));
 await page.fill('#pq', ''); await page.waitForTimeout(300);
+
+/* programme operator filter — pick a real operator from the dropdown itself,
+   so the check survives any operator entering or leaving the market */
+const pOp = await page.evaluate(() => [...document.getElementById('pop').options].map(o => o.value).find(v => v) ?? '');
+await page.selectOption('#pop', pOp); await page.waitForTimeout(400);
+const pf = await page.evaluate(() => ({
+  ops: [...document.querySelectorAll('#pBody tr td:nth-child(2)')].map(td => td.textContent.trim()),
+  count: document.getElementById('pCount')?.textContent ?? '',
+  clearShown: !document.getElementById('popClear').hidden,
+}));
+const pfN = parseInt((pf.count.match(/([\d,]+) entries/)?.[1] ?? '0').replace(/,/g, ''), 10);
+F('programme operator filter narrows (' + pOp + ' → "' + pf.count.trim() + '", ' + pf.ops.length + ' rows)',
+  pOp !== '' && pf.clearShown && pf.ops.length > 0 && pf.ops.every(o => o === pOp)
+  && pfN > 0 && pfN < progTotal && pf.ops.length === Math.min(pfN, 20));
+await page.click('#popClear'); await page.waitForTimeout(400);
+const pcl = await page.evaluate(() => ({
+  val: document.getElementById('pop').value,
+  hidden: document.getElementById('popClear').hidden,
+  count: document.getElementById('pCount')?.textContent ?? '',
+}));
+F('programme operator clear restores ("' + pcl.count.trim() + '")',
+  pcl.val === '' && pcl.hidden && pcl.count.includes(progTotal.toLocaleString('en-GB') + ' entries'));
 
 /* awards pagination (back on the awards tab) */
 await page.click('#tabA'); await page.waitForTimeout(200);
