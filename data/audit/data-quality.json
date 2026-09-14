@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T23:48:18.543Z",
+  "generatedAt": "2026-09-14T00:13:20.286Z",
   "summary": {
     "critical": 0,
     "warn": 103,
@@ -603,6 +603,15 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "292",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 13.9,
+      "note": "electric London fleets are post-2015"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "297",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
@@ -801,6 +810,15 @@
     {
       "severity": "WARN",
       "scope": "rc",
+      "id": "485",
+      "field": "vehicleAgeYears",
+      "expected": "<=12 for electric",
+      "actual": 15,
+      "note": "electric London fleets are post-2015"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
       "id": "E2",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
@@ -882,24 +900,6 @@
     {
       "severity": "WARN",
       "scope": "rc",
-      "id": "SL12",
-      "field": "operator",
-      "expected": "present",
-      "actual": null,
-      "note": ""
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
-      "id": "SL12",
-      "field": "garageCode",
-      "expected": "present",
-      "actual": null,
-      "note": ""
-    },
-    {
-      "severity": "WARN",
-      "scope": "rc",
       "id": "U3",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
@@ -931,10 +931,10 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "operator": 674,
-        "garage": 674,
-        "pvr": 670,
-        "vt": 672,
+        "operator": 675,
+        "garage": 675,
+        "pvr": 671,
+        "vt": 673,
         "prop": 675,
         "deck": 672,
         "ewtOrOtp": 0,
