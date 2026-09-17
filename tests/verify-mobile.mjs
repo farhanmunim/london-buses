@@ -29,7 +29,7 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-const views = ['#/', '#/route/482', '#/route/88', '#/tender', '#/diversions', '#/diversions/mileage', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
+const views = ['#/', '#/route/482', '#/route/88', '#/tender', '#/diversions', '#/mileage', '#/diversions/mileage', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
 for (const v of views){
   await page.goto('http://127.0.0.1:8911/' + v, { waitUntil:'load' });
   await page.waitForTimeout(v.includes('map') || v.includes('route/') ? 4000 : 2000);
@@ -45,26 +45,31 @@ const nav = await page.evaluate(() => {
   const clipped = bar.filter(a => { const l = a.lastChild; return l && l.nodeType === 3 && a.scrollWidth > a.clientWidth + 1; }).length;
   return { n: bar.length, minW: Math.min(...rects.map(r => r.width)), maxRight: Math.max(...rects.map(r => r.right)), clipped };
 });
-F(`bottom nav fits (${nav.n} tabs, min ${Math.round(nav.minW)}px, right ${Math.round(nav.maxRight)}, ${nav.clipped} clipped)`, nav.n === 6 && nav.maxRight <= 376 && nav.minW >= 44 && nav.clipped === 0);
+F(`bottom nav fits (${nav.n} tabs, min ${Math.round(nav.minW)}px, right ${Math.round(nav.maxRight)}, ${nav.clipped} clipped)`, nav.n === 5 && nav.maxRight <= 376 && nav.minW >= 44 && nav.clipped === 0);
+const tabs = await page.evaluate(() => [...document.querySelectorAll('.tabbar a, .tabbar button')].map(a => a.textContent.trim()));
+F(`tabbar holds ${tabs.join('/')}`, tabs.join() === 'Routes,Map,Operators,Tender,More');
 
-/* More sheet: opens with Tender/CPI-CPA/About, More lights on those pages,
-   sheet closes on navigation */
+/* More sheet: opens with Garages/Stops/Diversions/Mileage/CPI-CPA/About,
+   More lights on those pages, sheet closes on navigation */
 await page.goto('http://127.0.0.1:8911/#/', { waitUntil:'load' }); await page.waitForTimeout(1500);
 await page.click('#moreTab'); await page.waitForTimeout(200);
 const more = await page.evaluate(() => ({
   open: !document.getElementById('moreSheet').hidden,
   links: [...document.querySelectorAll('#moreSheet a')].map(a => a.textContent.trim()),
   onscreen: document.getElementById('moreSheet').getBoundingClientRect().right <= 376,
+  aboveBar: document.getElementById('moreSheet').getBoundingClientRect().bottom <=
+    document.querySelector('.tabbar').getBoundingClientRect().top + 1,
 }));
-await page.click('#moreSheet a[data-nav="tender"]'); await page.waitForTimeout(1200);
+await page.click('#moreSheet a[data-nav="diversions"]'); await page.waitForTimeout(1200);
 const after = await page.evaluate(() => ({
   hash: location.hash,
   closed: document.getElementById('moreSheet').hidden,
   moreOn: document.getElementById('moreTab').classList.contains('on'),
 }));
 F(`More sheet holds ${more.links.join('/')} and navigates (→ ${after.hash})`,
-  more.open && more.onscreen && more.links.join() === 'Tender,Diversions,CPI-CPA,About'
-  && after.hash === '#/tender' && after.closed && after.moreOn);
+  more.open && more.onscreen && more.aboveBar
+  && more.links.join() === 'Garages,Stops,Diversions,Mileage,CPI-CPA,About'
+  && after.hash === '#/diversions' && after.closed && after.moreOn);
 const kpiClip = await page.evaluate(async () => {
   location.hash = '#/tender'; await new Promise(r => setTimeout(r, 1500));
   return [...document.querySelectorAll('#tKpis .fact .l')].filter(el => el.scrollWidth > el.clientWidth + 1).length;

@@ -33,17 +33,40 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-/* nav item routes to the page */
+/* desktop More dropdown at 1280px: visible, opens under the topbar, holds
+   the sheet pages, and routes to #/diversions */
 await page.goto('http://127.0.0.1:8913/#/', { waitUntil:'load' }); await page.waitForTimeout(1500);
-const navLink = await page.evaluate(() => document.querySelector('.nav-desktop a[data-nav="diversions"]')?.getAttribute('href') ?? '');
-await page.click('.nav-desktop a[data-nav="diversions"]'); await page.waitForTimeout(2000);
+const moreVisible = await page.evaluate(() => {
+  const b = document.getElementById('moreBtn');
+  return !!b && b.offsetWidth > 0 && getComputedStyle(b).display !== 'none';
+});
+await page.click('#moreBtn'); await page.waitForTimeout(250);
+const dd = await page.evaluate(() => ({
+  open: !document.getElementById('moreSheet').hidden,
+  links: [...document.querySelectorAll('#moreSheet a')].map(a => a.textContent.trim()),
+  inline: [...document.querySelectorAll('.nav-desktop a')].map(a => a.textContent.trim()),
+  navLink: document.querySelector('#moreSheet a[data-nav="diversions"]')?.getAttribute('href') ?? '',
+  belowBar: document.getElementById('moreSheet').getBoundingClientRect().top >=
+    document.querySelector('.topbar').getBoundingClientRect().bottom - 1,
+  onscreen: (r => r.left >= 0 && r.right <= 1281)(document.getElementById('moreSheet').getBoundingClientRect()),
+}));
+F('desktop More dropdown opens with ' + dd.links.join('/') + ' (inline: ' + dd.inline.join('/') + ')',
+  moreVisible && dd.open && dd.belowBar && dd.onscreen
+  && dd.links.join() === 'Garages,Stops,Diversions,Mileage,CPI-CPA,About'
+  && dd.inline.join() === 'Map,Routes,Operators,Tender');
+await page.click('#moreSheet a[data-nav="diversions"]'); await page.waitForTimeout(2000);
 const nav = await page.evaluate(() => ({
   hash: location.hash,
+  closed: document.getElementById('moreSheet').hidden,
   navOn: !!document.querySelector('[data-nav="diversions"].on'),
+  moreOn: document.getElementById('moreBtn').classList.contains('on'),
   h1: document.querySelector('#main h1')?.textContent ?? '',
+  noPills: !document.getElementById('dTabH') && !document.getElementById('dTabM'),
+  mileageLink: !!document.querySelector('#main a[href="#/mileage"]'),
 }));
-F('nav item routes to the page (' + navLink + ' → ' + nav.hash + ', "' + nav.h1 + '")',
-  navLink === '#/diversions' && nav.hash === '#/diversions' && nav.navOn && /Diversions/.test(nav.h1));
+F('dropdown item routes to the page and closes it (' + dd.navLink + ' → ' + nav.hash + ', "' + nav.h1 + '")',
+  dd.navLink === '#/diversions' && nav.hash === '#/diversions' && nav.closed && nav.navOn && nav.moreOn
+  && /Diversions/.test(nav.h1) && nav.noPills && nav.mileageLink);
 
 /* history table renders rows + count + snapshot note */
 const h = await page.evaluate(() => ({
@@ -106,18 +129,24 @@ await page.click('#dNext'); await page.waitForTimeout(300);
 const p2 = await page.evaluate(() => document.getElementById('dPage')?.textContent ?? '');
 F('history pagination advances (' + p2 + ')', /Page 2 of \d+/.test(p2));
 
-/* tab 2 — either data rows (files exist) or the still-building note */
-await page.click('#dTabM'); await page.waitForTimeout(1000);
+/* #/mileage is its own page — history table gone, mileage table (or the
+   still-building note) present, More lights, cross-link back to diversions */
+await page.goto('http://127.0.0.1:8913/#/mileage', { waitUntil:'load' }); await page.waitForTimeout(2500);
 const m = await page.evaluate(() => ({
   hash: location.hash,
-  histHidden: document.getElementById('tabHist').hidden,
-  milesShown: !document.getElementById('tabMiles').hidden,
+  h1: document.querySelector('#main h1')?.textContent ?? '',
+  title: document.title,
+  histGone: !document.getElementById('dBody') && !document.getElementById('dTabH') && !document.getElementById('dTabM'),
+  navOn: !!document.querySelector('[data-nav="mileage"].on'),
+  moreOn: document.getElementById('moreBtn').classList.contains('on'),
+  divLink: !!document.querySelector('#main a[href="#/diversions"]'),
   rows: document.querySelectorAll('#mBody tr').length,
   building: /still building/.test(document.querySelector('#mWrap .empty')?.textContent ?? ''),
   firstRow: document.querySelector('#mBody tr')?.textContent?.replace(/\s+/g, ' ') ?? '',
 }));
-F('mileage tab shows ' + (perfExists ? 'data rows (' + m.rows + ', first: "' + m.firstRow.slice(0, 60) + '")' : 'the still-building note'),
-  m.histHidden && m.milesShown && m.hash === '#/diversions/mileage'
+F('#/mileage page shows ' + (perfExists ? 'data rows (' + m.rows + ', first: "' + m.firstRow.slice(0, 60) + '")' : 'the still-building note'),
+  m.hash === '#/mileage' && m.h1 === 'Mileage' && /^Mileage · /.test(m.title)
+  && m.histGone && m.navOn && m.moreOn && m.divLink
   && (perfExists ? (m.rows > 0 && !m.building && /%/.test(m.firstRow)) : m.building));
 if(perfExists){
   const est = await page.evaluate(() => [...document.querySelectorAll('#mBody tr td:nth-child(6)')].map(td => td.textContent.trim()));
@@ -129,22 +158,26 @@ if(perfExists){
     mdl.suggestedFilename() === 'london-bus-mileage.csv' && mcsv.includes('est_lost_km') && mcsv.split('\r\n').length - 1 > 0);
 }
 
-/* deep link straight to the mileage tab */
+/* legacy deep link redirects to the new page */
+await page.goto('http://127.0.0.1:8913/#/', { waitUntil:'load' }); await page.waitForTimeout(800);
 await page.goto('http://127.0.0.1:8913/#/diversions/mileage', { waitUntil:'load' }); await page.waitForTimeout(2500);
 const deep = await page.evaluate(() => ({
-  milesShown: !document.getElementById('tabMiles').hidden,
-  histHidden: document.getElementById('tabHist').hidden,
+  hash: location.hash,
+  h1: document.querySelector('#main h1')?.textContent ?? '',
+  mileageShown: !!document.getElementById('mWrap'),
+  histGone: !document.getElementById('dBody'),
 }));
-F('#/diversions/mileage deep-links the mileage tab', deep.milesShown && deep.histHidden);
+F('#/diversions/mileage redirects to #/mileage (' + deep.hash + ', "' + deep.h1 + '")',
+  deep.hash === '#/mileage' && deep.h1 === 'Mileage' && deep.mileageShown && deep.histGone);
 
-/* deep-linked tab renders Operated % values + the below-standard filter narrows */
+/* redirected page renders Operated % values + the below-standard filter narrows */
 if(perfExists){
   const mv = await page.evaluate(() => ({
     ops: [...document.querySelectorAll('#mBody tr td:nth-child(3)')].map(td => td.textContent.trim()),
     count: document.getElementById('mCount')?.textContent ?? '',
   }));
   const allN = parseInt((mv.count.match(/([\d,]+) rows?/)?.[1] ?? '0').replace(/,/g, ''), 10);
-  F('deep-linked mileage tab renders Operated % values ("' + mv.count.trim() + '", first: ' + mv.ops[0] + ')',
+  F('redirected mileage page renders Operated % values ("' + mv.count.trim() + '", first: ' + mv.ops[0] + ')',
     mv.ops.length > 0 && mv.ops.some(v => /^\d+(\.\d+)?%$/.test(v)) && allN >= mv.ops.length);
   await page.check('#mbelow'); await page.waitForTimeout(400);
   const bl = await page.evaluate(() => ({

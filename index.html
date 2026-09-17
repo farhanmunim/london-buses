@@ -76,9 +76,9 @@ svg{display:block}
 .brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
 .brand small{font-weight:600;font-size:10px;color:var(--bg);background:var(--tx);border-radius:999px;padding:2px 7px;letter-spacing:.04em}
 .nav-desktop{display:none;gap:2px;margin-left:14px}
-.nav-desktop a{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
-.nav-desktop a:hover{background:var(--surf2);color:var(--tx)}
-.nav-desktop a.on{background:var(--tx);color:var(--bg)}
+.nav-desktop a,.nav-desktop button{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
+.nav-desktop a:hover,.nav-desktop button:hover{background:var(--surf2);color:var(--tx)}
+.nav-desktop a.on,.nav-desktop button.on{background:var(--tx);color:var(--bg)}
 .topbar-spacer{flex:1}
 .net-chip{display:none;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;background:var(--surf)}
 .net-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
@@ -94,11 +94,14 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .tabbar a.on,.tabbar button.on{color:var(--acc)}
 .tabbar svg{width:21px;height:21px}
 @media(min-width:760px){.tabbar{display:none}}
+/* One sheet element serves both breakpoints: bottom-anchored above the
+   tabbar on mobile; ≥760px the JS pins it under the topbar's More button
+   (inline left/top) so it reads as a dropdown. */
 .more-sheet{position:fixed;right:10px;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 10px);z-index:61;background:var(--surf);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:6px;min-width:170px}
 .more-sheet a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--tx)}
 .more-sheet a.on{color:var(--acc);background:var(--acc-soft)}
 .more-sheet svg{width:18px;height:18px;flex:none}
-@media(min-width:760px){.more-sheet{display:none}}
+@media(min-width:760px){.more-sheet{right:auto;bottom:auto;box-shadow:0 6px 26px rgba(28,25,23,.15)}}
 
 /* ── Common components ─────────────────────────────────────────────────── */
 .h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px}
@@ -346,11 +349,8 @@ main.fullbleed{max-width:none;padding:0}
       <a href="#/map" data-nav="map">Map</a>
       <a href="#/" data-nav="routes">Routes</a>
       <a href="#/operators" data-nav="operators">Operators</a>
-      <a href="#/garages" data-nav="garages">Garages</a>
-      <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/tender" data-nav="tender">Tender</a>
-      <a href="#/diversions" data-nav="diversions">Diversions</a>
-      <a href="#/cpi" data-nav="cpi">CPI-CPA</a>
+      <button id="moreBtn" type="button" aria-label="More pages" aria-expanded="false" aria-haspopup="true">More ▾</button>
     </nav>
     <div class="topbar-spacer"></div>
     <div class="net-chip" id="netChip" hidden><span class="dot"></span><span id="netChipText"></span></div>
@@ -369,14 +369,15 @@ main.fullbleed{max-width:none;padding:0}
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
   <a href="#/map" data-nav="map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>Map</a>
   <a href="#/operators" data-nav="operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>Operators</a>
-  <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
-  <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
+  <a href="#/tender" data-nav="tender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tender</a>
   <button id="moreTab" type="button" aria-label="More pages" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg>More</button>
 </nav>
 
 <div class="more-sheet" id="moreSheet" hidden>
-  <a href="#/tender" data-nav="tender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tender</a>
+  <a href="#/garages" data-nav="garages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/><path d="M9 20v-6h6v6"/></svg>Garages</a>
+  <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
   <a href="#/diversions" data-nav="diversions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4l3-4 3 4h6"/><path d="M4 5h4l6 8"/><path d="M17 3l3 2-3 2M17 17l3 2-3 2"/></svg>Diversions</a>
+  <a href="#/mileage" data-nav="mileage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a9 9 0 1 1 14 0"/><path d="m12 14 4-5"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/></svg>Mileage</a>
   <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
   <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
 </div>
@@ -755,16 +756,21 @@ function navigate(){
   const navKey = view === 'route' ? 'routes' : view === 'garage' ? 'garages'
     : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view === 'vehicle' ? 'routes' : view;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
-  // The mobile More tab lights when any of the pages it holds is active,
-  // and its sheet closes on every navigation.
-  document.getElementById('moreTab')?.classList.toggle('on', ['tender','diversions','cpi','about'].includes(navKey));
+  // The More button/tab (both breakpoints) lights when any of the pages the
+  // sheet holds is active, and the sheet closes on every navigation.
+  const SHEET_PAGES = ['garages','stops','diversions','mileage','cpi','about'];
+  for(const id of ['moreTab','moreBtn'])
+    document.getElementById(id)?.classList.toggle('on', SHEET_PAGES.includes(navKey));
   const moreSheet = document.getElementById('moreSheet');
-  if(moreSheet && !moreSheet.hidden){ moreSheet.hidden = true; document.getElementById('moreTab')?.setAttribute('aria-expanded','false'); }
+  if(moreSheet && !moreSheet.hidden){
+    moreSheet.hidden = true;
+    for(const id of ['moreTab','moreBtn']) document.getElementById(id)?.setAttribute('aria-expanded','false');
+  }
   window.scrollTo(0, 0);
   main.classList.toggle('fullbleed', view === 'map');
   // Per-view titles so history entries and tabs are tellable apart.
   const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
-    garages:'Garages', tender:'Tender', diversions:'Diversions', cpi:'CPI-CPA', about:'About',
+    garages:'Garages', tender:'Tender', diversions:'Diversions', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
     route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
@@ -783,29 +789,41 @@ function navigate(){
   else if(view === 'vehicle')   renderVehicleDetail(arg);
   else if(view === 'tender')    renderTenders(arg);
   else if(view === 'tenders')   { location.replace('#/tender' + (arg ? '/' + encodeURIComponent(arg) : '')); return; }   // legacy plural slug
-  else if(view === 'diversions') renderDiversions(arg);
+  else if(view === 'diversions' && arg === 'mileage') { location.replace('#/mileage'); return; }   // legacy tab deep link
+  else if(view === 'diversions') renderDiversions();
+  else if(view === 'mileage')   renderMileage();
   else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
 }
 window.addEventListener('hashchange', navigate);
 
-/* ── Mobile "More" sheet — Tender, CPI-CPA and About live behind one tab
-   so the bar keeps five roomy destinations. Toggles on tap, closes on any
-   outside tap, Escape, or navigation (handled in navigate above). */
+/* ── "More" sheet — Garages, Stops, Diversions, Mileage, CPI-CPA and About
+   live behind one affordance on both breakpoints, so each bar keeps roomy
+   primary destinations. One element: bottom sheet above the mobile tabbar,
+   or pinned under the desktop More button when that one opened it. Toggles
+   on tap, closes on any outside tap, Escape, or navigation (handled in
+   navigate above). */
 {
-  const btn = document.getElementById('moreTab'), sheet = document.getElementById('moreSheet');
-  btn.addEventListener('click', () => {
-    sheet.hidden = !sheet.hidden;
-    btn.setAttribute('aria-expanded', String(!sheet.hidden));
-  });
-  document.addEventListener('click', e => {
-    if(!sheet.hidden && !sheet.contains(e.target) && !btn.contains(e.target)){
-      sheet.hidden = true; btn.setAttribute('aria-expanded','false');
+  const sheet = document.getElementById('moreSheet');
+  const btns = ['moreTab','moreBtn'].map(id => document.getElementById(id)).filter(Boolean);
+  const setOpen = (open, from) => {
+    sheet.hidden = !open;
+    for(const b of btns) b.setAttribute('aria-expanded', String(open));
+    sheet.style.left = sheet.style.top = '';
+    if(open && from === 'moreBtn' && matchMedia('(min-width:760px)').matches){
+      const r = document.getElementById('moreBtn').getBoundingClientRect();
+      const bar = document.querySelector('.topbar')?.getBoundingClientRect();
+      sheet.style.top = Math.max(r.bottom, (bar?.bottom ?? 0)) + 6 + 'px';
+      sheet.style.left = Math.max(8, Math.min(r.left, window.innerWidth - sheet.offsetWidth - 8)) + 'px';
     }
+  };
+  for(const b of btns) b.addEventListener('click', () => setOpen(sheet.hidden, b.id));
+  document.addEventListener('click', e => {
+    if(!sheet.hidden && !sheet.contains(e.target) && !btns.some(b => b.contains(e.target))) setOpen(false);
   });
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && !sheet.hidden){ sheet.hidden = true; btn.setAttribute('aria-expanded','false'); }
+    if(e.key === 'Escape' && !sheet.hidden) setOpen(false);
   });
 }
 
@@ -2932,8 +2950,20 @@ async function renderTenders(tab){
   });
 }
 
-/* ════════════════════ DIVERSIONS & MILEAGE ════════════════════ */
-async function renderDiversions(tab){
+/* ════════════════════ DIVERSIONS & MILEAGE ════════════════════
+   Two sibling pages (#/diversions, #/mileage) sharing the same data layer:
+   the diversion history feeds both — the mileage table counts overlapping
+   history entries per route. Shared row/format helpers live here. */
+const DIVN_PAGE = 20;
+const ddMMM = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
+  ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]}` : '—'; };
+const ddMMMhm = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
+  ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '—'; };
+const divnRouteChip = r => `<a class="rchip" style="padding:1px 7px;font-size:11px" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`;
+const divnInputCss = 'border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)';
+const divnSorted = hist => [...hist.entries].sort((a,b) => String(b.lastSeen ?? '').localeCompare(String(a.lastSeen ?? '')));
+
+async function renderDiversions(){
   const tok = navToken;
   main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
   const hist = await D.divHistory();
@@ -2942,12 +2972,8 @@ async function renderDiversions(tab){
     main.innerHTML = `<div class="wrap"><div class="empty">The diversion history is unreachable right now — try again shortly.</div></div>`;
     return;
   }
-  const all = [...hist.entries].sort((a,b) => String(b.lastSeen ?? '').localeCompare(String(a.lastSeen ?? '')));
-  const PAGE = 20;
-  const ddMMM = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
-    ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]}` : '—'; };
-  const ddMMMhm = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
-    ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '—'; };
+  const all = divnSorted(hist);
+  const PAGE = DIVN_PAGE, routeChip = divnRouteChip, inputCss = divnInputCss;
   const CAT_LABEL = { PlannedWork:'Planned', RealTime:'Unplanned', Event:'Event' };
   /* Badges reuse the site's existing accent/warn/muted vars — no new palette. */
   const badgeCss = 'display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px';
@@ -2956,19 +2982,12 @@ async function renderDiversions(tab){
     : c === 'RealTime'
     ? `<span class="dbadge" style="${badgeCss};color:var(--warn);background:color-mix(in srgb, var(--warn) 14%, transparent)">Unplanned</span>`
     : `<span class="dbadge" style="${badgeCss};color:var(--tx2);background:var(--surf2)">Event</span>`;
-  const routeChip = r => `<a class="rchip" style="padding:1px 7px;font-size:11px" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`;
   const trunc = s => { s = String(s ?? ''); return s.length > 120 ? s.slice(0, 119) + '…' : s; };
-  const inputCss = 'border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)';
 
   main.innerHTML = `<div class="wrap">
-    <div id="dhead"><h1 style="margin:2px 0 4px">Diversions &amp; mileage</h1>
-      <div style="color:var(--tx2);font-size:13.5px">Explain a route's lost mileage: the full <b>diversion history</b> day by day (${all.length.toLocaleString('en-GB')} entries), and scheduled-vs-operated <b>mileage per TfL reporting period</b>. Filter, and export either.</div>
-      <div style="color:var(--mu);font-size:12px;margin-top:6px">History accumulated from TfL status snapshots since ${esc(ddMMM(hist.firstObservedAt))} ${esc(String(new Date(hist.firstObservedAt ?? 0).getFullYear() || ''))} (~5-8 snapshots/day). TfL publishes no historical diversion feed.</div></div>
-    <div style="display:flex;gap:6px;margin-top:14px" role="tablist" aria-label="Diversion tables">
-      <button class="livebtn tabpill" id="dTabH" role="tab" aria-selected="true">Diversion history · ${all.length.toLocaleString('en-GB')}</button>
-      <button class="livebtn tabpill" id="dTabM" role="tab" aria-selected="false">Mileage by period</button>
-    </div>
-    <div id="tabHist">
+    <div id="dhead"><h1 style="margin:2px 0 4px">Diversions</h1>
+      <div style="color:var(--tx2);font-size:13.5px">The full <b>diversion history</b> day by day (${all.length.toLocaleString('en-GB')} entries). Filter, and export as CSV.</div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">History accumulated from TfL status snapshots since ${esc(ddMMM(hist.firstObservedAt))} ${esc(String(new Date(hist.firstObservedAt ?? 0).getFullYear() || ''))} (~5-8 snapshots/day). TfL publishes no historical diversion feed. <a href="#/mileage" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">Mileage by period →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="dq" type="search" aria-label="Search diversions by route" placeholder="Search route (e.g. 24)" style="flex:1;min-width:140px;max-width:240px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="dty" aria-label="Filter by diversion type" style="${inputCss}">
@@ -2993,30 +3012,7 @@ async function renderDiversions(tab){
       </div>
       <div class="legendrow" style="margin-top:8px"><span>Source: TfL Unified API line-status disruptions, accumulated per status refresh (${(hist.snapshotCount ?? 0).toLocaleString('en-GB')} snapshots so far). Stated window = the dates TfL's notice gives; first/last seen = when this site's snapshots actually observed it; days observed = distinct days it appeared (hover for the list). Pick a date to see everything observed that day.</span></div>
     </div>
-    </div>
-    <div id="tabMiles" hidden>
-    <div class="section" style="margin-top:14px"><div class="section-h" style="display:flex;align-items:center;gap:10px">Scheduled vs operated mileage<span id="mCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
-      <button class="livebtn" id="mExport" style="margin-left:auto" title="Downloads every row matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
-      <div id="mWrap"><div class="skel" style="height:46px;width:60%"></div></div>
-    </div>
-    </div>
   </div>`;
-
-  /* Tabs — history | mileage. #/diversions/mileage deep-links the second tab;
-     switching rewrites the hash without re-rendering (same pattern as Tender). */
-  const setTab = which => {
-    const h = which !== 'mileage';
-    document.getElementById('tabHist').hidden = !h;
-    document.getElementById('tabMiles').hidden = h;
-    document.getElementById('dTabH').classList.toggle('on', h);
-    document.getElementById('dTabM').classList.toggle('on', !h);
-    document.getElementById('dTabH').setAttribute('aria-selected', String(h));
-    document.getElementById('dTabM').setAttribute('aria-selected', String(!h));
-    history.replaceState(null, '', h ? '#/diversions' : '#/diversions/mileage');
-  };
-  setTab(tab === 'mileage' ? 'mileage' : 'history');
-  document.getElementById('dTabH').addEventListener('click', () => setTab('history'));
-  document.getElementById('dTabM').addEventListener('click', () => setTab('mileage'));
 
   /* ── History table ── */
   const st = { q:'', ty:'', act:false, day:'', page:0 };
@@ -3066,12 +3062,29 @@ async function renderDiversions(tab){
     ]);
   });
 
-  /* ── Mileage by period — joins TfL QSI/mileage per-period figures with
-     timetable-derived scheduled km. Either file may not exist yet while its
-     crawler finishes its first run — the tab degrades to a note, never an
-     error. ── */
-  const [perf, sched] = await Promise.all([D.routePerf(), D.schedMiles()]);
+}
+
+/* ════════════════════ MILEAGE ════════════════════ */
+async function renderMileage(){
+  const tok = navToken;
+  main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
+  const PAGE = DIVN_PAGE, routeChip = divnRouteChip, inputCss = divnInputCss;
+  /* Joins TfL QSI/mileage per-period figures with timetable-derived
+     scheduled km, plus this site's own diversion history for the newest
+     period's diversion counts. Either mileage file may not exist yet while
+     its crawler finishes its first run — the page degrades to a note, never
+     an error. */
+  const [perf, sched, hist] = await Promise.all([D.routePerf(), D.schedMiles(), D.divHistory()]);
   if(gone(tok)) return;
+  const all = hist?.entries?.length ? divnSorted(hist) : [];
+  main.innerHTML = `<div class="wrap">
+    <div id="dhead"><h1 style="margin:2px 0 4px">Mileage</h1>
+      <div style="color:var(--tx2);font-size:13.5px">Explain a route's lost mileage: scheduled-vs-operated <b>mileage per TfL reporting period</b>, joined with the <a href="#/diversions" style="color:var(--acc);font-weight:500">diversion history</a>. Filter, and export as CSV.</div></div>
+    <div class="section" style="margin-top:14px"><div class="section-h" style="display:flex;align-items:center;gap:10px">Scheduled vs operated mileage<span id="mCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
+      <button class="livebtn" id="mExport" style="margin-left:auto" title="Downloads every row matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
+      <div id="mWrap"><div class="skel" style="height:46px;width:60%"></div></div>
+    </div>
+  </div>`;
   const mWrap = document.getElementById('mWrap');
   if(!perf?.periods?.length || !perf?.routes){
     mWrap.innerHTML = `<div class="empty" style="padding:28px 0">The per-period performance dataset is still building — its crawler hasn't published <span style="font-family:var(--mono)">route-performance.json</span> yet. Check back soon.</div>`;
@@ -3118,7 +3131,7 @@ async function renderDiversions(tab){
         <th class="num" title="Route reliability for the period, in the route's own metric">Reliability</th>
         <th class="num" title="Estimate: dailyKm × (20 weekday + 4 Saturday + 4 Sunday) per 28-day period, from the current timetable${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. scheduled km</th>
         <th class="num" title="Est. scheduled km × (100 − operated %) ÷ 100${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. lost km</th>
-        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — TfL doesn't publish period calendar dates">Diversions</th>
+        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — TfL doesn't publish period calendar dates"><a href="#/diversions" style="color:inherit;text-decoration:underline dotted" title="Open the full diversion history">Diversions</a></th>
       </tr></thead>
       <tbody id="mBody"></tbody>
     </table></div>
@@ -3127,7 +3140,7 @@ async function renderDiversions(tab){
       <span id="mPage" style="font-size:12.5px;color:var(--tx2)"></span>
       <button class="livebtn" id="mNext">Next ›</button>
     </div>
-    <div class="legendrow" style="margin-top:8px"><span>Sources: ${esc(perf.source ?? 'TfL QSI & mileage per-route reports')}${schedRoutes ? ', joined with timetable-derived scheduled km (est. — 20 weekdays + 4 Saturdays + 4 Sundays per 28-day period)' : ''}. Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use this page's own snapshot history and are only computable for the newest period (last 28 days) — TfL publishes no period calendar.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
+    <div class="legendrow" style="margin-top:8px"><span>Sources: ${esc(perf.source ?? 'TfL QSI & mileage per-route reports')}${schedRoutes ? ', joined with timetable-derived scheduled km (est. — 20 weekdays + 4 Saturdays + 4 Sundays per 28-day period)' : ''}. Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days) — TfL publishes no period calendar.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
   const mst = { q:'', per:newest, below:false, page:0 };
   const rowFor = (id, per) => {
     const p = perfRoutes[id] ?? {};
@@ -3166,7 +3179,7 @@ async function renderDiversions(tab){
       <td class="num" style="white-space:nowrap">${r.rel != null ? esc(String(r.rel)) + ' <span style="color:var(--mu);font-size:11px">' + esc(r.metric) + '</span>' : '—'}</td>
       <td class="num" title="Estimated from the current timetable — 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>
       <td class="num">${r.lost != null ? r.lost.toLocaleString('en-GB') : '—'}</td>
-      <td class="num">${r.div != null ? r.div : '<span title="period dates not published in source" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
+      <td class="num">${r.div != null ? `<a href="#/diversions" style="color:inherit" title="Open the full diversion history">${r.div}</a>` : '<span title="period dates not published in source" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
       : `<tr><td colspan="8" style="color:var(--mu);padding:18px 14px">No rows match — route search is exact (e.g. 24), and only routes in TfL's per-route reports appear.</td></tr>`;
     document.getElementById('mCount').textContent = ` · ${list.length.toLocaleString('en-GB')} row${list.length === 1 ? '' : 's'}${mst.q.trim() ? '' : ` · ${mst.per}`}`;
     document.getElementById('mPage').textContent = `Page ${mst.page + 1} of ${pages}`;
