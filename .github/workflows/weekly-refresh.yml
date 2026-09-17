@@ -73,6 +73,9 @@ jobs:
         env:
           BUS_API_KEY:               ${{ secrets.BUS_API_KEY }}
           DVLA_API_KEY:              ${{ secrets.DVLA_API_KEY }}
+          CF_ACCOUNT_ID:             ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN:              ${{ secrets.CF_API_TOKEN }}
+          STREETWORKS_D1_ID:         ${{ secrets.STREETWORKS_D1_ID }}
         run: npm run refresh
 
       # Read the new geometry ZIP date
@@ -127,6 +130,7 @@ jobs:
           git add -f data/source/fandom-tenders.json        || true
           git add -f data/source/diversion-history.json    || true
           git add -f data/source/roadworks-history.json    || true
+          git add -f data/source/streetworks-history.json  || true
           git add -f data/source/route-performance.json     || true
 
           # Persist the upcoming-tender programme parse. Small (~100 KB); TfL

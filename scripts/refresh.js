@@ -71,6 +71,7 @@ const SOFT_FAIL = new Set([
   'fetch-line-status.js',
   'build-diversion-history.js',
   'fetch-roadworks.js',
+  'drain-streetworks.js',
   'fetch-scheduled-mileage.js',
   'fetch-route-performance.js',
   'fetch-cpi.js',
