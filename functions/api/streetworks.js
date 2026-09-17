@@ -304,7 +304,20 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'unexpected topic' }, 403);
     }
     const ha = highwayAuthorityOf(msg);
-    if (!ha || !LONDON_HA.test(ha)) return json({ skipped: 'outside London', ha });
+    if (!ha || !LONDON_HA.test(ha)) {
+      // One breadcrumb per isolate per case, so a systematic mis-read of
+      // the highway-authority attribute (docs vs production naming) can't
+      // silently skip every event as "outside London" — without spamming
+      // a commit per skipped England-wide event.
+      if (!ha && !globalThis.__swLoggedNullHa) {
+        globalThis.__swLoggedNullHa = true;
+        await breadcrumb(env, `notification sample: NO ha attribute found; MessageAttributes keys=[${Object.keys(msg.MessageAttributes ?? {}).join(',')}]`, msg);
+      } else if (ha && !globalThis.__swLoggedSkip) {
+        globalThis.__swLoggedSkip = true;
+        await breadcrumb(env, `notification sample: skipped non-London ha="${ha}" (pipeline healthy)`, msg);
+      }
+      return json({ skipped: 'outside London', ha });
+    }
     if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 503);
     const stored = await storeEvent(env, msg, ha);
     // Non-2xx makes SNS redeliver (its retry policy is the queue's
