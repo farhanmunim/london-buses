@@ -13,22 +13,34 @@
  *      SHA-256, cert fetched from sns.eu-west-2.amazonaws.com only, ±15 min
  *      timestamp window), drops everything outside the 33 London boroughs
  *      + TfL (the feed is England-wide; the `ha_org` message attribute
- *      carries the highway authority), and inserts the survivors into D1.
- *   3. The repo's status workflow drains D1 into the committed archive via
- *      scripts/drain-streetworks.js (Cloudflare REST API) — the same
- *      git-as-database pattern as every other dataset here.
+ *      carries the highway authority), and commits the survivors to THIS
+ *      GitHub repo — one file per event on the dedicated
+ *      `streetworks-inbox` branch (inbox/<MessageId>.json via the GitHub
+ *      contents API). No other storage: git IS the queue, matching the
+ *      rest of the platform.
+ *   3. The repo's status workflow folds the inbox into the committed
+ *      archive with plain git (scripts/drain-streetworks.js) and deletes
+ *      the processed files.
  *
- * Volume: England-wide is far beyond Workers KV's free write quota, which
- * is why storage is D1 (100k row writes/day free) and why the London
- * filter runs HERE, not at drain time. London-filtered volume is a few
- * thousand events/day.
+ * Why a dedicated branch + one file per event:
+ *   - Commits to `streetworks-inbox` never touch main, so they trigger no
+ *     Cloudflare Pages production builds. (Dashboard note: exclude this
+ *     branch from PREVIEW builds too — Settings → Builds → preview branch
+ *     control.)
+ *   - Unique filenames mean concurrent events never edit the same file;
+ *     two simultaneous commits can still race on the branch head, in which
+ *     case GitHub returns 409, this function returns non-2xx, and AWS SNS
+ *     retries the delivery — the standard SNS retry contract does the
+ *     queueing for us.
  *
- * Setup (one-time, Cloudflare dashboard):
- *   - Create a D1 database (suggested name: streetworks)
- *   - Bind it to this Pages project as STREETWORKS_DB
- *   - GET this endpoint to confirm it reports ready:true, THEN register.
+ * Setup (one-time):
+ *   - Fine-grained GitHub PAT, THIS repo only, permission Contents:
+ *     Read & write → Pages project env var GITHUB_TOKEN (encrypted).
+ *   - Optional GITHUB_REPO env var (owner/repo), defaults to
+ *     farhanmunim/london-buses.
+ *   - GET this endpoint until it reports ready:true, THEN register.
  *
- * GET  → health JSON (binding present? how many rows queued?)
+ * GET  → health JSON (token ok? inbox branch? queued file count?)
  * POST → SNS envelope handling as above.
  */
 
@@ -39,6 +51,10 @@ const CERT_HOST = /^https:\/\/sns\.eu-west-2\.amazonaws\.com\/[^\s]+\.pem$/;
 // authorities whose names don't carry it. "KINGSTON UPON THAMES" is
 // deliberately full-phrase so Kingston-upon-Hull never matches.
 const LONDON_HA = /LONDON|WESTMINSTER|KENSINGTON AND CHELSEA|ROYAL BOROUGH OF GREENWICH|KINGSTON UPON THAMES/;
+
+const DEFAULT_REPO = 'farhanmunim/london-buses';
+const INBOX_BRANCH = 'streetworks-inbox';
+const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';   // git's well-known empty tree
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json' } });
@@ -131,38 +147,92 @@ function highwayAuthorityOf(msg) {
   return null;
 }
 
-/* ── D1 ─────────────────────────────────────────────────────────────────── */
-let tableReady = false;
-async function ensureTable(db) {
-  if (tableReady) return;
-  await db.exec(`CREATE TABLE IF NOT EXISTS events (
-    id TEXT PRIMARY KEY,
-    received_at TEXT NOT NULL,
-    topic TEXT,
-    ha TEXT,
-    message TEXT NOT NULL
-  )`.replace(/\n\s*/g, ' '));
-  tableReady = true;
+/* ── GitHub inbox ───────────────────────────────────────────────────────── */
+function gh(env) {
+  const repo = env.GITHUB_REPO ?? DEFAULT_REPO;
+  const headers = {
+    'authorization': `Bearer ${env.GITHUB_TOKEN}`,
+    'accept': 'application/vnd.github+json',
+    'user-agent': 'london-buses-streetworks-fn',
+    'x-github-api-version': '2022-11-28',
+  };
+  return { repo, headers, api: (p) => `https://api.github.com/repos/${repo}${p}` };
+}
+
+// Create the inbox branch from a parentless empty commit (first event only).
+async function bootstrapBranch({ api, headers }) {
+  const commit = await fetch(api('/git/commits'), {
+    method: 'POST', headers,
+    body: JSON.stringify({ message: 'streetworks inbox root (empty)', tree: EMPTY_TREE, parents: [] }),
+  });
+  if (!commit.ok) return false;
+  const { sha } = await commit.json();
+  const ref = await fetch(api('/git/refs'), {
+    method: 'POST', headers,
+    body: JSON.stringify({ ref: `refs/heads/${INBOX_BRANCH}`, sha }),
+  });
+  return ref.ok || ref.status === 422;   // 422 = created concurrently — fine
+}
+
+async function storeEvent(env, msg, ha) {
+  const g = gh(env);
+  const path = `inbox/${msg.MessageId}.json`;
+  const payload = JSON.stringify({
+    message: `streetworks event ${msg.MessageId}`,
+    branch: INBOX_BRANCH,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify({
+      receivedAt: new Date().toISOString(),
+      topic: msg.TopicArn,
+      ha,
+      messageId: msg.MessageId,
+      message: msg.Message,
+    })))),
+  });
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
+    if (res.ok) return { ok: true };
+    if (res.status === 422) {
+      // Either the file already exists (SNS redelivery — success) or the
+      // branch doesn't exist yet (first ever event — bootstrap and retry).
+      const detail = await res.text();
+      if (/sha/i.test(detail)) return { ok: true, duplicate: true };
+      if (attempt === 1 && await bootstrapBranch(g)) continue;
+      return { ok: false, status: 422, detail: detail.slice(0, 160) };
+    }
+    if (res.status === 409 && attempt === 1) continue;   // head moved under us — one in-function retry
+    return { ok: false, status: res.status };
+  }
+  return { ok: false, status: 409 };                     // SNS will redeliver
 }
 
 /* ── Handlers ───────────────────────────────────────────────────────────── */
 export async function onRequestGet({ env }) {
-  const ready = !!env.STREETWORKS_DB;
-  let queued = null;
-  if (ready) {
-    try {
-      await ensureTable(env.STREETWORKS_DB);
-      queued = (await env.STREETWORKS_DB.prepare('SELECT COUNT(*) AS n FROM events').first())?.n ?? 0;
-    } catch (e) { return json({ ready: false, error: 'D1 error: ' + e.message }, 503); }
+  if (!env.GITHUB_TOKEN) {
+    return json({ service: 'street-manager open-data receiver', ready: false,
+                  hint: 'Set the GITHUB_TOKEN env var (fine-grained PAT, this repo, Contents read/write) on the Pages project.' }, 503);
+  }
+  const g = gh(env);
+  const repoRes = await fetch(g.api(''), { headers: g.headers });
+  if (!repoRes.ok) {
+    return json({ service: 'street-manager open-data receiver', ready: false,
+                  hint: `GitHub token cannot reach ${g.repo} (HTTP ${repoRes.status}).` }, 503);
+  }
+  let queued = 0, branch = false;
+  const dir = await fetch(g.api(`/contents/inbox?ref=${INBOX_BRANCH}`), { headers: g.headers });
+  if (dir.ok) { branch = true; const list = await dir.json(); queued = Array.isArray(list) ? list.length : 0; }
+  else if (dir.status === 404) {
+    // Branch or dir absent — absent until the first event; still ready.
+    const refRes = await fetch(g.api(`/git/ref/heads/${INBOX_BRANCH}`), { headers: g.headers });
+    branch = refRes.ok;
   }
   return json({
     service: 'street-manager open-data receiver',
-    ready,
-    queuedEvents: queued,
-    hint: ready
-      ? 'Endpoint is ready — you can register this URL for Street Manager open data.'
-      : 'Bind a D1 database to this Pages project as STREETWORKS_DB, then re-check.',
-  }, ready ? 200 : 503);
+    ready: true,
+    storage: `github:${g.repo}#${INBOX_BRANCH}`,
+    inboxBranchExists: branch,
+    queuedEvents: queued >= 1000 ? '1000+' : queued,
+    hint: 'Endpoint is ready — you can register this URL for Street Manager open data.',
+  });
 }
 
 export async function onRequestPost({ request, env }) {
@@ -189,13 +259,12 @@ export async function onRequestPost({ request, env }) {
   if (type === 'Notification') {
     const ha = highwayAuthorityOf(msg);
     if (!ha || !LONDON_HA.test(ha)) return json({ skipped: 'outside London', ha });
-    if (!env.STREETWORKS_DB) return json({ error: 'STREETWORKS_DB not bound' }, 503);
-    await ensureTable(env.STREETWORKS_DB);
-    await env.STREETWORKS_DB
-      .prepare('INSERT OR IGNORE INTO events (id, received_at, topic, ha, message) VALUES (?1, ?2, ?3, ?4, ?5)')
-      .bind(msg.MessageId, new Date().toISOString(), msg.TopicArn, ha, msg.Message)
-      .run();
-    return json({ stored: true });
+    if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 503);
+    const stored = await storeEvent(env, msg, ha);
+    // Non-2xx makes SNS redeliver (its retry policy is the queue's
+    // durability), so only report success when the commit really landed.
+    return stored.ok ? json({ stored: true, duplicate: stored.duplicate ?? false })
+                     : json({ error: 'github store failed', ...stored }, 503);
   }
 
   return json({ error: 'unknown message type' }, 400);

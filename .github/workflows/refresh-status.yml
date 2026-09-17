@@ -57,13 +57,11 @@ jobs:
         # a rolling archive here too.
         run: node scripts/fetch-roadworks.js
 
-      - name: Drain Street Manager events (if configured)
-        # Soft-skips until the D1 database + secrets exist and the user has
-        # registered for Street Manager open data. See data.md.
-        env:
-          CF_ACCOUNT_ID:     ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN:      ${{ secrets.CF_API_TOKEN }}
-          STREETWORKS_D1_ID: ${{ secrets.STREETWORKS_D1_ID }}
+      - name: Drain Street Manager events (if any)
+        # Folds inbox/<id>.json files from the streetworks-inbox branch
+        # (written by the /api/streetworks Pages Function) into the archive
+        # using plain git — no extra secrets. Soft-skips until the branch
+        # exists (i.e. until registration is done). See data.md.
         run: node scripts/drain-streetworks.js
 
       - name: Commit and push
