@@ -70,6 +70,7 @@ const SOFT_FAIL = new Set([
   'fetch-fandom-tenders.js',
   'fetch-line-status.js',
   'build-diversion-history.js',
+  'fetch-roadworks.js',
   'fetch-scheduled-mileage.js',
   'fetch-route-performance.js',
   'fetch-cpi.js',

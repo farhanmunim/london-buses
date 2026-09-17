@@ -31,7 +31,8 @@
     "fetch-cpi": "node scripts/fetch-cpi.js",
     "fetch-fandom-tenders": "node scripts/fetch-fandom-tenders.js",
     "build-diversion-history": "node scripts/build-diversion-history.js",
-    "fetch-scheduled-mileage": "node scripts/fetch-scheduled-mileage.js"
+    "fetch-scheduled-mileage": "node scripts/fetch-scheduled-mileage.js",
+    "fetch-roadworks": "node scripts/fetch-roadworks.js"
   },
   "engines": {
     "node": ">=18"

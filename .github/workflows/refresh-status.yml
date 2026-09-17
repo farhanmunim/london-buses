@@ -51,6 +51,12 @@ jobs:
         # the history (route, planned/unplanned, stated window, reason).
         run: node scripts/build-diversion-history.js
 
+      - name: Snapshot roadworks (TIMS) + accumulate history
+        # TfL's /Road/all/Disruption is live-only like the diversion feed,
+        # so each snapshot is corridor-joined to bus routes and merged into
+        # a rolling archive here too.
+        run: node scripts/fetch-roadworks.js
+
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -58,6 +64,8 @@ jobs:
           git add data/api/line-status.json data/api/route-diversions.json data/api/manifest.json || true
           git add data/api/diversion-history.json || true
           git add -f data/source/diversion-history.json || true
+          git add data/api/roadworks.json data/api/roadworks-history.json || true
+          git add -f data/source/roadworks-history.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

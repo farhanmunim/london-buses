@@ -126,6 +126,7 @@ jobs:
           git add -f data/source/tenders.json               || true
           git add -f data/source/fandom-tenders.json        || true
           git add -f data/source/diversion-history.json    || true
+          git add -f data/source/roadworks-history.json    || true
           git add -f data/source/route-performance.json     || true
 
           # Persist the upcoming-tender programme parse. Small (~100 KB); TfL
