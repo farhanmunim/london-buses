@@ -42,13 +42,24 @@ const r = await page.evaluate(() => ({
   navOn: document.querySelector('[data-nav="cpi"].on') != null,
   legend: [...document.querySelectorAll('#main .legendrow')].map(l => l.textContent).join(' '),
 }));
-F('CPI-CPA page renders (' + r.rows + ' rows)', r.h1 === 'CPI-CPA' && r.rows === data.months.length);
+const fwd = data.confirmedForward ?? [];
+F('CPI-CPA page renders (' + r.rows + ' rows incl ' + fwd.length + ' confirmed-forward)',
+  r.h1 === 'CPI-CPA' && r.rows === data.months.length + fwd.length);
 F('nav highlights CPI-CPA', r.navOn);
 F('KPI tiles show latest CPI ' + latest.cpi, r.facts.some(t => t.includes('CPI index') && t.includes(latest.cpi)));
 const p2pPct = (Number(latest.p2p) * 100).toFixed(2) + '%';
 const raPct  = (Number(latest.ra) * 100).toFixed(2) + '%';
+const fwdRows = await page.evaluate(n => [...document.querySelectorAll('#main .cpi-table tbody tr')].slice(0, n).map(t => t.textContent), fwd.length);
+F('confirmed-forward rows render marked, newest first (' + (fwdRows[0] ?? '').slice(0, 40) + '…)',
+  fwd.length >= 1 && fwdRows.length === fwd.length
+  && fwdRows.every(t => t.includes('CONFIRMED'))
+  && fwdRows[fwdRows.length - 1].includes((parseFloat(fwd[0].ra) * 100).toFixed(2))   // nearest month carries the RA actual
+  && fwdRows[0].includes((parseFloat(fwd[fwd.length - 1].p2p) * 100).toFixed(2)));
+F('confirmed-ahead chip states P2P/RA horizons', await page.evaluate(() =>
+  /Confirmed ahead: P2P to .+· RA to /.test(document.querySelector('#dhead')?.textContent ?? '')));
+const firstActual = await page.evaluate(n => document.querySelectorAll('#main .cpi-table tbody tr')[n]?.textContent ?? '', fwd.length);
 F('first table row is the latest month with P2P ' + p2pPct + ' / RA ' + raPct,
-  r.firstRow.includes(latest.cpi) && r.firstRow.includes(p2pPct) && r.firstRow.includes(raPct));
+  firstActual.includes(latest.cpi) && firstActual.includes(p2pPct) && firstActual.includes(raPct));
 F('formulas + ONS source stated', /0\.85/.test(r.legend) && /ONS/.test(r.legend));
 const nextRel = data.nextRelease ?? '';
 F('next ONS release: chip + source line, no KPI tile (' + JSON.stringify(nextRel) + ')',
@@ -61,7 +72,8 @@ const [dl] = await Promise.all([
 ]);
 const cpiCsv = readFileSync(await dl.path(), 'utf8');
 F('CPI export downloads CSV (' + dl.suggestedFilename() + ', ' + cpiCsv.split('\r\n').length + ' rows)',
-  dl.suggestedFilename() === 'cpi-cpa.csv' && cpiCsv.includes('month') && cpiCsv.includes(latest.cpi) && cpiCsv.split('\r\n').length === data.months.length + 1);
+  dl.suggestedFilename() === 'cpi-cpa.csv' && cpiCsv.includes('month') && cpiCsv.includes('status') && cpiCsv.includes('confirmed_forward')
+  && cpiCsv.includes(latest.cpi) && cpiCsv.split('\r\n').length === data.months.length + fwd.length + 1);
 F('ONS link present', await page.evaluate(() => !!document.querySelector('#main a[href*="ons.gov.uk"]')));
 
 await page.goto('http://127.0.0.1:8906/#/map', { waitUntil:'load' }); await page.waitForTimeout(5000);

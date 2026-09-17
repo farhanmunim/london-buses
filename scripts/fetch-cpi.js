@@ -174,6 +174,35 @@ async function main() {
     });
   }
 
+  // Confirmed-forward rates: both CPA formulas look BACKWARD from their
+  // month — p2p[M] needs yoy[M−4], ra[M] needs yoy up to M−1 — so a fresh
+  // CPI print confirms ACTUAL rates for months whose own CPI is not yet
+  // published: P2P for the next four months, RA for the next one. (With
+  // Aug confirmed: P2P actuals through Dec, RA actual for Sep — matching
+  // how contract escalation teams book them.) Same scale-10 arithmetic as
+  // the main series; no forecasting — only rates fully determined by
+  // published data are emitted.
+  const confirmedForward = [];
+  for (let ahead = 1; ahead <= P2P_LAG; ahead++) {
+    const k = shiftMonths(latest, ahead);
+    const p2pSrc = yoy10.get(shiftMonths(k, -P2P_LAG));
+    const p2p = p2pSrc != null ? roundHalfUp8(scaleByFactor(p2pSrc)) : null;
+    let ra = null;
+    let sum = 0n, complete = true;
+    for (let off = RA_WINDOW; off >= RA_LAG; off--) {
+      const w = yoy10.get(shiftMonths(k, -off));
+      if (w == null) { complete = false; break; }
+      sum += w;
+    }
+    if (complete) ra = roundHalfUp8(scaleByFactor(truncDiv(sum, BigInt(RA_WINDOW))));
+    if (p2p == null && ra == null) break;
+    confirmedForward.push({
+      month: k,
+      p2p: p2p != null ? fmt8(p2p) : null,
+      ra: ra != null ? fmt8(ra) : null,
+    });
+  }
+
   // Tamper guard: CPI is not normally revised (ONS policy — corrections are
   // rare, announced events). A historical value that differs from what we
   // have committed is therefore treated as upstream corruption: the run
@@ -205,6 +234,10 @@ async function main() {
     factor: '0.85',
     count: months.length,
     months,
+    // Actual rates already fixed for months beyond the latest CPI print
+    // (see derivation note above): p2p for latest+1..latest+4, ra for
+    // latest+1. These are CONFIRMED values, not forecasts.
+    confirmedForward,
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(out) + '\n', 'utf8');
