@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-16T08:51:39Z",
-  "route_count": 675,
+  "generated_at_utc": "2026-09-17T08:58:36Z",
+  "route_count": 674,
   "routes": {
     "1": [
       {
@@ -76698,323 +76698,6 @@
         "id": "490016608W"
       }
     ],
-    "230": [
-      {
-        "id": "490004046W",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490001343A",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490005145S",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490014897S",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490002116W",
-        "towards": "Leyton Bakers Arms"
-      },
-      {
-        "id": "490013295W",
-        "towards": "Clapton Or Walthamstow Central"
-      },
-      {
-        "id": "490006644W",
-        "towards": "Clapton Or Walthamstow Central"
-      },
-      {
-        "id": "490009135WK",
-        "towards": "Walthamstow Central"
-      },
-      {
-        "id": "490015100H",
-        "towards": "Walthamstow Central"
-      },
-      {
-        "id": "490015099B",
-        "towards": "Crooked Billet Or Blackhorse Road"
-      },
-      {
-        "id": "490007576N",
-        "towards": "Crooked Billet Or Blackhorse Road"
-      },
-      {
-        "id": "490011349N",
-        "towards": "Crooked Billet Or Blackhorse Road"
-      },
-      {
-        "id": "490014164D",
-        "towards": "Crooked Billet Or Highams Park"
-      },
-      {
-        "id": "490014165G",
-        "towards": "Chingford Mount, Highams Park Or Edmonton"
-      },
-      {
-        "id": "490008553N",
-        "towards": "Chingford Mount, Edmonton Or Highams Park"
-      },
-      {
-        "id": "490014163N",
-        "towards": "Chingford Mount, Edmonton Or Highams Park"
-      },
-      {
-        "id": "490014163W2",
-        "towards": "Tottenham Hale"
-      },
-      {
-        "id": "490009233W",
-        "towards": "Tottenham Hale"
-      },
-      {
-        "id": "490014169W",
-        "towards": "Tottenham Hale"
-      },
-      {
-        "id": "490008133W",
-        "towards": "Blackhorse Road"
-      },
-      {
-        "id": "490004944W",
-        "towards": "St James's Street Or Tottenham Hale"
-      },
-      {
-        "id": "490013345W",
-        "towards": "St James's Street Or Tottenham Hale"
-      },
-      {
-        "id": "490000024C",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490006821W",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490006818W",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490004277W",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490008542T",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "49009917SW",
-        "towards": "Turnpike Lane"
-      },
-      {
-        "id": "490013408N",
-        "towards": "South Tottenham Or Turnpike Lane"
-      },
-      {
-        "id": "490013726L",
-        "towards": "Manor House Or Wood Green"
-      },
-      {
-        "id": "490007529W",
-        "towards": "Manor House Or Wood Green"
-      },
-      {
-        "id": "490010090W",
-        "towards": "Manor House Or Wood Green"
-      },
-      {
-        "id": "490012991W",
-        "towards": "Manor House Or Wood Green"
-      },
-      {
-        "id": "490010982W",
-        "towards": "Turnpike Lane"
-      },
-      {
-        "id": "490004053W",
-        "towards": "Turnpike Lane Or Wood Green"
-      },
-      {
-        "id": "490014863W",
-        "towards": "Turnpike Lane Or Wood Green"
-      },
-      {
-        "id": "490012557W",
-        "towards": "Wood Green Or Hornsey"
-      },
-      {
-        "id": "490014713W",
-        "towards": "Wood Green Or Hornsey"
-      },
-      {
-        "id": "490015475U",
-        "towards": "Crouch End and Wood Green"
-      },
-      {
-        "id": "490000241L",
-        "towards": "Edmonton And Bounds Green"
-      },
-      {
-        "id": "490014854HB",
-        "towards": "Edmonton"
-      },
-      {
-        "id": "490015567G2",
-        "towards": "Turnpike Lane"
-      },
-      {
-        "id": "490009461KA",
-        "towards": "Manor House Or Tottenham"
-      },
-      {
-        "id": "490000241MA",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490015475Y",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490014713E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490012557E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490014464E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490010982E",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490012991E1",
-        "towards": "Tottenham Hale Or Northumberland Park"
-      },
-      {
-        "id": "490010090E",
-        "towards": "Tottenham Hale Or Northumberland Park"
-      },
-      {
-        "id": "490007529E",
-        "towards": "Tottenham Hale Or Northumberland Park"
-      },
-      {
-        "id": "490013726K",
-        "towards": "Blackhorse Road Or Northumberland Park"
-      },
-      {
-        "id": "490013732R",
-        "towards": "Blackhorse Road Or Tottenham Hale Station"
-      },
-      {
-        "id": "490013408S",
-        "towards": "Blackhorse Road Or Tottenham Hale Station"
-      },
-      {
-        "id": "490009917B",
-        "towards": "Blackhorse Road Or Ferry Lane Estate"
-      },
-      {
-        "id": "490009915E",
-        "towards": "Blackhorse Road Stn Or Ferry Lane Estate"
-      },
-      {
-        "id": "490006818E",
-        "towards": "Gants Hill Or Walthamstow Central"
-      },
-      {
-        "id": "490000024D",
-        "towards": "Gants Hill"
-      },
-      {
-        "id": "490008740E",
-        "towards": "Crooked Billet Or Gants Hill"
-      },
-      {
-        "id": "490008133E",
-        "towards": "Crooked Billet Or Gants Hill"
-      },
-      {
-        "id": "490014169E",
-        "towards": "Gants Hill"
-      },
-      {
-        "id": "490009233E",
-        "towards": "Gants Hill"
-      },
-      {
-        "id": "490014163E",
-        "towards": "Gants Hill"
-      },
-      {
-        "id": "490004518S",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490014165J",
-        "towards": "Bakers Arms"
-      },
-      {
-        "id": "490000249B",
-        "towards": "Whipps Cross"
-      },
-      {
-        "id": "490007547S",
-        "towards": "Clapton, Leyton Or Whipps Cross"
-      },
-      {
-        "id": "490007576S",
-        "towards": "Clapton, Leyton Or Whipps Cross"
-      },
-      {
-        "id": "490015099A",
-        "towards": "Clapton, Leyton Or Whipps Cross"
-      },
-      {
-        "id": "490015102C",
-        "towards": "Whipps Cross Or Wood Street"
-      },
-      {
-        "id": "490009135EJ",
-        "towards": "Highams Park, Leytonstone Or Woodford Green"
-      },
-      {
-        "id": "490012080E",
-        "towards": "Highams Park, Leytonstone Or Woodford Green"
-      },
-      {
-        "id": "490006342E",
-        "towards": "Highams Park, Leytonstone Or Woodford Green"
-      },
-      {
-        "id": "490014569A",
-        "towards": "Leytonstone Or Woodford Green"
-      },
-      {
-        "id": "490014897N",
-        "towards": "Bisterne Avenue"
-      },
-      {
-        "id": "490005145N",
-        "towards": "Bisterne Avenue"
-      },
-      {
-        "id": "490001343B",
-        "towards": "Bisterne Avenue"
-      },
-      {
-        "id": "490002333ZH"
-      }
-    ],
     "231": [
       {
         "id": "490001099CC",
@@ -88887,12 +88570,16 @@
         "towards": "Swiss Cottage"
       },
       {
-        "id": "490011760D",
-        "towards": "Camden Town Or Swiss Cottage"
+        "id": "490000098S",
+        "towards": "Swiss Cottage"
       },
       {
-        "id": "490011714E",
-        "towards": "Chalk Farm Or Swiss Cottage"
+        "id": "490000098A",
+        "towards": "Belsize Park Or Kentish Town"
+      },
+      {
+        "id": "490011000S",
+        "towards": "Belsize Park Or Kentish Town"
       },
       {
         "id": "490015255F",
@@ -88986,8 +88673,16 @@
         "towards": "Hampstead High Street Or Gospel Oak"
       },
       {
-        "id": "490011760C",
-        "towards": "Archway Or Kentish Town"
+        "id": "490011000N",
+        "towards": "Golders Green Or Swiss Cottage"
+      },
+      {
+        "id": "490000098B",
+        "towards": "Golders Green Or Swiss Cottage"
+      },
+      {
+        "id": "490008531N1",
+        "towards": "Golders Green"
       },
       {
         "id": "490008490N",
@@ -218889,16 +218584,28 @@
         "towards": "Finsbury Park"
       },
       {
-        "id": "490004903S",
-        "towards": "Archway"
+        "id": "490006435CF",
+        "towards": "Archway Or Holloway"
       },
       {
-        "id": "490006076CJ",
-        "towards": "Archway"
+        "id": "490008360S",
+        "towards": "Archway Or Holloway"
       },
       {
-        "id": "490008307CL",
-        "towards": "Archway"
+        "id": "490008365S",
+        "towards": "Archway, Finsbury Park Or Kings Cross"
+      },
+      {
+        "id": "490007751S",
+        "towards": "Finsbury Park Or Kings Cross"
+      },
+      {
+        "id": "490003261E",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490012591CO",
+        "towards": "Finsbury Park"
       },
       {
         "id": "490003160CT",
@@ -218923,20 +218630,32 @@
         "towards": "Archway, Crouch End Or Wood Green"
       },
       {
-        "id": "490007752CN",
+        "id": "490012591CP",
+        "towards": "Archway"
+      },
+      {
+        "id": "490003261W",
+        "towards": "Archway"
+      },
+      {
+        "id": "490008366W",
+        "towards": "Archway"
+      },
+      {
+        "id": "490006698N",
+        "towards": "Archway Or Crouch End"
+      },
+      {
+        "id": "490008365N",
         "towards": "Crouch End"
       },
       {
-        "id": "490008307CM",
-        "towards": "Crouch End"
+        "id": "490008360N",
+        "towards": "Turnpike Lane"
       },
       {
-        "id": "490008031CK",
-        "towards": "Crouch End"
-      },
-      {
-        "id": "490006076CH",
-        "towards": "Alexandra Park"
+        "id": "490006435CE",
+        "towards": "Turnpike Lane"
       },
       {
         "id": "490005826CD",

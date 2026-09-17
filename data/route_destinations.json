@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-16T08:43:24Z",
-  "route_count": 672,
+  "generated_at_utc": "2026-09-17T08:48:22Z",
+  "route_count": 674,
   "routes": {
     "1": {
       "service_types": [
@@ -1004,16 +1004,18 @@
       }
     },
     "70": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "South Kensington",
-        "qualifier": "",
-        "full": "South Kensington"
+        "qualifier": "Queensberry Place",
+        "full": "South Kensington, Queensberry Place"
       },
       "inbound": {
-        "destination": "Chiswick Business Park",
+        "destination": "Chiswick, Business Park",
         "qualifier": "",
-        "full": "Chiswick Business Park"
+        "full": "Chiswick, Business Park"
       }
     },
     "71": {
@@ -3031,14 +3033,14 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "Barnes Pond",
+        "destination": "Hammersmith",
         "qualifier": "Hammersmith Bus Station",
-        "full": "Barnes Pond, Hammersmith Bus Station"
+        "full": "Hammersmith"
       },
       "inbound": {
-        "destination": "Hammersmith",
-        "qualifier": "Barnes Pond",
-        "full": "Hammersmith, Barnes Pond"
+        "destination": "Barnes Pond",
+        "qualifier": "",
+        "full": "Barnes Pond"
       }
     },
     "210": {
@@ -3102,31 +3104,26 @@
       }
     },
     "214": {
+      "service_types": [],
+      "outbound": {
+        "destination": "Liverpool Street Station",
+        "qualifier": "",
+        "full": "Liverpool Street Station"
+      },
+      "inbound": {
+        "destination": "Highgate",
+        "qualifier": "",
+        "full": "Highgate"
+      }
+    },
+    "215": {
       "service_types": [
         "Regular"
       ],
       "outbound": {
-        "destination": "Moorgate, Finsbury Square",
-        "qualifier": "Finsbury Square",
-        "full": "Moorgate, Finsbury Square"
-      },
-      "inbound": {
-        "destination": "Highgate Village",
-        "qualifier": "Highgate School",
-        "full": "Highgate Village, Highgate School"
-      }
-    },
-    "215": {
-      "service_types": [],
-      "outbound": {
-        "destination": "Walthamstow",
-        "qualifier": "",
-        "full": "Walthamstow"
-      },
-      "inbound": {
-        "destination": "Lee Valley Campsite",
-        "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "destination": "Walthamstow Central",
+        "qualifier": "Walthamstow Bus Station",
+        "full": "Walthamstow Central, Walthamstow Bus Station"
       }
     },
     "216": {
@@ -3311,19 +3308,6 @@
         "full": "Thamesmead Town Centre"
       }
     },
-    "230": {
-      "service_types": [],
-      "outbound": {
-        "destination": "Wood Green Station",
-        "qualifier": "",
-        "full": "Wood Green Station"
-      },
-      "inbound": {
-        "destination": "Upper Walthamstow",
-        "qualifier": "",
-        "full": "Upper Walthamstow"
-      }
-    },
     "231": {
       "service_types": [],
       "outbound": {
@@ -3338,18 +3322,16 @@
       }
     },
     "232": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Wood Green, Haringey Heartlands",
-        "qualifier": "Coburg Road",
-        "full": "Wood Green, Haringey Heartlands, Coburg Road"
+        "destination": "Wood Green Coburg Road",
+        "qualifier": "",
+        "full": "Wood Green Coburg Road"
       },
       "inbound": {
-        "destination": "St Raphael's",
-        "qualifier": "Mitchell Way",
-        "full": "St Raphael's, Mitchell Way"
+        "destination": "St Raphael's Estate",
+        "qualifier": "",
+        "full": "St Raphael's Estate"
       }
     },
     "233": {
@@ -4553,13 +4535,11 @@
       }
     },
     "318": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Stamford Hill",
-        "qualifier": "Rookwood Road",
-        "full": "Stamford Hill, Rookwood Road"
+        "qualifier": "",
+        "full": "Stamford Hill"
       },
       "inbound": {
         "destination": "North Middlesex Hospital",
@@ -5288,18 +5268,16 @@
       }
     },
     "379": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Yardley Lane",
-        "qualifier": "Yardley Lane Estate",
-        "full": "Yardley Lane"
+        "destination": "Chingford",
+        "qualifier": "",
+        "full": "Chingford"
       },
       "inbound": {
-        "destination": "Chingford Station",
+        "destination": "Yardley Lane Estate",
         "qualifier": "",
-        "full": "Chingford Station"
+        "full": "Yardley Lane Estate"
       }
     },
     "380": {
@@ -6902,6 +6880,21 @@
         "full": "Romford, Parkside Avenue, Cedar Road"
       }
     },
+    "650": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Emerson Park School",
+        "qualifier": "Emerson Park Academy",
+        "full": "Emerson Park School, Emerson Park Academy"
+      },
+      "inbound": {
+        "destination": "Romford, Parkside Avenue",
+        "qualifier": "Cedar Road",
+        "full": "Romford, Parkside Avenue, Cedar Road"
+      }
+    },
     "651": {
       "service_types": [
         "Regular"
@@ -6915,6 +6908,36 @@
         "destination": "Romford Station",
         "qualifier": "",
         "full": "Romford Station"
+      }
+    },
+    "652": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Upminster",
+        "qualifier": "Upminster Station",
+        "full": "Upminster"
+      },
+      "inbound": {
+        "destination": "Rainham, Abbey Wood Lane",
+        "qualifier": "Abbey Wood Lane",
+        "full": "Rainham, Abbey Wood Lane"
+      }
+    },
+    "653": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Kingsbury, The Mall",
+        "qualifier": "Jewish Free School",
+        "full": "Kingsbury, The Mall, Jewish Free School"
+      },
+      "inbound": {
+        "destination": "Muswell Hill",
+        "qualifier": "",
+        "full": "Muswell Hill"
       }
     },
     "655": {
@@ -9958,17 +9981,15 @@
       }
     },
     "W7": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Finsbury Park Station",
+        "destination": "Finsbury Park",
         "qualifier": "",
-        "full": "Finsbury Park Station"
+        "full": "Finsbury Park"
       },
       "inbound": {
         "destination": "Muswell Hill",
-        "qualifier": "Muswell Hill Broadway",
+        "qualifier": "",
         "full": "Muswell Hill"
       }
     },
