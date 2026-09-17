@@ -44,7 +44,12 @@
  * POST → SNS envelope handling as above.
  */
 
-const EXPECTED_TOPICS = /^arn:aws:sns:eu-west-2:287813576808:prod-(permit|activity|section-58)-topic$/;
+// Topic gate: pinned to eu-west-2 + DfT's topic NAMES. The ACCOUNT id in
+// their docs (287813576808) may not match production, and a mismatch here
+// silently 403'd deliveries — so the account is not pinned; the signature
+// check plus the name pin carry the trust, and every decision is now
+// breadcrumbed to the inbox branch so a rejection is observable.
+const EXPECTED_TOPICS = /^arn:aws:sns:eu-west-2:\d+:(prod|sm)?[-_]?(permit|activity|section[-_]?58)[a-z-]*$/i;
 const CERT_HOST = /^https:\/\/sns\.eu-west-2\.amazonaws\.com\/[^\s]+\.pem$/;
 // The 33 London boroughs + TfL as Street Manager names them. Everything
 // with LONDON in the name (the LB* boroughs, City of London, TfL) plus the
@@ -118,7 +123,6 @@ async function signingKey(certUrl, hash) {
 
 async function verifySns(msg) {
   if (!CERT_HOST.test(msg.SigningCertURL ?? '')) return 'bad cert URL';
-  if (!EXPECTED_TOPICS.test(msg.TopicArn ?? '')) return 'unexpected topic';
   const age = Math.abs(Date.now() - Date.parse(msg.Timestamp ?? 0));
   if (!(age < 15 * 60 * 1000)) return 'stale timestamp';
   const hash = msg.SignatureVersion === '2' ? 'SHA-256' : 'SHA-1';
@@ -172,6 +176,33 @@ async function bootstrapBranch({ api, headers }) {
     body: JSON.stringify({ ref: `refs/heads/${INBOX_BRANCH}`, sha }),
   });
   return ref.ok || ref.status === 422;   // 422 = created concurrently — fine
+}
+
+// Tiny observability: every POST decision leaves a breadcrumb file on the
+// inbox branch (log/<ts>-<verdict>.json — type, topic, verdict; never
+// tokens or SubscribeURLs), so a rejected confirmation is visible in git
+// instead of vanishing into a 403. Best-effort: a failed breadcrumb never
+// fails the request.
+async function breadcrumb(env, verdict, msg) {
+  if (!env.GITHUB_TOKEN) return;
+  try {
+    const g = gh(env);
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const path = `log/${ts}-${(msg?.MessageId ?? 'x').slice(0, 8)}.json`;
+    const body = JSON.stringify({
+      at: new Date().toISOString(),
+      verdict,
+      type: msg?.Type ?? null,
+      topicArn: msg?.TopicArn ?? null,
+      messageId: msg?.MessageId ?? null,
+    });
+    const payload = JSON.stringify({ message: `streetworks ${verdict}`, branch: INBOX_BRANCH,
+      content: btoa(unescape(encodeURIComponent(body))) });
+    let res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
+    if (res.status === 422 && await bootstrapBranch(g)) {
+      await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
+    }
+  } catch { /* observability must never break delivery */ }
 }
 
 async function storeEvent(env, msg, ha) {
@@ -242,21 +273,36 @@ export async function onRequestPost({ request, env }) {
 
   const type = request.headers.get('x-amz-sns-message-type') ?? msg.Type;
   const failure = await verifySns(msg);
-  if (failure) return json({ error: failure }, 403);
+  if (failure) {
+    await breadcrumb(env, `rejected: ${failure}`, msg);
+    return json({ error: failure }, 403);
+  }
 
   if (type === 'SubscriptionConfirmation') {
-    // Activate the subscription. SubscribeURL host is pinned to SNS by the
-    // signature check above plus this explicit guard.
+    // Activate the subscription. The signature check above proves the
+    // request is genuine AWS SNS; the SubscribeURL host pin below stops
+    // anything else. Topic-name mismatches are logged, not fatal — a
+    // wrongly-guessed DfT account id must never eat the one-shot
+    // confirmation again.
     if (!/^https:\/\/sns\.eu-west-2\.amazonaws\.com\//.test(msg.SubscribeURL ?? '')) {
+      await breadcrumb(env, 'rejected: bad SubscribeURL', msg);
       return json({ error: 'bad SubscribeURL' }, 403);
     }
     const res = await fetch(msg.SubscribeURL);
+    await breadcrumb(env, res.ok ? 'confirmed subscription' : `confirm fetch HTTP ${res.status}`, msg);
     return json({ confirmed: res.ok, topic: msg.TopicArn }, res.ok ? 200 : 502);
   }
 
-  if (type === 'UnsubscribeConfirmation') return json({ noted: true });
+  if (type === 'UnsubscribeConfirmation') {
+    await breadcrumb(env, 'unsubscribe notice', msg);
+    return json({ noted: true });
+  }
 
   if (type === 'Notification') {
+    if (!EXPECTED_TOPICS.test(msg.TopicArn ?? '')) {
+      await breadcrumb(env, 'rejected: unexpected topic', msg);
+      return json({ error: 'unexpected topic' }, 403);
+    }
     const ha = highwayAuthorityOf(msg);
     if (!ha || !LONDON_HA.test(ha)) return json({ skipped: 'outside London', ha });
     if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 503);

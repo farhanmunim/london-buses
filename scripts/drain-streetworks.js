@@ -118,15 +118,29 @@ function main() {
     const head = git(['rev-parse', `refs/remotes/origin/${BRANCH}`]);
     const files = git(['ls-tree', '-r', '--name-only', head, '--', 'inbox/'])
       .split('\n').filter(f => f.endsWith('.json'));
-    if (!files.length) { console.log('Inbox empty — nothing to drain.'); break; }
+    // Breadcrumb log files (function observability) ride along: print the
+    // recent ones so delivery problems surface in the workflow log, and
+    // delete any older than 48 h with the same commit.
+    const logs = git(['ls-tree', '-r', '--name-only', head, '--', 'log/'])
+      .split('\n').filter(Boolean);
+    const staleLogs = [];
+    for (const f of logs) {
+      try {
+        const j = JSON.parse(git(['show', `${head}:${f}`]));
+        const ageH = (Date.now() - Date.parse(j.at)) / 36e5;
+        if (ageH < 6) console.log(`  [receiver] ${j.at} ${j.verdict} (${j.type ?? '?'} ${j.topicArn ?? ''})`);
+        if (ageH > 48) staleLogs.push(f);
+      } catch { staleLogs.push(f); }
+    }
+    if (!files.length && !staleLogs.length) { console.log('Inbox empty — nothing to drain.'); break; }
 
     for (const f of files) {
       try { fold(entries, JSON.parse(git(['show', `${head}:${f}`]))); }
       catch { console.warn(`  unreadable inbox file skipped: ${f}`); }
     }
-    drainedTotal = files.length;
+    drainedTotal += files.length;
 
-    if (pushDeletions(head, files)) break;
+    if (pushDeletions(head, [...files, ...staleLogs])) break;
     if (attempt === 3) {
       console.log('Inbox deletion push rejected 3× (heavy inflow) — folded anyway; deletions retry next drain.');
       break;
