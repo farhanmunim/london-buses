@@ -167,7 +167,7 @@ function gh(env) {
 async function bootstrapBranch({ api, headers }) {
   const commit = await fetch(api('/git/commits'), {
     method: 'POST', headers,
-    body: JSON.stringify({ message: 'streetworks inbox root (empty)', tree: EMPTY_TREE, parents: [] }),
+    body: JSON.stringify({ message: 'streetworks inbox root (empty) [CI Skip]', tree: EMPTY_TREE, parents: [] }),
   });
   if (!commit.ok) return false;
   const { sha } = await commit.json();
@@ -196,7 +196,7 @@ async function breadcrumb(env, verdict, msg) {
       topicArn: msg?.TopicArn ?? null,
       messageId: msg?.MessageId ?? null,
     });
-    const payload = JSON.stringify({ message: `streetworks ${verdict}`, branch: INBOX_BRANCH,
+    const payload = JSON.stringify({ message: `streetworks ${verdict} [CI Skip]`, branch: INBOX_BRANCH,
       content: btoa(unescape(encodeURIComponent(body))) });
     let res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
     // A pristine repo has no inbox branch yet: the contents API answers 404
@@ -213,7 +213,7 @@ async function storeEvent(env, msg, ha) {
   const g = gh(env);
   const path = `inbox/${msg.MessageId}.json`;
   const payload = JSON.stringify({
-    message: `streetworks event ${msg.MessageId}`,
+    message: `streetworks event ${msg.MessageId} [CI Skip]`,
     branch: INBOX_BRANCH,
     content: btoa(unescape(encodeURIComponent(JSON.stringify({
       receivedAt: new Date().toISOString(),

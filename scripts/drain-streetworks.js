@@ -96,7 +96,7 @@ function pushDeletions(head, paths) {
       git(['update-index', '--force-remove', '--', ...paths.slice(i, i + 500)], { env });
     }
     const tree = git(['write-tree'], { env });
-    const commit = git(['commit-tree', tree, '-p', head, '-m', `drain: fold ${paths.length} streetworks events into archive`], { env });
+    const commit = git(['commit-tree', tree, '-p', head, '-m', `drain: fold ${paths.length} streetworks events into archive [CI Skip]`], { env });
     try {
       git(['push', 'origin', `${commit}:refs/heads/${BRANCH}`]);
       return true;
