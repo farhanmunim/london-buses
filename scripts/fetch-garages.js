@@ -131,8 +131,23 @@ async function main() {
   const res = await fetchWithTimeout(GARAGES_CSV_URL, { headers: userAgentHeaders(SCRIPT) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const csvText = await res.text();
-  const rows = parseCsv(csvText);
-  console.log(`  Parsed ${rows.length} garage rows`);
+  const allRows = parseCsv(csvText);
+  // londonbusroutes.net's CSV is not buses-only: it includes London Trams'
+  // Therapia Lane depot ("Tram Operations Limited", group First) whose
+  // routes column carries the TRAM line numbers 1-4 — which collide with
+  // bus routes 1-4 and, unfiltered, hand bus route 3 the tram operator and
+  // depot. Drop every non-bus company row (tram today; ferry/cable-car
+  // defensively, should LBR ever add them).
+  const NON_BUS_COMPANY = /\btram|\bferr(y|ies)|cable\s*car|river\s*bus/i;
+  const rows = allRows.filter(row => {
+    const company = String(row['Company name'] ?? '');
+    if (NON_BUS_COMPANY.test(company)) {
+      console.log(`  Skipping non-bus depot row: ${company} (${row['Garage name'] ?? '?'})`);
+      return false;
+    }
+    return true;
+  });
+  console.log(`  Parsed ${rows.length} garage rows (${allRows.length - rows.length} non-bus rows dropped)`);
 
   // Route hygiene: copy numeric night routes into main
   for (const row of rows) {

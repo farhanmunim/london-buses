@@ -165,6 +165,13 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   // licence sweep, e.g. CP, NM) survive from the previous build wholesale.
   for (const [code, p] of prev) {
     if (locs[code]) continue;
+    // The carry-forward is for bus garages the licence sweep knows but this
+    // run's scrape missed — never for non-bus depots. Without this guard the
+    // tram depot (Therapia Lane, "Tram Operations Limited") that
+    // fetch-garages now filters out would survive here wholesale forever.
+    // Match on company AND depot name — the carried entry's company can be
+    // null (sticky field), leaving "Therapia Lane" as the only tram marker.
+    if (/\btram|\bferr(y|ies)|cable\s*car|river\s*bus|therapia\s*lane/i.test(`${p.company ?? ''} ${p.name ?? ''}`)) continue;
     garages.push({ ...p, routes: (routesByGarage[code] ?? p.routes ?? []).sort() });
   }
   garages.sort((a, b) => a.code.localeCompare(b.code));

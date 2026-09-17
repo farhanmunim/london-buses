@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-17T09:09:49.034Z",
-  "count": 77,
+  "generatedAt": "2026-09-17T16:03:32.361Z",
+  "count": 76,
   "garages": {
     "A": {
       "code": "A",
@@ -641,16 +641,6 @@
       "lon": -0.114381,
       "pvr": 78,
       "capacity": 120
-    },
-    "TK": {
-      "code": "TK",
-      "name": "Therapia Lane",
-      "operator": "First",
-      "address": "22 Coomber Way, Beddington, Croydon, CR0 4TQ",
-      "lat": 51.386219,
-      "lon": -0.134834,
-      "pvr": 28,
-      "capacity": null
     },
     "TL": {
       "code": "TL",
