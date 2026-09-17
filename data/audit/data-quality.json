@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-17T08:58:43.052Z",
+  "generatedAt": "2026-09-17T09:34:28.902Z",
   "summary": {
     "critical": 0,
     "warn": 103,
@@ -998,7 +998,7 @@
       "id": "data/source/tenders.json",
       "field": "generatedAt",
       "expected": "<=7d old",
-      "actual": "128.7d",
+      "actual": "128.8d",
       "note": ""
     }
   ]
