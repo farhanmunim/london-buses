@@ -29,7 +29,7 @@ const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
 
-const views = ['#/', '#/route/482', '#/route/88', '#/tender', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
+const views = ['#/', '#/route/482', '#/route/88', '#/tender', '#/diversions', '#/diversions/mileage', '#/cpi', '#/map', '#/stops', '#/operators', '#/garages', '#/operator/Metroline', '#/garage/Q', '#/about'];
 for (const v of views){
   await page.goto('http://127.0.0.1:8911/' + v, { waitUntil:'load' });
   await page.waitForTimeout(v.includes('map') || v.includes('route/') ? 4000 : 2000);
@@ -63,7 +63,7 @@ const after = await page.evaluate(() => ({
   moreOn: document.getElementById('moreTab').classList.contains('on'),
 }));
 F(`More sheet holds ${more.links.join('/')} and navigates (→ ${after.hash})`,
-  more.open && more.onscreen && more.links.join() === 'Tender,CPI-CPA,About'
+  more.open && more.onscreen && more.links.join() === 'Tender,Diversions,CPI-CPA,About'
   && after.hash === '#/tender' && after.closed && after.moreOn);
 const kpiClip = await page.evaluate(async () => {
   location.hash = '#/tender'; await new Promise(r => setTimeout(r, 1500));
