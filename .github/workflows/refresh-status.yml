@@ -45,11 +45,36 @@ jobs:
           BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
         run: node scripts/fetch-line-status.js
 
+      - name: Accumulate diversion history
+        # Every status snapshot feeds the rolling diversion archive — TfL
+        # publishes no historical diversion feed, so this accumulation IS
+        # the history (route, planned/unplanned, stated window, reason).
+        run: node scripts/build-diversion-history.js
+
+      - name: Snapshot roadworks (TIMS) + accumulate history
+        # TfL's /Road/all/Disruption is live-only like the diversion feed,
+        # so each snapshot is corridor-joined to bus routes and merged into
+        # a rolling archive here too.
+        run: node scripts/fetch-roadworks.js
+
+      - name: Drain Street Manager events (if any)
+        # Folds inbox/<id>.json files from the streetworks-inbox branch
+        # (written by the /api/streetworks Pages Function) into the archive
+        # using plain git — no extra secrets. Soft-skips until the branch
+        # exists (i.e. until registration is done). See data.md.
+        run: node scripts/drain-streetworks.js
+
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/api/line-status.json data/api/route-diversions.json data/api/manifest.json || true
+          git add data/api/diversion-history.json || true
+          git add -f data/source/diversion-history.json || true
+          git add data/api/roadworks.json data/api/roadworks-history.json || true
+          git add -f data/source/roadworks-history.json || true
+          git add data/api/streetworks-history.json || true
+          git add -f data/source/streetworks-history.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

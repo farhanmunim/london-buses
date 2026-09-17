@@ -349,6 +349,7 @@ main.fullbleed{max-width:none;padding:0}
       <a href="#/garages" data-nav="garages">Garages</a>
       <a href="#/stops" data-nav="stops">Stops</a>
       <a href="#/tender" data-nav="tender">Tender</a>
+      <a href="#/diversions" data-nav="diversions">Diversions</a>
       <a href="#/cpi" data-nav="cpi">CPI-CPA</a>
     </nav>
     <div class="topbar-spacer"></div>
@@ -375,6 +376,7 @@ main.fullbleed{max-width:none;padding:0}
 
 <div class="more-sheet" id="moreSheet" hidden>
   <a href="#/tender" data-nav="tender"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 14h6M9 17h4"/></svg>Tender</a>
+  <a href="#/diversions" data-nav="diversions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4l3-4 3 4h6"/><path d="M4 5h4l6 8"/><path d="M17 3l3 2-3 2M17 17l3 2-3 2"/></svg>Diversions</a>
   <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
   <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
 </div>
@@ -450,6 +452,9 @@ const D = {
   cpi:         () => get('/cpi-cpa'),
   tendersAll:  () => get('/tenders').then(d => fixOperatorDeep(Object.values(d?.byId ?? {}))),
   programme:   () => get('/tender-programme').then(d => (d?.entries ?? []).map(e => ({ ...e, sourceUrl: d?.sources?.[e.programmeYear] ?? null }))),
+  divHistory:  () => get('/diversion-history'),                          // accumulated diversion notices, per status snapshot
+  routePerf:   () => get('/route-performance'),                          // TfL QSI + mileage per period — may be absent while its crawler finishes
+  schedMiles:  () => get('/scheduled-mileage'),                          // timetable-derived daily km — may be absent while its crawler finishes
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
   accidents:   () => get('/accidents').then(d => d ?? null),             // static snapshot — DfT STATS19, bus/coach-involved
   liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
@@ -752,14 +757,14 @@ function navigate(){
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   // The mobile More tab lights when any of the pages it holds is active,
   // and its sheet closes on every navigation.
-  document.getElementById('moreTab')?.classList.toggle('on', ['tender','cpi','about'].includes(navKey));
+  document.getElementById('moreTab')?.classList.toggle('on', ['tender','diversions','cpi','about'].includes(navKey));
   const moreSheet = document.getElementById('moreSheet');
   if(moreSheet && !moreSheet.hidden){ moreSheet.hidden = true; document.getElementById('moreTab')?.setAttribute('aria-expanded','false'); }
   window.scrollTo(0, 0);
   main.classList.toggle('fullbleed', view === 'map');
   // Per-view titles so history entries and tabs are tellable apart.
   const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
-    garages:'Garages', tender:'Tender', cpi:'CPI-CPA', about:'About',
+    garages:'Garages', tender:'Tender', diversions:'Diversions', cpi:'CPI-CPA', about:'About',
     route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
@@ -778,6 +783,7 @@ function navigate(){
   else if(view === 'vehicle')   renderVehicleDetail(arg);
   else if(view === 'tender')    renderTenders(arg);
   else if(view === 'tenders')   { location.replace('#/tender' + (arg ? '/' + encodeURIComponent(arg) : '')); return; }   // legacy plural slug
+  else if(view === 'diversions') renderDiversions(arg);
   else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
   else                          renderRoutes();
@@ -2681,11 +2687,14 @@ async function renderTenders(tab){
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
         <input id="pq" type="search" aria-label="Search tendering programme" placeholder="Search route (e.g. 24), tranche or description" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
         <span style="display:inline-flex;align-items:center;gap:4px">
+          <select id="pop" aria-label="Filter by current operator" title="Which operator currently runs the route(s) in each entry" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
+          <button id="popClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
+        <span style="display:inline-flex;align-items:center;gap:4px">
           <select id="pyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"></select>
           <button id="pyrClear" hidden aria-label="Clear programme-year filter" title="Clear programme-year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       </div>
-      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1040px">
-        <thead><tr><th>Route</th><th>Description</th><th>Programme</th><th class="num">Tranche</th><th>Issued</th><th>Returns</th><th>Est. award</th><th>Contract start</th><th>Vehicle</th><th>+2 yr</th><th>Source</th></tr></thead>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1180px">
+        <thead><tr><th>Route</th><th title="Which operator currently runs the route — from the live route registry, not the programme PDF">Operator</th><th>Description</th><th>Programme</th><th class="num">Tranche</th><th>Issued</th><th>Returns</th><th>Est. award</th><th>Contract start</th><th>Vehicle</th><th>+2 yr</th><th>Source</th></tr></thead>
         <tbody id="pBody"></tbody>
       </table></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
@@ -2792,7 +2801,7 @@ async function renderTenders(tab){
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(a.route)}</span></td>
-      <td>${esc(a.operator ?? '—')}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
+      <td>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
@@ -2805,7 +2814,7 @@ async function renderTenders(tab){
       <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
       <td>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
-      <td>${a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
+      <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — source page on london-bus-routes.fandom.com" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tPage').textContent = `Page ${st.page + 1} of ${pages}`;
     document.getElementById('tPrev').disabled = st.page === 0;
@@ -2844,22 +2853,37 @@ async function renderTenders(tab){
         a.contractStart ?? '', a.contractEnd ?? '', Number.isFinite(a.termYears) ? a.termYears : '',
         a.twoYearExtension == null ? '' : (a.twoYearExtension ? 'yes' : 'no'), a.tranche ?? '',
         a.vehicle?.raw ?? '', a.jb?.isJoint ? 'yes' : 'no', a.jb?.partners?.join(' ') ?? '', a.notes ?? '',
-        a.btID ? `https://tfl.gov.uk/forms/13796.aspx?btID=${a.btID}` : '']),
+        a.provisional ? `https://london-bus-routes.fandom.com/wiki/Tender_Results_${(a.awardDate ?? '').slice(0,4)}` : a.btID ? `https://tfl.gov.uk/forms/13796.aspx?btID=${a.btID}` : '']),
     ]);
   });
 
   /* ── Tendering programme table (the forward half of TfL's forms page) ── */
-  const prog = await D.programme();
+  const [prog, pMeta] = await Promise.all([D.programme(), D.meta()]);
   if(gone(tok)) return;
   document.getElementById('tabP').textContent = `Programme · ${prog.length.toLocaleString('en-GB')}`;
+  /* CURRENT operator of each entry's route(s) — from the live route registry,
+     not the programme PDF (which never names one). A combined entry like
+     "649/650/651" takes the first token that resolves; night ids that don't
+     exist standalone (e.g. an "N15" folded into 15) fall back to the base id.
+     Withdrawn or not-yet-running routes resolve to nothing and show "—". */
+  for(const e of prog){
+    e.currentOperator = null;
+    for(const t of String(e.route ?? '').toUpperCase().split('/').map(x => x.trim()).filter(Boolean)){
+      const m = pMeta[t] ?? (t.startsWith('N') ? pMeta[t.slice(1)] : null);
+      if(m?.operator){ e.currentOperator = m.operator; break; }
+    }
+  }
+  const pOps = [...new Set(prog.map(e => e.currentOperator).filter(Boolean))].sort();
+  document.getElementById('pop').innerHTML = '<option value="">All operators</option>' + pOps.map(o => `<option>${esc(o)}</option>`).join('');
   const pYears = [...new Set(prog.map(e => e.programmeYear).filter(Boolean))].sort().reverse();
   document.getElementById('pyr').innerHTML = '<option value="">All programmes</option>' + pYears.map(y => `<option>${esc(y)}</option>`).join('');
   const today = new Date().toISOString().slice(0, 10);
-  const pst = { q:'', yr:'', page:0 };
+  const pst = { q:'', op:'', yr:'', page:0 };
   const pFiltered = () => {
     const q = pst.q.trim().toUpperCase();
     return prog.filter(e =>
-      (!pst.yr || e.programmeYear === pst.yr)
+      (!pst.op || e.currentOperator === pst.op)
+      && (!pst.yr || e.programmeYear === pst.yr)
       && (!q || String(e.route).toUpperCase().split('/').some(t => t.trim() === q)
           || String(e.tranche ?? '').toUpperCase() === q
           || String(e.description ?? '').toUpperCase().includes(q)));
@@ -2873,6 +2897,7 @@ async function renderTenders(tab){
       const upcoming = e.contractStart && e.contractStart >= today;
       return `<tr${upcoming ? ' style="background:var(--acc-soft)"' : ''}>
         <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(e.route)}</span></td>
+        <td>${esc(e.currentOperator ?? '—')}</td>
         <td style="max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description ?? '')}">${esc(e.description ?? '—')}</td>
         <td class="num" style="text-align:left">${esc(e.programmeYear ? e.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2') : '—')}</td>
         <td class="num">${esc(e.tranche ?? '—')}</td>
@@ -2893,14 +2918,272 @@ async function renderTenders(tab){
   pDraw();
   let pdeb;
   document.getElementById('pq').addEventListener('input', e => { clearTimeout(pdeb); pdeb = setTimeout(() => { pst.q = e.target.value; pst.page = 0; pDraw(); }, 150); });
+  document.getElementById('pop').addEventListener('change', e => { pst.op = e.target.value; pst.page = 0; document.getElementById('popClear').hidden = !pst.op; pDraw(); });
+  document.getElementById('popClear').addEventListener('click', () => { pst.op = ''; document.getElementById('pop').value = ''; document.getElementById('popClear').hidden = true; pDraw(); });
   document.getElementById('pyr').addEventListener('change', e => { pst.yr = e.target.value; pst.page = 0; document.getElementById('pyrClear').hidden = !pst.yr; pDraw(); });
   document.getElementById('pyrClear').addEventListener('click', () => { pst.yr = ''; document.getElementById('pyr').value = ''; document.getElementById('pyrClear').hidden = true; pDraw(); });
   document.getElementById('pPrev').addEventListener('click', () => { pst.page = Math.max(0, pst.page - 1); pDraw(); });
   document.getElementById('pNext').addEventListener('click', () => { pst.page = pst.page + 1; pDraw(); });
   document.getElementById('pExport').addEventListener('click', () => {
     downloadCsv('london-bus-tender-programme.csv', [
-      ['programme_year','tranche','route','description','tender_issue_date','tender_return_date','award_estimated','contract_start','vehicle_type','two_year_extension','source_url'],
-      ...pFiltered().map(e => [e.programmeYear ?? '', e.tranche ?? '', e.route, e.description ?? '', e.issueDate ?? '', e.returnDate ?? '', e.awardEstimated ?? '', e.contractStart ?? '', e.vehicleType ?? '', e.twoYearExtension == null ? '' : (e.twoYearExtension ? 'yes' : 'no'), e.sourceUrl ?? '']),
+      ['programme_year','tranche','route','current_operator','description','tender_issue_date','tender_return_date','award_estimated','contract_start','vehicle_type','two_year_extension','source_url'],
+      ...pFiltered().map(e => [e.programmeYear ?? '', e.tranche ?? '', e.route, e.currentOperator ?? '', e.description ?? '', e.issueDate ?? '', e.returnDate ?? '', e.awardEstimated ?? '', e.contractStart ?? '', e.vehicleType ?? '', e.twoYearExtension == null ? '' : (e.twoYearExtension ? 'yes' : 'no'), e.sourceUrl ?? '']),
+    ]);
+  });
+}
+
+/* ════════════════════ DIVERSIONS & MILEAGE ════════════════════ */
+async function renderDiversions(tab){
+  const tok = navToken;
+  main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
+  const hist = await D.divHistory();
+  if(gone(tok)) return;
+  if(!hist?.entries?.length){
+    main.innerHTML = `<div class="wrap"><div class="empty">The diversion history is unreachable right now — try again shortly.</div></div>`;
+    return;
+  }
+  const all = [...hist.entries].sort((a,b) => String(b.lastSeen ?? '').localeCompare(String(a.lastSeen ?? '')));
+  const PAGE = 20;
+  const ddMMM = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
+    ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]}` : '—'; };
+  const ddMMMhm = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
+    ? `${String(d.getDate()).padStart(2,'0')} ${MONTH_NAMES[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : '—'; };
+  const CAT_LABEL = { PlannedWork:'Planned', RealTime:'Unplanned', Event:'Event' };
+  /* Badges reuse the site's existing accent/warn/muted vars — no new palette. */
+  const badgeCss = 'display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px';
+  const badge = c => c === 'PlannedWork'
+    ? `<span class="dbadge" style="${badgeCss};color:var(--acc);background:var(--acc-soft)">Planned</span>`
+    : c === 'RealTime'
+    ? `<span class="dbadge" style="${badgeCss};color:var(--warn);background:color-mix(in srgb, var(--warn) 14%, transparent)">Unplanned</span>`
+    : `<span class="dbadge" style="${badgeCss};color:var(--tx2);background:var(--surf2)">Event</span>`;
+  const routeChip = r => `<a class="rchip" style="padding:1px 7px;font-size:11px" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`;
+  const trunc = s => { s = String(s ?? ''); return s.length > 120 ? s.slice(0, 119) + '…' : s; };
+  const inputCss = 'border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)';
+
+  main.innerHTML = `<div class="wrap">
+    <div id="dhead"><h1 style="margin:2px 0 4px">Diversions &amp; mileage</h1>
+      <div style="color:var(--tx2);font-size:13.5px">Explain a route's lost mileage: the full <b>diversion history</b> day by day (${all.length.toLocaleString('en-GB')} entries), and scheduled-vs-operated <b>mileage per TfL reporting period</b>. Filter, and export either.</div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">History accumulated from TfL status snapshots since ${esc(ddMMM(hist.firstObservedAt))} ${esc(String(new Date(hist.firstObservedAt ?? 0).getFullYear() || ''))} (~5-8 snapshots/day). TfL publishes no historical diversion feed.</div></div>
+    <div style="display:flex;gap:6px;margin-top:14px" role="tablist" aria-label="Diversion tables">
+      <button class="livebtn tabpill" id="dTabH" role="tab" aria-selected="true">Diversion history · ${all.length.toLocaleString('en-GB')}</button>
+      <button class="livebtn tabpill" id="dTabM" role="tab" aria-selected="false">Mileage by period</button>
+    </div>
+    <div id="tabHist">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
+      <input id="dq" type="search" aria-label="Search diversions by route" placeholder="Search route (e.g. 24)" style="flex:1;min-width:140px;max-width:240px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <select id="dty" aria-label="Filter by diversion type" style="${inputCss}">
+        <option value="">All types</option><option value="PlannedWork">Planned</option><option value="RealTime">Unplanned</option><option value="Event">Event</option></select>
+      <input id="dday" type="date" aria-label="Show diversions observed on this day" title="Show only diversions observed on this day" style="${inputCss}">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="dact" type="checkbox">Active only</label>
+      <button class="livebtn" id="dExport" title="Downloads every diversion matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button>
+    </div>
+    <div class="section"><div class="section-h" id="dCount"></div>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1080px">
+        <thead><tr>
+          <th>Route</th><th>Type</th><th>Stated window</th><th>First seen</th><th>Last seen</th>
+          <th class="num" title="Distinct days this diversion was observed in the snapshots">Days observed</th>
+          <th style="text-align:center">Active</th><th>Reason</th>
+        </tr></thead>
+        <tbody id="dBody"></tbody>
+      </table></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <button class="livebtn" id="dPrev">‹ Prev</button>
+        <span id="dPage" style="font-size:12.5px;color:var(--tx2)"></span>
+        <button class="livebtn" id="dNext">Next ›</button>
+      </div>
+      <div class="legendrow" style="margin-top:8px"><span>Source: TfL Unified API line-status disruptions, accumulated per status refresh (${(hist.snapshotCount ?? 0).toLocaleString('en-GB')} snapshots so far). Stated window = the dates TfL's notice gives; first/last seen = when this site's snapshots actually observed it; days observed = distinct days it appeared (hover for the list). Pick a date to see everything observed that day.</span></div>
+    </div>
+    </div>
+    <div id="tabMiles" hidden>
+    <div class="section" style="margin-top:14px"><div class="section-h" style="display:flex;align-items:center;gap:10px">Scheduled vs operated mileage<span id="mCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
+      <button class="livebtn" id="mExport" style="margin-left:auto" title="Downloads every row matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
+      <div id="mWrap"><div class="skel" style="height:46px;width:60%"></div></div>
+    </div>
+    </div>
+  </div>`;
+
+  /* Tabs — history | mileage. #/diversions/mileage deep-links the second tab;
+     switching rewrites the hash without re-rendering (same pattern as Tender). */
+  const setTab = which => {
+    const h = which !== 'mileage';
+    document.getElementById('tabHist').hidden = !h;
+    document.getElementById('tabMiles').hidden = h;
+    document.getElementById('dTabH').classList.toggle('on', h);
+    document.getElementById('dTabM').classList.toggle('on', !h);
+    document.getElementById('dTabH').setAttribute('aria-selected', String(h));
+    document.getElementById('dTabM').setAttribute('aria-selected', String(!h));
+    history.replaceState(null, '', h ? '#/diversions' : '#/diversions/mileage');
+  };
+  setTab(tab === 'mileage' ? 'mileage' : 'history');
+  document.getElementById('dTabH').addEventListener('click', () => setTab('history'));
+  document.getElementById('dTabM').addEventListener('click', () => setTab('mileage'));
+
+  /* ── History table ── */
+  const st = { q:'', ty:'', act:false, day:'', page:0 };
+  const filtered = () => {
+    const q = st.q.trim().toUpperCase();
+    // Routes match EXACTLY, same rule as the tenders route search.
+    return all.filter(e =>
+      (!q || String(e.route ?? '').toUpperCase().split('/').some(t => t.trim() === q))
+      && (!st.ty || e.category === st.ty)
+      && (!st.act || e.active)
+      && (!st.day || (e.days ?? []).includes(st.day)));
+  };
+  function draw(){
+    const list = filtered();
+    const pages = Math.max(1, Math.ceil(list.length / PAGE));
+    st.page = Math.min(st.page, pages - 1);
+    const shown = list.slice(st.page * PAGE, st.page * PAGE + PAGE);
+    document.getElementById('dBody').innerHTML = shown.map(e => `<tr>
+      <td>${routeChip(e.route)}</td>
+      <td>${badge(e.category)}</td>
+      <td style="white-space:nowrap">${ddMMM(e.since)} → ${ddMMM(e.until)}</td>
+      <td class="num" style="text-align:left;white-space:nowrap">${ddMMMhm(e.firstSeen)}</td>
+      <td class="num" style="text-align:left;white-space:nowrap">${ddMMMhm(e.lastSeen)}</td>
+      <td class="num" title="${esc((e.days ?? []).join(', '))}">${(e.days ?? []).length}</td>
+      <td style="text-align:center">${e.active ? '<span style="color:var(--good);font-weight:700" title="Still present in the latest snapshot">✓</span>' : '<span style="color:var(--mu)">—</span>'}</td>
+      <td style="max-width:460px;font-size:12px;line-height:1.4" title="${esc(e.reason ?? '')}">${esc(trunc(e.reason))}</td></tr>`).join('');
+    document.getElementById('dCount').textContent =
+      `${list.length.toLocaleString('en-GB')} diversion${list.length === 1 ? '' : 's'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
+    document.getElementById('dPage').textContent = `Page ${st.page + 1} of ${pages}`;
+    document.getElementById('dPrev').disabled = st.page === 0;
+    document.getElementById('dNext').disabled = st.page >= pages - 1;
+  }
+  draw();
+  let deb;
+  document.getElementById('dq').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => { st.q = e.target.value; st.page = 0; draw(); }, 150); });
+  document.getElementById('dty').addEventListener('change', e => { st.ty = e.target.value; st.page = 0; draw(); });
+  document.getElementById('dday').addEventListener('change', e => { st.day = e.target.value; st.page = 0; draw(); });
+  document.getElementById('dact').addEventListener('change', e => { st.act = e.target.checked; st.page = 0; draw(); });
+  document.getElementById('dPrev').addEventListener('click', () => { st.page = Math.max(0, st.page - 1); draw(); });
+  document.getElementById('dNext').addEventListener('click', () => { st.page = st.page + 1; draw(); });
+  document.getElementById('dExport').addEventListener('click', () => {
+    downloadCsv('london-bus-diversions.csv', [
+      ['route','type','scheduled','stated_since','stated_until','first_seen','last_seen','observations','days_observed','days','active','reason'],
+      ...filtered().map(e => [e.route ?? '', CAT_LABEL[e.category] ?? e.category ?? '', e.scheduled ? 'yes' : 'no',
+        e.since ?? '', e.until ?? '', e.firstSeen ?? '', e.lastSeen ?? '', Number.isFinite(e.observations) ? e.observations : '',
+        (e.days ?? []).length, (e.days ?? []).join(' '), e.active ? 'yes' : 'no', e.reason ?? '']),
+    ]);
+  });
+
+  /* ── Mileage by period — joins TfL QSI/mileage per-period figures with
+     timetable-derived scheduled km. Either file may not exist yet while its
+     crawler finishes its first run — the tab degrades to a note, never an
+     error. ── */
+  const [perf, sched] = await Promise.all([D.routePerf(), D.schedMiles()]);
+  if(gone(tok)) return;
+  const mWrap = document.getElementById('mWrap');
+  if(!perf?.periods?.length || !perf?.routes){
+    mWrap.innerHTML = `<div class="empty" style="padding:28px 0">The per-period performance dataset is still building — its crawler hasn't published <span style="font-family:var(--mono)">route-performance.json</span> yet. Check back soon.</div>`;
+    document.getElementById('mExport').hidden = true;
+    return;
+  }
+  const perfRoutes = perf.routes;
+  const periods = perf.periods;                       // oldest → newest
+  const newest = periods[periods.length - 1];
+  const periodsDesc = [...periods].reverse();
+  const schedRoutes = sched?.routes ?? null;
+  const estKm = id => {
+    const dk = schedRoutes?.[id]?.dailyKm;
+    if(!dk) return null;
+    // A TfL reporting period is 28 days ≈ 20 weekdays + 4 Saturdays + 4 Sundays.
+    const v = 20 * (dk.weekday ?? 0) + 4 * (dk.saturday ?? 0) + 4 * (dk.sunday ?? 0);
+    return Number.isFinite(v) && v > 0 ? v : null;
+  };
+  /* Diversion counts: TfL doesn't publish the period calendar, so the only
+     period we can honestly date is the newest one — approximate it as the
+     last 28 days and count history entries whose [firstSeen, lastSeen]
+     overlaps that window. Every other period shows "—". */
+  const nowMs = Date.now(), cutoff28 = nowMs - 28 * 864e5;
+  const div28 = {};
+  for(const e of all){
+    const f = Date.parse(e.firstSeen ?? ''), l = Date.parse(e.lastSeen ?? '');
+    if(Number.isFinite(f) && Number.isFinite(l) && f <= nowMs && l >= cutoff28){
+      const k = String(e.route ?? '').toUpperCase();
+      div28[k] = (div28[k] ?? 0) + 1;
+    }
+  }
+  const routeIds = Object.keys(perfRoutes).sort(cmpRoute);
+  mWrap.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
+      <input id="mq" type="search" aria-label="Search mileage by route" placeholder="Search route (e.g. 24) — shows all its periods" style="flex:1;min-width:140px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <select id="mper" aria-label="Reporting period" style="${inputCss}">${periodsDesc.map(p => `<option${p === newest ? ' selected' : ''}>${esc(p)}</option>`).join('')}</select>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="mbelow" type="checkbox">Below standard only</label>
+    </div>
+    <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:980px">
+      <thead><tr>
+        <th>Route</th><th>Period</th>
+        <th class="num" title="Kilometres operated as % of schedule — red when below the route's contractual minimum standard">Operated %</th>
+        <th class="num" title="Contractual minimum operated-mileage standard">Min std</th>
+        <th class="num" title="Route reliability for the period, in the route's own metric">Reliability</th>
+        <th class="num" title="Estimate: dailyKm × (20 weekday + 4 Saturday + 4 Sunday) per 28-day period, from the current timetable${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. scheduled km</th>
+        <th class="num" title="Est. scheduled km × (100 − operated %) ÷ 100${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. lost km</th>
+        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — TfL doesn't publish period calendar dates">Diversions</th>
+      </tr></thead>
+      <tbody id="mBody"></tbody>
+    </table></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+      <button class="livebtn" id="mPrev">‹ Prev</button>
+      <span id="mPage" style="font-size:12.5px;color:var(--tx2)"></span>
+      <button class="livebtn" id="mNext">Next ›</button>
+    </div>
+    <div class="legendrow" style="margin-top:8px"><span>Sources: ${esc(perf.source ?? 'TfL QSI & mileage per-route reports')}${schedRoutes ? ', joined with timetable-derived scheduled km (est. — 20 weekdays + 4 Saturdays + 4 Sundays per 28-day period)' : ''}. Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use this page's own snapshot history and are only computable for the newest period (last 28 days) — TfL publishes no period calendar.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
+  const mst = { q:'', per:newest, below:false, page:0 };
+  const rowFor = (id, per) => {
+    const p = perfRoutes[id] ?? {};
+    const op = num(p.operatedPct?.[per]);
+    const ek = estKm(id);
+    return {
+      route:id, period:per, op, minStd:num(p.operatedMinStandard),
+      rel:num(p.reliability?.[per]), metric:p.reliabilityMetric ?? '',
+      ek, lost:(op != null && ek != null) ? Math.round(ek * (100 - op) / 100) : null,
+      div: per === newest ? (div28[String(id).toUpperCase()] ?? 0) : null,
+    };
+  };
+  const mFiltered = () => {
+    const q = mst.q.trim().toUpperCase();
+    let rows;
+    if(q){
+      const id = routeIds.find(r => String(r).toUpperCase() === q);
+      rows = id ? periodsDesc.map(per => rowFor(id, per)) : [];
+    } else {
+      rows = routeIds.map(id => rowFor(id, mst.per));
+    }
+    rows = rows.filter(r => r.op != null || r.rel != null);
+    if(mst.below) rows = rows.filter(r => r.op != null && r.minStd != null && r.op < r.minStd);
+    return rows;
+  };
+  function mDraw(){
+    const list = mFiltered();
+    const pages = Math.max(1, Math.ceil(list.length / PAGE));
+    mst.page = Math.min(mst.page, pages - 1);
+    const shown = list.slice(mst.page * PAGE, mst.page * PAGE + PAGE);
+    document.getElementById('mBody').innerHTML = shown.length ? shown.map(r => `<tr>
+      <td>${routeChip(r.route)}</td>
+      <td class="num" style="text-align:left;white-space:nowrap">${esc(r.period)}</td>
+      <td class="num"${r.op != null && r.minStd != null && r.op < r.minStd ? ' style="color:var(--bad);font-weight:600" title="Below the contractual minimum standard"' : ''}>${r.op != null ? r.op.toFixed(1) + '%' : '—'}</td>
+      <td class="num">${r.minStd != null ? r.minStd.toFixed(1) + '%' : '—'}</td>
+      <td class="num" style="white-space:nowrap">${r.rel != null ? esc(String(r.rel)) + ' <span style="color:var(--mu);font-size:11px">' + esc(r.metric) + '</span>' : '—'}</td>
+      <td class="num" title="Estimated from the current timetable — 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>
+      <td class="num">${r.lost != null ? r.lost.toLocaleString('en-GB') : '—'}</td>
+      <td class="num">${r.div != null ? r.div : '<span title="period dates not published in source" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
+      : `<tr><td colspan="8" style="color:var(--mu);padding:18px 14px">No rows match — route search is exact (e.g. 24), and only routes in TfL's per-route reports appear.</td></tr>`;
+    document.getElementById('mCount').textContent = ` · ${list.length.toLocaleString('en-GB')} row${list.length === 1 ? '' : 's'}${mst.q.trim() ? '' : ` · ${mst.per}`}`;
+    document.getElementById('mPage').textContent = `Page ${mst.page + 1} of ${pages}`;
+    document.getElementById('mPrev').disabled = mst.page === 0;
+    document.getElementById('mNext').disabled = mst.page >= pages - 1;
+  }
+  mDraw();
+  let mdeb;
+  document.getElementById('mq').addEventListener('input', e => { clearTimeout(mdeb); mdeb = setTimeout(() => { mst.q = e.target.value; mst.page = 0; mDraw(); }, 150); });
+  document.getElementById('mper').addEventListener('change', e => { mst.per = e.target.value; mst.page = 0; mDraw(); });
+  document.getElementById('mbelow').addEventListener('change', e => { mst.below = e.target.checked; mst.page = 0; mDraw(); });
+  document.getElementById('mPrev').addEventListener('click', () => { mst.page = Math.max(0, mst.page - 1); mDraw(); });
+  document.getElementById('mNext').addEventListener('click', () => { mst.page = mst.page + 1; mDraw(); });
+  document.getElementById('mExport').addEventListener('click', () => {
+    downloadCsv('london-bus-mileage.csv', [
+      ['route','period','operated_pct','operated_min_standard','reliability','reliability_metric','est_scheduled_km','est_lost_km','diversions_last_28d'],
+      ...mFiltered().map(r => [r.route, r.period, r.op ?? '', r.minStd ?? '', r.rel ?? '', r.metric, r.ek != null ? Math.round(r.ek) : '', r.lost ?? '', r.div ?? '']),
     ]);
   });
 }

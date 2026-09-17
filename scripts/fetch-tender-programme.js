@@ -23,8 +23,9 @@
  * Quirks handled:
  *   - Multi-route tranches: only the FIRST row in a tranche carries the
  *     tranche number; subsequent rows inherit it from the prior row.
- *   - Long route descriptions wrap to a separate line above the data row.
- *     Detect by absence of any date cell, then merge into the next row.
+ *   - Long route descriptions wrap to a separate line above the data row
+ *     (or below it, 2028/29+). Detect by absence of any date cell, then
+ *     merge into the neighbouring description-less row.
  *   - 'x' marker after a route number = "eligible for two-year extension".
  *   - Vehicle column: 'DD' / 'SD (45)' / 'SD (60)' / 'ZEDD' / 'ZESD' etc.
  *   - Contract Award is month-only ('Jun-25') because TfL marks it estimated
@@ -122,7 +123,13 @@ const MON_YY     = /^[A-Za-z]{3}-\d{2}$/;                  // 'Jun-25'
 // '1029', '972a'). The letter is meaningful (TfL splits a tranche into
 // sub-batches) so it's kept verbatim — never stripped.
 const TRANCHE_RE = /^\d{3,5}[A-Za-z]?$/;
-const ROUTE_RE   = /^[A-Z]{0,3}\d{1,4}[A-Z]?(?:\/[A-Z]?\d{0,4}[A-Z]?)?$/;
+// A route cell is 1-4 route ids joined by '/', optionally spaced ('68 / N68').
+// Each id may carry a full letter prefix AFTER the slash too ('EL1/NEL1',
+// 'H32/NH32', '281/681/N281') — the old single-slash, one-letter-prefix
+// pattern silently rejected those cells, which made the parser mistake the
+// row's tranche number for its route id and shift every tranche in the block.
+const ROUTE_PART = /[A-Z]{0,3}\d{1,4}[A-Z]?/.source;
+const ROUTE_RE   = new RegExp(`^${ROUTE_PART}(?:\\s*/\\s*${ROUTE_PART}){0,3}$`);
 
 function isDateCell(s) { return typeof s === 'string' && (DD_MON_YY.test(s) || MON_YY.test(s)); }
 function isTrancheCell(s) { return typeof s === 'string' && TRANCHE_RE.test(s); }
@@ -189,10 +196,17 @@ function parsePage(rows, programmeYear, sourceUrl, pdfModifiedAt) {
     // Pull date cells out of the row (they're always at fixed column positions)
     const dateCells = cells.filter(isDateCell);
     if (dateCells.length === 0) {
-      // No dates -> probably a wrapped route description, hold it for the next row
-      // Skip rows that look like raw text noise
+      // No dates -> a wrapped route description. Which row it belongs to
+      // varies by programme year: older PDFs wrap it ABOVE the data row,
+      // 2028/29+ wraps it BELOW. If the entry just parsed came out with no
+      // description this line is its wrapped text — attach it backward;
+      // otherwise hold it for the next row.
       const flat = cells.join(' ').trim();
-      if (flat.length > 6 && !/^Page\s+\d+/i.test(flat)) wrappedDescription = flat;
+      if (flat.length > 6 && !/^Page\s+\d+/i.test(flat)) {
+        const last = entries[entries.length - 1];
+        if (last && last.route_description == null) last.route_description = flat;
+        else wrappedDescription = flat;
+      }
       continue;
     }
 
@@ -211,11 +225,13 @@ function parsePage(rows, programmeYear, sourceUrl, pdfModifiedAt) {
     // Route id, with its two-year-extension marker ('x' / '*') — either an
     // inline suffix on the route cell ("263/N271 x", the definer-row layout)
     // or a separate following cell ("G1", "x", the continuation layout).
-    const { id: routeId, ext: inlineExt } = stripExtMarker(cells[idx]);
-    if (!routeId || !looksLikeRouteToken(routeId)) {
+    const { id: routeIdRaw, ext: inlineExt } = stripExtMarker(cells[idx]);
+    if (!routeIdRaw || !looksLikeRouteToken(routeIdRaw)) {
       // Couldn't find a recognisable route id -- skip
       continue;
     }
+    // Canonical form: no spaces around '/' ('68 / N68' -> '68/N68').
+    const routeId = routeIdRaw.replace(/\s*\/\s*/g, '/');
     idx++;
 
     let twoYearExtension = inlineExt;

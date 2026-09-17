@@ -349,13 +349,21 @@ const TENDER_OP_GROUP = {
   'London General': 'Go-Ahead', 'London Central': 'Go-Ahead', 'Blue Triangle': 'Go-Ahead',
   'Docklands Buses': 'Go-Ahead', 'Metrobus': 'Go-Ahead', 'East Thames Buses': 'Go-Ahead', 'East Thames': 'Go-Ahead',
   'Selkent': 'Stagecoach', 'East London': 'Stagecoach',
-  'London United': 'RATP', 'London Sovereign': 'RATP', 'Sovereign': 'RATP', 'Quality Line': 'RATP', 'NSL': 'RATP',
+  // RATP-era names fold into First, matching operator-aliases.json (RATP Dev
+  // sold its London operations to FirstGroup in Feb 2025).
+  'London United': 'First', 'London Sovereign': 'First', 'Sovereign': 'First', 'Quality Line': 'First', 'NSL': 'First',
+  'RATP': 'First', 'RATP Dev': 'First',
   'CentreWest': 'First',
-  'Travel London': 'Abellio',
+  // RATP Dev Transit London's awards appear as "London Transit" on TfL's
+  // pages; FirstGroup acquired the business Feb 2025 (see operator-aliases).
+  'London Transit': 'First',
+  // Abellio London rebranded Transport UK London Bus in 2023 (same company);
+  // Travel London was its pre-2009 name. One lineage, one parent.
+  'Travel London': 'Transport UK', 'Abellio': 'Transport UK',
   'National Car Parks': 'NCP',
 };
 const TENDER_OP_PREFIXES = [
-  ['Arriva ', 'Arriva'], ['Abellio ', 'Abellio'], ['Stagecoach ', 'Stagecoach'],
+  ['Arriva ', 'Arriva'], ['Abellio ', 'Transport UK'], ['Stagecoach ', 'Stagecoach'],
   ['First ', 'First'], ['Metroline ', 'Metroline'], ['Go-Ahead ', 'Go-Ahead'],
   // The Tower-Transit-acquired Hotspur Lane operations rebranded to
   // "Transport UK London" / "Transport UK West London" on the tender form
@@ -592,9 +600,18 @@ function aggregateRouteFleet(routeId) {
     .sort((a, b) => b[1] - a[1])
     .map(([make, count]) => ({ make, count, share: Math.round((count / total) * 100) / 100 }));
 
+  // Headline make is the DAY-WEIGHTED mode (as data.md documents): a reg
+  // seen 20 distinct days outweighs one seen 2. The unweighted mode let a
+  // block of low-recurrence cover buses (each just clearing MIN_CORE_DAYS)
+  // outvote the actual allocation — e.g. route 117: 21 ADL regs at 2-3 days
+  // each beat 8 Citaros at 19-23 days each.
+  const makesByDays = {};
+  for (const s of fleetSamples) if (s.make) makesByDays[s.make] = (makesByDays[s.make] ?? 0) + s.days;
+
   return {
-    make:            modeOf(makes),
+    make:            modeOf(makesByDays),
     propulsion:      dominantProp,
+    propulsionCounts: propCounts,
     vehicleAgeYears: ageN ? Math.round((ageSum / ageN) * 10) / 10 : null,
     fleetSize:       fleetSamples.length,
     fleetConfidence,
@@ -621,9 +638,21 @@ try {
   // First run, or file missing — nothing to preserve.
 }
 
-// Read all route GeoJSON files
+// Read the route GeoJSON files for CURRENT TfL-served routes only. The
+// geometry ZIP ships more ids than TfL actually serves (contract-internal
+// UL*/DL* school ids, X-suffixed trial variants) and withdrawn routes'
+// files linger on disk, so "every file in data/routes/" is the wrong
+// universe — it grew to 792 vs TfL's 675. route_stops.json is rebuilt from
+// TfL /Line/Mode/bus every refresh (last-known-good on failure), so its key
+// set IS the served network, including hard-coded extras like 969.
+const servedRoutes = (() => {
+  try {
+    return new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'route_stops.json'), 'utf8')).routes ?? {}).map(r => r.toUpperCase()));
+  } catch { return null; }   // unreadable → classify every file, as before
+})();
 const routeFiles = fs.readdirSync(ROUTES_DIR)
   .filter(f => f.endsWith('.geojson') && f !== 'index.json')
+  .filter(f => !servedRoutes || servedRoutes.has(f.replace('.geojson', '').toUpperCase()))
   .sort();
 
 console.log(`Classifying ${routeFiles.length} routes...`);
@@ -723,9 +752,13 @@ for (const file of routeFiles) {
   // We still keep `details.deck` as a fallback for vehicle strings not yet
   // in the lookup; for school routes (uniformly single-deck minibuses /
   // coaches in London) default to 'single' last.
+  // The school-route 'single' default must rank BELOW last-known-good (it
+  // is applied in the final assembly below, after lastRec.deck): plenty of
+  // school routes genuinely run double-deckers, and when the scrape is
+  // missing this default would otherwise overwrite their preserved deck.
   const deck        = fallback?.deck
                    ?? details.deck
-                   ?? (type === 'school' ? 'single' : null);
+                   ?? null;
 
   // ── Propulsion precedence ───────────────────────────────────────────────
   // Naive "DVLA always wins" was wrong: with fleetSize 1–3 (typical right
@@ -746,12 +779,38 @@ for (const file of routeFiles) {
   //     electric mid-week).
   //   • Otherwise → fall through to LBR / vehicle-lookup / last-known-good.
   const HIGH_CONF_OBS = 5;
-  const lbrProp  = details.propulsion;
+  // The LBR verdict is this run's scrape, else the vehicle-lookup implied
+  // one, else the LAST-KNOWN-GOOD verdict — when route_details.json is
+  // missing/partial (scrape failed, or a run without it), the previous
+  // verdict must keep standing in for LBR here, BEFORE the DVLA branch
+  // below gets a say. Without this, every hybrid/hydrogen route collapses
+  // to DVLA's 'diesel' (DVLA registers hybrids as HEAVY OIL and fuel-cells
+  // inconsistently) — exactly the mass-flattening the last-known-good
+  // philosophy exists to prevent.
+  const lbrProp  = details.propulsion ?? fallback?.propulsion ?? lastGood[routeId]?.propulsion ?? null;
   const dvlaProp = fleetAgg?.propulsion;
   const dvlaObs  = fleetAgg?.fleetSize ?? 0;
   let propulsion;
   if (lbrProp && lbrProp !== 'diesel') {
     propulsion = lbrProp;
+    // …but LBR fleet strings go stale after a conversion, and DVLA's
+    // ELECTRICITY register is unambiguous in BOTH directions (hybrids
+    // register as HEAVY OIL/DIESEL, never as ELECTRICITY — the cache holds
+    // zero 'hybrid'). So with a confident core fleet:
+    //   • LBR 'hybrid' + DVLA-dominant electric → the route converted to
+    //     electric (e.g. route 18's BYDs) — believe DVLA.
+    //   • LBR 'electric' + zero ELECTRICITY regs in the core fleet → the
+    //     route is NOT electric (e.g. route 23 running B5LH/ADL diesels
+    //     against a stale 'MetroDecker EV' row) — believe DVLA. The
+    //     hybrid-vs-diesel split stays uncertain either way; dominant
+    //     DVLA is strictly less wrong than 'electric'.
+    // Hydrogen claims are left alone (fuel-cell regs are too rare/odd in
+    // DVLA to overrule the explicit FCEV fleet codes).
+    const propCounts = fleetAgg?.propulsionCounts ?? {};
+    if (dvlaObs >= HIGH_CONF_OBS) {
+      if (lbrProp === 'hybrid' && dvlaProp === 'electric') propulsion = 'electric';
+      else if (lbrProp === 'electric' && dvlaProp && dvlaProp !== 'electric' && !(propCounts.electric > 0)) propulsion = dvlaProp;
+    }
   } else if (dvlaProp && dvlaObs >= HIGH_CONF_OBS) {
     propulsion = dvlaProp;
   } else {
@@ -830,7 +889,7 @@ for (const file of routeFiles) {
     type:        override.type        ?? type,
     isPrefix:    override.isPrefix    ?? isPrefix,
     lengthBand:  override.lengthBand  ?? lengthBand,
-    deck:        override.deck        ?? deck        ?? lastRec.deck        ?? null,
+    deck:        override.deck        ?? deck        ?? lastRec.deck        ?? (type === 'school' ? 'single' : null),
     vehicleType: override.vehicleType ?? vehicleType ?? lastRec.vehicleType ?? null,
     propulsion:  override.propulsion  ?? propulsion  ?? lastRec.propulsion  ?? null,
     operator:    override.operator    ?? operator    ?? lastRec.operator    ?? null,

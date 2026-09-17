@@ -60,6 +60,13 @@ jobs:
           TENDERS_HEADFUL: "1"
         run: xvfb-run -a node scripts/fetch-tenders.js
 
+      - name: Fetch provisional awards (community wiki)
+        # Supplementary feed: london-bus-routes.fandom.com Tender Results
+        # pages via the MediaWiki API (2 requests). TfL's register lags the
+        # weekly bulletins by months; these rows are served flagged
+        # `provisional` and drop out once the TfL page appears.
+        run: node scripts/fetch-fandom-tenders.js
+
       - name: Fetch tendering programme
         # content.tfl.gov.uk is not behind the forms WAF; unchanged years
         # short-circuit on Last-Modified so this is seconds when quiet.
@@ -78,7 +85,7 @@ jobs:
           # timestamps on every run, so gating on the source files avoids a
           # no-op commit (and a Cloudflare build) when TfL published nothing
           # new. Both fetchers write content-stably (no timestamp-only churn).
-          git add -f data/source/tenders.json data/source/tender-programme.json || true
+          git add -f data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json || true
           if git diff --cached --quiet; then
             echo "No new tender awards"
           else

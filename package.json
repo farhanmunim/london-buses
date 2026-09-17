@@ -16,6 +16,7 @@
     "fetch-tenders": "node scripts/fetch-tenders.js",
     "tenders-local": "node scripts/fetch-tenders.js && node scripts/fetch-tender-programme.js && node scripts/build-api.js",
     "fetch-tender-programme": "node scripts/fetch-tender-programme.js",
+    "fetch-route-performance": "node scripts/fetch-route-performance.js",
     "build-classifications": "node scripts/build-classifications.js",
     "build-overview": "node scripts/build-overview.js",
     "build-garage-locations": "node scripts/build-garage-locations.js",
@@ -27,7 +28,12 @@
     "audit-summary": "node scripts/audit-summary.js",
     "fetch-line-status": "node scripts/fetch-line-status.js",
     "build-api": "node scripts/build-api.js",
-    "fetch-cpi": "node scripts/fetch-cpi.js"
+    "fetch-cpi": "node scripts/fetch-cpi.js",
+    "fetch-fandom-tenders": "node scripts/fetch-fandom-tenders.js",
+    "build-diversion-history": "node scripts/build-diversion-history.js",
+    "fetch-scheduled-mileage": "node scripts/fetch-scheduled-mileage.js",
+    "fetch-roadworks": "node scripts/fetch-roadworks.js",
+    "drain-streetworks": "node scripts/drain-streetworks.js"
   },
   "engines": {
     "node": ">=18"
