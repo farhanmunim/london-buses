@@ -479,6 +479,34 @@ function auditFreshness() {
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
+// This project is BUSES ONLY, but two upstreams have leaked other modes
+// before (londonbusroutes.net's garages.csv shipped the Therapia Lane TRAM
+// depot, which handed bus route 3 the tram operator). The fetchers filter
+// at parse time; this gate is the backstop that makes any recurrence a
+// hard build failure rather than a silently-served wrong operator.
+const NON_BUS_RE = /\btram(s|way|link)?\b|tram operations|therapia\s*lane|\bferr(y|ies)\b|cable\s*car|river\s*bus|woolwich\s*ferry/i;
+function auditNoNonBusModes(rc) {
+  for (const [id, r] of Object.entries(rc?.routes ?? {})) {
+    for (const f of ['operator', 'garageName', 'vehicleType']) {
+      // The Irizar "ie tram" is a tram-STYLED electric BUS (route 358) —
+      // the one legitimate tram-word in a vehicle-type string.
+      const value = String(r?.[f] ?? '').replace(/\bie[- ]tram\b/gi, '');
+      if (NON_BUS_RE.test(value)) {
+        add('CRITICAL', 'rc', id, f, 'bus-only value', r[f], 'non-bus (tram/ferry/cable-car) contamination — check the source scrape filters');
+      }
+    }
+  }
+  for (const file of ['garages.json', 'route-meta.json']) {
+    const j = tryRead(path.join(DATA_DIR, 'api', file));
+    const entries = file === 'garages.json'
+      ? (j?.garages ?? []).map(g => [g.code, `${g.name ?? ''} ${g.operator ?? ''} ${g.company ?? ''}`])
+      : Object.entries(j?.routes ?? {}).map(([k, v]) => [k, `${v.operator ?? ''} ${v.garageName ?? ''} ${v.company ?? ''}`]);
+    for (const [id, text] of entries) {
+      if (NON_BUS_RE.test(text)) add('CRITICAL', 'api', `${file}:${id}`, 'served fields', 'bus-only value', text.trim(), 'non-bus contamination in served dataset');
+    }
+  }
+}
+
 function main() {
   console.log('=== Data Quality Audit ===\n');
 
@@ -492,6 +520,7 @@ function main() {
   if (vf)  auditFleet(vf);
   if (gar) auditGarages(gar);
   if (rv && vf) auditObservations(rv, vf);
+  auditNoNonBusModes(rc);
   auditFreshness();
 
   // Summarise
