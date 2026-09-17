@@ -45,11 +45,19 @@ jobs:
           BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
         run: node scripts/fetch-line-status.js
 
+      - name: Accumulate diversion history
+        # Every status snapshot feeds the rolling diversion archive — TfL
+        # publishes no historical diversion feed, so this accumulation IS
+        # the history (route, planned/unplanned, stated window, reason).
+        run: node scripts/build-diversion-history.js
+
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/api/line-status.json data/api/route-diversions.json data/api/manifest.json || true
+          git add data/api/diversion-history.json || true
+          git add -f data/source/diversion-history.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
