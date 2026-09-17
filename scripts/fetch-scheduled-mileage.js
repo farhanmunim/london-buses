@@ -68,24 +68,39 @@ async function fetchJson(url, retries = 5) {
   }
 }
 
-// Same schedule-name → day-type classifier as fetch-frequencies.js.
+// Schedule-name → day-type classifier. Extends fetch-frequencies.js's
+// rules with night-service names: a schedule called "Friday Night/Saturday
+// Morning" RUNS on Friday night, so it belongs to the weekday bucket (the
+// generic /sat/ rule would misfile it), and TfL abbreviates to "Mo-Th
+// Nights/Tu-Fr Morning" which none of the long-form patterns match.
 function classifyScheduleName(name) {
-  if (/mon/.test(name) && /fri/.test(name)) return 'weekday';
-  if (/mon/.test(name) && /thu/.test(name)) return 'weekday';
-  if (/weekday/.test(name))                 return 'weekday';
-  if (/sat/.test(name))                     return 'saturday';
-  if (/sun/.test(name))                     return 'sunday';
-  if (/fri/.test(name))                     return 'weekday';
+  if (/fri(day)?\s*night/.test(name))        return 'weekday';
+  if (/sat(urday)?\s*night/.test(name))      return 'saturday';
+  if (/sun(day)?\s*night/.test(name))        return 'sunday';
+  if (/mo-th/.test(name))                    return 'weekday';
+  if (/mon/.test(name) && /fri/.test(name))  return 'weekday';
+  if (/mon/.test(name) && /thu/.test(name))  return 'weekday';
+  if (/weekday/.test(name))                  return 'weekday';
+  if (/sat/.test(name))                      return 'saturday';
+  if (/sun/.test(name))                      return 'sunday';
+  if (/fri/.test(name))                      return 'weekday';
   return null;
 }
 
 function tripsByDayType(timetable) {
+  // Within one route variant, schedules classified to the same bucket are
+  // ALTERNATIVE days of that type ("Monday to Thursday" 107 + "Friday" 107
+  // = a 107-trip weekday, not 214) — take the max as the representative
+  // day. Across variants (rare: different terminals sharing the origin
+  // stop) journeys are additive — sum the per-variant representatives.
   const trips = { weekday: 0, saturday: 0, sunday: 0 };
   for (const rt of (timetable?.timetable?.routes ?? [])) {
+    const perVariant = { weekday: 0, saturday: 0, sunday: 0 };
     for (const sch of (rt.schedules ?? [])) {
       const dt = classifyScheduleName((sch.name ?? '').toLowerCase());
-      if (dt) trips[dt] += (sch.knownJourneys ?? []).length;
+      if (dt) perVariant[dt] = Math.max(perVariant[dt], (sch.knownJourneys ?? []).length);
     }
+    for (const dt of ['weekday', 'saturday', 'sunday']) trips[dt] += perVariant[dt];
   }
   return trips;
 }
