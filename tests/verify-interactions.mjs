@@ -59,6 +59,19 @@ await page.fill('#q', 'N73'); await page.waitForTimeout(400);
 F('routes: search narrows', /1 route/.test(await txt('#countNote')));
 await page.click('#qClear'); await page.waitForTimeout(300);
 F('routes: clear button restores', (await txt('#countNote')) === total && (await page.inputValue('#q')) === '');
+const rOps = await page.locator('#rop option').allTextContents();
+await page.selectOption('#rop', rOps[1]); await page.waitForTimeout(400);
+const rOpCount = await txt('#countNote');
+F(`routes: operator select narrows (${total.trim()} → ${rOpCount.trim()})`, rOps[0] === 'All operators' && rOpCount !== total && /match/.test(rOpCount));
+F('routes: visible rows all show ' + rOps[1], await page.evaluate(op => {
+  const rows = [...document.querySelectorAll('#rlist .rrow .op')];
+  return rows.length > 0 && rows.every(e => e.textContent.includes(op));
+}, rOps[1]));
+F('routes: matching operator chip lights with the select', await page.evaluate(() => document.querySelectorAll('#chips .chip.on[data-f="op"]').length === 1));
+await page.click('#ropClear'); await page.waitForTimeout(400);
+F('routes: operator clear ✕ restores', (await txt('#countNote')) === total
+  && (await page.evaluate(() => document.getElementById('rop').value)) === ''
+  && (await page.evaluate(() => document.getElementById('ropClear').hidden)));
 await page.click('.rrow'); await page.waitForTimeout(1500);
 F('routes: row click opens route detail', (await page.evaluate(() => location.hash)).startsWith('#/route/'));
 
@@ -107,6 +120,28 @@ F('netmap: colour-by segment switches', await page.evaluate(() => [...document.q
 await go('#/stops');
 await page.fill('#sq', 'angel'); await page.waitForTimeout(600);
 F('stops: search matches', /stop/.test(await txt('#sCount')));
+await page.click('#sqClear'); await page.waitForTimeout(400);
+const sTotal = await txt('#sCount');   // "N stops on the network"
+const sOps = await page.locator('#sop option').allTextContents();
+const sPick = sOps[1];
+await page.selectOption('#sop', sPick); await page.waitForTimeout(700);
+const sOpCount = await txt('#sCount');
+const sMatched = parseInt(sOpCount.replace(/,/g, ''), 10), sAll = parseInt(sTotal.replace(/,/g, ''), 10);
+F(`stops: operator select narrows (${sTotal.trim()} → ${sOpCount.trim()})`,
+  sOps[0] === 'All operators' && /match/.test(sOpCount) && sMatched > 0 && sMatched < sAll);
+const metaRoutes = JSON.parse(readFileSync(join(ROOT, 'data/api/route-meta.json'), 'utf8')).routes;
+const sOpRoutes = Object.entries(metaRoutes).filter(([, m]) => m?.operator === sPick).map(([r]) => r.toUpperCase());
+F('stops: visible rows each show a ' + sPick + ' route (or a truncated list)', await page.evaluate(rs => {
+  const rows = [...document.querySelectorAll('#slist .grow .g-nm > span')];
+  return rows.length > 0 && rows.every(e => {
+    const t = e.textContent;
+    return t.includes('…') || t.split(' · ').some(l => rs.includes(l.trim()));
+  });
+}, sOpRoutes));
+await page.click('#sopClear'); await page.waitForTimeout(500);
+F('stops: operator clear ✕ restores', (await txt('#sCount')) === sTotal
+  && (await page.evaluate(() => document.getElementById('sop').value)) === '');
+await page.fill('#sq', 'angel'); await page.waitForTimeout(600);
 await page.click('#slist a, #slist .grow'); await page.waitForTimeout(1800);
 F('stops: row opens live board', (await page.evaluate(() => location.hash)).startsWith('#/stop/'));
 F('stop: arrivals rows render', (await page.locator('#arrBoard > div').count()) >= 1);
@@ -123,6 +158,19 @@ await go('#/garages');
 const gAll = await txt('#gCount');
 await page.fill('#gq', 'catford'); await page.waitForTimeout(400);
 F(`garages: search narrows (${gAll.trim()} → ${(await txt('#gCount')).trim()})`, (await txt('#gCount')) !== gAll);
+await page.fill('#gq', ''); await page.waitForTimeout(400);
+const gOps = await page.locator('#gop option').allTextContents();
+await page.selectOption('#gop', gOps[1]); await page.waitForTimeout(400);
+const gOpCount = await txt('#gCount');
+F(`garages: operator select narrows (${gAll.trim()} → ${gOpCount.trim()})`,
+  gOps[0] === 'All operators' && gOpCount !== gAll && parseInt(gOpCount, 10) > 0);
+F('garages: visible rows all belong to ' + gOps[1], await page.evaluate(op => {
+  const rows = [...document.querySelectorAll('#glist .grow .g-nm > span')];
+  return rows.length > 0 && rows.every(e => e.textContent.startsWith(op + ' ·'));
+}, gOps[1]));
+await page.click('#gopClear'); await page.waitForTimeout(400);
+F('garages: operator clear ✕ restores', (await txt('#gCount')) === gAll
+  && (await page.evaluate(() => document.getElementById('gop').value)) === '');
 
 /* ── Tender ── */
 await go('#/tender'); await page.waitForTimeout(800);

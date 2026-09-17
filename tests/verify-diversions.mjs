@@ -92,6 +92,44 @@ F('type filter narrows to Planned only (' + ty.badges.length + ' rows, "' + ty.c
   ty.badges.length > 0 && ty.badges.every(b => b === 'Planned') && ty.count.includes(tyTotal.toLocaleString('en-GB')));
 await page.selectOption('#dty', ''); await page.waitForTimeout(300);
 
+/* operator filter — each entry resolves route → current operator via
+   route-meta, N-prefixed ids falling back to their base id (same rule the
+   programme tab uses) */
+const metaRoutes = JSON.parse(readFileSync(join(ROOT, 'data/api/route-meta.json'), 'utf8')).routes;
+const opOf = r => {
+  for(const t of String(r ?? '').toUpperCase().split('/').map(x => x.trim()).filter(Boolean)){
+    const m = metaRoutes[t] ?? (t.startsWith('N') ? metaRoutes[t.slice(1)] : null);
+    if(m?.operator) return m.operator;
+  }
+  return null;
+};
+const opCounts = {};
+for(const e of hist.entries){ const o = opOf(e.route); if(o) opCounts[o] = (opCounts[o] ?? 0) + 1; }
+const dPick = Object.keys(opCounts).sort().find(o => opCounts[o] > 0 && opCounts[o] < total) ?? Object.keys(opCounts)[0];
+await page.selectOption('#dop', dPick); await page.waitForTimeout(400);
+const dop = await page.evaluate(() => ({
+  count: document.getElementById('dCount')?.textContent ?? '',
+  titles: [...document.querySelectorAll('#dBody tr td:first-child')].map(td => td.getAttribute('title') ?? ''),
+  clearShown: !document.getElementById('dopClear').hidden,
+  firstOpt: document.querySelector('#dop option')?.textContent ?? '',
+}));
+F('operator filter narrows to ' + dPick + ' (' + opCounts[dPick] + ' expected, "' + dop.count + '") and every visible row resolves to it',
+  dop.firstOpt === 'All operators' && opCounts[dPick] < total
+  && dop.count.includes(opCounts[dPick].toLocaleString('en-GB'))
+  && dop.titles.length > 0 && dop.titles.every(t => t === dPick) && dop.clearShown);
+const [odl] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }), page.click('#dExport') ]);
+const ocsv = readFileSync(await odl.path(), 'utf8');
+F('CSV export respects the operator filter (' + (ocsv.split('\r\n').length - 1) + ' rows)',
+  ocsv.split('\r\n').length - 1 === opCounts[dPick]);
+await page.click('#dopClear'); await page.waitForTimeout(400);
+const dClr = await page.evaluate(() => ({
+  count: document.getElementById('dCount')?.textContent ?? '',
+  val: document.getElementById('dop').value,
+  clearHidden: document.getElementById('dopClear').hidden,
+}));
+F('operator clear ✕ restores ("' + dClr.count + '")',
+  dClr.count.includes(total.toLocaleString('en-GB')) && dClr.val === '' && dClr.clearHidden);
+
 /* active-only narrows */
 const actTotal = hist.entries.filter(e => e.active).length;
 await page.check('#dact'); await page.waitForTimeout(400);
@@ -190,6 +228,31 @@ if(perfExists){
     belowN > 0 && belowN < allN && bl.rows.length > 0
     && bl.rows.every(r => parseFloat(r.op) < parseFloat(r.min)));
   await page.uncheck('#mbelow'); await page.waitForTimeout(300);
+
+  /* operator filter on the mileage table — same route-meta resolution */
+  const mOpsAll = await page.locator('#mop option').allTextContents();
+  const mPick = mOpsAll[1];
+  const mBefore = await page.evaluate(() => document.getElementById('mCount')?.textContent ?? '');
+  const mAllN = parseInt((mBefore.match(/([\d,]+) rows?/)?.[1] ?? '0').replace(/,/g, ''), 10);
+  await page.selectOption('#mop', mPick); await page.waitForTimeout(400);
+  const mo = await page.evaluate(() => ({
+    count: document.getElementById('mCount')?.textContent ?? '',
+    routes: [...document.querySelectorAll('#mBody tr td:first-child')].map(td => td.textContent.trim()),
+    clearShown: !document.getElementById('mopClear').hidden,
+  }));
+  const mOpN = parseInt((mo.count.match(/([\d,]+) rows?/)?.[1] ?? '0').replace(/,/g, ''), 10);
+  F('mileage operator filter narrows (' + mAllN + ' → ' + mOpN + ') and every visible route resolves to ' + mPick,
+    mOpsAll[0] === 'All operators' && mOpN > 0 && mOpN < mAllN && mo.clearShown
+    && mo.routes.length > 0 && mo.routes.every(r => opOf(r) === mPick));
+  const [mdl2] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }), page.click('#mExport') ]);
+  const mcsv2 = readFileSync(await mdl2.path(), 'utf8');
+  F('mileage CSV respects the operator filter (' + (mcsv2.split('\r\n').length - 1) + ' rows)',
+    mcsv2.split('\r\n').length - 1 === mOpN);
+  await page.click('#mopClear'); await page.waitForTimeout(400);
+  const mAfter = await page.evaluate(() => document.getElementById('mCount')?.textContent ?? '');
+  F('mileage operator clear ✕ restores ("' + mAfter.trim() + '")',
+    parseInt((mAfter.match(/([\d,]+) rows?/)?.[1] ?? '0').replace(/,/g, ''), 10) === mAllN
+    && await page.evaluate(() => document.getElementById('mop').value === '' && document.getElementById('mopClear').hidden));
 }
 
 F('zero page errors', errors.length === 0);

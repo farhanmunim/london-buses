@@ -506,6 +506,32 @@ const cmpRoute = (a,b) => { const na=parseInt(a,10), nb=parseInt(b,10);
   if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb; if(!isNaN(na)&&isNaN(nb)) return -1; if(isNaN(na)&&!isNaN(nb)) return 1;
   return String(a).localeCompare(String(b)); };
 
+/* Operator filter — the tender tables' select + ✕ clear pattern, shared by
+   every filterable table. Options come pre-normalised from route-meta /
+   garages (the pipeline canonicalises operator names — no extra
+   normalisation here); blank/unknown operators only ever match
+   "All operators". */
+const opSelCss = 'border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx);max-width:100%';
+const opClearCss = 'width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1;flex:none';
+const opFilterHtml = (id, ops, cur = '') => `<span style="display:inline-flex;align-items:center;gap:4px;min-width:0">
+    <select id="${id}" aria-label="Filter by operator" style="${opSelCss}"><option value="">All operators</option>${ops.map(o => `<option${o === cur ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>
+    <button id="${id}Clear" ${cur ? '' : 'hidden'} aria-label="Clear operator filter" title="Clear operator filter" style="${opClearCss}">✕</button></span>`;
+function bindOpFilter(id, apply){
+  const sel = document.getElementById(id), clr = document.getElementById(id + 'Clear');
+  sel.addEventListener('change', () => { clr.hidden = !sel.value; apply(sel.value); });
+  clr.addEventListener('click', () => { sel.value = ''; clr.hidden = true; apply(''); });
+}
+/* Current operator of a (possibly combined "24/N24") route id — the same
+   resolution the tendering-programme tab uses: route-meta first, an
+   N-prefixed id falling back to its base id. */
+const routeOperatorOf = (meta, route) => {
+  for(const t of String(route ?? '').toUpperCase().split('/').map(x => x.trim()).filter(Boolean)){
+    const m = meta?.[t] ?? (t.startsWith('N') ? meta?.[t.slice(1)] : null);
+    if(m?.operator) return m.operator;
+  }
+  return null;
+};
+
 const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:'School' };
 const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
 const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
@@ -872,6 +898,7 @@ async function renderRoutes(){
         <input id="q" aria-label="Search routes" placeholder="Search a route, e.g. 25 or N73" autocomplete="off" inputmode="search" value="${esc(routesViewState.q)}" />
         <button class="clear" id="qClear" aria-label="Clear search" ${routesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 2px 0" id="ropRow"></div>
       <div class="chips" id="chips"></div>
     </div>
     <div class="count-note" id="countNote"></div>
@@ -933,12 +960,18 @@ async function renderRoutes(){
   const rlist = document.getElementById('rlist');
   const rerender = () => { rlist.innerHTML = rowsHtml(); };
   chips.innerHTML = chipsHtml();
+  document.getElementById('ropRow').innerHTML = opFilterHtml('rop', ops, routesViewState.op ?? '');
   rerender();
+  bindOpFilter('rop', v => { routesViewState.op = v || null; chips.innerHTML = chipsHtml(); rerender(); });
 
   chips.addEventListener('click', e => {
     const b = e.target.closest('.chip'); if(!b) return;
     const f = b.dataset.f, v = b.dataset.v;
     routesViewState[f] = routesViewState[f] === v ? null : v;
+    if(f === 'op'){   // keep the operator select + its ✕ in step with the chip
+      const s = document.getElementById('rop'), c = document.getElementById('ropClear');
+      if(s){ s.value = routesViewState.op ?? ''; c.hidden = !routesViewState.op; }
+    }
     chips.innerHTML = chipsHtml();
     rerender();
   });
@@ -2089,7 +2122,7 @@ async function renderOperatorDetail(op){
 }
 
 /* ════════════════════ GARAGES ════════════════════ */
-const garagesViewState = { q:'' };
+const garagesViewState = { q:'', op:'' };
 async function renderGarages(){
   const tok = navToken;
   main.innerHTML = `
@@ -2098,15 +2131,19 @@ async function renderGarages(){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
       <input id="gq" aria-label="Search garages" placeholder="Search by name or code" autocomplete="off" value="${esc(garagesViewState.q)}" />
       <button class="clear" id="gqClear" aria-label="Clear search" ${garagesViewState.q?'':'hidden'}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-    </div></div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 2px 0" id="gopRow"></div></div>
     <div class="count-note" id="gCount"></div>
     <div class="glist" id="glist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
   const garages = await D.garages();
   if(gone(tok)) return;
   if(!garages?.length){ document.getElementById('glist').innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
+  const gOps = [...new Set(garages.map(g => g.operator).filter(Boolean))].sort();
+  document.getElementById('gopRow').innerHTML = opFilterHtml('gop', gOps, garagesViewState.op);
   const rerender = () => {
     const q = garagesViewState.q.trim().toLowerCase();
-    const list = garages.filter(g => !q || g.name?.toLowerCase().includes(q) || g.code?.toLowerCase() === q)
+    const list = garages.filter(g => (!q || g.name?.toLowerCase().includes(q) || g.code?.toLowerCase() === q)
+        && (!garagesViewState.op || g.operator === garagesViewState.op))
       .sort((a,b) => String(a.name).localeCompare(String(b.name)));
     document.getElementById('gCount').textContent = `${list.length} garage${list.length===1?'':'s'}`;
     document.getElementById('glist').innerHTML = list.map(g => `
@@ -2118,6 +2155,7 @@ async function renderGarages(){
       </a>`).join('') || '<div class="empty">No garages match.</div>';
   };
   rerender();
+  bindOpFilter('gop', v => { garagesViewState.op = v; rerender(); });
   const gq = document.getElementById('gq'), gqClear = document.getElementById('gqClear');
   gq.addEventListener('input', () => { garagesViewState.q = gq.value; gqClear.hidden = !gq.value; rerender(); });
   gqClear.addEventListener('click', () => { gq.value=''; garagesViewState.q=''; gqClear.hidden=true; rerender(); gq.focus(); });
@@ -2208,7 +2246,7 @@ async function initGarageMap(g, tok = navToken){
 }
 
 /* ════════════════════ STOPS — search + live arrivals ════════════════════ */
-const stopsViewState = { q:'' };
+const stopsViewState = { q:'', op:'' };
 const haversineM = (aLat,aLng,bLat,bLng) => {
   const D = Math.PI/180, R = 6371e3;
   const x = Math.sin((bLat-aLat)*D/2)**2 + Math.cos(aLat*D)*Math.cos(bLat*D)*Math.sin((bLng-aLng)*D/2)**2;
@@ -2228,13 +2266,28 @@ async function renderStops(){
         <button class="livebtn" id="nearBtn" style="margin:0;flex:none"><span class="spin"></span>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Near me</button>
       </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 2px 0" id="sopRow"></div>
     </div>
     <div class="count-note" id="sCount"></div>
     <div class="glist" id="slist"><div class="empty" id="sHint">Loading the stop directory…</div></div>`;
-  const reg = await stopRegistry();
+  const [reg, meta] = await Promise.all([stopRegistry(), D.meta()]);
   if(gone(tok)) return;
   if(!reg?.size){ const l=document.getElementById('slist'); if(l) l.innerHTML = '<div class="empty">The data is unreachable right now.</div>'; return; }
   const all = [...reg.values()];
+  /* route → operator, built once, lazily — one Map lookup per line keeps the
+     ~20k-stop join cheap. A stop matches when ANY route serving it is run by
+     the selected operator. */
+  const sOps = [...new Set(Object.values(meta ?? {}).map(m => m?.operator).filter(Boolean))].sort();
+  let opByRoute = null;
+  const lineOp = l => {
+    if(!opByRoute){
+      opByRoute = new Map();
+      for(const [r, mm] of Object.entries(meta ?? {})) if(mm?.operator) opByRoute.set(String(r).toUpperCase(), mm.operator);
+    }
+    return opByRoute.get(String(l).toUpperCase()) ?? null;
+  };
+  const servedBy = (s, op) => { for(const l of s.lines) if(lineOp(l) === op) return true; return false; };
+  document.getElementById('sopRow').innerHTML = opFilterHtml('sop', sOps, stopsViewState.op);
 
   const rowHtml = (s, dist) => `
     <a class="grow" href="#/stop/${encodeURIComponent(s.id)}">
@@ -2245,18 +2298,21 @@ async function renderStops(){
 
   const rerender = () => {
     const q = stopsViewState.q.trim().toLowerCase();
+    const op = stopsViewState.op;
     const cEl = document.getElementById('sCount'), lEl = document.getElementById('slist');
     if(!cEl || !lEl) return;
-    if(q.length < 2){
+    if(q.length < 2 && !op){
       cEl.textContent = `${all.length.toLocaleString('en-GB')} stops on the network`;
       lEl.innerHTML = '<div class="empty">Type at least two characters, or use “Near me”.</div>';
       return;
     }
-    const list = all.filter(s => s.name?.toLowerCase().includes(q)).slice(0, 60);
-    cEl.textContent = `${list.length}${list.length===60?'+':''} stop${list.length===1?'':'s'} match`;
+    const matched = all.filter(s => (q.length < 2 || s.name?.toLowerCase().includes(q)) && (!op || servedBy(s, op)));
+    const list = matched.slice(0, 60);
+    cEl.textContent = `${matched.length.toLocaleString('en-GB')} stop${matched.length===1?'':'s'} match${list.length < matched.length ? ` · first ${list.length} shown` : ''}`;
     lEl.innerHTML = list.map(s => rowHtml(s)).join('') || '<div class="empty">No stops match.</div>';
   };
   rerender();
+  bindOpFilter('sop', v => { stopsViewState.op = v; rerender(); });
   const sq = document.getElementById('sq'), sqClear = document.getElementById('sqClear');
   let sqT = null;   // ~20k stop names per keystroke — debounce the rebuild
   sq.addEventListener('input', () => { stopsViewState.q = sq.value; sqClear.hidden = !sq.value; clearTimeout(sqT); sqT = setTimeout(rerender, 90); });
@@ -2966,13 +3022,15 @@ const divnSorted = hist => [...hist.entries].sort((a,b) => String(b.lastSeen ?? 
 async function renderDiversions(){
   const tok = navToken;
   main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
-  const hist = await D.divHistory();
+  const [hist, dMeta] = await Promise.all([D.divHistory(), D.meta()]);
   if(gone(tok)) return;
   if(!hist?.entries?.length){
     main.innerHTML = `<div class="wrap"><div class="empty">The diversion history is unreachable right now — try again shortly.</div></div>`;
     return;
   }
   const all = divnSorted(hist);
+  for(const e of all) e.currentOperator = routeOperatorOf(dMeta, e.route);
+  const dOps = [...new Set(all.map(e => e.currentOperator).filter(Boolean))].sort();
   const PAGE = DIVN_PAGE, routeChip = divnRouteChip, inputCss = divnInputCss;
   const CAT_LABEL = { PlannedWork:'Planned', RealTime:'Unplanned', Event:'Event' };
   /* Badges reuse the site's existing accent/warn/muted vars — no new palette. */
@@ -2992,6 +3050,7 @@ async function renderDiversions(){
       <input id="dq" type="search" aria-label="Search diversions by route" placeholder="Search route (e.g. 24)" style="flex:1;min-width:140px;max-width:240px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="dty" aria-label="Filter by diversion type" style="${inputCss}">
         <option value="">All types</option><option value="PlannedWork">Planned</option><option value="RealTime">Unplanned</option><option value="Event">Event</option></select>
+      ${opFilterHtml('dop', dOps)}
       <input id="dday" type="date" aria-label="Show diversions observed on this day" title="Show only diversions observed on this day" style="${inputCss}">
       <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="dact" type="checkbox">Active only</label>
       <button class="livebtn" id="dExport" title="Downloads every diversion matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button>
@@ -3015,12 +3074,13 @@ async function renderDiversions(){
   </div>`;
 
   /* ── History table ── */
-  const st = { q:'', ty:'', act:false, day:'', page:0 };
+  const st = { q:'', ty:'', op:'', act:false, day:'', page:0 };
   const filtered = () => {
     const q = st.q.trim().toUpperCase();
     // Routes match EXACTLY, same rule as the tenders route search.
     return all.filter(e =>
       (!q || String(e.route ?? '').toUpperCase().split('/').some(t => t.trim() === q))
+      && (!st.op || e.currentOperator === st.op)
       && (!st.ty || e.category === st.ty)
       && (!st.act || e.active)
       && (!st.day || (e.days ?? []).includes(st.day)));
@@ -3031,7 +3091,7 @@ async function renderDiversions(){
     st.page = Math.min(st.page, pages - 1);
     const shown = list.slice(st.page * PAGE, st.page * PAGE + PAGE);
     document.getElementById('dBody').innerHTML = shown.map(e => `<tr>
-      <td>${routeChip(e.route)}</td>
+      <td title="${esc(e.currentOperator ?? '')}">${routeChip(e.route)}</td>
       <td>${badge(e.category)}</td>
       <td style="white-space:nowrap">${ddMMM(e.since)} → ${ddMMM(e.until)}</td>
       <td class="num" style="text-align:left;white-space:nowrap">${ddMMMhm(e.firstSeen)}</td>
@@ -3049,6 +3109,7 @@ async function renderDiversions(){
   let deb;
   document.getElementById('dq').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => { st.q = e.target.value; st.page = 0; draw(); }, 150); });
   document.getElementById('dty').addEventListener('change', e => { st.ty = e.target.value; st.page = 0; draw(); });
+  bindOpFilter('dop', v => { st.op = v; st.page = 0; draw(); });
   document.getElementById('dday').addEventListener('change', e => { st.day = e.target.value; st.page = 0; draw(); });
   document.getElementById('dact').addEventListener('change', e => { st.act = e.target.checked; st.page = 0; draw(); });
   document.getElementById('dPrev').addEventListener('click', () => { st.page = Math.max(0, st.page - 1); draw(); });
@@ -3074,7 +3135,7 @@ async function renderMileage(){
      period's diversion counts. Either mileage file may not exist yet while
      its crawler finishes its first run — the page degrades to a note, never
      an error. */
-  const [perf, sched, hist] = await Promise.all([D.routePerf(), D.schedMiles(), D.divHistory()]);
+  const [perf, sched, hist, mMeta] = await Promise.all([D.routePerf(), D.schedMiles(), D.divHistory(), D.meta()]);
   if(gone(tok)) return;
   const all = hist?.entries?.length ? divnSorted(hist) : [];
   main.innerHTML = `<div class="wrap">
@@ -3117,10 +3178,16 @@ async function renderMileage(){
     }
   }
   const routeIds = Object.keys(perfRoutes).sort(cmpRoute);
+  /* Current operator per route — same route-meta resolution (N-prefix
+     fallback) the diversions page and the programme tab use. */
+  const mOpOf = {};
+  for(const id of routeIds) mOpOf[id] = routeOperatorOf(mMeta, id);
+  const mOps = [...new Set(Object.values(mOpOf).filter(Boolean))].sort();
   mWrap.innerHTML = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
       <input id="mq" type="search" aria-label="Search mileage by route" placeholder="Search route (e.g. 24) — shows all its periods" style="flex:1;min-width:140px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="mper" aria-label="Reporting period" style="${inputCss}">${periodsDesc.map(p => `<option${p === newest ? ' selected' : ''}>${esc(p)}</option>`).join('')}</select>
+      ${opFilterHtml('mop', mOps)}
       <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="mbelow" type="checkbox">Below standard only</label>
     </div>
     <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:980px">
@@ -3141,7 +3208,7 @@ async function renderMileage(){
       <button class="livebtn" id="mNext">Next ›</button>
     </div>
     <div class="legendrow" style="margin-top:8px"><span>Sources: ${esc(perf.source ?? 'TfL QSI & mileage per-route reports')}${schedRoutes ? ', joined with timetable-derived scheduled km (est. — 20 weekdays + 4 Saturdays + 4 Sundays per 28-day period)' : ''}. Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days) — TfL publishes no period calendar.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
-  const mst = { q:'', per:newest, below:false, page:0 };
+  const mst = { q:'', per:newest, op:'', below:false, page:0 };
   const rowFor = (id, per) => {
     const p = perfRoutes[id] ?? {};
     const op = num(p.operatedPct?.[per]);
@@ -3163,6 +3230,7 @@ async function renderMileage(){
       rows = routeIds.map(id => rowFor(id, mst.per));
     }
     rows = rows.filter(r => r.op != null || r.rel != null);
+    if(mst.op) rows = rows.filter(r => mOpOf[r.route] === mst.op);
     if(mst.below) rows = rows.filter(r => r.op != null && r.minStd != null && r.op < r.minStd);
     return rows;
   };
@@ -3190,6 +3258,7 @@ async function renderMileage(){
   let mdeb;
   document.getElementById('mq').addEventListener('input', e => { clearTimeout(mdeb); mdeb = setTimeout(() => { mst.q = e.target.value; mst.page = 0; mDraw(); }, 150); });
   document.getElementById('mper').addEventListener('change', e => { mst.per = e.target.value; mst.page = 0; mDraw(); });
+  bindOpFilter('mop', v => { mst.op = v; mst.page = 0; mDraw(); });
   document.getElementById('mbelow').addEventListener('change', e => { mst.below = e.target.checked; mst.page = 0; mDraw(); });
   document.getElementById('mPrev').addEventListener('click', () => { mst.page = Math.max(0, mst.page - 1); mDraw(); });
   document.getElementById('mNext').addEventListener('click', () => { mst.page = mst.page + 1; mDraw(); });
