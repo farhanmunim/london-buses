@@ -199,10 +199,14 @@ async function breadcrumb(env, verdict, msg) {
     const payload = JSON.stringify({ message: `streetworks ${verdict}`, branch: INBOX_BRANCH,
       content: btoa(unescape(encodeURIComponent(body))) });
     let res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
-    if (res.status === 422 && await bootstrapBranch(g)) {
-      await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
+    // A pristine repo has no inbox branch yet: the contents API answers 404
+    // (branch missing) — 422 covers other first-write shapes. Bootstrap and
+    // retry once for either.
+    if ((res.status === 404 || res.status === 422) && await bootstrapBranch(g)) {
+      res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
     }
-  } catch { /* observability must never break delivery */ }
+    return { status: res.status, ok: res.ok };
+  } catch (e) { return { status: 0, error: String(e).slice(0, 120) }; /* observability must never break delivery */ }
 }
 
 async function storeEvent(env, msg, ha) {
@@ -222,9 +226,15 @@ async function storeEvent(env, msg, ha) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     const res = await fetch(g.api(`/contents/${path}`), { method: 'PUT', headers: g.headers, body: payload });
     if (res.ok) return { ok: true };
+    if (res.status === 404 && attempt === 1) {
+      // Pristine repo: the inbox branch doesn't exist yet — the contents
+      // API answers 404 for a missing branch, NOT 422. Bootstrap and retry.
+      if (await bootstrapBranch(g)) continue;
+      return { ok: false, status: 404, detail: 'inbox branch missing and bootstrap failed (write permission?)' };
+    }
     if (res.status === 422) {
-      // Either the file already exists (SNS redelivery — success) or the
-      // branch doesn't exist yet (first ever event — bootstrap and retry).
+      // Either the file already exists (SNS redelivery — success) or a
+      // first-write shape quirk — bootstrap and retry once.
       const detail = await res.text();
       if (/sha/i.test(detail)) return { ok: true, duplicate: true };
       if (attempt === 1 && await bootstrapBranch(g)) continue;
@@ -237,7 +247,7 @@ async function storeEvent(env, msg, ha) {
 }
 
 /* ── Handlers ───────────────────────────────────────────────────────────── */
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   if (!env.GITHUB_TOKEN) {
     return json({ service: 'street-manager open-data receiver', ready: false,
                   hint: 'Set the GITHUB_TOKEN env var (fine-grained PAT, this repo, Contents read/write) on the Pages project.' }, 503);
@@ -256,14 +266,23 @@ export async function onRequestGet({ env }) {
     const refRes = await fetch(g.api(`/git/ref/heads/${INBOX_BRANCH}`), { headers: g.headers });
     branch = refRes.ok;
   }
-  return json({
+  const out = {
     service: 'street-manager open-data receiver',
     ready: true,
     storage: `github:${g.repo}#${INBOX_BRANCH}`,
     inboxBranchExists: branch,
     queuedEvents: queued >= 1000 ? '1000+' : queued,
     hint: 'Endpoint is ready — you can register this URL for Street Manager open data.',
-  });
+  };
+  // ?selftest=write exercises the REAL write path (breadcrumb → branch
+  // bootstrap → contents PUT), which plain readiness (a read) cannot prove
+  // — a read-only PAT looks "ready" but would fail every delivery.
+  if (new URL(request.url).searchParams.get('selftest') === 'write') {
+    out.writeSelfTest = await breadcrumb(env, 'write self-test', { Type: 'SelfTest', MessageId: `selftest-${Date.now()}` });
+    out.ready = out.ready && out.writeSelfTest?.ok === true;
+    if (out.writeSelfTest?.status === 403) out.hint = 'GITHUB_TOKEN can read but NOT write — recreate the fine-grained PAT with Contents: Read AND write.';
+  }
+  return json(out, out.ready ? 200 : 503);
 }
 
 export async function onRequestPost({ request, env }) {
