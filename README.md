@@ -6,12 +6,13 @@ An interactive map and data explorer for every bus route in London. Search route
 
 ## What it does
 
-The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`.
+The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`.
 
 - Draws the whole network as one colour-coded map. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender.
 - Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, and bus-involved **collisions** as a heatmap.
 - **Tender**: every published TfL award since 2003, plus the forward tendering programme. Both tables are searchable by route, operator or tranche, with analysis numbers computed for the current filter (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
 - **CPI-CPA**: the ONS CPI index by month and the contract price adjustment rates derived from it. Verified against ONS reference tables.
+- **Diversions**: a day-by-day history of every TfL-notified diversion, accumulated from status snapshots (TfL publishes no archive). **Street works**: the statutory DfT Street Manager record for London's 33 highway authorities + TfL, pushed live over SNS into the repo. **Mileage**: scheduled-vs-operated km per route per TfL reporting period.
 - Live service status per route, straight from TfL. Per-route crowding: peak load, busiest stop, busiest time.
 - Stackable filters, multi-route comparison, per-operator statistics, CSV exports throughout.
 
@@ -30,11 +31,11 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|
 | Nightly full refresh | routes, geometry, stops, operators/garages/PVR, CPI-CPA, programme | daily 03:17 | `weekly-refresh.yml` |
-| Service status | line status, diversion register | every 2 h, 07:41–21:41 | `refresh-status.yml` |
+| Service status | line status, diversion register + history, TIMS roadworks, street-works drain | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
 
-Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `functions/api/live/vehicles.js`, a Cloudflare Pages Function that proxies the DfT BODS GPS feed with a 10-second edge cache.
+Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `functions/api/live/vehicles.js`, a Cloudflare Pages Function that proxies the DfT BODS GPS feed with a 10-second edge cache. Street works arrive by push: `functions/api/streetworks.js` receives DfT Street Manager SNS notifications (signature-verified, London-filtered by SWA org code) and commits each event to the `streetworks-inbox` branch, which the status workflow folds into the archive.
 
 ## Local development
 

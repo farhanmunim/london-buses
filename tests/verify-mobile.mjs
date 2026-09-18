@@ -68,7 +68,7 @@ const after = await page.evaluate(() => ({
 }));
 F(`More sheet holds ${more.links.join('/')} and navigates (→ ${after.hash})`,
   more.open && more.onscreen && more.aboveBar
-  && more.links.join() === 'Garages,Stops,Diversions,Mileage,CPI-CPA,About'
+  && more.links.join() === 'Garages,Stops,Diversions,Street works,Mileage,CPI-CPA,About'
   && after.hash === '#/diversions' && after.closed && after.moreOn);
 const kpiClip = await page.evaluate(async () => {
   location.hash = '#/tender'; await new Promise(r => setTimeout(r, 1500));

@@ -52,7 +52,7 @@ const dd = await page.evaluate(() => ({
 }));
 F('desktop More dropdown opens with ' + dd.links.join('/') + ' (inline: ' + dd.inline.join('/') + ')',
   moreVisible && dd.open && dd.belowBar && dd.onscreen
-  && dd.links.join() === 'Garages,Stops,Diversions,Mileage,CPI-CPA,About'
+  && dd.links.join() === 'Garages,Stops,Diversions,Street works,Mileage,CPI-CPA,About'
   && dd.inline.join() === 'Map,Routes,Operators,Tender');
 await page.click('#moreSheet a[data-nav="diversions"]'); await page.waitForTimeout(2000);
 const nav = await page.evaluate(() => ({

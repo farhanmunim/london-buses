@@ -164,6 +164,9 @@ b{font-weight:700}
   <tr><td><code>#/garages</code> · <code>#/garage/…</code></td><td>Every garage: capacity, utilisation, routes based there, on the map.</td></tr>
   <tr><td><code>#/vehicle/…</code></td><td>One bus by registration: make, age, fuel, live position.</td></tr>
   <tr><td><code>#/tender</code></td><td>Every TfL award since 2003 and the forward programme. Search by route, operator or tranche. Filter, sort, analyse, export CSV.</td></tr>
+  <tr><td><code>#/diversions</code></td><td>Day-by-day history of every TfL-notified diversion, accumulated from status snapshots. Filter and export.</td></tr>
+  <tr><td><code>#/streetworks</code></td><td>The statutory DfT Street Manager record for London: every permit and work event, pushed live from DfT. Filter by borough, category, status; export.</td></tr>
+  <tr><td><code>#/mileage</code></td><td>Scheduled-vs-operated mileage per route per TfL reporting period, joined with the diversion history.</td></tr>
   <tr><td><code>#/cpi</code></td><td>The ONS CPI index and the contract price adjustment rates derived from it.</td></tr>
   <tr><td><code>#/about</code></td><td>Sources, licences, and a live table of when each dataset refreshes.</td></tr>
 </table></div>
@@ -242,6 +245,10 @@ b{font-weight:700}
   <tr><td><code>cpi-cpa.json</code></td><td>The CPI series and derived CPA rates.</td></tr>
   <tr><td><code>crowding.json</code> / <code>crowding-profile.json</code></td><td>Peak-load data per route.</td></tr>
   <tr><td><code>bridges.json</code> / <code>accidents.json</code></td><td>Low bridges and collision records for the map layers.</td></tr>
+  <tr><td><code>diversion-history.json</code></td><td>Rolling diversion archive, one entry per (route, reason), with the days each was observed.</td></tr>
+  <tr><td><code>streetworks-history.json</code></td><td>DfT Street Manager works for London’s highway authorities — latest payload plus the event trail per work.</td></tr>
+  <tr><td><code>roadworks-history.json</code></td><td>TfL TIMS road disruptions, corridor-joined to bus routes within 30 m.</td></tr>
+  <tr><td><code>route-performance.json</code> / <code>scheduled-mileage.json</code></td><td>TfL QSI + operated-mileage per period / timetable-derived scheduled km per day type.</td></tr>
   <tr><td><code>manifest.json</code></td><td>Per dataset: source, fetch time, row count, cadence. Powers the About page.</td></tr>
 </table></div>
 
@@ -250,7 +257,7 @@ b{font-weight:700}
 <div class="tablewrap"><table>
   <tr><th>Workflow</th><th>Schedule (UTC)</th><th>Refreshes</th></tr>
   <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full 17-step pipeline. The name is historical.</td></tr>
-  <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status and the diversion register.</td></tr>
+  <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status, the diversion register + history, TIMS roadworks, and the street-works drain (folds DfT Street Manager events pushed to the <code>streetworks-inbox</code> branch).</td></tr>
   <tr><td><code>refresh-fleet.yml</code></td><td>07:20 / 15:20 / 23:20</td><td>Arrivals sweep and DVLA fleet data.</td></tr>
   <tr><td><code>refresh-tenders.yml</code></td><td>hourly 07:20–20:20, plus after every other run</td><td>Tender awards and the programme.</td></tr>
 </table></div>
