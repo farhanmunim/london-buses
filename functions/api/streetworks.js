@@ -351,10 +351,10 @@ export async function onRequestPost({ request, env }) {
       if (!ha && !globalThis.__swLoggedNullHa) {
         globalThis.__swLoggedNullHa = true;
         await breadcrumb(env, `notification sample: NO ha attribute found; MessageAttributes keys=[${Object.keys(msg.MessageAttributes ?? {}).join(',')}]`, msg);
-      } else if (ha && !globalThis.__swLoggedSkip) {
-        globalThis.__swLoggedSkip = true;
-        await breadcrumb(env, `notification sample: skipped non-London ha="${ha}" (pipeline healthy)`, msg);
       }
+      // Healthy non-London skips are no longer breadcrumbed: the go-live
+      // diagnostics proved the ha_org read, and isolate churn made the
+      // once-per-isolate sample ~dozens of commits/day of pure noise.
       return json({ skipped: 'outside London', ha });
     }
     if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 503);

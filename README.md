@@ -9,7 +9,7 @@ An interactive map and data explorer for every bus route in London. Search route
 The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`.
 
 - Draws the whole network as one colour-coded map. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender.
-- Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, and bus-involved **collisions** as a heatmap.
+- Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, bus-involved **collisions** as a heatmap, and current **street works** from the DfT Street Manager feed.
 - **Tender**: every published TfL award since 2003, plus the forward tendering programme. Both tables are searchable by route, operator or tranche, with analysis numbers computed for the current filter (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
 - **CPI-CPA**: the ONS CPI index by month and the contract price adjustment rates derived from it. Verified against ONS reference tables.
 - **Diversions**: a day-by-day history of every TfL-notified diversion, accumulated from status snapshots (TfL publishes no archive). **Street works**: the statutory DfT Street Manager record for London's 33 highway authorities + TfL, pushed live over SNS into the repo. **Mileage**: scheduled-vs-operated km per route per TfL reporting period.

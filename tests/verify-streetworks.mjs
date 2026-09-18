@@ -14,10 +14,18 @@ const srv = createServer((req, res) => {
   }catch(e){ res.writeHead(404); res.end('nf'); }
 }).listen(8917);
 
+const FIX = join(ROOT, 'tests/fixtures/');
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 const ctx = await browser.newContext({ viewport:{ width:1280, height:900 }, acceptDownloads:true });
 const page = await ctx.newPage();
-await page.route(/unpkg\.com|cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk/, r => r.abort());
+await page.route('**://unpkg.com/**', r => {
+  const u = r.request().url();
+  if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body: readFileSync(FIX + 'leaflet-heat.js', 'utf8') });
+  if(u.endsWith('leaflet.js'))  return r.fulfill({ contentType:'text/javascript', body: readFileSync(FIX + 'leaflet.js', 'utf8') });
+  if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body: readFileSync(FIX + 'leaflet.css', 'utf8') });
+  return r.abort();
+});
+await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk|\/api\/live\//, r => r.abort());
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL')+'  '+k); ok?pass++:fail++; };
@@ -75,6 +83,20 @@ F('nav entry highlighted', await page.locator('a[data-nav="streetworks"].on').co
 await page.goto('http://127.0.0.1:8917/#/diversions', { waitUntil:'load' });
 await page.waitForTimeout(1200);
 F('diversions page links to street works', await page.locator('a[href="#/streetworks"]').count() >= 1);
+
+// Route-map layer: the cone toggle draws the layer and reports a note
+// (count depends on live data, so assert the note text, not a number).
+await page.goto('http://127.0.0.1:8917/#/route/1', { waitUntil:'load' });
+await page.waitForTimeout(2500);
+const btn = page.locator('#swMapBtn');
+F('route map has street-works toggle (enabled)', await btn.count() === 1 && await btn.isEnabled());
+await btn.click();
+await page.waitForTimeout(1200);
+const note = (await page.locator('#swNote').textContent().catch(() => '')) ?? '';
+F(`street-works layer reports (${note.trim().slice(0, 60)}…)`, /street work/.test(note) && /Street Manager|archive/.test(note));
+await btn.click();
+await page.waitForTimeout(400);
+F('street-works layer toggles off (note removed)', await page.locator('#swNote').count() === 0);
 
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log('errors:', errors);

@@ -1005,6 +1005,7 @@ async function renderRouteDetail(name){
         <button class="livebtn iconb" id="closestBtn" disabled title="Garages" aria-label="Garages"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg></button>
         <button class="livebtn iconb" id="bridgeBtn" disabled title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
         <button class="livebtn iconb" id="incBtn" disabled title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
+        <button class="livebtn iconb" id="swMapBtn" disabled title="Street works" aria-label="Street works"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4h-3L6 20h12z"/><path d="M9.2 10h5.6M7.9 15h8.2"/><path d="M4 20h16"/></svg></button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -1475,6 +1476,53 @@ async function initRouteMap(route, m = {}, tok = navToken){
     layerNote('incNote', near.length
       ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m, ${esc(snap.period ?? '2021–2025')} — shown as a density heatmap; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;border:1px solid #fff;vertical-align:baseline"></span> serious (${ns}) and <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#111827;border:1px solid #fff;vertical-align:baseline"></span> fatal (${nf}) are individual dots — click one for the record. DfT STATS19.</span>`
       : `<span>No recorded bus/coach-involved collisions within 150 m of this route, ${esc(snap?.period ?? '2021–2025')}.</span>`);
+  });
+
+  /* "Street works" layer — the DfT Street Manager archive (BNG coordinates
+     pre-converted to WGS84 by the drain), filtered to current/upcoming
+     works within 150 m of the route. Each work draws its stated extent as
+     a short line plus a clickable cone-coloured dot. */
+  let swLayer = null, swOn = false;
+  const swMapBtn = document.getElementById('swMapBtn');
+  swMapBtn?.addEventListener('click', async () => {
+    swOn = !swOn;
+    swMapBtn.classList.toggle('on', swOn);
+    if(!swOn){ if(swLayer){ _map.removeLayer(swLayer); swLayer = null; } layerNote('swNote'); return; }
+    const snap = await D.streetworks();
+    if(gone(tok) || !swOn) return;
+    const cutoff = new Date(Date.now() - 3 * 864e5).toISOString();
+    const current = (snap?.entries ?? []).filter(e => {
+      if(!e.coords?.length) return false;
+      const l = e.latest ?? {};
+      const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
+      return (!end || end >= cutoff) && l.work_status !== 'Works completed';
+    });
+    const near = current.filter(e => e.coords.some(([la, ln]) => nearRoute(la, ln, 150)));
+    swLayer = L.layerGroup();
+    const swBand = c => c === 'Immediate' || String(c ?? '').startsWith('Immediate')
+      ? { c:'#dc2626', label:'Immediate' } : c === 'Major' ? { c:'#ea580c', label:'Major' }
+      : c ? { c:'#f59e0b', label:c } : { c:'#64748b', label:'Notified activity' };
+    const srow = (l, v) => v == null || v === '' || v === '—' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right">${v}</b></div>`;
+    for(const e of near){
+      const l = e.latest ?? {};
+      const band = swBand(l.work_category ?? (l.activity_type ? null : l.work_category));
+      const start = l.actual_start_date_time ?? l.proposed_start_date ?? l.start_date;
+      const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
+      if(e.coords.length > 1)
+        L.polyline(e.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(swLayer);
+      L.circleMarker(e.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
+        .bindTooltip(`${esc(title(l.street_name ?? '') || 'Street work')} · ${esc(band.label)}${l.promoter_organisation ? ' · ' + esc(title(l.promoter_organisation)) : ''}`, { direction:'top' })
+        .bindPopup(() => `<div style="min-width:200px"><b style="font-size:13px">${esc(title(l.street_name ?? '') || 'Street work')}</b>
+          <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${l.activity_name ? ' · ' + esc(l.activity_name) : ''}</div>
+          ${srow('Promoter', l.promoter_organisation ? esc(title(l.promoter_organisation)) : null)}${srow('Authority', esc(e.ha ?? ''))}${srow('Traffic', l.traffic_management_type ? esc(l.traffic_management_type) : null)}${srow('Status', l.work_status ? esc(l.work_status) : null)}${srow('Window', `${fmtDate(start) ?? '—'} → ${fmtDate(end) ?? '—'}`)}
+          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT Street Manager · ${esc(e.ref)}</div></div>`)
+        .addTo(swLayer);
+    }
+    swLayer.addTo(_map);
+    const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
+    layerNote('swNote', near.length
+      ? `<span>${near.length} current or upcoming street work${near.length===1?'':'s'} within 150 m — ${dot('#dc2626')} immediate, ${dot('#ea580c')} major, ${dot('#f59e0b')} standard/minor, ${dot('#64748b')} activity. DfT Street Manager (statutory record, live since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`
+      : `<span>No current street works within 150 m of this route in the archive (accumulating since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`);
   });
 
   // Say why there is no garage pin instead of leaving a silent gap.
