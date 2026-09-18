@@ -56,6 +56,26 @@ const CERT_HOST = /^https:\/\/sns\.eu-west-2\.amazonaws\.com\/[^\s]+\.pem$/;
 // authorities whose names don't carry it. "KINGSTON UPON THAMES" is
 // deliberately full-phrase so Kingston-upon-Hull never matches.
 const LONDON_HA = /LONDON|WESTMINSTER|KENSINGTON AND CHELSEA|ROYAL BOROUGH OF GREENWICH|KINGSTON UPON THAMES/;
+// In production the SNS ha_org attribute carries the bare SWA org code
+// (GeoPlace SWA_ORG list), not a name — the 33 London highway authorities
+// plus TfL, keyed by code so events store a readable name.
+const LONDON_SWA = {
+  '20': 'TRANSPORT FOR LONDON', '5030': 'CITY OF LONDON CORPORATION',
+  '5060': 'LB BARKING AND DAGENHAM', '5090': 'LB BARNET', '5120': 'LB BEXLEY',
+  '5150': 'LB BRENT', '5180': 'LB BROMLEY', '5210': 'LB CAMDEN',
+  '5240': 'LB CROYDON', '5270': 'LB EALING', '5300': 'LB ENFIELD',
+  '5330': 'RB GREENWICH', '5360': 'LB HACKNEY', '5390': 'LB HAMMERSMITH & FULHAM',
+  '5420': 'LB HARINGEY', '5450': 'LB HARROW', '5480': 'LB HAVERING',
+  '5510': 'LB HILLINGDON', '5540': 'LB HOUNSLOW', '5570': 'LB ISLINGTON',
+  '5600': 'RB KENSINGTON AND CHELSEA', '5630': 'RB KINGSTON UPON THAMES',
+  '5660': 'LB LAMBETH', '5690': 'LB LEWISHAM', '5720': 'LB MERTON',
+  '5750': 'LB NEWHAM', '5780': 'LB REDBRIDGE', '5810': 'LB RICHMOND UPON THAMES',
+  '5840': 'LB SOUTHWARK', '5870': 'LB SUTTON', '5900': 'LB TOWER HAMLETS',
+  '5930': 'LB WALTHAM FOREST', '5960': 'LB WANDSWORTH', '5990': 'CITY OF WESTMINSTER',
+};
+// London test: a known SWA code, or (fallback, should the attribute ever
+// carry a name) the name regex.
+const isLondonHa = (ha) => !!ha && (ha in LONDON_SWA || LONDON_HA.test(ha));
 
 const DEFAULT_REPO = 'farhanmunim/london-buses';
 const INBOX_BRANCH = 'streetworks-inbox';
@@ -323,7 +343,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'unexpected topic' }, 403);
     }
     const ha = highwayAuthorityOf(msg);
-    if (!ha || !LONDON_HA.test(ha)) {
+    if (!isLondonHa(ha)) {
       // One breadcrumb per isolate per case, so a systematic mis-read of
       // the highway-authority attribute (docs vs production naming) can't
       // silently skip every event as "outside London" — without spamming
@@ -338,7 +358,7 @@ export async function onRequestPost({ request, env }) {
       return json({ skipped: 'outside London', ha });
     }
     if (!env.GITHUB_TOKEN) return json({ error: 'GITHUB_TOKEN not configured' }, 503);
-    const stored = await storeEvent(env, msg, ha);
+    const stored = await storeEvent(env, msg, LONDON_SWA[ha] ?? ha);
     // Non-2xx makes SNS redeliver (its retry policy is the queue's
     // durability), so only report success when the commit really landed.
     return stored.ok ? json({ stored: true, duplicate: stored.duplicate ?? false })
