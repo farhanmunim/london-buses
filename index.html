@@ -2877,7 +2877,7 @@ async function renderTenders(tab){
     };
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
-      <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(a.route)}</span></td>
+      <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
       <td>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
@@ -2890,7 +2890,7 @@ async function renderTenders(tab){
       <td class="num">${Number.isFinite(a.termYears) ? a.termYears + ' yr' + (a.twoYearExtension ? ' <span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2</span>' : '') : (a.twoYearExtension ? '<span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2 opt</span>' : '—')}</td>
       <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
-      <td>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
+      <td${(a.jb?.partners?.length ?? 0) > 1 ? ' style="min-width:200px"' : ''}>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
       <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — source page on london-bus-routes.fandom.com" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tPage').textContent = `Page ${st.page + 1} of ${pages}`;
@@ -2973,7 +2973,7 @@ async function renderTenders(tab){
     document.getElementById('pBody').innerHTML = shown.map(e => {
       const upcoming = e.contractStart && e.contractStart >= today;
       return `<tr${upcoming ? ' style="background:var(--acc-soft)"' : ''}>
-        <td><span style="display:inline-flex;gap:4px;flex-wrap:wrap">${routeChips(e.route)}</span></td>
+        <td style="min-width:${String(e.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(e.route)}</span></td>
         <td>${esc(e.currentOperator ?? '—')}</td>
         <td style="max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(e.description ?? '')}">${esc(e.description ?? '—')}</td>
         <td class="num" style="text-align:left">${esc(e.programmeYear ? e.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2') : '—')}</td>
