@@ -9,11 +9,14 @@
  * nightly) folds those files into the archive, then pushes a commit to the
  * inbox branch that deletes the processed files.
  *
- * Concurrency safety: the deletion commit is built ON TOP of the fetched
- * inbox head and pushed WITHOUT force — if a new event lands mid-drain the
- * push is rejected, and we refetch and rebuild (up to 3 attempts; on the
- * third rejection the deletions simply wait for the next drain — events
- * are only ever deleted after they are folded, so nothing can be lost).
+ * Concurrency safety: the deletion commit carries the fetched head's tree
+ * minus the processed files and is pushed with --force-with-lease pinned
+ * to that head (server-side compare-and-swap) — if a new event lands
+ * mid-drain the push is rejected, and we refetch and rebuild (up to 3
+ * attempts; on the third rejection the deletions simply wait for the next
+ * drain — events are only ever deleted after they are folded, so nothing
+ * can be lost). The commit is parentless, so the branch stays at history
+ * depth 1 instead of accreting one commit per received event.
  *
  * Requirements: a git remote with push rights to the inbox branch — true
  * in GitHub Actions (the workflow already pushes data commits) and in any
@@ -90,10 +93,15 @@ function fold(entries, row) {
   }
 }
 
-// Push a commit deleting `paths` from the inbox branch, built on `head`.
-// Plain (non-force) push: a rejection means new events landed — caller
-// refetches and retries. Uses plumbing only, so the main worktree is
-// untouched.
+// Push a commit deleting `paths` from the inbox branch. The commit is
+// PARENTLESS but carries head's tree minus the processed files, and is
+// pushed with --force-with-lease pinned to the exact head we folded — an
+// atomic compare-and-swap at the server. This keeps the inbox branch at
+// history depth 1 forever (at ~thousands of events/day, per-event commits
+// would otherwise pile up ~1M commits/year) while losing nothing: an event
+// landing mid-drain moves the ref, the lease fails the push, and the
+// caller refetches and retries. Uses plumbing only, so the main worktree
+// is untouched.
 function pushDeletions(head, paths) {
   const env = { ...process.env, GIT_INDEX_FILE: path.join(ROOT, '.git', 'streetworks-drain-index') };
   try {
@@ -103,11 +111,11 @@ function pushDeletions(head, paths) {
       git(['update-index', '--force-remove', '--', ...paths.slice(i, i + 500)], { env });
     }
     const tree = git(['write-tree'], { env });
-    const commit = git(['commit-tree', tree, '-p', head, '-m', `drain: fold ${paths.length} streetworks events into archive [CI Skip]`], { env });
+    const commit = git(['commit-tree', tree, '-m', `drain: fold ${paths.length} streetworks events into archive [CI Skip]`], { env });
     try {
-      git(['push', 'origin', `${commit}:refs/heads/${BRANCH}`]);
+      git(['push', `--force-with-lease=refs/heads/${BRANCH}:${head}`, 'origin', `${commit}:refs/heads/${BRANCH}`]);
       return true;
-    } catch { return false; }                       // non-fast-forward — retry
+    } catch { return false; }                       // lease failed — new events landed, retry
   } finally {
     try { fs.unlinkSync(env.GIT_INDEX_FILE); } catch { /* already gone */ }
   }
