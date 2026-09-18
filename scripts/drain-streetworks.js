@@ -25,8 +25,9 @@
  * by the work/permit reference; each keeps the highway authority, first
  * and last event times, a compact event trail [{type, time}], and the
  * LATEST object_data payload verbatim. A corridor join to bus routes (as
- * fetch-roadworks.js does for TIMS) is a follow-up once real coordinate
- * fields are observed.
+ * fetch-roadworks.js does for TIMS) is a follow-up; real payloads carry
+ * works_location_coordinates as WKT in British National Grid (EPSG:27700
+ * easting/northing), so the join needs an OSGB36→WGS84 conversion first.
  *
  * Outputs:
  *   data/source/streetworks-history.json  (accumulator, force-committed)
@@ -78,9 +79,15 @@ function fold(entries, row) {
   if (time > e.lastEvent) { e.lastEvent = time; e.latest = inner.object_data ?? inner; }
   e.latest ??= inner.object_data ?? inner;
   e.ha = row.ha ?? e.ha;
-  e.events.push({ type: inner.event_type ?? null, time });
-  e.events.sort((a, b) => String(a.time).localeCompare(String(b.time)));
-  if (e.events.length > 200) e.events = e.events.slice(-200);   // cap pathological churn
+  // Same (type, time) already in the trail = a duplicate delivery — SNS
+  // redelivery, or this drain's own retry loop refolding files after a
+  // rejected deletion push.
+  const type = inner.event_type ?? null;
+  if (!e.events.some(x => x.type === type && x.time === time)) {
+    e.events.push({ type, time });
+    e.events.sort((a, b) => String(a.time).localeCompare(String(b.time)));
+    if (e.events.length > 200) e.events = e.events.slice(-200); // cap pathological churn
+  }
 }
 
 // Push a commit deleting `paths` from the inbox branch, built on `head`.
