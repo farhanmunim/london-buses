@@ -162,7 +162,17 @@ function fold(entries, row) {
 // caller refetches and retries. Uses plumbing only, so the main worktree
 // is untouched.
 function pushDeletions(head, paths) {
-  const env = { ...process.env, GIT_INDEX_FILE: path.join(ROOT, '.git', 'streetworks-drain-index') };
+  const env = {
+    ...process.env,
+    GIT_INDEX_FILE: path.join(ROOT, '.git', 'streetworks-drain-index'),
+    // commit-tree needs an ident; in Actions this script runs BEFORE the
+    // workflow's own `git config user.*` step, so carry one ourselves
+    // (same bot identity the workflow's data commits use).
+    GIT_AUTHOR_NAME: 'github-actions[bot]',
+    GIT_AUTHOR_EMAIL: 'github-actions[bot]@users.noreply.github.com',
+    GIT_COMMITTER_NAME: 'github-actions[bot]',
+    GIT_COMMITTER_EMAIL: 'github-actions[bot]@users.noreply.github.com',
+  };
   try {
     git(['read-tree', head], { env });
     // Remove in chunks to stay clear of argv limits.
