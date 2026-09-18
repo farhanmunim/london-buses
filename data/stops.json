@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-17T08:58:36Z",
-  "stop_count": 19975,
+  "generated_at_utc": "2026-09-18T08:37:02Z",
+  "stop_count": 19991,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -10262,6 +10262,24 @@
       "lon": -0.08259,
       "routes": [
         "439"
+      ]
+    },
+    "4000OC466S": {
+      "name": "Hinchley Wood School",
+      "indicator": null,
+      "lat": 51.3793,
+      "lon": -0.33193,
+      "routes": [
+        "467"
+      ]
+    },
+    "4000OC467S": {
+      "name": "Hinchley Wood School",
+      "indicator": null,
+      "lat": 51.37934,
+      "lon": -0.33245,
+      "routes": [
+        "467"
       ]
     },
     "4900000009E1": {
@@ -36384,8 +36402,7 @@
       "lat": 51.56845,
       "lon": -0.1194,
       "routes": [
-        "210",
-        "W7"
+        "210"
       ]
     },
     "490003261W": {
@@ -36394,8 +36411,7 @@
       "lat": 51.56886,
       "lon": -0.11835,
       "routes": [
-        "210",
-        "W7"
+        "210"
       ]
     },
     "490003262HW": {
@@ -37574,6 +37590,15 @@
       "indicator": "Stop ->S",
       "lat": 51.6453,
       "lon": -0.00864,
+      "routes": [
+        "379"
+      ]
+    },
+    "490003340ZT": {
+      "name": "Antlers Hill",
+      "indicator": "Stop ->S",
+      "lat": 51.64438,
+      "lon": -0.00884,
       "routes": [
         "379"
       ]
@@ -48793,6 +48818,15 @@
         "379"
       ]
     },
+    "490004128SZ": {
+      "name": "Antlers Hill / Gilwell Close",
+      "indicator": "Stop ->E",
+      "lat": 51.64609,
+      "lon": -0.00893,
+      "routes": [
+        "379"
+      ]
+    },
     "490004130N": {
       "name": "Thamesmead / Carlyle Road",
       "indicator": "Stop SK",
@@ -58600,6 +58634,15 @@
         "313",
         "317",
         "629"
+      ]
+    },
+    "490004903S": {
+      "name": "Cecile Park",
+      "indicator": "Stop CG",
+      "lat": 51.5767,
+      "lon": -0.12277,
+      "routes": [
+        "W7"
       ]
     },
     "490004904Y": {
@@ -73539,6 +73582,15 @@
         "379"
       ]
     },
+    "490006024ZS": {
+      "name": "Antlers Hill / Deerleap Grove",
+      "indicator": "Stop ->S",
+      "lat": 51.64319,
+      "lon": -0.00808,
+      "routes": [
+        "379"
+      ]
+    },
     "490006025N": {
       "name": "Victoria Park",
       "indicator": "Stop T",
@@ -74220,6 +74272,24 @@
       "routes": [
         "248",
         "346"
+      ]
+    },
+    "490006076CH": {
+      "name": "Dickenson Road",
+      "indicator": "Stop CH",
+      "lat": 51.575,
+      "lon": -0.1218,
+      "routes": [
+        "W7"
+      ]
+    },
+    "490006076CJ": {
+      "name": "Dickenson Road",
+      "indicator": "Stop CJ",
+      "lat": 51.57462,
+      "lon": -0.12146,
+      "routes": [
+        "W7"
       ]
     },
     "490006077E": {
@@ -75784,11 +75854,29 @@
         "601"
       ]
     },
+    "490006207NY": {
+      "name": "Drysdale Avenue / Hawkwood Crescent",
+      "indicator": "Stop ->N",
+      "lat": 51.64033,
+      "lon": -0.00856,
+      "routes": [
+        "379"
+      ]
+    },
     "490006207S": {
       "name": "Drysdale Avenue / Hawkwood Crescent",
       "indicator": "Stop ->S",
       "lat": 51.64059,
       "lon": -0.00841,
+      "routes": [
+        "379"
+      ]
+    },
+    "490006207SZ": {
+      "name": "Drysdale Avenue / Hawkwood Crescent",
+      "indicator": "Stop ->S",
+      "lat": 51.64053,
+      "lon": -0.00839,
       "routes": [
         "379"
       ]
@@ -79169,8 +79257,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490006435CF": {
@@ -79182,8 +79269,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490006436N": {
@@ -82077,8 +82163,7 @@
       "routes": [
         "210",
         "91",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490006699N": {
@@ -88779,15 +88864,6 @@
         "N83"
       ]
     },
-    "490007199W": {
-      "name": "Gladesmore Road",
-      "indicator": "->W",
-      "lat": 51.5783,
-      "lon": -0.07118,
-      "routes": [
-        "318"
-      ]
-    },
     "490007200F": {
       "name": "Gladstone Avenue",
       "indicator": "Stop D",
@@ -89609,6 +89685,7 @@
       "routes": [
         "121",
         "191",
+        "259",
         "307",
         "313",
         "377"
@@ -89620,6 +89697,7 @@
       "lat": 51.64867,
       "lon": -0.04864,
       "routes": [
+        "259",
         "313",
         "377"
       ]
@@ -93468,15 +93546,6 @@
         "N68"
       ]
     },
-    "490007561S": {
-      "name": "Grovelands Road",
-      "indicator": "->N",
-      "lat": 51.57748,
-      "lon": -0.06375,
-      "routes": [
-        "318"
-      ]
-    },
     "490007565A": {
       "name": "Grove Park Bus Station",
       "indicator": "Stop A",
@@ -96424,7 +96493,15 @@
       "routes": [
         "210",
         "91",
-        "N91",
+        "N91"
+      ]
+    },
+    "490007752CN": {
+      "name": "Crouch Hill Station",
+      "indicator": "Stop CN",
+      "lat": 51.57072,
+      "lon": -0.11616,
+      "routes": [
         "W7"
       ]
     },
@@ -97036,6 +97113,15 @@
       "indicator": "Stop ->S",
       "lat": 51.63511,
       "lon": -0.01019,
+      "routes": [
+        "379"
+      ]
+    },
+    "490007794SZ": {
+      "name": "Drysdale Avenue / Harford Road",
+      "indicator": "Stop ->S",
+      "lat": 51.63523,
+      "lon": -0.0102,
       "routes": [
         "379"
       ]
@@ -99023,6 +99109,15 @@
         "379"
       ]
     },
+    "490007925SH": {
+      "name": "Hawkswood School",
+      "indicator": "Stop ->S",
+      "lat": 51.64269,
+      "lon": -0.00623,
+      "routes": [
+        "379"
+      ]
+    },
     "490007926N": {
       "name": "Hawkwood Crescent",
       "indicator": "Stop W",
@@ -100366,6 +100461,15 @@
         "109",
         "60",
         "N109"
+      ]
+    },
+    "490008031CK": {
+      "name": "Heathville Road",
+      "indicator": "Stop CK",
+      "lat": 51.57303,
+      "lon": -0.12063,
+      "routes": [
+        "W7"
       ]
     },
     "490008033N": {
@@ -103924,6 +104028,24 @@
         "C11"
       ]
     },
+    "490008307CL": {
+      "name": "Crouch Hill Station",
+      "indicator": "Stop CL",
+      "lat": 51.57173,
+      "lon": -0.11844,
+      "routes": [
+        "W7"
+      ]
+    },
+    "490008307CM": {
+      "name": "Shaftesbury Road",
+      "indicator": "Stop CM",
+      "lat": 51.57191,
+      "lon": -0.11899,
+      "routes": [
+        "W7"
+      ]
+    },
     "490008308N": {
       "name": "Mandeville Road",
       "indicator": "Stop C",
@@ -104647,8 +104769,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490008360S": {
@@ -104660,8 +104781,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490008365E": {
@@ -104682,8 +104802,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490008365S": {
@@ -104696,8 +104815,7 @@
         "41",
         "91",
         "N41",
-        "N91",
-        "W7"
+        "N91"
       ]
     },
     "490008365W": {
@@ -104715,8 +104833,7 @@
       "lat": 51.56734,
       "lon": -0.12131,
       "routes": [
-        "210",
-        "W7"
+        "210"
       ]
     },
     "490008367J": {
@@ -122328,6 +122445,24 @@
         "379"
       ]
     },
+    "490009646XY": {
+      "name": "Drysdale Avenue / Margaret Avenue",
+      "indicator": "Stop ->N",
+      "lat": 51.63744,
+      "lon": -0.00936,
+      "routes": [
+        "379"
+      ]
+    },
+    "490009646XZ": {
+      "name": "Drysdale Avenue / Margaret Avenue",
+      "indicator": "Stop ->S",
+      "lat": 51.63693,
+      "lon": -0.00949,
+      "routes": [
+        "379"
+      ]
+    },
     "490009647E": {
       "name": "Margaret Road",
       "indicator": "Stop AT",
@@ -122465,6 +122600,15 @@
       "indicator": "Stop ->N",
       "lat": 51.63838,
       "lon": -0.0089,
+      "routes": [
+        "379"
+      ]
+    },
+    "490009657NZ": {
+      "name": "Drysdale Avenue / Epping Way",
+      "indicator": "Stop ->N",
+      "lat": 51.6384,
+      "lon": -0.00894,
       "routes": [
         "379"
       ]
@@ -127334,15 +127478,6 @@
         "186",
         "340",
         "79"
-      ]
-    },
-    "49000HC180W": {
-      "name": "Gladesmore Road / High Road",
-      "indicator": "->W",
-      "lat": 51.57806,
-      "lon": -0.07259,
-      "routes": [
-        "318"
       ]
     },
     "49000HC186NE": {
@@ -146138,6 +146273,7 @@
       "lat": 51.64597,
       "lon": -0.04686,
       "routes": [
+        "259",
         "279",
         "377",
         "491",
@@ -159192,6 +159328,7 @@
       "lat": 51.64476,
       "lon": -0.04628,
       "routes": [
+        "259",
         "279",
         "377",
         "491",
@@ -159205,6 +159342,7 @@
       "lon": -0.04695,
       "routes": [
         "191",
+        "259",
         "279",
         "491",
         "N279"
@@ -160297,6 +160435,7 @@
         "149",
         "243",
         "279",
+        "318",
         "476",
         "67",
         "76",
@@ -162109,8 +162248,7 @@
       "lat": 51.5702,
       "lon": -0.11601,
       "routes": [
-        "210",
-        "W7"
+        "210"
       ]
     },
     "490012591CP": {
@@ -162119,8 +162257,7 @@
       "lat": 51.5702,
       "lon": -0.11574,
       "routes": [
-        "210",
-        "W7"
+        "210"
       ]
     },
     "490012592N": {
@@ -194742,6 +194879,15 @@
         "379"
       ]
     },
+    "490014987Z": {
+      "name": "Yardley Lane",
+      "indicator": "Stop ->W",
+      "lat": 51.64156,
+      "lon": -0.01069,
+      "routes": [
+        "379"
+      ]
+    },
     "490014988N": {
       "name": "Yardley Lane Estate",
       "indicator": "->N",
@@ -201164,6 +201310,7 @@
       "lat": 51.64783,
       "lon": -0.04668,
       "routes": [
+        "259",
         "279",
         "377",
         "491",
@@ -201176,6 +201323,7 @@
       "lat": 51.64751,
       "lon": -0.04656,
       "routes": [
+        "259",
         "279",
         "377",
         "491",
@@ -214760,15 +214908,6 @@
       "indicator": "->S",
       "lat": 51.6056,
       "lon": -0.07818,
-      "routes": [
-        "318"
-      ]
-    },
-    "4900HC178E": {
-      "name": "Ravensdale Road/ Stamford Hill",
-      "indicator": "->E",
-      "lat": 51.57483,
-      "lon": -0.0718,
       "routes": [
         "318"
       ]

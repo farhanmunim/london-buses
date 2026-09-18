@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-17T08:58:36Z",
+  "generated_at_utc": "2026-09-18T08:37:02Z",
   "route_count": 674,
   "routes": {
     "1": [
@@ -85466,6 +85466,18 @@
     ],
     "259": [
       {
+        "id": "490007258P",
+        "towards": "Chingford, Bush Hill Park Or Edmonton"
+      },
+      {
+        "id": "490015441J",
+        "towards": "Edmonton Or Bush Hill Park"
+      },
+      {
+        "id": "490012335L",
+        "towards": "Edmonton Or Bush Hill Park"
+      },
+      {
         "id": "490010364S",
         "towards": "Edmonton Green"
       },
@@ -85804,6 +85816,22 @@
       {
         "id": "490007087N",
         "towards": "Enfield Town Or Waltham Cross"
+      },
+      {
+        "id": "490012335N",
+        "towards": "Enfield Town Or Waltham Cross"
+      },
+      {
+        "id": "490011367K",
+        "towards": "Enfield Island Village Or Waltham Cross"
+      },
+      {
+        "id": "490015441H",
+        "towards": "Enfield Island Village Or Waltham Cross"
+      },
+      {
+        "id": "490007258D",
+        "towards": "Enfield Town"
       }
     ],
     "260": [
@@ -103024,16 +103052,8 @@
         "towards": "Turnpike Lane Or Seven Sisters"
       },
       {
-        "id": "4900HC178E"
-      },
-      {
-        "id": "490007561S"
-      },
-      {
-        "id": "490007199W"
-      },
-      {
-        "id": "49000HC180W"
+        "id": "490012433N",
+        "towards": "Tottenham Or Wood Green"
       },
       {
         "id": "490015852N",
@@ -118132,13 +118152,22 @@
         "towards": "Chingford Mount Or Ponders End"
       },
       {
+        "id": "490009646XY"
+      },
+      {
         "id": "490009646N"
+      },
+      {
+        "id": "490009657NZ"
       },
       {
         "id": "490009657N"
       },
       {
         "id": "490007921N"
+      },
+      {
+        "id": "490006207NY"
       },
       {
         "id": "490014987N",
@@ -118153,10 +118182,16 @@
         "towards": "Chingford Mount Or Chingford Station #"
       },
       {
+        "id": "490004128SZ"
+      },
+      {
         "id": "490004128S"
       },
       {
         "id": "490003340S"
+      },
+      {
+        "id": "490003340ZT"
       },
       {
         "id": "490014989S"
@@ -118165,7 +118200,16 @@
         "id": "490006024S"
       },
       {
+        "id": "490006024ZS"
+      },
+      {
         "id": "490007925S"
+      },
+      {
+        "id": "490007925SH"
+      },
+      {
+        "id": "490014987Z"
       },
       {
         "id": "490007926S",
@@ -118175,7 +118219,16 @@
         "id": "490006207S"
       },
       {
+        "id": "490006207SZ"
+      },
+      {
+        "id": "490009646XZ"
+      },
+      {
         "id": "490012250S"
+      },
+      {
+        "id": "490007794SZ"
       },
       {
         "id": "490007794S"
@@ -133901,6 +133954,9 @@
     ],
     "467": [
       {
+        "id": "4000OC466S"
+      },
+      {
         "id": "490006501S",
         "towards": "Chessington"
       },
@@ -134160,6 +134216,9 @@
       {
         "id": "490006501N",
         "towards": "Surbiton"
+      },
+      {
+        "id": "4000OC467S"
       }
     ],
     "468": [
@@ -218584,28 +218643,16 @@
         "towards": "Finsbury Park"
       },
       {
-        "id": "490006435CF",
-        "towards": "Archway Or Holloway"
+        "id": "490004903S",
+        "towards": "Archway"
       },
       {
-        "id": "490008360S",
-        "towards": "Archway Or Holloway"
+        "id": "490006076CJ",
+        "towards": "Archway"
       },
       {
-        "id": "490008365S",
-        "towards": "Archway, Finsbury Park Or Kings Cross"
-      },
-      {
-        "id": "490007751S",
-        "towards": "Finsbury Park Or Kings Cross"
-      },
-      {
-        "id": "490003261E",
-        "towards": "Finsbury Park"
-      },
-      {
-        "id": "490012591CO",
-        "towards": "Finsbury Park"
+        "id": "490008307CL",
+        "towards": "Archway"
       },
       {
         "id": "490003160CT",
@@ -218630,32 +218677,20 @@
         "towards": "Archway, Crouch End Or Wood Green"
       },
       {
-        "id": "490012591CP",
-        "towards": "Archway"
-      },
-      {
-        "id": "490003261W",
-        "towards": "Archway"
-      },
-      {
-        "id": "490008366W",
-        "towards": "Archway"
-      },
-      {
-        "id": "490006698N",
-        "towards": "Archway Or Crouch End"
-      },
-      {
-        "id": "490008365N",
+        "id": "490007752CN",
         "towards": "Crouch End"
       },
       {
-        "id": "490008360N",
-        "towards": "Turnpike Lane"
+        "id": "490008307CM",
+        "towards": "Crouch End"
       },
       {
-        "id": "490006435CE",
-        "towards": "Turnpike Lane"
+        "id": "490008031CK",
+        "towards": "Crouch End"
+      },
+      {
+        "id": "490006076CH",
+        "towards": "Alexandra Park"
       },
       {
         "id": "490005826CD",
