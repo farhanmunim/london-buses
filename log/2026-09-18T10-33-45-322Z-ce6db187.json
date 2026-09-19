@@ -1,0 +1,1 @@
+{"at":"2026-09-18T10:33:45.322Z","verdict":"notification sample: skipped non-London ha=\"1900\" (pipeline healthy)","type":"Notification","topicArn":"arn:aws:sns:eu-west-2:287813576808:prod-permit-topic","messageId":"ce6db187-5279-5ba9-a449-d2a047b00fac"}
