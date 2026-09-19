@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-18T08:47:50.690Z",
+  "generatedAt": "2026-09-19T08:31:16.887Z",
   "count": 76,
   "garages": {
     "A": {
@@ -149,7 +149,7 @@
       "address": "Approach Road, Edgware, Middlesex, HA8 7AN",
       "lat": 51.611541,
       "lon": -0.273136,
-      "pvr": 86,
+      "pvr": 87,
       "capacity": 100
     },
     "BW": {
@@ -499,7 +499,7 @@
       "address": "Cornwall Road, London, SE1 8TE",
       "lat": 51.50283,
       "lon": -0.109155,
-      "pvr": 36,
+      "pvr": 32,
       "capacity": 64
     },
     "RM": {
@@ -579,7 +579,7 @@
       "address": "331 Pinner Road, Harrow, HA1 4HN",
       "lat": 51.584292,
       "lon": -0.358842,
-      "pvr": 80,
+      "pvr": 81,
       "capacity": null
     },
     "SW": {
@@ -759,7 +759,7 @@
       "address": "Great Western Road, London, W9 3NW",
       "lat": 51.523365,
       "lon": -0.201514,
-      "pvr": 132,
+      "pvr": 133,
       "capacity": 173
     }
   }

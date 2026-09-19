@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-18T08:37:02Z",
+  "generated_at_utc": "2026-09-19T08:20:51Z",
   "route_count": 674,
   "routes": {
     "1": [
@@ -13461,20 +13461,16 @@
         "towards": "Bank Or Liverpool Street"
       },
       {
-        "id": "490000149Z",
-        "towards": "Aldwych Or London Bridge"
+        "id": "490003172A",
+        "towards": "Aldgate Or Liverpool Street"
       },
       {
-        "id": "490007417S",
-        "towards": "London Bridge"
+        "id": "490004043S",
+        "towards": "London Bridge Or St Paul's"
       },
       {
-        "id": "490011218B",
-        "towards": "London Bridge"
-      },
-      {
-        "id": "490000148G",
-        "towards": "London Bridge"
+        "id": "490000148U",
+        "towards": "London Bridge Or Southwark Bridge"
       },
       {
         "id": "490009267E",
@@ -39906,10 +39902,6 @@
         "towards": "Blackhorse Road Or Ferry Lane Estate"
       },
       {
-        "id": "490009915E",
-        "towards": "Blackhorse Road Stn Or Ferry Lane Estate"
-      },
-      {
         "id": "490006818E",
         "towards": "Gants Hill Or Walthamstow Central"
       },
@@ -40207,10 +40199,6 @@
       },
       {
         "id": "490004277W",
-        "towards": "Tottenham"
-      },
-      {
-        "id": "490008542T",
         "towards": "Tottenham"
       },
       {
@@ -71731,10 +71719,6 @@
       },
       {
         "id": "490011057L"
-      },
-      {
-        "id": "490011756E",
-        "towards": "Kings Cross"
       },
       {
         "id": "490016573S",
@@ -212242,13 +212226,6 @@
       {
         "id": "490002507LR",
         "towards": "Ferry Lane / Coldharbour Lane"
-      },
-      {
-        "id": "490002508LF"
-      },
-      {
-        "id": "490002507RL",
-        "towards": "Elm Park"
       },
       {
         "id": "490006247N",

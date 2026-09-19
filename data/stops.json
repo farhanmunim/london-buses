@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-18T08:37:02Z",
-  "stop_count": 19991,
+  "generated_at_utc": "2026-09-19T08:20:51Z",
+  "stop_count": 19985,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -15419,15 +15419,6 @@
         "382"
       ]
     },
-    "490000148G": {
-      "name": "King William Street / Monument Stn",
-      "indicator": "Stop G",
-      "lat": 51.51147,
-      "lon": -0.08721,
-      "routes": [
-        "43"
-      ]
-    },
     "490000148K": {
       "name": "Monument Station",
       "indicator": "Stop H",
@@ -15464,6 +15455,7 @@
         "344",
         "35",
         "388",
+        "43",
         "47",
         "N133"
       ]
@@ -15496,7 +15488,6 @@
       "lat": 51.5178,
       "lon": -0.0884,
       "routes": [
-        "43",
         "76"
       ]
     },
@@ -32769,24 +32760,6 @@
         "SL12"
       ]
     },
-    "490002507RL": {
-      "name": "Lamson Road / Rainham Station Southside",
-      "indicator": "Stop S",
-      "lat": 51.51572,
-      "lon": 0.18789,
-      "routes": [
-        "SL12"
-      ]
-    },
-    "490002508LF": {
-      "name": "Ferry Lane / Coldharbour Lane",
-      "indicator": "Stop A",
-      "lat": 51.50932,
-      "lon": 0.17814,
-      "routes": [
-        "SL12"
-      ]
-    },
     "49000287ST": {
       "name": "Sir Ludwig Guttmann Health Centre",
       "indicator": "Stop R",
@@ -35193,7 +35166,8 @@
       "routes": [
         "100",
         "153",
-        "21"
+        "21",
+        "43"
       ]
     },
     "490003173N": {
@@ -47703,6 +47677,7 @@
         "344",
         "35",
         "388",
+        "43",
         "47",
         "8",
         "N133",
@@ -91684,15 +91659,6 @@
         "344"
       ]
     },
-    "490007417S": {
-      "name": "Great Swan Alley",
-      "indicator": "->S",
-      "lat": 51.51598,
-      "lon": -0.08911,
-      "routes": [
-        "43"
-      ]
-    },
     "490007418E": {
       "name": "Great Tower Street",
       "indicator": "Stop TU",
@@ -107535,7 +107501,6 @@
       "lat": 51.58792,
       "lon": -0.0586,
       "routes": [
-        "123",
         "N73"
       ]
     },
@@ -126139,7 +126104,6 @@
       "lat": 51.58806,
       "lon": -0.05837,
       "routes": [
-        "123",
         "N73"
       ]
     },
@@ -144162,15 +144126,6 @@
         "43"
       ]
     },
-    "490011218B": {
-      "name": "Bank Station  / Princes Street",
-      "indicator": "Stop B",
-      "lat": 51.51396,
-      "lon": -0.08926,
-      "routes": [
-        "43"
-      ]
-    },
     "490011219N": {
       "name": "Princes Way",
       "indicator": "->N",
@@ -151486,15 +151441,6 @@
         "46",
         "88",
         "N20"
-      ]
-    },
-    "490011756E": {
-      "name": "Royal College Street",
-      "indicator": "Stop U",
-      "lat": 51.53549,
-      "lon": -0.13391,
-      "routes": [
-        "214"
       ]
     },
     "490011756W": {
