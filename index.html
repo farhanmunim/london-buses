@@ -565,6 +565,8 @@ function garagePinIcon(g, size = 38, tint = null){
    tappable chip, and the detail link. */
 function garagePopupHtml(g, meta, extraRows = ''){
   const tvr = tvrOf(g.pvr);
+  // Same utilisation definition as the garage detail page: PVR ÷ capacity.
+  const util = num(g.utilisation) ?? (num(g.pvr) && num(g.capacity) ? g.pvr / g.capacity : null);
   const props = (g.routes ?? []).map(r => meta?.[r]?.propulsion).filter(Boolean);
   const ev = props.length ? Math.round(props.filter(p => p === 'electric' || p === 'hydrogen').length / props.length * 100) + '%' : '—';
   const row = (l, v) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12.5px">${v}</b></div>`;
@@ -572,7 +574,7 @@ function garagePopupHtml(g, meta, extraRows = ''){
     `<a href="#/route/${encodeURIComponent(r)}" style="background:var(--surf2);color:var(--tx);border-radius:6px;padding:1px 6px;font-family:var(--mono);font-weight:600;font-size:10.5px">${esc(r)}</a>`).join('');
   return `<div style="min-width:212px"><b style="font-size:13.5px">${esc(g.name)} (${esc(g.code)})</b>
     <div style="color:var(--tx2);margin:1px 0 8px">${esc(g.operator ?? '')}</div>
-    ${row('PVR', g.pvr ?? '—')}${row('TVR', tvr ?? '—')}${row('Capacity', g.capacity ?? '—')}${row('Zero-emission', ev)}${row('Routes operated', (g.routes ?? []).length)}${extraRows}
+    ${row('PVR', g.pvr ?? '—')}${row('TVR', tvr ?? '—')}${row('Capacity', g.capacity ?? '—')}${util != null ? row('Utilisation', `<span title="PVR ÷ capacity">${Math.round(util*100)}%</span>`) : ''}${row('Zero-emission', ev)}${row('Routes operated', (g.routes ?? []).length)}${extraRows}
     <div style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin:9px 0 5px">Routes operated</div>
     <div style="display:flex;flex-wrap:wrap;gap:4px;max-width:250px;margin-bottom:9px">${chips}</div>
     <a href="#/garage/${encodeURIComponent(g.code)}" style="color:var(--acc);font-weight:600">Garage details ›</a></div>`;
