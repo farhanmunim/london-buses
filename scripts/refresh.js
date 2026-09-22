@@ -46,6 +46,10 @@ const STEPS = [
   { label: 'Step 10/17 — Tender programme PDFs (TfL)',              script: 'fetch-tender-programme.js' },
   { label: 'Step 11/17 — Line status + diversions (TfL)',           script: 'fetch-line-status.js' },
   { label: 'Step 12/17 — CPI index + CPA rates (ONS)',              script: 'fetch-cpi.js' },
+  // 12b/12c were built after the numbering settled; both are cached
+  // (per-PDF Last-Modified / cheap timetable reads) so nightly is fine.
+  { label: 'Step 12b/17 — Scheduled mileage (TfL timetables)',      script: 'fetch-scheduled-mileage.js' },
+  { label: 'Step 12c/17 — Route performance PDFs (TfL QSI)',        script: 'fetch-route-performance.js' },
   { label: 'Step 13/17 — Build classifications',                    script: 'build-classifications.js' },
   { label: 'Step 14/17 — Build overview + snapshot',                script: 'build-overview.js' },
   { label: 'Step 15/17 — Garage locations (frontend JSON)',         script: 'build-garage-locations.js' },

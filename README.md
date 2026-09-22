@@ -18,7 +18,7 @@ The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions
 
 ## How it works
 
-There is no server. The repository is the whole platform. GitHub Actions is the scheduler and the computer. Git is the database. Cloudflare Pages serves it all, plus one small edge function for live bus GPS.
+There is no server. The repository is the whole platform. GitHub Actions is the scheduler and the computer. Git is the database. Cloudflare Pages serves it all, plus two small edge functions: one for live bus GPS, one receiving the DfT street-works push feed.
 
 Scheduled workflows fetch every dataset from its public source, validate it, and commit the results. A failed validation commits nothing — the last good data keeps serving. `scripts/build-api.js` turns the committed datasets into a set of static JSON files under `data/api/` (the "faux-API") that the app reads like an API.
 
@@ -30,7 +30,7 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|
-| Nightly full refresh | routes, geometry, stops, operators/garages/PVR, CPI-CPA, programme | daily 03:17 | `weekly-refresh.yml` |
+| Nightly full refresh | routes, geometry, stops, operators/garages/PVR, CPI-CPA, tenders + provisional awards, programme, scheduled mileage, route performance | daily 03:17 | `weekly-refresh.yml` |
 | Service status | line status, diversion register + history, TIMS roadworks, street-works drain | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
@@ -60,7 +60,7 @@ Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, and Andy Cor
 
 ## Licence
 
-Code is [MIT](LICENSE). The data comes from third-party sources and stays under their terms: [TfL open data](https://tfl.gov.uk/info-for/open-data-users/) (Powered by TfL Open Data; contains OS data © Crown copyright and database rights 2016, Geomni UK Map data © and database rights 2019), public sector information under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) (DfT, DVLA, ONS), [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL), and londonbusroutes.net (community reference).
+Code is [MIT](LICENSE). The data comes from third-party sources and stays under their terms: [TfL open data](https://tfl.gov.uk/info-for/open-data-users/) (Powered by TfL Open Data; contains OS data © Crown copyright and database rights 2016, Geomni UK Map data © and database rights 2019), public sector information under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) (DfT, DVLA, ONS), [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL), londonbusroutes.net (community reference), and london-bus-routes.fandom.com (community-reported provisional awards, CC BY-SA).
 
 ## Tech
 

@@ -137,7 +137,8 @@ b{font-weight:700}
   <tr><td><code>data/audit/</code></td><td>Cross-check reports comparing our data against independent sources.</td></tr>
   <tr><td><code>scripts/</code></td><td>The data pipeline. One script per step. <code>refresh.js</code> runs them in order.</td></tr>
   <tr><td><code>.github/workflows/</code></td><td>Four scheduled workflows (see <a href="#automations">section 9</a>).</td></tr>
-  <tr><td><code>functions/api/live/vehicles.js</code></td><td>The one piece of server code. A small Cloudflare function that proxies live bus GPS.</td></tr>
+  <tr><td><code>functions/api/live/vehicles.js</code></td><td>Cloudflare function: proxies live bus GPS (adds the secret BODS key, filters to the route).</td></tr>
+  <tr><td><code>functions/api/streetworks.js</code></td><td>Cloudflare function: receives DfT Street Manager push notifications (signature-verified) and commits each London event to the <code>streetworks-inbox</code> branch.</td></tr>
   <tr><td><code>tests/</code></td><td>Browser test suites. They mock every external feed, so they pass offline.</td></tr>
   <tr><td><code>_headers</code>, <code>_redirects</code></td><td>Cloudflare Pages config. Response headers and old-URL redirects.</td></tr>
   <tr><td><code>docs.html</code></td><td>This page.</td></tr>
@@ -193,12 +194,16 @@ b{font-weight:700}
   <tr><td>ONS</td><td>CPI index for contract price adjustment</td><td>No</td></tr>
   <tr><td>londonbusroutes.net</td><td>Operator, garage, PVR, vehicle type (community reference)</td><td>No</td></tr>
   <tr><td>postcodes.io / OSM</td><td>Geocoding garages</td><td>No</td></tr>
+  <tr><td>DfT Street Manager open data</td><td>The statutory street-works record, pushed live over SNS and filtered to London's 33 highway authorities + TfL</td><td>Free registration (push-only; needs a GitHub token on Pages — see <a href="#cloudflare">section 11</a>)</td></tr>
+  <tr><td>TfL Road disruptions (TIMS)</td><td>Live roadworks from TfL's traffic control centre, corridor-joined to bus routes</td><td>No</td></tr>
+  <tr><td>TfL per-route performance PDFs</td><td>Operated-mileage % and reliability per 4-week period (the QSI reports)</td><td>No</td></tr>
+  <tr><td>london-bus-routes.fandom.com</td><td>Provisional tender awards, weeks-to-months ahead of TfL's register (served flagged provisional)</td><td>No</td></tr>
   <tr><td>DfT STATS19, TfL datastore, TfL BUSTO</td><td>Collisions, low bridges, crowding (fixed snapshots)</td><td>No</td></tr>
 </table></div>
 <p>Keys go in a local <code>.env</code> file (copy <code>.env.example</code>) or in GitHub secrets. The frontend needs no keys at all. It runs entirely from the committed JSON.</p>
 
 <h2 id="pipeline">6. Data — how it's made</h2>
-<p><code>npm run refresh</code> runs 17 steps in order. Steps 1–12 fetch. Steps 13–16 build. Step 17 is the quality gate. A fetch step may fail without stopping the run — the last good data stays. A build step must succeed. If the audit fails, nothing is committed.</p>
+<p><code>npm run refresh</code> runs the steps below in order (the historical "17-step" numbering kept its shape as steps were added — 9b, 12b, 12c). Fetch steps come first, then the builds, and the quality gate closes the run. A fetch step may fail without stopping the run — the last good data stays. A build step must succeed. If the audit fails, nothing is committed.</p>
 <div class="tablewrap"><table>
   <tr><th>#</th><th>Script</th><th>What it does</th></tr>
   <tr><td>1</td><td><code>fetch-data.js</code></td><td>Downloads TfL's geometry ZIP. Writes one GeoJSON per route.</td></tr>
@@ -210,15 +215,19 @@ b{font-weight:700}
   <tr><td>7</td><td><code>fetch-vehicle-fleet.js</code></td><td>Joins TfL's registration list with DVLA lookups. 90-day cache — only new vehicles are queried.</td></tr>
   <tr><td>8</td><td><code>fetch-route-vehicles.js</code></td><td>Samples live arrivals to see which buses actually worked each route today.</td></tr>
   <tr><td>9</td><td><code>fetch-tenders.js</code></td><td>Every published TfL award since 2003. Awards never change, so only new ones are fetched.</td></tr>
+  <tr><td>9b</td><td><code>fetch-fandom-tenders.js</code></td><td>Provisional awards from the community wiki's Tender Results pages, served flagged provisional until TfL publishes the real award.</td></tr>
   <tr><td>10</td><td><code>fetch-tender-programme.js</code></td><td>Parses TfL's annual programme PDFs. Which routes come up for tender, and when.</td></tr>
   <tr><td>11</td><td><code>fetch-line-status.js</code></td><td>Snapshot of service status and diversions. The live feed still wins in the browser.</td></tr>
   <tr><td>12</td><td><code>fetch-cpi.js</code></td><td>The ONS CPI index and the CPA rates derived from it.</td></tr>
+  <tr><td>12b</td><td><code>fetch-scheduled-mileage.js</code></td><td>Timetable-derived scheduled km per route per day type.</td></tr>
+  <tr><td>12c</td><td><code>fetch-route-performance.js</code></td><td>TfL's per-route QSI PDFs: operated-mileage % and reliability per period. Cached on Last-Modified, so most nights re-download almost nothing.</td></tr>
   <tr><td>13</td><td><code>build-classifications.js</code></td><td>Joins everything into one master record per route. Manual overrides are applied last and always win.</td></tr>
   <tr><td>14</td><td><code>build-overview.js</code></td><td>Simplifies all geometry into one network-wide GeoJSON the map can draw at once.</td></tr>
   <tr><td>15</td><td><code>build-garage-locations.js</code></td><td>Garage coordinates in the shape the frontend wants.</td></tr>
   <tr><td>16</td><td><code>build-api.js</code></td><td>Assembles the faux-API files plus a manifest. Missing fields keep their last good value.</td></tr>
-  <tr><td>17</td><td><code>audit-data.js</code></td><td>Checks every record for plausibility. Critical problems abort the run.</td></tr>
+  <tr><td>17</td><td><code>audit-data.js</code></td><td>Checks every record for plausibility (including a buses-only guard — no tram data may leak in). Critical problems abort the run.</td></tr>
 </table></div>
+<p class="muted">Three more steps run only in the 2-hourly status workflow, because they accumulate history from feeds that publish no archive: <code>build-diversion-history.js</code> (folds each diversion snapshot into the rolling history), <code>fetch-roadworks.js</code> (TIMS snapshot, corridor-joined to routes, accumulated), and <code>drain-streetworks.js</code> (folds Street Manager events pushed to the <code>streetworks-inbox</code> branch into the archive, converting coordinates to WGS84).</p>
 
 <h2 id="storage">7. Data — where it's stored</h2>
 <p>Everything is a file in Git. There is no database, no object store, no cache server. Three layers of files:</p>
@@ -257,7 +266,7 @@ b{font-weight:700}
 <p>Four GitHub Actions workflows keep the data fresh. Times are UTC. The app's About page shows the same schedule in London time.</p>
 <div class="tablewrap"><table>
   <tr><th>Workflow</th><th>Schedule (UTC)</th><th>Refreshes</th></tr>
-  <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full 17-step pipeline. The name is historical.</td></tr>
+  <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full pipeline (every fetch and build step plus the audit gate). The name is historical.</td></tr>
   <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status, the diversion register + history, TIMS roadworks, and the street-works drain (folds DfT Street Manager events pushed to the <code>streetworks-inbox</code> branch).</td></tr>
   <tr><td><code>refresh-fleet.yml</code></td><td>07:20 / 15:20 / 23:20</td><td>Arrivals sweep and DVLA fleet data.</td></tr>
   <tr><td><code>refresh-tenders.yml</code></td><td>hourly 07:20–20:20, plus after every other run</td><td>Tender awards and the programme.</td></tr>
@@ -283,7 +292,8 @@ b{font-weight:700}
 <p>Cloudflare Pages hosts the site. Three parts matter:</p>
 <ul>
   <li><b>Pages.</b> The project is connected to the GitHub repo. Production branch is <code>main</code>. There is no build command — Pages just serves the files. The custom domain points at it.</li>
-  <li><b>The one function.</b> <code>functions/api/live/vehicles.js</code> runs at the edge. It takes a route number, adds the secret BODS key, fetches the national GPS feed, filters it to the route's bounding box, and returns the result. Responses are cached at the edge for 10 seconds, so heavy use never hammers the upstream feed. The key is set as a Pages environment variable.</li>
+  <li><b>The live-GPS function.</b> <code>functions/api/live/vehicles.js</code> runs at the edge. It takes a route number, adds the secret BODS key, fetches the national GPS feed, filters it to the route's bounding box, and returns the result. Responses are cached at the edge for 10 seconds, so heavy use never hammers the upstream feed. The key is set as a Pages environment variable (<code>BODS_API_KEY</code>).</li>
+  <li><b>The street-works receiver.</b> <code>functions/api/streetworks.js</code> accepts DfT Street Manager push notifications (AWS SNS), verifies their signatures, filters to London's highway authorities by SWA org code, and commits each event to the <code>streetworks-inbox</code> branch via the GitHub API — git is the queue. It needs a fine-grained GitHub token (this repo, Contents read/write) as the Pages environment variable <code>GITHUB_TOKEN</code>. The status workflow folds queued events into <code>streetworks-history.json</code>.</li>
   <li><b>Config files.</b> <code>_headers</code> sets security headers and makes JS and CSS revalidate on every load (there are no fingerprinted filenames, so this keeps returning visitors on the current version). <code>_redirects</code> keeps old URLs working.</li>
 </ul>
 
@@ -313,9 +323,10 @@ b{font-weight:700}
   <li><b>Fork or clone</b> <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">the repository</a>. It ships with working data, so the site runs immediately with no keys.</li>
   <li><b>Serve it locally.</b> <code>npm install</code>, then any static server (<code>npx serve .</code>) from the repo root. Open the site. Everything works from the committed JSON.</li>
   <li><b>Get keys</b> (only needed to refresh data): a TfL API key, a DVLA key, and a BODS key. All free. Copy <code>.env.example</code> to <code>.env</code> and fill them in.</li>
-  <li><b>Run the pipeline.</b> <code>npm run refresh</code>. Watch the 17 steps. The audit at the end must pass. Each step can also run alone — see <code>package.json</code>.</li>
+  <li><b>Run the pipeline.</b> <code>npm run refresh</code>. Watch the steps run. The audit at the end must pass. Each step can also run alone — see <code>package.json</code>.</li>
   <li><b>Host it.</b> Create a Cloudflare Pages project pointed at your repo. Production branch <code>main</code>. No build command. Set <code>BODS_API_KEY</code> as a Pages environment variable so live buses work.</li>
   <li><b>Automate it.</b> Add <code>BUS_API_KEY</code> and <code>DVLA_API_KEY</code> as GitHub Actions secrets. The four workflows then keep the data fresh on their own. Public repos get unlimited Actions minutes.</li>
+  <li><b>Optional — street works.</b> The Street Manager feed is push-based, so it needs your own registration: set a fine-grained GitHub token as the Pages env var <code>GITHUB_TOKEN</code>, GET <code>/api/streetworks</code> until it reports ready, then register that URL at DfT's open-data onboarding. Everything else works without it.</li>
   <li><b>Fix data by hand when needed.</b> Add an entry to <code>data/route-overrides.json</code>. Rebuild: <code>npm run build-classifications</code>, then <code>build-overview</code>, then <code>build-api</code>. Commit. Overrides survive every future refresh.</li>
   <li><b>Verify.</b> Run the suites in <code>tests/</code> (they need Playwright's Chromium; the tests download nothing and mock all feeds).</li>
 </ol>
@@ -332,6 +343,8 @@ b{font-weight:700}
   <tr><td>£/mile</td><td>The award's cost per contracted mile. The headline price of running the route.</td></tr>
   <tr><td>CPI-CPA</td><td>Contract Price Adjustment. TfL contracts rise with 85% of CPI inflation.</td></tr>
   <tr><td>iBus</td><td>TfL's on-bus tracking system. Its open data lists every vehicle's registration and operator.</td></tr>
+  <tr><td>Street Manager</td><td>DfT's national register of street and road works. Every permit and work event in England flows through it; this site subscribes to the London slice.</td></tr>
+  <tr><td>SWA code</td><td>Street Works Act organisation code — the numeric ID every highway authority carries (e.g. 5300 = Enfield). Street Manager identifies authorities by these.</td></tr>
   <tr><td>BODS</td><td>The DfT Bus Open Data Service. The national live bus GPS feed.</td></tr>
   <tr><td>Faux-API</td><td>This project's term for committed JSON files served statically but read like an API.</td></tr>
 </table></div>
