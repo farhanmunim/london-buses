@@ -85,12 +85,11 @@ b{font-weight:700}
 
 <div class="topbar"><div class="topbar-in">
   <a class="brand" href="/"><span class="brand-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="14" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/><circle cx="8.5" cy="14.5" r=".9" fill="#fff"/><circle cx="15.5" cy="14.5" r=".9" fill="#fff"/></svg></span>London Buses</a>
-  <span class="right"><a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">GitHub ↗</a></span>
 </div></div>
 
 <main>
 <h1>How this project works</h1>
-<p class="sub">The full picture, in plain words. What the app does, where the data comes from, how GitHub and Cloudflare fit together, and how to rebuild the whole thing. Deep per-field notes live in <a href="https://github.com/farhanmunim/london-buses/blob/main/data.md" rel="noopener" target="_blank">data.md</a>.</p>
+<p class="sub">The full picture, in plain words. What the app does, where the data comes from, how GitHub and Cloudflare fit together, and how to rebuild the whole thing. Deep per-field notes live in <code>data.md</code> in the repository.</p>
 
 <div class="card"><div class="toc">
   <a href="#what">1. What this is</a>
@@ -320,7 +319,7 @@ b{font-weight:700}
 <h2 id="replicate">15. Rebuild it from scratch</h2>
 <p>The full recipe, in order. Nothing here is magic. It is ordinary Git, JSON and static hosting.</p>
 <ol>
-  <li><b>Fork or clone</b> <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">the repository</a>. It ships with working data, so the site runs immediately with no keys.</li>
+  <li><b>Fork or clone</b> the repository. It ships with working data, so the site runs immediately with no keys.</li>
   <li><b>Serve it locally.</b> <code>npm install</code>, then any static server (<code>npx serve .</code>) from the repo root. Open the site. Everything works from the committed JSON.</li>
   <li><b>Get keys</b> (only needed to refresh data): a TfL API key, a DVLA key, and a BODS key. All free. Copy <code>.env.example</code> to <code>.env</code> and fill them in.</li>
   <li><b>Run the pipeline.</b> <code>npm run refresh</code>. Watch the steps run. The audit at the end must pass. Each step can also run alone — see <code>package.json</code>.</li>
@@ -350,7 +349,7 @@ b{font-weight:700}
 </table></div>
 
 <div class="footer">
-  <a href="/">← Back to the app</a> · <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">Source on GitHub ↗</a><br>
+  <a href="/">← Back to the app</a><br>
   MIT-licensed code · data remains subject to its sources' own terms (TfL open data, OGL v3.0, ODbL).
 </div>
 </main>

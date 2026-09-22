@@ -3542,7 +3542,7 @@ async function renderAbout(){
         <p>An independent project. <b>Not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
         <p>Every number on this site comes from its own open data pipeline. GitHub Actions fetches, checks and commits the datasets. The site serves them as static JSON.</p>
         <p><b>Sources.</b> Routes, stops, geometry, status, crowding and live arrivals come from <b>Transport for London</b> — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures come from the <b>Office for National Statistics</b> (D7BT series). Live bus positions come from the DfT Bus Open Data Service. Street works come from DfT Street Manager open data (pushed live, filtered to London's highway authorities). Vehicle details come from the DVLA. These contain public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Low-bridge heights are from TfL's height-restrictions register. Collision records are from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR are courtesy of londonbusroutes.net (community reference). Provisional tender awards are community-reported via london-bus-routes.fandom.com (flagged until TfL publishes the official result). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>.</p>
-        <p><b>Open source.</b> The whole platform lives in one public repository: <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank">github.com/farhanmunim/london-buses</a>. Code is MIT-licensed. The data stays under its sources' own licences. Issues and pull requests welcome. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
+        <p><b>Licensing.</b> Code is MIT-licensed. The data stays under its sources' own licences. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
         <p>Built by <a href="https://farhan.app" rel="noopener" target="_blank">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
       </div>
     </div>
@@ -3565,7 +3565,7 @@ async function renderAbout(){
         <tr><td>Crowding</td><td class="desc">TfL BUSTO 2025–2026 — seeded snapshot.</td></tr>
       </table></div>
     </div>
-    <div class="footer">Data may be incomplete or out of date — verify before acting on it.<br><a href="/docs.html" style="color:var(--acc);font-weight:600">Documentation</a> · <a href="https://github.com/farhanmunim/london-buses" rel="noopener" target="_blank" style="color:var(--acc);font-weight:600">Source on GitHub ↗</a></div>`;
+    <div class="footer">Data may be incomplete or out of date — verify before acting on it.<br><a href="/docs.html" style="color:var(--acc);font-weight:600">Documentation</a></div>`;
   const mf = await D.manifest();
   if(gone(tok)) return;
 
