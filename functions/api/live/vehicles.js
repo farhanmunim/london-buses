@@ -62,7 +62,10 @@ export async function onRequestGet(context) {
   // 503, not 502 — Cloudflare swallows a Worker's 502/504 body and serves
   // its own branded error page, which hides this diagnostic JSON.
   if (!res.ok) {
-    const snippet = (await res.text().catch(() => '')).slice(0, 300);
+    // Redact the key defensively: if BODS ever echoes the request URL in an
+    // error body, this diagnostic snippet must not relay it to the browser.
+    const snippet = (await res.text().catch(() => '')).slice(0, 300)
+      .replaceAll(env.BODS_API_KEY, '[redacted]');
     return json({ error: `BODS upstream HTTP ${res.status}`, upstreamBody: snippet }, 503);
   }
   const xml = await res.text();
