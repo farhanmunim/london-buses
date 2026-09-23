@@ -243,6 +243,16 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .util .minibar{flex:1}
 
 /* about */
+/* About page — benchmarked on docs.html: one calm column, bordered
+   section headings, short prose, quiet tables. */
+.about{max-width:760px;margin:0 auto}
+.about h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:8px 0 3px}
+.about .absub{color:var(--tx2);font-size:13.5px;margin-bottom:20px}
+.about h2{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:32px 0 10px;padding-top:12px;border-top:1px solid var(--bd)}
+.about p{font-size:13.5px;line-height:1.65;color:var(--tx);max-width:72ch;margin:0 0 11px}
+.about p.note{font-size:12px;color:var(--mu);margin-top:8px}
+.about a{color:var(--acc);font-weight:500}
+.about .card{margin:0}
 .prose{font-size:13.5px;color:var(--tx2);line-height:1.6}
 .prose p{margin-bottom:10px}
 .prose b{color:var(--tx)}
@@ -3536,38 +3546,44 @@ async function renderCpi(){
 
 async function renderAbout(){
   const tok = navToken;
-  main.innerHTML = `
-    <h1 class="h1">About</h1>
-    <div class="sub">London Buses — search and explore every TfL bus route, operator and garage.</div>
-    <div class="card" style="padding:16px" id="aboutCard">
-      <div class="prose">
-        <p>An independent project. <b>Not affiliated with Transport for London</b> or any bus operator. Not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
-        <p>Every number on this site comes from its own open data pipeline. GitHub Actions fetches, checks and commits the datasets. The site serves them as static JSON.</p>
-        <p><b>Sources.</b> Routes, stops, geometry, status, crowding and live arrivals come from <b>Transport for London</b> — <b>Powered by TfL Open Data</b>. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. CPI figures come from the <b>Office for National Statistics</b> (D7BT series). Live bus positions come from the DfT Bus Open Data Service. Street works come from DfT Street Manager open data (pushed live, filtered to London's highway authorities). Vehicle details come from the DVLA. These contain public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Low-bridge heights are from TfL's height-restrictions register. Collision records are from DfT STATS19 (bus/coach-involved, 2021–2025). Operators, garages and PVR are courtesy of londonbusroutes.net (community reference). Provisional tender awards are community-reported via london-bus-routes.fandom.com (flagged until TfL publishes the official result). Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>.</p>
-        <p><b>Licensing.</b> Code is MIT-licensed. The data stays under its sources' own licences. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
-        <p>Built by <a href="https://farhan.app" rel="noopener" target="_blank">Farhan Munim</a>. Contributors: Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, Andy Corbett. <a href="/archive/v1/">Classic map app (archived) ›</a></p>
-      </div>
-    </div>
-    <div class="section"><div class="section-h">Live feeds</div>
-      <div class="card"><table class="fresh">
-        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Straight from TfL Countdown — re-syncs every ~30 s while a stop board is open.</td></tr>
-        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">DfT Bus Open Data GPS — every ~15–20 s while the live layer is on.</td></tr>
-        <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Straight from TfL — checked on view, re-polled every 60 s.</td></tr>
-      </table></div>
-      <div class="legendrow" style="margin-top:7px"><span>Live feeds are never stored — the browser reads them directly, with the last committed snapshot as fallback.</span></div>
-    </div>
-    <div class="section"><div class="section-h">Scheduled pipelines</div>
-      <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
-      <div class="legendrow" style="margin-top:7px"><span>Refreshed by scheduled GitHub Actions — times shown in London time (GMT/BST); GitHub's scheduler can slip a slot by a few minutes to a few hours. A run commits — and the site redeploys — only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check.</span></div>
-    </div>
-    <div class="section"><div class="section-h">Static snapshots</div>
-      <div class="card"><table class="fresh">
-        <tr><td>Low bridges</td><td class="desc">TfL height-restrictions register — seeded snapshot.</td></tr>
-        <tr><td>Collisions</td><td class="desc">DfT STATS19, bus/coach-involved 2021–2025 — seeded snapshot.</td></tr>
-        <tr><td>Crowding</td><td class="desc">TfL BUSTO 2025–2026 — seeded snapshot.</td></tr>
-      </table></div>
-    </div>
-    <div class="footer">Data may be incomplete or out of date — verify before acting on it.<br><a href="/docs.html" style="color:var(--acc);font-weight:600">Documentation</a></div>`;
+  const src = (name, what) => `<tr><td>${name}</td><td class="desc">${what}</td></tr>`;
+  main.innerHTML = `<div class="about">
+    <h1>About</h1>
+    <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
+
+    <p>London Buses is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
+    <p>There is no server. Scheduled pipelines fetch each dataset from its public source, validate it, and publish it as static files — every number on the site can be traced to where it came from. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
+
+    <h2>Where the data comes from</h2>
+    <div class="card"><table class="fresh">
+      ${src('Transport for London', 'Routes, stops, geometry, timetables, service status, diversions, crowding, live arrivals — Powered by TfL Open Data')}
+      ${src('DfT Bus Open Data', 'Live bus positions (GPS)')}
+      ${src('DfT Street Manager', 'Street works — the statutory permit record, pushed live for London’s highway authorities')}
+      ${src('DfT STATS19', 'Bus-involved collision records, 2021–2025')}
+      ${src('DVLA', 'Vehicle make, fuel type and age')}
+      ${src('Office for National Statistics', 'The CPI index behind the contract price adjustment rates')}
+      ${src('londonbusroutes.net', 'Operators, garages and PVR (community reference)')}
+      ${src('london-bus-routes.fandom.com', 'Provisional tender awards, flagged until TfL publishes the official result')}
+    </table></div>
+    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. Code is MIT-licensed; the data stays under its sources' own licences.</p>
+
+    <h2>Live right now</h2>
+    <div class="card"><table class="fresh">
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Straight from TfL Countdown — re-syncs every ~30 s while a stop board is open.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">DfT Bus Open Data GPS — every ~15–20 s while the live layer is on.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Straight from TfL — checked on view, re-polled every 60 s.</td></tr>
+    </table></div>
+    <p class="note">Live feeds are never stored — the browser reads them directly, with the last published snapshot as fallback.</p>
+
+    <h2>When each dataset refreshes</h2>
+    <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
+    <p class="note">Times are London time (GMT/BST); the scheduler can slip a slot by a few minutes to a few hours. A refresh publishes only when the data actually changed, so "last updated" is the last time the upstream moved, not the last check. Low bridges, collisions and crowding are seeded snapshots and don't refresh.</p>
+
+    <h2>Credits</h2>
+    <p>Built by <a href="https://farhan.app" rel="noopener" target="_blank">Farhan Munim</a>. Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran and Andy Corbett for data, feedback and reference material. The original map-first app is preserved as the <a href="/archive/v1/">classic map app ›</a></p>
+
+    <div class="footer" style="margin-top:28px">Data may be incomplete or out of date — verify before acting on it.</div>
+  </div>`;
   const mf = await D.manifest();
   if(gone(tok)) return;
 
