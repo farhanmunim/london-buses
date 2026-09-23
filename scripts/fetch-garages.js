@@ -266,13 +266,22 @@ async function main() {
   // allocation and once with partial data from a different parent contract
   // record. Merge: keep the row with the larger PVR + populated route list,
   // and union route fields so neither source's allocation is lost.
+  // Some duplicates carry DIFFERENT codes for the same physical site, which
+  // the code-keyed dedupe can't see — normalise those to the canonical TfL
+  // code first so they merge like any other duplicate.
+  //   LI → HO: Lea Interchange (Stagecoach). The CSV lists it once as HO
+  //   (current allocation, capacity) and once as LI under the legacy
+  //   "Lea Interchange Bus Co. Ltd." contract record. HO is the code the
+  //   route allocations use.
+  const CODE_ALIASES = { LI: 'HO' };
   const dedup = new Map();
   const ROUTE_FIELDS_FOR_MERGE = [
     'TfL main network routes', 'TfL night routes',
     'TfL school/mobility routes', 'Other routes',
   ];
   for (const f of features) {
-    const code = String(f.properties['TfL garage code'] || '').toUpperCase().trim();
+    let code = String(f.properties['TfL garage code'] || '').toUpperCase().trim();
+    if (CODE_ALIASES[code]) { code = CODE_ALIASES[code]; f.properties['TfL garage code'] = code; }
     if (!code) {
       // No TfL code → not part of the dedup keyspace. Keep as-is; the
       // pipeline downstream filters these out by code anyway.
@@ -295,6 +304,14 @@ async function main() {
         const tokens = new Set([...a.split(/\s+/), ...b.split(/\s+/)].filter(Boolean));
         canonical.properties[k] = [...tokens].join(' ');
       }
+    }
+    // Fill any other blank property from the losing row — an aliased
+    // duplicate can carry fields the canonical row lacks (e.g. LI's
+    // company name vs HO's capacity).
+    for (const [k, v] of Object.entries(other.properties ?? {})) {
+      const cur = canonical.properties[k];
+      if ((cur == null || String(cur).trim() === '') && v != null && String(v).trim() !== '')
+        canonical.properties[k] = v;
     }
     dedup.set(code, canonical);
   }

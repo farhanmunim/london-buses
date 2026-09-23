@@ -163,7 +163,19 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   });
   // Garages the source list has never carried (coach/school operators from the
   // licence sweep, e.g. CP, NM) survive from the previous build wholesale.
+  // Codes superseded by another code for the SAME physical site must not:
+  // the carried entry renders as a duplicate garage page forever. Fold their
+  // sticky fields into the canonical entry and drop them.
+  //   LI → HO: Lea Interchange (Stagecoach) — one site; the upstream CSV
+  //   and every route allocation use HO, LI is the legacy contract code.
+  const SUPERSEDED = { LI: 'HO' };
   for (const [code, p] of prev) {
+    const target = SUPERSEDED[code];
+    if (target) {
+      const t = garages.find(g => g.code === target);
+      if (t) for (const k of ['company', 'licence', 'capacity', 'postcode']) t[k] ??= p[k] ?? null;
+      continue;
+    }
     if (locs[code]) continue;
     // The carry-forward is for bus garages the licence sweep knows but this
     // run's scrape missed — never for non-bus depots. Without this guard the
