@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-09-25T09:07:28Z",
-  "stop_count": 19985,
+  "generated_at_utc": "2026-09-26T08:53:55Z",
+  "stop_count": 19984,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -4282,7 +4282,7 @@
       ]
     },
     "210021903892": {
-      "name": "Watford Junction Railway Station",
+      "name": "Watford Junction Station",
       "indicator": "Stop 1",
       "lat": 51.66335,
       "lon": -0.39629,
@@ -7363,7 +7363,7 @@
       ]
     },
     "40004406038B": {
-      "name": "Epsom Clock Tower",
+      "name": "Clock Tower",
       "indicator": "Stop B",
       "lat": 51.33326,
       "lon": -0.26883,
@@ -10363,7 +10363,7 @@
       ]
     },
     "490000004E": {
-      "name": "Aldgate East Station ><",
+      "name": "Aldgate East Station",
       "indicator": "Stop E",
       "lat": 51.5155,
       "lon": -0.07143,
@@ -11093,6 +11093,7 @@
       "lon": -0.04142,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
@@ -11620,7 +11621,6 @@
       "lon": 0.00849,
       "routes": [
         "115",
-        "330",
         "N15"
       ]
     },
@@ -11646,6 +11646,15 @@
         "330",
         "5",
         "N15"
+      ]
+    },
+    "490000039G": {
+      "name": "Canning Town Bus Station",
+      "indicator": "Stop G",
+      "lat": 51.51442,
+      "lon": 0.00827,
+      "routes": [
+        "330"
       ]
     },
     "490000039H": {
@@ -12124,7 +12133,7 @@
       ]
     },
     "490000062A": {
-      "name": "Ealing Broadway Stn   / Haven Green",
+      "name": "Ealing Broadway Station   / Haven Green",
       "indicator": "Stop A",
       "lat": 51.51565,
       "lon": -0.30225,
@@ -12573,7 +12582,7 @@
       ]
     },
     "490000073J": {
-      "name": "Elephant & Castle   / New Kent Road",
+      "name": "Elephant & Castle / New Kent Road",
       "indicator": "Stop J",
       "lat": 51.49486,
       "lon": -0.09783,
@@ -14552,8 +14561,8 @@
     "490000129D": {
       "name": "King's Cross Station",
       "indicator": "Stop D",
-      "lat": 51.5304,
-      "lon": -0.12308,
+      "lat": 51.53045,
+      "lon": -0.12328,
       "routes": [
         "46",
         "63",
@@ -16068,7 +16077,9 @@
         "135",
         "205",
         "243",
-        "N205"
+        "55",
+        "N205",
+        "N55"
       ]
     },
     "490000169L": {
@@ -16846,7 +16857,7 @@
       ]
     },
     "490000200E": {
-      "name": "Russell Square",
+      "name": ".Russell Square",
       "indicator": "Stop E",
       "lat": 51.52233,
       "lon": -0.12713,
@@ -17679,8 +17690,7 @@
       "lon": -0.09716,
       "routes": [
         "100",
-        "76",
-        "N25"
+        "76"
       ]
     },
     "490000227A": {
@@ -18230,6 +18240,7 @@
         "144",
         "184",
         "221",
+        "230",
         "67",
         "W4"
       ]
@@ -18258,6 +18269,7 @@
         "121",
         "184",
         "221",
+        "230",
         "329",
         "67",
         "W4"
@@ -18628,6 +18640,7 @@
       "lon": -0.02046,
       "routes": [
         "20",
+        "230",
         "W12",
         "W15",
         "W19"
@@ -21800,7 +21813,7 @@
     },
     "490000924Y": {
       "name": "Grove Lane",
-      "indicator": "->N",
+      "indicator": "Stop ->N",
       "lat": 51.32431,
       "lon": -0.1519,
       "routes": [
@@ -25448,7 +25461,7 @@
     "490001177E": {
       "name": "Lewisham Station",
       "indicator": "Stop E",
-      "lat": 51.46463,
+      "lat": 51.4646,
       "lon": -0.01361,
       "routes": [
         "21",
@@ -27693,7 +27706,7 @@
       "name": "Sundridge Park Station",
       "indicator": "Stop B",
       "lat": 51.41404,
-      "lon": 0.02231,
+      "lon": 0.02229,
       "routes": [
         "314"
       ]
@@ -28597,6 +28610,24 @@
       "routes": [
         "463",
         "633"
+      ]
+    },
+    "490001343A": {
+      "name": "Wood Street Station",
+      "indicator": "Stop D",
+      "lat": 51.58642,
+      "lon": -0.00214,
+      "routes": [
+        "230"
+      ]
+    },
+    "490001343B": {
+      "name": "Wood Street Station",
+      "indicator": "Stop J",
+      "lat": 51.58672,
+      "lon": -0.00178,
+      "routes": [
+        "230"
       ]
     },
     "490001343D": {
@@ -29749,7 +29780,7 @@
       "name": "Deptford Bridge Station",
       "indicator": "Stop T",
       "lat": 51.47442,
-      "lon": -0.02319,
+      "lon": -0.02312,
       "routes": [
         "177",
         "453",
@@ -30393,6 +30424,7 @@
       "lon": 0.00166,
       "routes": [
         "20",
+        "230",
         "257"
       ]
     },
@@ -31989,6 +32021,15 @@
         "339"
       ]
     },
+    "490002314YY": {
+      "name": "Brent Cross West Station",
+      "indicator": "Stop AA",
+      "lat": 51.5701,
+      "lon": -0.22649,
+      "routes": [
+        "189"
+      ]
+    },
     "490002314ZZ": {
       "name": "Brent Cross West Station",
       "indicator": "Stop BB",
@@ -31996,6 +32037,15 @@
       "lon": -0.22622,
       "routes": [
         "189"
+      ]
+    },
+    "490002333ZZ": {
+      "name": "Avon Road",
+      "indicator": "Stop O",
+      "lat": 51.58913,
+      "lon": 0.00299,
+      "routes": [
+        "230"
       ]
     },
     "490002338HY": {
@@ -32735,8 +32785,8 @@
     "490002503PS": {
       "name": "Pancras Square",
       "indicator": "Stop W",
-      "lat": 51.53425,
-      "lon": -0.12569,
+      "lat": 51.53435,
+      "lon": -0.12587,
       "routes": [
         "63",
         "N63"
@@ -32885,7 +32935,7 @@
       ]
     },
     "490003027E": {
-      "name": "Priory Terrace",
+      "name": "Abbey Road",
       "indicator": "Stop X",
       "lat": 51.53918,
       "lon": -0.18908,
@@ -37559,18 +37609,9 @@
         "103"
       ]
     },
-    "490003340S": {
-      "name": "Antlers Hill",
-      "indicator": "Stop ->S",
-      "lat": 51.6453,
-      "lon": -0.00864,
-      "routes": [
-        "379"
-      ]
-    },
     "490003340ZT": {
       "name": "Antlers Hill",
-      "indicator": "Stop ->S",
+      "indicator": "->S",
       "lat": 51.64438,
       "lon": -0.00884,
       "routes": [
@@ -37580,7 +37621,7 @@
     "490003341E": {
       "name": "Aperfield Road",
       "indicator": "->E",
-      "lat": 51.30734,
+      "lat": 51.30733,
       "lon": 0.04388,
       "routes": [
         "246"
@@ -38429,7 +38470,7 @@
       ]
     },
     "490003399S": {
-      "name": "Portobello and Golborne Market",
+      "name": "Portobello Road Market",
       "indicator": "Stop PQ",
       "lat": 51.51385,
       "lon": -0.20464,
@@ -41332,7 +41373,7 @@
       ]
     },
     "490003620D": {
-      "name": "Barley Lane / King George Hospital",
+      "name": "Barley Lane",
       "indicator": "Stop D",
       "lat": 51.58262,
       "lon": 0.11561,
@@ -47546,7 +47587,7 @@
       ]
     },
     "490004031W": {
-      "name": "Birbeck Road",
+      "name": "Daws Lane / Watford Way",
       "indicator": "->W",
       "lat": 51.61578,
       "lon": -0.2419,
@@ -47701,6 +47742,24 @@
         "N74"
       ]
     },
+    "490004046W": {
+      "name": "Fyfield Road",
+      "indicator": "Stop C",
+      "lat": 51.58981,
+      "lon": 0.00098,
+      "routes": [
+        "230"
+      ]
+    },
+    "490004046ZZ": {
+      "name": "Fyfield Road",
+      "indicator": "Stop C",
+      "lat": 51.58781,
+      "lon": 0.00023,
+      "routes": [
+        "230"
+      ]
+    },
     "490004049E": {
       "name": "Bittacy Hill",
       "indicator": "->E",
@@ -47795,6 +47854,7 @@
       "lat": 51.58612,
       "lon": -0.09077,
       "routes": [
+        "230",
         "41",
         "67",
         "N41"
@@ -48158,8 +48218,8 @@
     "490004078N": {
       "name": "Blacksmiths Lane",
       "indicator": "Stop SY",
-      "lat": 51.39244,
-      "lon": 0.11456,
+      "lat": 51.39243,
+      "lon": 0.11454,
       "routes": [
         "R4"
       ]
@@ -48784,18 +48844,9 @@
         "U5"
       ]
     },
-    "490004128S": {
-      "name": "Antlers Hill / Gilwell Close",
-      "indicator": "Stop ->E",
-      "lat": 51.64613,
-      "lon": -0.00894,
-      "routes": [
-        "379"
-      ]
-    },
     "490004128SZ": {
       "name": "Antlers Hill / Gilwell Close",
-      "indicator": "Stop ->E",
+      "indicator": "->E",
       "lat": 51.64609,
       "lon": -0.00893,
       "routes": [
@@ -50323,8 +50374,8 @@
     "490004247S": {
       "name": "Brampton Road",
       "indicator": "S-bound",
-      "lat": 51.387,
-      "lon": -0.0822,
+      "lat": 51.38703,
+      "lon": -0.08217,
       "routes": [
         "410"
       ]
@@ -50631,6 +50682,7 @@
       "lon": -0.05512,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
@@ -50755,6 +50807,7 @@
       "lat": 51.57515,
       "lon": -0.22396,
       "routes": [
+        "112",
         "324"
       ]
     },
@@ -52149,7 +52202,7 @@
       ]
     },
     "490004377F": {
-      "name": "Broad Street / Teddington",
+      "name": "Teddington / Broad Street",
       "indicator": "Stop F",
       "lat": 51.42595,
       "lon": -0.33687,
@@ -54116,6 +54169,7 @@
       "routes": [
         "212",
         "215",
+        "230",
         "275",
         "34",
         "357",
@@ -56876,7 +56930,7 @@
       ]
     },
     "490004761N": {
-      "name": "Old Lodge Lane Bus Terminus",
+      "name": "Canons Hill",
       "indicator": "->N",
       "lat": 51.31552,
       "lon": -0.1151,
@@ -59129,6 +59183,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73"
       ]
     },
@@ -60128,7 +60183,7 @@
       "name": "Christ Church",
       "indicator": "Stop X",
       "lat": 51.36388,
-      "lon": 0.10685,
+      "lon": 0.10683,
       "routes": [
         "R7"
       ]
@@ -61574,6 +61629,24 @@
       "routes": [
         "92",
         "N118"
+      ]
+    },
+    "490005145N": {
+      "name": "Chestnut Avenue North",
+      "indicator": "Stop H",
+      "lat": 51.58478,
+      "lon": -0.00162,
+      "routes": [
+        "230"
+      ]
+    },
+    "490005145S": {
+      "name": "Chestnut Avenue North",
+      "indicator": "Stop E",
+      "lat": 51.58497,
+      "lon": -0.00119,
+      "routes": [
+        "230"
       ]
     },
     "490005147BG": {
@@ -70479,6 +70552,7 @@
         "213",
         "371",
         "K2",
+        "K3",
         "K4",
         "K5",
         "SL7"
@@ -71555,7 +71629,7 @@
       ]
     },
     "490005858NZ": {
-      "name": "St. George's Walk / Croydon Town Centre",
+      "name": "Croydon Library",
       "indicator": "Stop KM",
       "lat": 51.37316,
       "lon": -0.09865,
@@ -72079,15 +72153,6 @@
       "routes": [
         "195",
         "E8"
-      ]
-    },
-    "4900058QA17": {
-      "name": "Cromwell Road Bus Station",
-      "indicator": "Stop Z1",
-      "lat": 51.41235,
-      "lon": -0.29907,
-      "routes": [
-        "K3"
       ]
     },
     "490005900N": {
@@ -73548,18 +73613,9 @@
         "N98"
       ]
     },
-    "490006024S": {
-      "name": "Antlers Hill / Deerleap Grove",
-      "indicator": "Stop ->E",
-      "lat": 51.64321,
-      "lon": -0.00829,
-      "routes": [
-        "379"
-      ]
-    },
     "490006024ZS": {
       "name": "Antlers Hill / Deerleap Grove",
-      "indicator": "Stop ->S",
+      "indicator": "->S",
       "lat": 51.64319,
       "lon": -0.00808,
       "routes": [
@@ -75254,7 +75310,7 @@
     "490006165S": {
       "name": "Keston Church",
       "indicator": "Stop WJ",
-      "lat": 51.34646,
+      "lat": 51.34645,
       "lon": 0.03581,
       "routes": [
         "246",
@@ -75831,25 +75887,16 @@
     },
     "490006207NY": {
       "name": "Drysdale Avenue / Hawkwood Crescent",
-      "indicator": "Stop ->N",
+      "indicator": "->N",
       "lat": 51.64033,
       "lon": -0.00856,
       "routes": [
         "379"
       ]
     },
-    "490006207S": {
-      "name": "Drysdale Avenue / Hawkwood Crescent",
-      "indicator": "Stop ->S",
-      "lat": 51.64059,
-      "lon": -0.00841,
-      "routes": [
-        "379"
-      ]
-    },
     "490006207SZ": {
       "name": "Drysdale Avenue / Hawkwood Crescent",
-      "indicator": "Stop ->S",
+      "indicator": "->S",
       "lat": 51.64053,
       "lon": -0.00839,
       "routes": [
@@ -77883,6 +77930,7 @@
       "lon": -0.00344,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -79702,7 +79750,7 @@
       ]
     },
     "490006476N": {
-      "name": "Portobello and Golborne Market",
+      "name": "Portobello Road Market",
       "indicator": "Stop PP",
       "lat": 51.51445,
       "lon": -0.20519,
@@ -80919,8 +80967,8 @@
     "490006569N": {
       "name": "Endlebury Road",
       "indicator": "Stop GT",
-      "lat": 51.62458,
-      "lon": 0.00207,
+      "lat": 51.62457,
+      "lon": 0.00201,
       "routes": [
         "444"
       ]
@@ -81653,6 +81701,7 @@
       "lon": -0.00678,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -83799,6 +83848,7 @@
       "lon": -0.05364,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
@@ -83809,6 +83859,7 @@
       "lon": -0.05176,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
@@ -83846,6 +83897,7 @@
       "lon": -0.04432,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
@@ -83936,7 +83988,7 @@
       ]
     },
     "490006827W": {
-      "name": "Pimlico Academy Library & Waes",
+      "name": "Altab Ali Park",
       "indicator": "Stop K",
       "lat": 51.51694,
       "lon": -0.06778,
@@ -84915,7 +84967,7 @@
       "name": "Ford Road",
       "indicator": "->W",
       "lat": 51.54006,
-      "lon": 0.15262,
+      "lon": 0.15264,
       "routes": [
         "145"
       ]
@@ -84933,8 +84985,8 @@
     "490006906W": {
       "name": "East Entrance",
       "indicator": "Stop P",
-      "lat": 51.52761,
-      "lon": 0.1584,
+      "lat": 51.52762,
+      "lon": 0.15831,
       "routes": [
         "174",
         "287"
@@ -85522,8 +85574,8 @@
     "490006950N": {
       "name": "Fort Road",
       "indicator": "->N",
-      "lat": 51.54344,
-      "lon": -0.36485,
+      "lat": 51.54319,
+      "lon": -0.36516,
       "routes": [
         "E10"
       ]
@@ -85693,8 +85745,8 @@
     "490006963N2": {
       "name": "Fountain Drive",
       "indicator": "Stop M",
-      "lat": 51.42669,
-      "lon": -0.07517,
+      "lat": 51.42668,
+      "lon": -0.07518,
       "routes": [
         "450"
       ]
@@ -91377,8 +91429,8 @@
     "490007387S": {
       "name": "Gravel Road",
       "indicator": "Stop WA",
-      "lat": 51.37072,
-      "lon": 0.03923,
+      "lat": 51.37033,
+      "lon": 0.03924,
       "routes": [
         "320"
       ]
@@ -93105,6 +93157,7 @@
       "lat": 51.58933,
       "lon": -0.07581,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -93114,6 +93167,7 @@
       "lat": 51.58914,
       "lon": -0.07521,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -93335,6 +93389,7 @@
       "lon": -0.01799,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -93648,6 +93703,7 @@
       "lon": -0.01725,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -93667,6 +93723,7 @@
       "lon": -0.01637,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -94301,8 +94358,8 @@
     "490007617N": {
       "name": "Hackington Crescent",
       "indicator": "Stop K",
-      "lat": 51.41977,
-      "lon": -0.02605,
+      "lat": 51.41976,
+      "lon": -0.02606,
       "routes": [
         "352"
       ]
@@ -94837,7 +94894,7 @@
       ]
     },
     "490007649S": {
-      "name": "Hainault Forest Golf Club",
+      "name": "Hainault London Golf Club",
       "indicator": "->S",
       "lat": 51.60501,
       "lon": 0.13449,
@@ -96976,8 +97033,8 @@
     "490007785S": {
       "name": "New Park Road",
       "indicator": "Stop H",
-      "lat": 51.60585,
-      "lon": -0.48101,
+      "lat": 51.60584,
+      "lon": -0.48102,
       "routes": [
         "U9"
       ]
@@ -97074,18 +97131,9 @@
         "120"
       ]
     },
-    "490007794S": {
-      "name": "Drysdale Avenue / Harford Road",
-      "indicator": "Stop ->S",
-      "lat": 51.63511,
-      "lon": -0.01019,
-      "routes": [
-        "379"
-      ]
-    },
     "490007794SZ": {
       "name": "Drysdale Avenue / Harford Road",
-      "indicator": "Stop ->S",
+      "indicator": "->S",
       "lat": 51.63523,
       "lon": -0.0102,
       "routes": [
@@ -99002,15 +99050,6 @@
         "193"
       ]
     },
-    "490007921N": {
-      "name": "Drysdale Avenue / Hawkwood Crescent",
-      "indicator": "Stop ->N",
-      "lat": 51.6403,
-      "lon": -0.00875,
-      "routes": [
-        "379"
-      ]
-    },
     "490007922S": {
       "name": "Hawkridge Close",
       "indicator": "Stop P",
@@ -99066,18 +99105,9 @@
         "385"
       ]
     },
-    "490007925S": {
-      "name": "Hawkswood School",
-      "indicator": "Stop ->S",
-      "lat": 51.64269,
-      "lon": -0.00623,
-      "routes": [
-        "379"
-      ]
-    },
     "490007925SH": {
       "name": "Hawkswood School",
-      "indicator": "Stop ->S",
+      "indicator": "->S",
       "lat": 51.64269,
       "lon": -0.00623,
       "routes": [
@@ -100544,8 +100574,8 @@
     "490008039N": {
       "name": "Heavers Farm School",
       "indicator": "->N",
-      "lat": 51.39458,
-      "lon": -0.08038,
+      "lat": 51.39415,
+      "lon": -0.08003,
       "routes": [
         "410"
       ]
@@ -101725,6 +101755,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73"
       ]
     },
@@ -101736,6 +101767,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W12",
         "W15",
@@ -102056,6 +102088,7 @@
       "lat": 51.5721,
       "lon": -0.14971,
       "routes": [
+        "143",
         "263",
         "603",
         "N263"
@@ -104999,7 +105032,7 @@
       "name": "Horse Leaze",
       "indicator": "Stop A",
       "lat": 51.51183,
-      "lon": 0.0671,
+      "lon": 0.06709,
       "routes": [
         "129",
         "262",
@@ -105024,8 +105057,8 @@
     "490008379E": {
       "name": "Horseshoe Crescent",
       "indicator": "S-bound",
-      "lat": 51.53817,
-      "lon": -0.36941,
+      "lat": 51.538,
+      "lon": -0.36958,
       "routes": [
         "E10"
       ]
@@ -107675,6 +107708,7 @@
       "routes": [
         "212",
         "215",
+        "230",
         "275",
         "34",
         "357",
@@ -108983,7 +109017,7 @@
       "name": "Kent House Lane",
       "indicator": "->N",
       "lat": 51.42018,
-      "lon": -0.04261,
+      "lon": -0.04262,
       "routes": [
         "356"
       ]
@@ -110117,6 +110151,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73"
       ]
     },
@@ -114044,7 +114079,7 @@
       "name": "Lawrence Campe Close",
       "indicator": "->NW",
       "lat": 51.62527,
-      "lon": -0.17023,
+      "lon": -0.17025,
       "routes": [
         "234",
         "383",
@@ -115744,6 +115779,7 @@
       "lon": -0.00835,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -115760,6 +115796,7 @@
       "lon": -0.00763,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "W15",
@@ -117032,7 +117069,6 @@
       "routes": [
         "425",
         "86",
-        "N25",
         "N86",
         "W19"
       ]
@@ -117166,6 +117202,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -117181,6 +117218,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -120079,6 +120117,7 @@
       "lon": -0.10669,
       "routes": [
         "141",
+        "230",
         "29",
         "67",
         "N29",
@@ -121908,7 +121947,7 @@
       "name": "Mansfield Avenue",
       "indicator": "->W",
       "lat": 51.57242,
-      "lon": -0.40415,
+      "lon": -0.40417,
       "routes": [
         "398"
       ]
@@ -122369,6 +122408,7 @@
       "lat": 51.54669,
       "lon": -0.0558,
       "routes": [
+        "242",
         "277",
         "38",
         "N242",
@@ -122401,29 +122441,11 @@
         "N277"
       ]
     },
-    "490009646N": {
-      "name": "Drysdale Avenue / Margaret Avenue",
-      "indicator": "Stop ->N",
-      "lat": 51.63738,
-      "lon": -0.00934,
-      "routes": [
-        "379"
-      ]
-    },
     "490009646XY": {
       "name": "Drysdale Avenue / Margaret Avenue",
-      "indicator": "Stop ->N",
+      "indicator": "->N",
       "lat": 51.63744,
       "lon": -0.00936,
-      "routes": [
-        "379"
-      ]
-    },
-    "490009646XZ": {
-      "name": "Drysdale Avenue / Margaret Avenue",
-      "indicator": "Stop ->S",
-      "lat": 51.63693,
-      "lon": -0.00949,
       "routes": [
         "379"
       ]
@@ -122560,18 +122582,9 @@
         "N21"
       ]
     },
-    "490009657N": {
-      "name": "Drysdale Avenue / Epping Way",
-      "indicator": "Stop ->N",
-      "lat": 51.63838,
-      "lon": -0.0089,
-      "routes": [
-        "379"
-      ]
-    },
     "490009657NZ": {
       "name": "Drysdale Avenue / Epping Way",
-      "indicator": "Stop ->N",
+      "indicator": "->N",
       "lat": 51.6384,
       "lon": -0.00894,
       "routes": [
@@ -125682,7 +125695,7 @@
     "490009884N2": {
       "name": "Mill Brook Road",
       "indicator": "Stop SF",
-      "lat": 51.39501,
+      "lat": 51.395,
       "lon": 0.1143,
       "routes": [
         "B14",
@@ -126143,6 +126156,7 @@
       "lon": -0.06078,
       "routes": [
         "123",
+        "230",
         "76",
         "N73",
         "W4"
@@ -126179,7 +126193,7 @@
       ]
     },
     "490009918W": {
-      "name": "Thames Barrier",
+      "name": "Pontoon Dock Station",
       "indicator": "Stop Q",
       "lat": 51.50246,
       "lon": 0.0324,
@@ -127086,7 +127100,7 @@
       ]
     },
     "490009979P": {
-      "name": "West Wickham and Shirley Baptist Church",
+      "name": "West Wickham & Shirley Baptist Church",
       "indicator": "Stop P",
       "lat": 51.37742,
       "lon": -0.02745,
@@ -127096,7 +127110,7 @@
       ]
     },
     "490009979Q": {
-      "name": "West Wickham and Shirley Baptist Church",
+      "name": "West Wickham & Shirley Baptist Church",
       "indicator": "Stop Q",
       "lat": 51.37721,
       "lon": -0.02807,
@@ -128789,6 +128803,7 @@
       "lat": 51.58922,
       "lon": -0.07929,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -128798,6 +128813,7 @@
       "lat": 51.58923,
       "lon": -0.07858,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -131748,7 +131764,6 @@
       "routes": [
         "57",
         "85",
-        "K3",
         "K4"
       ]
     },
@@ -133200,6 +133215,7 @@
       "lat": 51.53762,
       "lon": 0.0755,
       "routes": [
+        "169",
         "238",
         "366",
         "5",
@@ -135279,7 +135295,7 @@
       "name": "Old School Close",
       "indicator": "->N",
       "lat": 51.40667,
-      "lon": -0.04528,
+      "lon": -0.0453,
       "routes": [
         "354"
       ]
@@ -136423,8 +136439,8 @@
     "490010675N": {
       "name": "Overton Road",
       "indicator": "Stop N",
-      "lat": 51.49317,
-      "lon": 0.12136,
+      "lat": 51.49327,
+      "lon": 0.12157,
       "routes": [
         "B11"
       ]
@@ -140672,6 +140688,7 @@
       "lat": 51.58636,
       "lon": -0.08727,
       "routes": [
+        "230",
         "341",
         "41",
         "N41"
@@ -140683,6 +140700,7 @@
       "lat": 51.58639,
       "lon": -0.08816,
       "routes": [
+        "230",
         "341",
         "41",
         "N41"
@@ -143775,7 +143793,7 @@
       ]
     },
     "490011197N": {
-      "name": "Prince of Wales Drive",
+      "name": "Prince Of Wales Drive",
       "indicator": "Stop LV",
       "lat": 51.47438,
       "lon": -0.16637,
@@ -145982,6 +146000,7 @@
       "lon": -0.0185,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -150250,7 +150269,7 @@
       ]
     },
     "490011679E": {
-      "name": "Rosebery Avenue",
+      "name": "Hatton Garden",
       "indicator": "Stop CU",
       "lat": 51.52198,
       "lon": -0.10987,
@@ -155924,6 +155943,7 @@
       "lon": -0.00518,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -158446,8 +158466,8 @@
     "490012264N": {
       "name": "Southcote Rise",
       "indicator": "->N",
-      "lat": 51.57619,
-      "lon": -0.43482,
+      "lat": 51.57618,
+      "lon": -0.4347,
       "routes": [
         "U10"
       ]
@@ -161727,6 +161747,7 @@
       "lat": 51.58706,
       "lon": -0.09741,
       "routes": [
+        "230",
         "41",
         "67",
         "N41",
@@ -161739,6 +161760,7 @@
       "lat": 51.58718,
       "lon": -0.09809,
       "routes": [
+        "230",
         "41",
         "67",
         "N41",
@@ -165200,8 +165222,8 @@
     "490012792S": {
       "name": "St Mary's Church",
       "indicator": "Stop T",
-      "lat": 51.45122,
-      "lon": -0.44062,
+      "lat": 51.4512,
+      "lon": -0.44071,
       "routes": [
         "H25",
         "H26"
@@ -167560,6 +167582,7 @@
       "lat": 51.58831,
       "lon": -0.08424,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -167569,6 +167592,7 @@
       "lat": 51.5885,
       "lon": -0.08286,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -167829,7 +167853,7 @@
     "490013017S": {
       "name": "Main Road / Sunningvale Avenue",
       "indicator": "Stop P",
-      "lat": 51.32204,
+      "lat": 51.32203,
       "lon": 0.02773,
       "routes": [
         "246",
@@ -168858,8 +168882,8 @@
     "490013082R": {
       "name": "Sutton / Grove Road",
       "indicator": "Stop R",
-      "lat": 51.36006,
-      "lon": -0.1926,
+      "lat": 51.36007,
+      "lon": -0.19287,
       "routes": [
         "164",
         "280",
@@ -168876,8 +168900,8 @@
     "490013082S": {
       "name": "Sutton / Grove Road",
       "indicator": "Stop S",
-      "lat": 51.35996,
-      "lon": -0.19308,
+      "lat": 51.35995,
+      "lon": -0.19348,
       "routes": [
         "151",
         "213",
@@ -169391,7 +169415,7 @@
       "name": "Sydenham Avenue",
       "indicator": "Stop Q",
       "lat": 51.42338,
-      "lon": -0.064,
+      "lon": -0.06402,
       "routes": [
         "227"
       ]
@@ -170141,7 +170165,7 @@
       ]
     },
     "490013178H": {
-      "name": "Park Road / Teddington Station",
+      "name": "Teddington Police Station",
       "indicator": "Stop H",
       "lat": 51.42503,
       "lon": -0.33456,
@@ -171751,6 +171775,7 @@
       "lon": -0.00435,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -172464,6 +172489,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73"
       ]
     },
@@ -172993,7 +173019,7 @@
       ]
     },
     "490013378W": {
-      "name": "Shirley Youth and Community Centre",
+      "name": "Bridle Road",
       "indicator": "->W",
       "lat": 51.36934,
       "lon": -0.03144,
@@ -173460,6 +173486,7 @@
       "lon": -0.06583,
       "routes": [
         "123",
+        "230",
         "76",
         "N73"
       ]
@@ -173471,6 +173498,7 @@
       "lon": -0.06566,
       "routes": [
         "123",
+        "230",
         "76",
         "N73"
       ]
@@ -178197,6 +178225,7 @@
       "lat": 51.58858,
       "lon": -0.07175,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -178206,6 +178235,7 @@
       "lat": 51.58849,
       "lon": -0.0714,
       "routes": [
+        "230",
         "341"
       ]
     },
@@ -178316,6 +178346,7 @@
       "lon": -0.06913,
       "routes": [
         "123",
+        "230",
         "76",
         "N73"
       ]
@@ -178380,7 +178411,6 @@
         "149",
         "243",
         "318",
-        "341",
         "476"
       ]
     },
@@ -178393,6 +178423,7 @@
         "123",
         "259",
         "279",
+        "341",
         "N279",
         "W4"
       ]
@@ -180902,7 +180933,7 @@
       ]
     },
     "490013897N": {
-      "name": "Barnet Hill / Underhill",
+      "name": "Underhill",
       "indicator": "Stop W",
       "lat": 51.64814,
       "lon": -0.19136,
@@ -183096,7 +183127,7 @@
       ]
     },
     "490014048Z": {
-      "name": "Victoria & Albert Museum",
+      "name": "Victoria and Albert Museum",
       "indicator": "Stop R",
       "lat": 51.49595,
       "lon": -0.17239,
@@ -184525,6 +184556,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -184540,6 +184572,7 @@
       "routes": [
         "212",
         "215",
+        "230",
         "275",
         "34",
         "357",
@@ -184588,6 +184621,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -184628,6 +184662,7 @@
       "lat": 51.58416,
       "lon": -0.02034,
       "routes": [
+        "230",
         "257",
         "N73",
         "SL1"
@@ -184659,6 +184694,7 @@
       "routes": [
         "212",
         "215",
+        "230",
         "275",
         "34",
         "357",
@@ -184682,6 +184718,7 @@
       "routes": [
         "212",
         "215",
+        "230",
         "275",
         "34",
         "357",
@@ -184753,6 +184790,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -184768,6 +184806,7 @@
       "routes": [
         "123",
         "212",
+        "230",
         "N73",
         "W11",
         "W12",
@@ -188238,7 +188277,7 @@
       ]
     },
     "490014448S": {
-      "name": "Romford Town Centre",
+      "name": "Western Road",
       "indicator": "Stop QQ",
       "lat": 51.5775,
       "lon": 0.1851,
@@ -188280,7 +188319,7 @@
       ]
     },
     "490014452E": {
-      "name": "Western Road",
+      "name": "Romford Town Centre",
       "indicator": "Stop PP",
       "lat": 51.57738,
       "lon": 0.18434,
@@ -188299,7 +188338,7 @@
       ]
     },
     "490014452P": {
-      "name": "Romford Town Centre",
+      "name": "Western Road",
       "indicator": "Stop P",
       "lat": 51.57683,
       "lon": 0.18316,
@@ -188320,7 +188359,7 @@
       ]
     },
     "490014452Q": {
-      "name": "Western Road",
+      "name": "Romford Town Centre",
       "indicator": "Stop Q",
       "lat": 51.57713,
       "lon": 0.18408,
@@ -188414,6 +188453,7 @@
       "lat": 51.58613,
       "lon": -0.09231,
       "routes": [
+        "230",
         "41",
         "67",
         "N41"
@@ -188891,7 +188931,6 @@
       "lon": -0.13144,
       "routes": [
         "148",
-        "N11",
         "N44"
       ]
     },
@@ -189889,6 +189928,7 @@
       "lon": -0.00093,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -191009,8 +191049,8 @@
     "490014664S": {
       "name": "Wiggins Mead",
       "indicator": "Stop QN",
-      "lat": 51.60501,
-      "lon": -0.2437,
+      "lat": 51.605,
+      "lon": -0.24373,
       "routes": [
         "303",
         "642"
@@ -191691,6 +191731,7 @@
       "lat": 51.58802,
       "lon": -0.09997,
       "routes": [
+        "230",
         "41",
         "67",
         "N41",
@@ -191703,6 +191744,7 @@
       "lat": 51.58759,
       "lon": -0.10013,
       "routes": [
+        "230",
         "41",
         "67",
         "N41",
@@ -192477,7 +192519,7 @@
       "name": "Windmill Road",
       "indicator": "->W",
       "lat": 51.38596,
-      "lon": -0.09921,
+      "lon": -0.09923,
       "routes": [
         "450"
       ]
@@ -193316,6 +193358,7 @@
       "lon": -0.10913,
       "routes": [
         "144",
+        "230",
         "29",
         "67"
       ]
@@ -193403,6 +193446,7 @@
       "lat": 51.58602,
       "lon": -0.0944,
       "routes": [
+        "230",
         "41",
         "67",
         "N41"
@@ -193762,6 +193806,24 @@
       "lon": -0.06858,
       "routes": [
         "197"
+      ]
+    },
+    "490014897N": {
+      "name": "Woodside Park Avenue",
+      "indicator": "Stop G",
+      "lat": 51.58273,
+      "lon": -0.00061,
+      "routes": [
+        "230"
+      ]
+    },
+    "490014897S": {
+      "name": "Woodside Park Avenue",
+      "indicator": "Stop F",
+      "lat": 51.5832,
+      "lon": 0.00003,
+      "routes": [
+        "230"
       ]
     },
     "490014899E": {
@@ -194184,7 +194246,7 @@
       ]
     },
     "490014934W": {
-      "name": "Woolwich",
+      "name": "Woolwich Station",
       "indicator": "Stop Z",
       "lat": 51.49118,
       "lon": 0.07072,
@@ -194344,8 +194406,8 @@
     "490014949S": {
       "name": "Worsley Bridge Road / Southend Lane",
       "indicator": "Stop LG",
-      "lat": 51.42732,
-      "lon": -0.0321,
+      "lat": 51.42744,
+      "lon": -0.03207,
       "routes": [
         "352"
       ]
@@ -194827,7 +194889,7 @@
     },
     "490014987Z": {
       "name": "Yardley Lane",
-      "indicator": "Stop ->W",
+      "indicator": "->W",
       "lat": 51.64156,
       "lon": -0.01069,
       "routes": [
@@ -194850,15 +194912,6 @@
       "lon": -0.01027,
       "routes": [
         "215",
-        "379"
-      ]
-    },
-    "490014989S": {
-      "name": "Antlers Hill",
-      "indicator": "Stop ->S",
-      "lat": 51.64421,
-      "lon": -0.00879,
-      "routes": [
         "379"
       ]
     },
@@ -196358,6 +196411,7 @@
       "lon": -0.0148,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -196376,6 +196430,7 @@
       "lon": -0.01432,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "55",
@@ -196395,6 +196450,7 @@
       "lon": -0.01191,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "69",
@@ -196431,6 +196487,7 @@
       "lon": -0.01168,
       "routes": [
         "20",
+        "230",
         "257",
         "357",
         "56",
@@ -201618,7 +201675,7 @@
       ]
     },
     "490015463M": {
-      "name": "Palace Gardens Terrace",
+      "name": "Palace Garden",
       "indicator": "Stop M",
       "lat": 51.50971,
       "lon": -0.19343,
@@ -201737,7 +201794,7 @@
       "name": "Redvers Road",
       "indicator": "Stop V",
       "lat": 51.59758,
-      "lon": -0.10757,
+      "lon": -0.10759,
       "routes": [
         "W3"
       ]
@@ -201838,6 +201895,7 @@
       "lon": -0.10246,
       "routes": [
         "141",
+        "230",
         "29",
         "41",
         "67",
@@ -201854,6 +201912,7 @@
       "routes": [
         "123",
         "184",
+        "230",
         "41",
         "67",
         "N41",
@@ -202689,6 +202748,7 @@
       "lon": -0.10926,
       "routes": [
         "141",
+        "230",
         "29",
         "67",
         "N29",
@@ -203341,8 +203401,8 @@
     "490015730S": {
       "name": "Feltham Assembly Hall",
       "indicator": "Stop S",
-      "lat": 51.45135,
-      "lon": -0.40622,
+      "lat": 51.45127,
+      "lon": -0.40628,
       "routes": [
         "117",
         "235",
@@ -203864,8 +203924,8 @@
     "490015897S": {
       "name": "Waring Drive",
       "indicator": "->S",
-      "lat": 51.35474,
-      "lon": 0.09403,
+      "lat": 51.35469,
+      "lon": 0.09405,
       "routes": [
         "R1"
       ]
@@ -204144,7 +204204,7 @@
     "490016150E": {
       "name": "Warminster Way",
       "indicator": "->E",
-      "lat": 51.4091,
+      "lat": 51.40909,
       "lon": -0.14596,
       "routes": [
         "152",
@@ -204470,7 +204530,7 @@
       "name": "Somerset Road",
       "indicator": "->N",
       "lat": 51.42949,
-      "lon": -0.21266,
+      "lon": -0.21268,
       "routes": [
         "493"
       ]
@@ -204496,8 +204556,8 @@
     "490016264E": {
       "name": "Samson Street",
       "indicator": "Stop T",
-      "lat": 51.52897,
-      "lon": 0.03393,
+      "lat": 51.52896,
+      "lon": 0.03404,
       "routes": [
         "115",
         "147",
@@ -208076,6 +208136,7 @@
         "149",
         "259",
         "279",
+        "341",
         "476",
         "N279"
       ]
@@ -208704,8 +208765,8 @@
     "490018376N": {
       "name": "Arrowsmith Road",
       "indicator": "Stop AJ",
-      "lat": 51.61012,
-      "lon": 0.10909,
+      "lat": 51.61013,
+      "lon": 0.1091,
       "routes": [
         "362"
       ]
@@ -211101,7 +211162,6 @@
         "149",
         "243",
         "318",
-        "341",
         "476"
       ]
     },
@@ -214819,6 +214879,7 @@
       "lon": -0.06126,
       "routes": [
         "123",
+        "230",
         "N73"
       ]
     },
