@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T09:11:57.741Z",
+  "generatedAt": "2026-09-27T09:52:55.962Z",
   "count": 76,
   "garages": {
     "A": {
@@ -499,7 +499,7 @@
       "address": "Cornwall Road, London, SE1 8TE",
       "lat": 51.50283,
       "lon": -0.109155,
-      "pvr": 32,
+      "pvr": 33,
       "capacity": 64
     },
     "RM": {
@@ -699,7 +699,7 @@
       "address": "329 Edgware Road, Dollis Hill, London, NW2 6JP",
       "lat": 51.562317,
       "lon": -0.221893,
-      "pvr": 175,
+      "pvr": 176,
       "capacity": 225
     },
     "WH": {
