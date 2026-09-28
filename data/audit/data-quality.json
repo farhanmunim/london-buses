@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-27T09:52:56.926Z",
+  "generatedAt": "2026-09-28T10:25:18.703Z",
   "summary": {
     "critical": 0,
     "warn": 124,
@@ -12,8 +12,8 @@
       "id": "2",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.50",
-      "note": "fleetSize=70 pvr=20"
+      "actual": "3.55",
+      "note": "fleetSize=71 pvr=20"
     },
     {
       "severity": "WARN",
@@ -30,8 +30,8 @@
       "id": "7",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.50",
-      "note": "fleetSize=42 pvr=12"
+      "actual": "3.67",
+      "note": "fleetSize=44 pvr=12"
     },
     {
       "severity": "WARN",
@@ -57,8 +57,8 @@
       "id": "23",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.64",
-      "note": "fleetSize=65 pvr=14"
+      "actual": "4.71",
+      "note": "fleetSize=66 pvr=14"
     },
     {
       "severity": "WARN",
@@ -129,8 +129,8 @@
       "id": "54",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.38",
-      "note": "fleetSize=86 pvr=16"
+      "actual": "5.44",
+      "note": "fleetSize=87 pvr=16"
     },
     {
       "severity": "WARN",
@@ -210,8 +210,8 @@
       "id": "88",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.82",
-      "note": "fleetSize=84 pvr=22"
+      "actual": "3.91",
+      "note": "fleetSize=86 pvr=22"
     },
     {
       "severity": "WARN",
@@ -264,8 +264,8 @@
       "id": "117",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.10",
-      "note": "fleetSize=41 pvr=10"
+      "actual": "4.30",
+      "note": "fleetSize=43 pvr=10"
     },
     {
       "severity": "WARN",
@@ -273,8 +273,8 @@
       "id": "120",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.29",
-      "note": "fleetSize=90 pvr=17"
+      "actual": "5.35",
+      "note": "fleetSize=91 pvr=17"
     },
     {
       "severity": "WARN",
@@ -282,8 +282,8 @@
       "id": "122",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.05",
-      "note": "fleetSize=115 pvr=19"
+      "actual": "6.11",
+      "note": "fleetSize=116 pvr=19"
     },
     {
       "severity": "WARN",
@@ -309,8 +309,8 @@
       "id": "136",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.95",
-      "note": "fleetSize=87 pvr=22"
+      "actual": "4.00",
+      "note": "fleetSize=88 pvr=22"
     },
     {
       "severity": "WARN",
@@ -327,8 +327,8 @@
       "id": "142",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.44",
-      "note": "fleetSize=55 pvr=16"
+      "actual": "3.50",
+      "note": "fleetSize=56 pvr=16"
     },
     {
       "severity": "WARN",
@@ -336,8 +336,8 @@
       "id": "144",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.47",
-      "note": "fleetSize=67 pvr=15"
+      "actual": "4.53",
+      "note": "fleetSize=68 pvr=15"
     },
     {
       "severity": "WARN",
@@ -381,8 +381,8 @@
       "id": "161",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "7.25",
-      "note": "fleetSize=116 pvr=16"
+      "actual": "7.38",
+      "note": "fleetSize=118 pvr=16"
     },
     {
       "severity": "WARN",
@@ -417,8 +417,8 @@
       "id": "177",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.95",
-      "note": "fleetSize=125 pvr=21"
+      "actual": "6.00",
+      "note": "fleetSize=126 pvr=21"
     },
     {
       "severity": "WARN",
@@ -435,8 +435,8 @@
       "id": "180",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.59",
-      "note": "fleetSize=78 pvr=17"
+      "actual": "4.65",
+      "note": "fleetSize=79 pvr=17"
     },
     {
       "severity": "WARN",
@@ -543,8 +543,8 @@
       "id": "221",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.43",
-      "note": "fleetSize=79 pvr=23"
+      "actual": "3.48",
+      "note": "fleetSize=80 pvr=23"
     },
     {
       "severity": "WARN",
@@ -615,8 +615,8 @@
       "id": "252",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.77",
-      "note": "fleetSize=62 pvr=13"
+      "actual": "4.85",
+      "note": "fleetSize=63 pvr=13"
     },
     {
       "severity": "WARN",
@@ -696,8 +696,8 @@
       "id": "302",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.81",
-      "note": "fleetSize=77 pvr=16"
+      "actual": "4.94",
+      "note": "fleetSize=79 pvr=16"
     },
     {
       "severity": "WARN",
@@ -705,8 +705,8 @@
       "id": "304",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.30",
-      "note": "fleetSize=43 pvr=10"
+      "actual": "4.40",
+      "note": "fleetSize=44 pvr=10"
     },
     {
       "severity": "WARN",
@@ -723,8 +723,8 @@
       "id": "307",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.93",
-      "note": "fleetSize=59 pvr=15"
+      "actual": "4.00",
+      "note": "fleetSize=60 pvr=15"
     },
     {
       "severity": "WARN",
@@ -768,8 +768,8 @@
       "id": "365",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.67",
-      "note": "fleetSize=56 pvr=12"
+      "actual": "4.75",
+      "note": "fleetSize=57 pvr=12"
     },
     {
       "severity": "WARN",
@@ -840,8 +840,8 @@
       "id": "422",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.65",
-      "note": "fleetSize=113 pvr=17"
+      "actual": "6.71",
+      "note": "fleetSize=114 pvr=17"
     },
     {
       "severity": "WARN",
@@ -858,8 +858,8 @@
       "id": "436",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.23",
-      "note": "fleetSize=68 pvr=13"
+      "actual": "5.31",
+      "note": "fleetSize=69 pvr=13"
     },
     {
       "severity": "WARN",
@@ -876,8 +876,8 @@
       "id": "460",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.50",
-      "note": "fleetSize=65 pvr=10"
+      "actual": "6.60",
+      "note": "fleetSize=66 pvr=10"
     },
     {
       "severity": "WARN",
@@ -975,8 +975,8 @@
       "id": "H25",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.10",
-      "note": "fleetSize=31 pvr=10"
+      "actual": "3.20",
+      "note": "fleetSize=32 pvr=10"
     },
     {
       "severity": "WARN",
@@ -1020,8 +1020,8 @@
       "id": "N53",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.09",
-      "note": "fleetSize=45 pvr=11"
+      "actual": "4.18",
+      "note": "fleetSize=46 pvr=11"
     },
     {
       "severity": "WARN",
@@ -1029,8 +1029,8 @@
       "id": "N87",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.00",
-      "note": "fleetSize=65 pvr=13"
+      "actual": "5.08",
+      "note": "fleetSize=66 pvr=13"
     },
     {
       "severity": "WARN",
@@ -1047,8 +1047,8 @@
       "id": "P5",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.50",
-      "note": "fleetSize=35 pvr=10"
+      "actual": "3.60",
+      "note": "fleetSize=36 pvr=10"
     },
     {
       "severity": "WARN",
@@ -1167,7 +1167,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 24351,
+        "totalObs": 24464,
         "missingFleet": 0
       },
       "note": ""
@@ -1178,7 +1178,7 @@
       "id": "data/source/tenders.json",
       "field": "generatedAt",
       "expected": "<=7d old",
-      "actual": "9.7d",
+      "actual": "10.7d",
       "note": ""
     },
     {
@@ -1187,7 +1187,7 @@
       "id": "data/source/tender-programme.json",
       "field": "generatedAt",
       "expected": "<=14d old",
-      "actual": "15.8d",
+      "actual": "16.8d",
       "note": ""
     }
   ]
