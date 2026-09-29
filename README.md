@@ -9,7 +9,7 @@ An interactive map and data explorer for every bus route in London. Search route
 The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Traffic orders, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`.
 
 - Draws the whole network as one colour-coded map. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender.
-- Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, bus-involved **collisions** as a heatmap, and current **street works** from the DfT Street Manager feed.
+- Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, bus-involved **collisions** as a heatmap, current **street works** from the DfT Street Manager feed, and statutory **traffic orders** (D-TRO) with each closure's official diversion route drawn.
 - **Tender**: every published TfL award since 2003, plus the forward tendering programme. Both tables are searchable by route, operator or tranche, with analysis numbers computed for the current filter (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
 - **CPI-CPA**: the ONS CPI index by month and the contract price adjustment rates derived from it. Verified against ONS reference tables.
 - **Diversions**: a day-by-day history of every TfL-notified diversion, accumulated from status snapshots (TfL publishes no archive). **Street works**: the statutory DfT Street Manager record for London's 33 highway authorities + TfL, pushed live over SNS into the repo. **Traffic orders**: the statutory D-TRO record — closures, bus lanes, banned turns and official diversion routes, corridor-joined to routes. **Mileage**: scheduled-vs-operated km per route per TfL reporting period.
@@ -46,7 +46,7 @@ npm run refresh               # full data pipeline — optional, committed data 
 npx serve .                   # any static file server; the app is one index.html
 ```
 
-The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`) or the live-vehicles function (`BODS_API_KEY`).
+The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`; optionally `DTRO_CLIENT_ID`/`DTRO_API_KEY`/`DTRO_CLIENT_SECRET` for traffic orders — the fetcher skips gracefully without them) or the live-vehicles function (`BODS_API_KEY`).
 
 Tests live in `tests/`. Run one with `node tests/verify-<name>.mjs`. They use Playwright with a system Chromium and mock all external feeds, so they pass offline.
 
