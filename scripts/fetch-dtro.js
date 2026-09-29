@@ -51,6 +51,19 @@ const JOIN_METRES = 35;
 const PAGE_SIZE = 50;
 const MAX_PAGES = 400;               // 20k orders/run — raise when London fills in
 const MAX_DETAIL = 600;              // full-order fetches per run (incremental catches the rest)
+// DfT enforces a 120-requests/minute spike arrest across ALL endpoints
+// (search pages + detail fetches). First live run learned this the hard
+// way: 279 of 448 detail fetches came back 429. Pace every call under
+// the limit, and on a 429 wait out the window once before retrying.
+const THROTTLE_MS = 550;             // ~109 req/min
+const RATE_RETRY_MS = 65000;
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+let lastCall = 0;
+async function pace() {
+  const wait = lastCall + THROTTLE_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastCall = Date.now();
+}
 
 // Greater London in BNG, generous margins (matches the network's extent).
 const LONDON_POLY = 'POLYGON((501000 153000, 565000 153000, 565000 204000, 501000 204000, 501000 153000))';
@@ -201,7 +214,8 @@ async function getToken(key, secret) {
   if (!tok) throw new Error('token response had no access_token');
   return tok;
 }
-async function api(pathname, token, appId, init = {}) {
+async function api(pathname, token, appId, init = {}, rateRetried = false) {
+  await pace();
   const res = await fetchWithTimeout(`${BASE}${pathname}`, {
     ...init,
     headers: {
@@ -214,6 +228,11 @@ async function api(pathname, token, appId, init = {}) {
     },
   }, 45000);
   const text = await res.text();
+  if (res.status === 429 && !rateRetried) {
+    console.warn(`  ${pathname} rate-limited — waiting ${RATE_RETRY_MS / 1000}s for the window to reset`);
+    await sleep(RATE_RETRY_MS);
+    return api(pathname, token, appId, init, true);
+  }
   if (!res.ok) throw new Error(`${pathname} HTTP ${res.status}: ${text.slice(0, 300)}`);
   return text ? JSON.parse(text) : null;
 }
@@ -288,9 +307,16 @@ async function main() {
   catch (e) { console.error(`D-TRO auth failed — ${e.message}. Keeping last-known-good.`); return; }
   console.log('Authenticated with the D-TRO service.');
 
-  // Search Greater London; incremental via publicationTime after first run.
+  // Search Greater London. While the service is small (hundreds of London
+  // orders ≈ a dozen search pages) a FULL search every run is cheap and
+  // self-healing: an order whose detail fetch failed on a previous run is
+  // simply not in the accumulator yet, so it gets retried, and unchanged
+  // orders are skipped by the lastUpdated check below. The publicationTime
+  // watermark only kicks in once the accumulator is big enough that paging
+  // everything would matter (autumn-2026 mandate volumes).
   const query = { geometry: LONDON_POLY };
-  if (acc.watermark) query.publicationTime = acc.watermark;
+  const incremental = Object.keys(acc.orders).length > 5000;
+  if (incremental && acc.watermark) query.publicationTime = acc.watermark;
   const ids = new Map();                          // id → summary meta
   let totalCount = null;
   for (let page = 1; page <= MAX_PAGES; page++) {
@@ -322,6 +348,7 @@ async function main() {
 
   // Fetch full documents for new/changed orders (bounded per run).
   let fetched = 0, kept = 0, failures = 0;
+  const prevWatermark = acc.watermark;
   for (const [id, meta] of ids) {
     const prev = acc.orders[id];
     if (prev && prev.lastUpdated === meta.lastUpdated) continue;
@@ -335,13 +362,16 @@ async function main() {
       }, geoms);
       acc.orders[id] = order;
       if (order.busRelevant) kept++;
+      // Watermark only advances over orders we actually hold — a failed
+      // fetch must stay reachable by the next incremental search.
+      const t = meta.publicationTime;
+      if (t && (!acc.watermark || t > acc.watermark)) acc.watermark = t;
     } catch (e) {
       failures++;
       if (failures <= 3) console.warn(`  order ${id}: ${e.message}`);
     }
-    const t = meta.publicationTime;
-    if (t && (!acc.watermark || t > acc.watermark)) acc.watermark = t;
   }
+  if (failures) acc.watermark = prevWatermark;   // failed orders must stay reachable next run
   console.log(`Fetched ${fetched} order documents (${kept} bus-relevant, ${failures} failures)`);
 
   writeOutputs(acc, 'Coverage grows as TRAs onboard — publication is mandatory for new orders from autumn 2026.');

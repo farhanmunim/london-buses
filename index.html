@@ -389,6 +389,7 @@ main.fullbleed{max-width:none;padding:0}
   <a href="#/stops" data-nav="stops"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>Stops</a>
   <a href="#/diversions" data-nav="diversions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h4l3-4 3 4h6"/><path d="M4 5h4l6 8"/><path d="M17 3l3 2-3 2M17 17l3 2-3 2"/></svg>Diversions</a>
   <a href="#/streetworks" data-nav="streetworks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4h-3L6 20h12z"/><path d="M9.2 10h5.6M7.9 15h8.2"/><path d="M4 20h16"/></svg>Street works</a>
+  <a href="#/tro" data-nav="tro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>Traffic orders</a>
   <a href="#/mileage" data-nav="mileage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a9 9 0 1 1 14 0"/><path d="m12 14 4-5"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/></svg>Mileage</a>
   <a href="#/cpi" data-nav="cpi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>CPI-CPA</a>
   <a href="#/about" data-nav="about"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>About</a>
@@ -485,6 +486,7 @@ const D = {
     });
     return { ...d, entries };
   }),
+  dtro:        () => get('/dtro'),                                       // DfT D-TRO — statutory traffic regulation orders, bus-relevant, Greater London
   routePerf:   () => get('/route-performance'),                          // TfL QSI + mileage per period — may be absent while its crawler finishes
   schedMiles:  () => get('/scheduled-mileage'),                          // timetable-derived daily km — may be absent while its crawler finishes
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
@@ -493,6 +495,11 @@ const D = {
   liveVehicles:(r) => liveGet('/api/live/vehicles?line=' + encodeURIComponent(r)),                 // BODS via our Pages Function
   arrivals:    (s) => tflLive(TFL + '/StopPoint/' + encodeURIComponent(s) + '/Arrivals'),          // never cached — polled
 };
+/* D-TRO regulation types arrive camelCased with a namespace prefix
+   ("miscRoadClosure", "kerbsideNoWaiting") or as an authority's off-list id
+   ("Barnet_X124") — prettify the former to plain words, keep ids verbatim. */
+const troPretty = t => /_/.test(String(t)) ? String(t)
+  : title(String(t).replace(/^(misc|kerbside|bannedMovement|mandatoryDirection|movementOrder|dimension|nonOrderKerbside)/, '').replace(/([a-z])([A-Z])/g, '$1 $2'));
 const plate = (reg, link=true) => reg
   ? (link ? `<a class="plate" href="#/vehicle/${encodeURIComponent(String(reg).toUpperCase())}">${esc(String(reg).toUpperCase())}</a>`
           : `<span class="plate">${esc(String(reg).toUpperCase())}</span>`)
@@ -817,7 +824,7 @@ function navigate(){
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   // The More button/tab (both breakpoints) lights when any of the pages the
   // sheet holds is active, and the sheet closes on every navigation.
-  const SHEET_PAGES = ['garages','stops','diversions','streetworks','mileage','cpi','about'];
+  const SHEET_PAGES = ['garages','stops','diversions','streetworks','tro','mileage','cpi','about'];
   for(const id of ['moreTab','moreBtn'])
     document.getElementById(id)?.classList.toggle('on', SHEET_PAGES.includes(navKey));
   const moreSheet = document.getElementById('moreSheet');
@@ -829,7 +836,7 @@ function navigate(){
   main.classList.toggle('fullbleed', view === 'map');
   // Per-view titles so history entries and tabs are tellable apart.
   const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
-    garages:'Garages', tender:'Tender', diversions:'Diversions', streetworks:'Street works', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
+    garages:'Garages', tender:'Tender', diversions:'Diversions', streetworks:'Street works', tro:'Traffic orders', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
     route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
@@ -851,6 +858,7 @@ function navigate(){
   else if(view === 'diversions' && arg === 'mileage') { location.replace('#/mileage'); return; }   // legacy tab deep link
   else if(view === 'diversions') renderDiversions();
   else if(view === 'streetworks') renderStreetworks();
+  else if(view === 'tro')       renderTro();
   else if(view === 'mileage')   renderMileage();
   else if(view === 'cpi')       renderCpi();
   else if(view === 'about')     renderAbout();
@@ -1043,6 +1051,7 @@ async function renderRouteDetail(name){
         <button class="livebtn iconb" id="bridgeBtn" disabled title="Low bridges" aria-label="Low bridges"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg></button>
         <button class="livebtn iconb" id="incBtn" disabled title="Incidents" aria-label="Incidents"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></button>
         <button class="livebtn iconb" id="swMapBtn" disabled title="Street works" aria-label="Street works"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4h-3L6 20h12z"/><path d="M9.2 10h5.6M7.9 15h8.2"/><path d="M4 20h16"/></svg></button>
+        <button class="livebtn iconb" id="troMapBtn" disabled title="Traffic orders" aria-label="Traffic orders"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg></button>
         <span id="busLiveNote" style="display:none;align-items:center;gap:7px;font-size:12px;color:var(--mu)"><span class="livechip"><i class="pulse"></i>LIVE</span><span id="busLiveText"></span></span>
       </div>
       <div id="divnNote"></div>
@@ -1560,6 +1569,60 @@ async function initRouteMap(route, m = {}, tok = navToken){
     layerNote('swNote', near.length
       ? `<span>${near.length} current or upcoming street work${near.length===1?'':'s'} within 150 m — ${dot('#dc2626')} immediate, ${dot('#ea580c')} major, ${dot('#f59e0b')} standard/minor, ${dot('#64748b')} activity. DfT Street Manager (statutory record, live since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`
       : `<span>No current street works within 150 m of this route in the archive (accumulating since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`);
+  });
+
+  /* "Traffic orders" layer — the statutory D-TRO record near this route:
+     road closures, bus lanes and gates, banned turns and one-ways, each
+     with the order's published diversion route where one exists. Orders
+     are pre-joined to routes by the fetcher's 35 m corridor join; a 150 m
+     proximity check catches the rest. Coverage grows as authorities
+     onboard (publication is mandatory for new orders from autumn 2026). */
+  let troLayer = null, troOn = false;
+  const troMapBtn = document.getElementById('troMapBtn');
+  troMapBtn?.addEventListener('click', async () => {
+    troOn = !troOn;
+    troMapBtn.classList.toggle('on', troOn);
+    if(!troOn){ if(troLayer){ _map.removeLayer(troLayer); troLayer = null; } layerNote('troNote'); return; }
+    const snap = await D.dtro();
+    if(gone(tok) || !troOn) return;
+    const near = (snap?.orders ?? []).filter(o => o.routes?.includes(route.name)
+      || o.provisions?.some(p => p.places?.some(pl => pl.type !== 'diversionRoute' && pl.coords?.some(([la, ln]) => nearRoute(la, ln, 150)))));
+    troLayer = L.layerGroup();
+    const troKind = ts => ts.some(t => /RoadClosure|LaneClosure|PedestrianZone|ProhibitedAccess|SuspensionOf/.test(t)) ? { c:'#dc2626', label:'Closure / access' }
+      : ts.some(t => /^miscBus|Busway|BusStop/.test(t)) ? { c:'#2563eb', label:'Bus lane / stop' }
+      : ts.some(t => /^bannedMovement|^mandatoryDirection/.test(t)) ? { c:'#ea580c', label:'Turn / one-way' }
+      : { c:'#64748b', label:'Other order' };
+    const trow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right;max-width:170px">${v}</b></div>`;
+    for(const o of near){
+      for(const p of o.provisions ?? []){
+        const band = troKind(p.regulationTypes ?? []);
+        const popup = () => `<div style="min-width:210px"><b style="font-size:13px">${esc(o.troName ?? 'Traffic regulation order')}</b>
+          <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${p.description ? ' · ' + esc(p.description) : ''}</div>
+          ${trow('Regulations', esc((p.regulationTypes ?? []).map(troPretty).join(', ') || '—'))}${trow('Authority', esc(title(o.traName ?? '') || o.tra || '—'))}${trow('Window', `${fmtDate(p.start) ?? '—'} → ${fmtDate(p.end) ?? '—'}`)}${trow('Action', p.actionType ? esc(p.actionType) : null)}
+          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT D-TRO · statutory order</div></div>`;
+        for(const pl of p.places ?? []){
+          if(!pl.coords?.length) continue;
+          if(pl.type === 'diversionRoute'){
+            if(pl.coords.length > 1)
+              L.polyline(pl.coords, { color:'#16a34a', weight: 4, opacity: .8, dashArray: '7 6' })
+                .bindTooltip(`Official diversion${pl.description ? ' · ' + esc(pl.description) : ''}`, { direction:'top', sticky:true })
+                .bindPopup(popup).addTo(troLayer);
+            continue;
+          }
+          if(pl.coords.length > 1)
+            L.polyline(pl.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(troLayer);
+          L.circleMarker(pl.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
+            .bindTooltip(`${esc(o.troName ?? 'Traffic order')} · ${esc(band.label)}`, { direction:'top' })
+            .bindPopup(popup).addTo(troLayer);
+        }
+      }
+    }
+    troLayer.addTo(_map);
+    const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
+    const dash = `<span style="display:inline-block;width:14px;height:0;border-top:2.5px dashed #16a34a;vertical-align:middle"></span>`;
+    layerNote('troNote', near.length
+      ? `<span>${near.length} statutory traffic order${near.length===1?'':'s'} near this route — ${dot('#dc2626')} closure, ${dot('#2563eb')} bus lane/stop, ${dot('#ea580c')} turn/one-way, ${dot('#64748b')} other, ${dash} official diversion route. DfT D-TRO (coverage grows as authorities onboard) — <a href="#/tro" style="color:var(--acc)">all traffic orders ›</a></span>`
+      : `<span>No published traffic regulation orders near this route yet — the D-TRO service is onboarding authorities (mandatory for new orders from autumn 2026). <a href="#/tro" style="color:var(--acc)">All traffic orders ›</a></span>`);
   });
 
   // Say why there is no garage pin instead of leaving a silent gap.
@@ -3284,7 +3347,7 @@ async function renderStreetworks(){
   main.innerHTML = `<div class="wrap">
     <div><h1 style="margin:2px 0 4px">Street works</h1>
       <div style="color:var(--tx2);font-size:13.5px">The <b>statutory street-works record</b> for London — every permit and work event DfT's Street Manager publishes for the 33 London highway authorities + TfL (${rows.length.toLocaleString('en-GB')} works so far). Filter, and export as CSV.</div>
-      <div style="color:var(--mu);font-size:12px;margin-top:6px">Pushed live from DfT Street Manager open data since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet — for roadworks already joined to routes see each route's page, and for TfL-notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">Pushed live from DfT Street Manager open data since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet — for roadworks already joined to routes see each route's page, for the legal orders behind closures the <a href="#/tro" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">traffic orders →</a>, and for TfL-notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="swq" type="search" aria-label="Search street works" placeholder="Search street, ref or promoter" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="swha" aria-label="Filter by highway authority" style="${inputCss}"><option value="">All boroughs</option>${boroughs.map(b => `<option>${esc(b)}</option>`).join('')}</select>
@@ -3353,6 +3416,124 @@ async function renderStreetworks(){
       ['reference','street','town','borough','promoter','category','traffic_management','status','permit_status','traffic_sensitive','window_start','window_end','latest_event','latest_event_time','events_recorded'],
       ...filtered().map(r => [r.ref, r.street, r.town, r.ha, r.promoter, r.category, r.tm, r.status, r.permit ?? '',
         r.sensitive ? 'yes' : 'no', r.start ?? '', r.end ?? '', r.lastType ?? '', r.lastEvent ?? '', r.nEvents]),
+    ]);
+  });
+}
+
+/* ════════════════════ TRAFFIC ORDERS ════════════════════
+   DfT's D-TRO service — the statutory digital record of traffic regulation
+   orders (closures, bus lanes and gates, banned turns, one-ways, kerbside
+   rules). The pipeline searches a Greater London polygon and keeps the
+   bus-relevant orders; publication is mandatory for new orders from autumn
+   2026, so coverage grows as each authority onboards. */
+async function renderTro(){
+  const tok = navToken;
+  main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
+  const snap = await D.dtro();
+  if(gone(tok)) return;
+  if(!snap?.orders?.length){
+    main.innerHTML = `<div class="wrap"><div class="empty">No traffic regulation orders fetched yet — the D-TRO feed refreshes with the status pipeline. Try again shortly.</div></div>`;
+    return;
+  }
+  const PAGE = DIVN_PAGE, inputCss = divnInputCss, routeChip = divnRouteChip;
+  const now = new Date().toISOString();
+  const rows = snap.orders.map(o => {
+    const provs = o.provisions ?? [];
+    const regs = [...new Set(provs.flatMap(p => p.regulationTypes ?? []))];
+    const starts = provs.map(p => p.start).filter(Boolean).sort();
+    const ends = provs.map(p => p.end).filter(Boolean).sort();
+    const start = starts[0] ?? null, end = ends.pop() ?? null;
+    const status = start && start > now ? 'Upcoming' : end && end < now ? 'Ended' : start || end ? 'Current' : '—';
+    return {
+      id: o.id, name: o.troName ?? 'Traffic regulation order',
+      authority: title(o.traName ?? '') || String(o.tra ?? '—'),
+      regs, regsPretty: regs.map(troPretty),
+      temporary: provs.some(p => /^tt[rm]o/i.test(p.orderReportingPoint ?? '')),
+      desc: provs.map(p => p.description).find(Boolean) ?? provs.flatMap(p => p.places ?? []).map(pl => pl.description).find(Boolean) ?? '',
+      start, end, status, published: o.publicationTime ?? null,
+      routes: o.routes ?? [], hasDiversion: provs.some(p => (p.places ?? []).some(pl => pl.type === 'diversionRoute')),
+    };
+  }).sort((a, b) => String(b.published ?? '').localeCompare(String(a.published ?? '')));
+  const authorities = [...new Set(rows.map(r => r.authority))].sort();
+  const regOptions = [...new Set(rows.flatMap(r => r.regsPretty))].sort();
+  const auth = snap.publishingAuthorities ?? {};
+  const authNote = Object.entries(auth).sort((a, b) => b[1] - a[1])
+    .map(([n, c]) => `${title(n)} (${c})`).join(', ');
+
+  main.innerHTML = `<div class="wrap">
+    <div><h1 style="margin:2px 0 4px">Traffic orders</h1>
+      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory traffic regulation orders</b> shaping how buses move — road closures, bus lanes and gates, banned turns and one-ways from DfT's D-TRO service, filtered to the ${rows.length.toLocaleString('en-GB')} bus-relevant orders in Greater London (of ${(snap.totalOrders ?? rows.length).toLocaleString('en-GB')} fetched). Filter, and export as CSV.</div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">Publication is mandatory for new orders from autumn 2026, so coverage grows as each authority onboards. Orders within 35 m of a route's corridor carry route chips; closures often include the <b style="color:var(--tx2)">official diversion route</b>, drawn on each route's map. See also <a href="#/streetworks" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">street works →</a> and <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversions →</a></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
+      <input id="troq" type="search" aria-label="Search traffic orders" placeholder="Search order, street or authority" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <select id="troauth" aria-label="Filter by authority" style="${inputCss}"><option value="">All authorities</option>${authorities.map(a => `<option>${esc(a)}</option>`).join('')}</select>
+      <select id="troreg" aria-label="Filter by regulation type" style="${inputCss}"><option value="">All regulation types</option>${regOptions.map(r => `<option>${esc(r)}</option>`).join('')}</select>
+      <select id="trost" aria-label="Filter by status" style="${inputCss}"><option value="">Any status</option><option>Current</option><option>Upcoming</option><option>Ended</option></select>
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="troroutes" type="checkbox">On a route corridor only</label>
+      <button class="livebtn" id="troExport" title="Downloads every order matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button>
+    </div>
+    <div class="section"><div class="section-h" id="troCount"></div>
+      <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1050px">
+        <thead><tr>
+          <th>Order</th><th>Authority</th><th>Regulations</th><th>Status</th><th>Window</th><th>Published</th><th>Routes</th>
+        </tr></thead>
+        <tbody id="troBody"></tbody>
+      </table></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+        <button class="livebtn" id="troPrev">‹ Prev</button>
+        <span id="troPage" style="font-size:12.5px;color:var(--tx2)"></span>
+        <button class="livebtn" id="troNext">Next ›</button>
+      </div>
+      <div class="legendrow" style="margin-top:8px"><span>Source: ${esc(snap.source ?? "DfT D-TRO service")} — the legal orders themselves, not works or observations. Publishing so far: ${esc(authNote) || '—'}. Neighbouring counties appear because the search polygon covers the whole network's extent. ⤳ marks orders that publish an official diversion route.</span></div>
+    </div>
+  </div>`;
+
+  const st = { q:'', auth:'', reg:'', stat:'', onRoutes:false, page:0 };
+  const filtered = () => {
+    const q = st.q.trim().toUpperCase();
+    return rows.filter(r =>
+      (!q || r.name.toUpperCase().includes(q) || r.authority.toUpperCase().includes(q) || r.desc.toUpperCase().includes(q))
+      && (!st.auth || r.authority === st.auth)
+      && (!st.reg || r.regsPretty.includes(st.reg))
+      && (!st.stat || r.status === st.stat)
+      && (!st.onRoutes || r.routes.length));
+  };
+  const stBadge = s => {
+    const c = s === 'Current' ? 'var(--warn)' : s === 'Upcoming' ? 'var(--acc)' : 'var(--mu)';
+    return `<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px;color:${c};background:color-mix(in srgb, ${c} 12%, transparent)">${esc(s)}</span>`;
+  };
+  function draw(){
+    const list = filtered();
+    const pages = Math.max(1, Math.ceil(list.length / PAGE));
+    st.page = Math.min(st.page, pages - 1);
+    document.getElementById('troBody').innerHTML = list.slice(st.page * PAGE, st.page * PAGE + PAGE).map(r => `<tr>
+      <td style="max-width:250px" title="${esc(r.id)}"><b>${esc(r.name)}</b>${r.hasDiversion ? ' <span title="Publishes an official diversion route" style="color:var(--good)">⤳</span>' : ''}${r.desc && r.desc !== r.name ? `<div style="font-size:11px;color:var(--mu)">${esc(r.desc)}</div>` : ''}</td>
+      <td style="font-size:12px;max-width:150px">${esc(r.authority)}</td>
+      <td style="max-width:230px;font-size:12px" title="${esc(r.regsPretty.join(', '))}">${esc(r.regsPretty.slice(0, 3).join(', '))}${r.regsPretty.length > 3 ? ` <span style="color:var(--mu)">+${r.regsPretty.length - 3}</span>` : ''}</td>
+      <td>${stBadge(r.status)}${r.temporary ? `<div style="font-size:10px;color:var(--mu);margin-top:2px">temporary</div>` : ''}</td>
+      <td style="white-space:nowrap">${ddMMM(r.start)} → ${ddMMM(r.end)}</td>
+      <td style="white-space:nowrap;font-size:12px">${ddMMM(r.published)}</td>
+      <td style="max-width:160px">${r.routes.length ? r.routes.map(routeChip).join('') : '<span style="color:var(--mu);font-size:11px">—</span>'}</td></tr>`).join('');
+    document.getElementById('troCount').textContent =
+      `${list.length.toLocaleString('en-GB')} order${list.length === 1 ? '' : 's'}${list.length !== rows.length ? ` (of ${rows.length.toLocaleString('en-GB')})` : ''}`;
+    document.getElementById('troPage').textContent = `Page ${st.page + 1} of ${pages}`;
+    document.getElementById('troPrev').disabled = st.page === 0;
+    document.getElementById('troNext').disabled = st.page >= pages - 1;
+  }
+  draw();
+  let deb;
+  document.getElementById('troq').addEventListener('input', e => { clearTimeout(deb); deb = setTimeout(() => { st.q = e.target.value; st.page = 0; draw(); }, 150); });
+  document.getElementById('troauth').addEventListener('change', e => { st.auth = e.target.value; st.page = 0; draw(); });
+  document.getElementById('troreg').addEventListener('change', e => { st.reg = e.target.value; st.page = 0; draw(); });
+  document.getElementById('trost').addEventListener('change', e => { st.stat = e.target.value; st.page = 0; draw(); });
+  document.getElementById('troroutes').addEventListener('change', e => { st.onRoutes = e.target.checked; st.page = 0; draw(); });
+  document.getElementById('troPrev').addEventListener('click', () => { st.page = Math.max(0, st.page - 1); draw(); });
+  document.getElementById('troNext').addEventListener('click', () => { st.page = st.page + 1; draw(); });
+  document.getElementById('troExport').addEventListener('click', () => {
+    downloadCsv('london-bus-traffic-orders.csv', [
+      ['id','order','authority','regulation_types','status','temporary','window_start','window_end','published','routes','official_diversion_route'],
+      ...filtered().map(r => [r.id, r.name, r.authority, r.regsPretty.join('; '), r.status, r.temporary ? 'yes' : 'no',
+        r.start ?? '', r.end ?? '', r.published ?? '', r.routes.join(' '), r.hasDiversion ? 'yes' : 'no']),
     ]);
   });
 }
