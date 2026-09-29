@@ -793,7 +793,7 @@ new MutationObserver(() => applyTips(document.getElementById('main'))).observe(
 
 /* ── Router ───────────────────────────────────────────────────────────── */
 const main = document.getElementById('main');
-const routesViewState = { q:'', type:null, op:null, prop:null, deck:null };  // survives back-nav
+const routesViewState = { q:'', type:null, op:null, prop:null, deck:null, freq:null };  // survives back-nav
 let liveTimers = [];   // every polling surface registers here — all killed on nav
 const addLiveTimer = t => { liveTimers.push(t); return t; };
 /* Every navigation bumps navToken. Async renderers capture it at entry and
@@ -954,6 +954,8 @@ async function renderRoutes(){
       c.push(`<button class="chip ${st.prop===p?'on':''}" data-f="prop" data-v="${p}">${title(p)}</button>`);
     for(const [d,l] of [['double','Double deck'],['single','Single deck']])
       c.push(`<button class="chip ${st.deck===d?'on':''}" data-f="deck" data-v="${d}">${l}</button>`);
+    for(const [fq,l] of [['high','High frequency'],['low','Low frequency']])
+      c.push(`<button class="chip ${st.freq===fq?'on':''}" data-f="freq" data-v="${fq}">${l}</button>`);
     for(const o of ops)
       c.push(`<button class="chip ${st.op===o?'on':''}" data-f="op" data-v="${esc(o)}">${esc(o.replace(' London',''))}</button>`);
     return c.join('');
@@ -969,12 +971,13 @@ async function renderRoutes(){
       if(st.op && m.operator !== st.op) return false;
       if(st.prop && m.propulsion !== st.prop) return false;
       if(st.deck && m.deck !== st.deck) return false;
+      if(st.freq && m.frequency !== st.freq) return false;
       return true;
     }).sort((a,b) => cmpRoute(a.name, b.name));
     const cn = document.getElementById('countNote');
     if(!cn) return '';   // debounced rerender fired after navigating away
     cn.textContent =
-      `${list.length} route${list.length===1?'':'s'}${q||st.type||st.op||st.prop||st.deck ? ' match' : ''}`;
+      `${list.length} route${list.length===1?'':'s'}${q||st.type||st.op||st.prop||st.deck||st.freq ? ' match' : ''}`;
     if(!list.length) return '<div class="empty">No routes match.</div>';
     return list.map(r => {
       const m = meta[r.name] ?? {};
@@ -1670,7 +1673,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
 /* ════════════════════ NETWORK MAP ════════════════════ */
 const netmapState = {
   pills: [],                                   // focused routes, in selection order
-  f: { type:new Set(), prop:new Set(), deck:new Set(), op:new Set() },   // multi-select filters
+  f: { type:new Set(), prop:new Set(), deck:new Set(), freq:new Set(), op:new Set() },   // multi-select filters
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
@@ -1771,6 +1774,7 @@ async function renderNetworkMap(){
     if(st.f.op.size   && !st.f.op.has(m.operator)) return false;
     if(st.f.prop.size && !st.f.prop.has(m.propulsion)) return false;
     if(st.f.deck.size && !st.f.deck.has(m.deck)) return false;
+    if(st.f.freq.size && !st.f.freq.has(m.frequency)) return false;
     return true;
   };
   const styleFor = (f) => {
@@ -1834,7 +1838,7 @@ async function renderNetworkMap(){
   function syncGarages(){
     if(garageLayer){ _map.removeLayer(garageLayer); garageLayer = null; }
     if(!st.garages) return;
-    const narrowing = st.pills.length || st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.op.size;
+    const narrowing = st.pills.length || st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size;
     const vis = new Set();
     if(narrowing) for(const n of allNames){
       const up = n.toUpperCase();
@@ -1922,7 +1926,7 @@ async function renderNetworkMap(){
 
     const vis = new Set();
     for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) vis.add(n);
-    const filtered = st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.op.size;
+    const filtered = st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size;
     const cEl = document.getElementById('nmCount');
     if(cEl) cEl.textContent = st.pills.length
       ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
@@ -1955,6 +1959,7 @@ async function renderNetworkMap(){
     ['type', 'Route type', Object.entries(TYPE_LABEL).map(([v,l]) => [v,l])],
     ['prop', 'Power', PROPULSION.map(p => [p, title(p)])],
     ['deck', 'Deck', [['double','Double deck'], ['single','Single deck']]],
+    ['freq', 'Frequency', [['high','High frequency'], ['low','Low frequency']]],
     ['op', 'Operator', ops.map(o => [o, o.replace(' London','')])],
   ];
   function popHtml(){
@@ -1972,7 +1977,7 @@ async function renderNetworkMap(){
   function syncPop(){
     pop.hidden = !st.panelOpen;
     pop.innerHTML = st.panelOpen ? popHtml() : '';
-    const n = st.f.type.size + st.f.prop.size + st.f.deck.size + st.f.op.size;
+    const n = st.f.type.size + st.f.prop.size + st.f.deck.size + st.f.freq.size + st.f.op.size;
     const badge = document.getElementById('nmFBadge');
     if(badge){ badge.hidden = !n; badge.textContent = n; }
     document.getElementById('nmFilters')?.classList.toggle('on', st.panelOpen || n > 0);
@@ -2091,7 +2096,7 @@ async function renderNetworkMap(){
       syncPop(); repaint();
       return;
     }
-    if(e.target.closest('#nmFClear')){ st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.op.clear(); syncPop(); repaint(); }
+    if(e.target.closest('#nmFClear')){ st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear(); syncPop(); repaint(); }
     if(e.target.closest('#nmFDone')){ st.panelOpen = false; syncPop(); }
   });
   document.querySelector('.nm-tools .seg').addEventListener('click', e => {
@@ -2123,7 +2128,7 @@ async function renderNetworkMap(){
     ]);
   });
   document.getElementById('nmReset').addEventListener('click', () => {
-    st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.op.clear();
+    st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();
     st.garagesAll = false;
     nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);

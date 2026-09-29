@@ -119,6 +119,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       fleet: c.vehicleType ?? prev.fleet ?? null,
       propulsion: c.propulsion ?? prev.propulsion ?? null,
       deck: c.deck ?? prev.deck ?? null,
+      frequency: c.frequency ?? prev.frequency ?? null,
       lengthKm: prev.lengthKm ?? null,                     // sticky until a geometry-length builder lands
       contractDate: c.currentContractAwardDate ?? prev.contractDate ?? null,
       contractStart: c.contractStartDate ?? prev.contractStart ?? null,
