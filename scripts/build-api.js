@@ -118,6 +118,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       tvr: pvr != null ? Math.floor(pvr * 1.13) : null,
       fleet: c.vehicleType ?? prev.fleet ?? null,
       propulsion: c.propulsion ?? prev.propulsion ?? null,
+      deck: c.deck ?? prev.deck ?? null,
       lengthKm: prev.lengthKm ?? null,                     // sticky until a geometry-length builder lands
       contractDate: c.currentContractAwardDate ?? prev.contractDate ?? null,
       contractStart: c.contractStartDate ?? prev.contractStart ?? null,
