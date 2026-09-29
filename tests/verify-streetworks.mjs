@@ -50,9 +50,11 @@ F(`borough filter narrows (${c1.trim()})`, /\(of [\d,]+\)/.test(c1));
 await page.selectOption('#swha', '');
 await page.waitForTimeout(200);
 
-// Search matches — term taken from the committed data so growth never breaks it
-const firstStreet = JSON.parse(readFileSync(join(ROOT, 'data/api/streetworks-history.json'), 'utf8'))
-  .entries.map(e => e.latest?.street_name).find(Boolean);
+// Search matches — term taken from the committed data so growth never breaks
+// it. The file is columnar ({fields, rows}); street_name is a plain column.
+const swRaw = JSON.parse(readFileSync(join(ROOT, 'data/api/streetworks-history.json'), 'utf8'));
+const stCol = swRaw.fields.indexOf('street_name');
+const firstStreet = swRaw.rows.map(r => r[stCol]).find(v => typeof v === 'string' && v.length > 5);
 await page.fill('#swq', String(firstStreet).slice(0, 8));
 await page.waitForTimeout(400);
 const c2 = (await txt('#swCount')).trim();

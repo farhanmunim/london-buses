@@ -466,7 +466,25 @@ const D = {
   tendersAll:  () => get('/tenders').then(d => fixOperatorDeep(Object.values(d?.byId ?? {}))),
   programme:   () => get('/tender-programme').then(d => (d?.entries ?? []).map(e => ({ ...e, sourceUrl: d?.sources?.[e.programmeYear] ?? null }))),
   divHistory:  () => get('/diversion-history'),                          // accumulated diversion notices, per status snapshot
-  streetworks: () => get('/streetworks-history'),                        // DfT Street Manager permits/works, London HAs — may be absent until first drain
+  // DfT Street Manager permits/works, London HAs. The file is columnar
+  // ({fields, enums, rows} — key names and repetitive categorical values
+  // stored once) to keep 20k+ works light; decode back into the object
+  // shape the page and map layer consume. Pre-columnar payloads pass through.
+  streetworks: () => get('/streetworks-history').then(d => {
+    if(!d?.rows || !d?.fields) return d;
+    const TOP = new Set(['ref','ha','objectType','firstEvent','lastEvent','lastType','nEvents','coords']);
+    const entries = d.rows.map(row => {
+      const e = { latest: {} };
+      d.fields.forEach((f, i) => {
+        let v = row[i];
+        if(d.enums?.[f]) v = (v >= 0 ? d.enums[f][v] : null);
+        if(v == null) return;
+        if(TOP.has(f)) e[f] = v; else e.latest[f] = v;
+      });
+      return e;
+    });
+    return { ...d, entries };
+  }),
   routePerf:   () => get('/route-performance'),                          // TfL QSI + mileage per period — may be absent while its crawler finishes
   schedMiles:  () => get('/scheduled-mileage'),                          // timetable-derived daily km — may be absent while its crawler finishes
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions

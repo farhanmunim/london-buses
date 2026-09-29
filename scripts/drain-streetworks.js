@@ -227,13 +227,39 @@ function main() {
         .map(k => [k, typeof e.latest[k] === 'string' ? e.latest[k].slice(0, 140) : e.latest[k]])),
     }))
     .sort((a, b) => String(b.lastEvent).localeCompare(String(a.lastEvent)));
+
+  // Columnar encoding: at 20k+ rows the object form spends nearly half its
+  // bytes repeating key names, and the categorical columns (borough,
+  // promoter, category, status…) repeat a handful of values thousands of
+  // times. Emit {fields, enums, rows}: each row is an array in field order,
+  // and enum-listed columns store an index into their value table (-1 =
+  // null). The app's data layer (D.streetworks) decodes this back into the
+  // object shape the page and map layer consume — change one, change both.
+  const FIELDS = ['ref', 'ha', 'objectType', 'firstEvent', 'lastEvent', 'lastType', 'nEvents', 'coords', ...KEEP];
+  const ENUM_COLS = new Set(['ha', 'objectType', 'lastType', 'town', 'area_name',
+    'promoter_organisation', 'highway_authority', 'work_category',
+    'traffic_management_type', 'work_status', 'permit_status',
+    'is_traffic_sensitive', 'activity_type', 'activity_location_type']);
+  const enums = {}, enumIdx = {};
+  for (const c of ENUM_COLS) { enums[c] = []; enumIdx[c] = new Map(); }
+  const enc = (col, v) => {
+    if (v == null) return ENUM_COLS.has(col) ? -1 : null;
+    if (!ENUM_COLS.has(col)) return v;
+    let i = enumIdx[col].get(v);
+    if (i === undefined) { i = enums[col].length; enums[col].push(v); enumIdx[col].set(v, i); }
+    return i;
+  };
+  const rows = list.map(e => FIELDS.map(f =>
+    enc(f, f in e ? e[f] : (e.latest?.[f] ?? null))));
   writeStable(API_PATH, sanitizeRecord({
     generatedAt: nowIso,
     source: 'DfT Street Manager open data (SNS → Pages Function → streetworks-inbox branch → this archive), London highway authorities only',
-    note: 'Current and recently-ended works (14-day window); the complete archive lives in data/source/streetworks-history.json.',
+    note: 'Current and recently-ended works (14-day window), columnar-encoded; the complete archive lives in data/source/streetworks-history.json.',
     totalArchived: Object.keys(entries).length,
-    count: list.length,
-    entries: list,
+    count: rows.length,
+    fields: FIELDS,
+    enums,
+    rows,
   }));
 }
 
