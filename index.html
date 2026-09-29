@@ -1840,10 +1840,12 @@ async function renderNetworkMap(){
       const up = n.toUpperCase();
       if(st.pills.length ? st.pills.includes(up) : passes(n)) vis.add(up);
     }
-    // "All" escape hatch only exists while a focus is narrowing the pins.
+    // "All" escape hatch whenever ANYTHING is narrowing the pins — focused
+    // routes or panel filters alike. On, the non-matching garages come back
+    // as smaller context pins so the matching ones keep the stage.
     const allBtn = document.getElementById('nmGaragesAll');
     if(allBtn){
-      allBtn.hidden = !(st.garages && st.pills.length);
+      allBtn.hidden = !(st.garages && narrowing);
       allBtn.classList.toggle('on', st.garagesAll);
     }
     garageLayer = L.layerGroup();
@@ -1873,7 +1875,15 @@ async function renderNetworkMap(){
           .addTo(garageLayer);
         continue;
       }
-      if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))) continue;
+      if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))){
+        if(!st.garagesAll) continue;
+        // Context pin: garage outside the current filter, smaller so the
+        // matching garages keep the stage.
+        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 27) })
+          .bindPopup(() => garagePopupHtml(g, meta))
+          .addTo(garageLayer);
+        continue;
+      }
       const tints = null;
       L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints?.length ? tints : null) })
         .bindPopup(() => garagePopupHtml(g, meta))
