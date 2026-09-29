@@ -344,7 +344,7 @@ async function main() {
     }
     if (!rows.length || rows.length < PAGE_SIZE) break;
   }
-  console.log(`Search: ${ids.size} orders in the London polygon${acc.watermark ? ` since ${acc.watermark}` : ''} (service total: ${totalCount ?? '?'})`);
+  console.log(`Search: ${ids.size} orders in the London polygon${incremental && acc.watermark ? ` since ${acc.watermark}` : ''} (service total: ${totalCount ?? '?'})`);
 
   // Fetch full documents for new/changed orders (bounded per run).
   let fetched = 0, kept = 0, failures = 0;
