@@ -194,6 +194,7 @@ b{font-weight:700}
   <tr><td>londonbusroutes.net</td><td>Operator, garage, PVR, vehicle type (community reference)</td><td>No</td></tr>
   <tr><td>postcodes.io / OSM</td><td>Geocoding garages</td><td>No</td></tr>
   <tr><td>DfT Street Manager open data</td><td>The statutory street-works record, pushed live over SNS and filtered to London's 33 highway authorities + TfL</td><td>Free registration (push-only; needs a GitHub token on Pages — see <a href="#cloudflare">section 11</a>)</td></tr>
+  <tr><td>DfT D-TRO service</td><td>The statutory traffic regulation orders behind closures, bus lanes, bus gates and diversions, searched for Greater London</td><td>Free registration (OAuth id + key/secret as Actions secrets)</td></tr>
   <tr><td>TfL Road disruptions (TIMS)</td><td>Live roadworks from TfL's traffic control centre, corridor-joined to bus routes</td><td>No</td></tr>
   <tr><td>TfL per-route performance PDFs</td><td>Operated-mileage % and reliability per 4-week period (the QSI reports)</td><td>No</td></tr>
   <tr><td>london-bus-routes.fandom.com</td><td>Provisional tender awards, weeks-to-months ahead of TfL's register (served flagged provisional)</td><td>No</td></tr>
@@ -226,7 +227,7 @@ b{font-weight:700}
   <tr><td>16</td><td><code>build-api.js</code></td><td>Assembles the faux-API files plus a manifest. Missing fields keep their last good value.</td></tr>
   <tr><td>17</td><td><code>audit-data.js</code></td><td>Checks every record for plausibility (including a buses-only guard — no tram data may leak in). Critical problems abort the run.</td></tr>
 </table></div>
-<p class="muted">Three more steps run only in the 2-hourly status workflow, because they accumulate history from feeds that publish no archive: <code>build-diversion-history.js</code> (folds each diversion snapshot into the rolling history), <code>fetch-roadworks.js</code> (TIMS snapshot, corridor-joined to routes, accumulated), and <code>drain-streetworks.js</code> (folds Street Manager events pushed to the <code>streetworks-inbox</code> branch into the archive, converting coordinates to WGS84).</p>
+<p class="muted">Three more steps run only in the 2-hourly status workflow, because they accumulate history from feeds that publish no archive: <code>build-diversion-history.js</code> (folds each diversion snapshot into the rolling history), <code>fetch-roadworks.js</code> (TIMS snapshot, corridor-joined to routes, accumulated), and <code>drain-streetworks.js</code> (folds Street Manager events pushed to the <code>streetworks-inbox</code> branch into the archive, converting coordinates to WGS84), and <code>fetch-dtro.js</code> (statutory traffic regulation orders from DfT's D-TRO service, incremental after the first London sync).</p>
 
 <h2 id="storage">7. Data — where it's stored</h2>
 <p>Everything is a file in Git. There is no database, no object store, no cache server. Three layers of files:</p>
@@ -256,6 +257,7 @@ b{font-weight:700}
   <tr><td><code>bridges.json</code> / <code>accidents.json</code></td><td>Low bridges and collision records for the map layers.</td></tr>
   <tr><td><code>diversion-history.json</code></td><td>Rolling diversion archive, one entry per (route, reason), with the days each was observed.</td></tr>
   <tr><td><code>streetworks-history.json</code></td><td>DfT Street Manager works for London’s highway authorities — latest payload plus the event trail per work.</td></tr>
+  <tr><td><code>dtro.json</code></td><td>Bus-relevant statutory traffic regulation orders (D-TRO), corridor-joined to routes, with per-authority publishing counts.</td></tr>
   <tr><td><code>roadworks-history.json</code></td><td>TfL TIMS road disruptions, corridor-joined to bus routes within 30 m.</td></tr>
   <tr><td><code>route-performance.json</code> / <code>scheduled-mileage.json</code></td><td>TfL QSI + operated-mileage per period / timetable-derived scheduled km per day type.</td></tr>
   <tr><td><code>manifest.json</code></td><td>Per dataset: source, fetch time, row count, cadence. Powers the About page.</td></tr>
@@ -266,7 +268,7 @@ b{font-weight:700}
 <div class="tablewrap"><table>
   <tr><th>Workflow</th><th>Schedule (UTC)</th><th>Refreshes</th></tr>
   <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full pipeline (every fetch and build step plus the audit gate). The name is historical.</td></tr>
-  <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status, the diversion register + history, TIMS roadworks, and the street-works drain (folds DfT Street Manager events pushed to the <code>streetworks-inbox</code> branch).</td></tr>
+  <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status, the diversion register + history, TIMS roadworks, the street-works drain (folds DfT Street Manager events pushed to the <code>streetworks-inbox</code> branch), and the D-TRO order search.</td></tr>
   <tr><td><code>refresh-fleet.yml</code></td><td>07:20 / 15:20 / 23:20</td><td>Arrivals sweep and DVLA fleet data.</td></tr>
   <tr><td><code>refresh-tenders.yml</code></td><td>hourly 07:20–20:20, plus after every other run</td><td>Tender awards and the programme.</td></tr>
 </table></div>

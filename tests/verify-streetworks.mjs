@@ -46,7 +46,7 @@ F(`borough select populated (${opts.length - 1} boroughs)`, opts.length > 5);
 await page.selectOption('#swha', { index: 1 });
 await page.waitForTimeout(300);
 const c1 = await txt('#swCount');
-F(`borough filter narrows (${c1.trim()})`, /\(of \d+\)/.test(c1));
+F(`borough filter narrows (${c1.trim()})`, /\(of [\d,]+\)/.test(c1));
 await page.selectOption('#swha', '');
 await page.waitForTimeout(200);
 

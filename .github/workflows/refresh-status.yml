@@ -64,6 +64,17 @@ jobs:
         # exists (i.e. until registration is done). See data.md.
         run: node scripts/drain-streetworks.js
 
+      - name: Fetch D-TRO orders (DfT digital traffic regulation orders)
+        # The statutory TROs behind closures, bus lanes/gates, banned turns
+        # and diversions — Greater London polygon search, bus-relevant
+        # orders corridor-joined to routes. Soft-skips without credentials;
+        # incremental after the first full sync. See data.md.
+        env:
+          DTRO_CLIENT_ID:     ${{ secrets.DTRO_CLIENT_ID }}
+          DTRO_API_KEY:       ${{ secrets.DTRO_API_KEY }}
+          DTRO_CLIENT_SECRET: ${{ secrets.DTRO_CLIENT_SECRET }}
+        run: node scripts/fetch-dtro.js
+
       - name: Commit and push
         run: |
           git config user.name  "github-actions[bot]"
@@ -75,6 +86,8 @@ jobs:
           git add -f data/source/roadworks-history.json || true
           git add data/api/streetworks-history.json || true
           git add -f data/source/streetworks-history.json || true
+          git add data/api/dtro.json || true
+          git add -f data/source/dtro.json || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

@@ -625,6 +625,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     'roadworks':         { source: 'TfL Unified API /Road/all/Disruption (TIMS), corridor-joined to routes', cadence: 'several times daily' },
     'roadworks-history': { source: 'TIMS snapshots, accumulated per status refresh', cadence: 'several times daily (rolling archive)' },
     'streetworks-history': { source: 'DfT Street Manager open data (SNS push, London-filtered)', cadence: 'several times daily once registered' },
+    'dtro':               { source: 'DfT D-TRO service (statutory traffic regulation orders), London search', cadence: 'every 2 h (coverage grows as TRAs onboard)' },
     'scheduled-mileage': { source: 'TfL Unified API timetables × route geometry (estimate)', cadence: 'nightly' },
     'route-performance': { source: 'TfL QSI & Mileage per-route PDFs (bus.data.tfl.gov.uk)', cadence: 'nightly check (TfL republishes quarterly)' },
     'route-diversions': { source: 'TfL Unified API · /Line/{ids}/Status (disruptions)', cadence: 'several times daily' },

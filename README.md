@@ -31,7 +31,7 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|
 | Nightly full refresh | routes, geometry, stops, operators/garages/PVR, CPI-CPA, tenders + provisional awards, programme, scheduled mileage, route performance | daily 03:17 | `weekly-refresh.yml` |
-| Service status | line status, diversion register + history, TIMS roadworks, street-works drain | every 2 h, 07:41–21:41 | `refresh-status.yml` |
+| Service status | line status, diversion register + history, TIMS roadworks, street-works drain, D-TRO orders | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
 

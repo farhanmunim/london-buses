@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "4.0.0",
+  "data": {
+    "source": {
+      "actionType": "new",
+      "currentTraOwner": 20,
+      "troName": "Synthetic test order — Plumstead Road closure (fixture, not a real TRO)",
+      "provision": [
+        {
+          "actionType": "new",
+          "orderReportingPoint": "ttroTtmoNoticeOfIntention",
+          "provisionDescription": "Synthetic temporary road closure on Plumstead Road for join testing",
+          "reference": "00000000-0000-0000-0000-000000000001",
+          "regulatedPlace": [
+            {
+              "description": "Plumstead Road, SE18",
+              "type": "regulationLocation",
+              "busRoute": true,
+              "linearGeometry": {
+                "version": 1,
+                "linestring": "SRID=27700;LINESTRING(544000 178800, 544400 178780)",
+                "representation": "linear",
+                "direction": "bidirectional",
+                "lateralPosition": "centreline"
+              }
+            }
+          ],
+          "regulation": [
+            { "generalRegulation": { "regulationType": "miscRoadClosure" }, "isDynamic": false,
+              "condition": { "timeValidity": { "start": "2026-10-01T09:00:00", "end": "2026-10-05T18:00:00" } } }
+          ]
+        }
+      ]
+    }
+  }
+}

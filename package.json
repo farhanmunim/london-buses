@@ -33,7 +33,8 @@
     "build-diversion-history": "node scripts/build-diversion-history.js",
     "fetch-scheduled-mileage": "node scripts/fetch-scheduled-mileage.js",
     "fetch-roadworks": "node scripts/fetch-roadworks.js",
-    "drain-streetworks": "node scripts/drain-streetworks.js"
+    "drain-streetworks": "node scripts/drain-streetworks.js",
+    "fetch-dtro": "node scripts/fetch-dtro.js"
   },
   "engines": {
     "node": ">=18"

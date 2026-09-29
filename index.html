@@ -3224,8 +3224,8 @@ async function renderStreetworks(){
       sensitive: l.is_traffic_sensitive === 'Yes',
       start: l.actual_start_date_time ?? l.proposed_start_date ?? l.start_date ?? null,
       end: l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date ?? null,
-      lastType: e.events?.[e.events.length - 1]?.type ?? null,
-      lastEvent: e.lastEvent, nEvents: e.events?.length ?? 0,
+      lastType: e.lastType ?? e.events?.[e.events.length - 1]?.type ?? null,
+      lastEvent: e.lastEvent, nEvents: e.nEvents ?? e.events?.length ?? 0,
     };
   }).sort((a, b) => String(b.lastEvent ?? '').localeCompare(String(a.lastEvent ?? '')));
   const has = sel => [...new Set(rows.map(sel).filter(v => v && v !== '—'))].sort();
