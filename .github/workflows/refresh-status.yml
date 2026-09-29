@@ -85,7 +85,6 @@ jobs:
           git add data/api/roadworks.json data/api/roadworks-history.json || true
           git add -f data/source/roadworks-history.json || true
           git add data/api/streetworks-history.json || true
-          git add -f data/source/streetworks-history.json || true
           git add data/api/dtro.json || true
           git add -f data/source/dtro.json || true
           if git diff --cached --quiet; then

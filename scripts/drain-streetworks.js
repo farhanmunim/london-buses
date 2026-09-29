@@ -56,9 +56,36 @@ const git = (args, opts = {}) =>
   execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, ...opts }).trim();
 
 
+// The full accumulator lives ON THE INBOX BRANCH (archive/…), not on
+// main: at ~2k London events/day it crossed Cloudflare Pages' 25 MB
+// per-file limit within a week of go-live and silently failed every
+// deployment (2026-09-23 → -29). The inbox branch is never deployed, so
+// it can hold the archive at any size; main only carries the compact
+// served view. The old data/source copy remains readable as a one-time
+// migration fallback.
+const ARCHIVE_BRANCH = 'streetworks-archive';
+const ARCHIVE_FILE = 'streetworks-history.json';
 function loadAcc() {
+  try {
+    git(['fetch', 'origin', `${ARCHIVE_BRANCH}:refs/remotes/origin/${ARCHIVE_BRANCH}`, '--no-tags', '--force']);
+    return JSON.parse(git(['show', `refs/remotes/origin/${ARCHIVE_BRANCH}:${ARCHIVE_FILE}`])).entries ?? {};
+  } catch { /* branch has no archive yet — fall through to migration */ }
   try { return JSON.parse(fs.readFileSync(ACC_PATH, 'utf8')).entries ?? {}; }
   catch { return {}; }
+}
+
+// The archive branch has exactly one writer (this drain), so a plain
+// parentless force push is race-free and keeps it at history depth 1.
+function pushArchive(archiveJson, env) {
+  const tmp = path.join(ROOT, '.git', 'streetworks-archive-tmp.json');
+  fs.writeFileSync(tmp, archiveJson, 'utf8');
+  const blob = git(['hash-object', '-w', tmp]);
+  fs.unlinkSync(tmp);
+  git(['read-tree', '--empty'], { env });
+  git(['update-index', '--add', '--cacheinfo', `100644,${blob},${ARCHIVE_FILE}`], { env });
+  const tree = git(['write-tree'], { env });
+  const commit = git(['commit-tree', tree, '-m', 'drain: streetworks archive snapshot [CI Skip]'], { env });
+  git(['push', '--force', 'origin', `${commit}:refs/heads/${ARCHIVE_BRANCH}`]);
 }
 
 const stable = (o) => JSON.stringify({ ...o, generatedAt: null });
@@ -95,6 +122,18 @@ function fold(entries, row) {
   }
 }
 
+// Rolling archive: a work that ended more than 90 days ago (and has gone
+// quiet) leaves the accumulator, or it grows without bound at ~2k London
+// events/day.
+function pruneEnded(entries) {
+  const PRUNE = new Date(Date.now() - 90 * 864e5).toISOString();
+  for (const [ref, e] of Object.entries(entries)) {
+    const l = e.latest ?? {};
+    const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
+    if (end && end < PRUNE && String(e.lastEvent ?? '') < PRUNE) delete entries[ref];
+  }
+}
+
 // Push a commit deleting `paths` from the inbox branch. The commit is
 // PARENTLESS but carries head's tree minus the processed files, and is
 // pushed with --force-with-lease pinned to the exact head we folded — an
@@ -104,7 +143,7 @@ function fold(entries, row) {
 // landing mid-drain moves the ref, the lease fails the push, and the
 // caller refetches and retries. Uses plumbing only, so the main worktree
 // is untouched.
-function pushDeletions(head, paths) {
+function pushDeletions(paths) {
   const env = {
     ...process.env,
     GIT_INDEX_FILE: path.join(ROOT, '.git', 'streetworks-drain-index'),
@@ -117,17 +156,27 @@ function pushDeletions(head, paths) {
     GIT_COMMITTER_EMAIL: 'github-actions[bot]@users.noreply.github.com',
   };
   try {
-    git(['read-tree', head], { env });
-    // Remove in chunks to stay clear of argv limits.
-    for (let i = 0; i < paths.length; i += 500) {
-      git(['update-index', '--force-remove', '--', ...paths.slice(i, i + 500)], { env });
+    // Folding a big backlog takes minutes, and events land every few
+    // seconds — so the commit is built against a FRESH head each attempt,
+    // keeping whatever arrived mid-fold, and only the paths we actually
+    // processed are removed. With the archive on its own branch this
+    // commit is tiny, so each attempt's fetch→tree→push window is around
+    // a second; 20 attempts reliably finds a gap in the event stream.
+    for (let attempt = 1; attempt <= 20; attempt++) {
+      git(['fetch', 'origin', `${BRANCH}:refs/remotes/origin/${BRANCH}`, '--no-tags', '--force']);
+      const head = git(['rev-parse', `refs/remotes/origin/${BRANCH}`]);
+      git(['read-tree', head], { env });
+      for (let i = 0; i < paths.length; i += 500) {
+        git(['rm', '--cached', '--ignore-unmatch', '--quiet', '--', ...paths.slice(i, i + 500)], { env });
+      }
+      const tree = git(['write-tree'], { env });
+      const commit = git(['commit-tree', tree, '-m', `drain: remove ${paths.length} folded streetworks events [CI Skip]`], { env });
+      try {
+        git(['push', `--force-with-lease=refs/heads/${BRANCH}:${head}`, 'origin', `${commit}:refs/heads/${BRANCH}`]);
+        return true;
+      } catch { /* lease failed — an event landed in the window; go again */ }
     }
-    const tree = git(['write-tree'], { env });
-    const commit = git(['commit-tree', tree, '-m', `drain: fold ${paths.length} streetworks events into archive [CI Skip]`], { env });
-    try {
-      git(['push', `--force-with-lease=refs/heads/${BRANCH}:${head}`, 'origin', `${commit}:refs/heads/${BRANCH}`]);
-      return true;
-    } catch { return false; }                       // lease failed — new events landed, retry
+    return false;
   } finally {
     try { fs.unlinkSync(env.GIT_INDEX_FILE); } catch { /* already gone */ }
   }
@@ -139,63 +188,72 @@ function main() {
   catch { console.log(`No ${BRANCH} branch on origin (no events received yet) — skipped.`); return; }
 
   const entries = loadAcc();
-  let drainedTotal = 0;
+  let drainedTotal = 0, archivePushed = false;
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const head = git(['rev-parse', `refs/remotes/origin/${BRANCH}`]);
-    const files = git(['ls-tree', '-r', '--name-only', head, '--', 'inbox/'])
-      .split('\n').filter(f => f.endsWith('.json'));
-    // Breadcrumb log files (function observability) ride along: print the
-    // recent ones so delivery problems surface in the workflow log, and
-    // delete any older than 48 h with the same commit.
-    const logs = git(['ls-tree', '-r', '--name-only', head, '--', 'log/'])
-      .split('\n').filter(Boolean);
-    const staleLogs = [];
-    for (const f of logs) {
-      try {
-        const j = JSON.parse(git(['show', `${head}:${f}`]));
-        const ageH = (Date.now() - Date.parse(j.at)) / 36e5;
-        if (ageH < 6) console.log(`  [receiver] ${j.at} ${j.verdict} (${j.type ?? '?'} ${j.topicArn ?? ''})`);
-        if (ageH > 48) staleLogs.push(f);
-      } catch { staleLogs.push(f); }
-    }
-    if (!files.length && !staleLogs.length) { console.log('Inbox empty — nothing to drain.'); break; }
+  const head = git(['rev-parse', `refs/remotes/origin/${BRANCH}`]);
+  const files = git(['ls-tree', '-r', '--name-only', head, '--', 'inbox/'])
+    .split('\n').filter(f => f.endsWith('.json'));
+  // Breadcrumb log files (function observability) ride along: print the
+  // recent ones so delivery problems surface in the workflow log, and
+  // delete any older than 48 h with the same commit.
+  const logs = git(['ls-tree', '-r', '--name-only', head, '--', 'log/'])
+    .split('\n').filter(Boolean);
+  const staleLogs = [];
+  for (const f of logs) {
+    try {
+      const j = JSON.parse(git(['show', `${head}:${f}`]));
+      const ageH = (Date.now() - Date.parse(j.at)) / 36e5;
+      if (ageH < 6) console.log(`  [receiver] ${j.at} ${j.verdict} (${j.type ?? '?'} ${j.topicArn ?? ''})`);
+      if (ageH > 48) staleLogs.push(f);
+    } catch { staleLogs.push(f); }
+  }
 
-    for (const f of files) {
-      try { fold(entries, JSON.parse(git(['show', `${head}:${f}`]))); }
-      catch { console.warn(`  unreadable inbox file skipped: ${f}`); }
-    }
-    drainedTotal += files.length;
+  for (const f of files) {
+    try { fold(entries, JSON.parse(git(['show', `${head}:${f}`]))); }
+    catch { console.warn(`  unreadable inbox file skipped: ${f}`); }
+  }
+  drainedTotal = files.length;
 
-    if (pushDeletions(head, [...files, ...staleLogs])) break;
-    if (attempt === 3) {
-      console.log('Inbox deletion push rejected 3× (heavy inflow) — folded anyway; deletions retry next drain.');
-      break;
-    }
-    git(['fetch', 'origin', `${BRANCH}:refs/remotes/origin/${BRANCH}`, '--no-tags', '--force']);
+  // WGS84 coordinates from the latest payload's BNG WKT — recomputed
+  // before serialising, so the branch archive and served view agree.
+  for (const e of Object.values(entries))
+    e.coords = wktToCoords(e.latest?.works_location_coordinates ?? e.latest?.activity_coordinates
+      ?? e.latest?.section_58_coordinates ?? e.latest?.coordinates) ?? e.coords ?? null;
+
+  pruneEnded(entries);
+  const archiveJson = JSON.stringify(sanitizeRecord({ generatedAt: new Date().toISOString(), entries }));
+  let branchArchive = null;
+  try { branchArchive = git(['show', `refs/remotes/origin/${ARCHIVE_BRANCH}:${ARCHIVE_FILE}`]); } catch { /* absent */ }
+  const archiveMoved = branchArchive == null
+    || JSON.stringify({ ...JSON.parse(branchArchive), generatedAt: null }) !== JSON.stringify({ ...JSON.parse(archiveJson), generatedAt: null });
+
+  const identEnv = {
+    ...process.env,
+    GIT_INDEX_FILE: path.join(ROOT, '.git', 'streetworks-archive-index'),
+    GIT_AUTHOR_NAME: 'github-actions[bot]',
+    GIT_AUTHOR_EMAIL: 'github-actions[bot]@users.noreply.github.com',
+    GIT_COMMITTER_NAME: 'github-actions[bot]',
+    GIT_COMMITTER_EMAIL: 'github-actions[bot]@users.noreply.github.com',
+  };
+  if (archiveMoved) {
+    try { pushArchive(archiveJson, identEnv); archivePushed = true; }
+    catch (e) { console.error(`archive push failed: ${String(e.message).slice(0, 200)}`); }
+    finally { try { fs.unlinkSync(identEnv.GIT_INDEX_FILE); } catch { /* gone */ } }
+  } else { archivePushed = true; }
+
+  if (!files.length && !staleLogs.length) {
+    console.log('Inbox empty — nothing to delete.');
+  } else if (!pushDeletions([...files, ...staleLogs])) {
+    console.log('Inbox deletion push rejected 20× (heavy inflow) — folded anyway; deletions retry next drain.');
   }
 
   console.log(`Drained ${drainedTotal} events; archive now holds ${Object.keys(entries).length} works`);
   if (!drainedTotal && !Object.keys(entries).length) return;   // nothing yet — write nothing
 
-  // WGS84 coordinates from the latest payload's BNG WKT — recomputed at
-  // every write, so entries archived before this existed backfill too.
-  for (const e of Object.values(entries))
-    e.coords = wktToCoords(e.latest?.works_location_coordinates ?? e.latest?.activity_coordinates
-      ?? e.latest?.section_58_coordinates ?? e.latest?.coordinates) ?? e.coords ?? null;
-
-  // Rolling archive: a work that ended more than 90 days ago (and has gone
-  // quiet) leaves the accumulator, or the committed file grows without
-  // bound at ~2k London events/day.
-  const PRUNE = new Date(Date.now() - 90 * 864e5).toISOString();
-  for (const [ref, e] of Object.entries(entries)) {
-    const l = e.latest ?? {};
-    const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
-    if (end && end < PRUNE && String(e.lastEvent ?? '') < PRUNE) delete entries[ref];
-  }
+  if (!archivePushed && drainedTotal)
+    console.log('Note: archive update not pushed this run (lease contention) — refolded next drain.');
 
   const nowIso = new Date().toISOString();
-  writeStable(ACC_PATH, sanitizeRecord({ generatedAt: nowIso, entries }));
 
   // Served view: the full archive crossed 20k works (~40 MB with verbatim
   // payloads) within a week of go-live — far too heavy for the browser.
