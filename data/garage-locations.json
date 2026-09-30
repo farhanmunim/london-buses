@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-28T10:25:17.570Z",
+  "generatedAt": "2026-09-30T10:14:44.985Z",
   "count": 76,
   "garages": {
     "A": {
@@ -519,7 +519,7 @@
       "address": "51 River Road, London, IG11 0DA",
       "lat": 51.523066,
       "lon": 0.096456,
-      "pvr": 190,
+      "pvr": 201,
       "capacity": 250
     },
     "S": {
@@ -559,7 +559,7 @@
       "address": "Factory Road, Silvertown, London, E16 2EL",
       "lat": 51.500553,
       "lon": 0.054502,
-      "pvr": 26,
+      "pvr": 15,
       "capacity": 100
     },
     "SM": {
