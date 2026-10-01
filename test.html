@@ -13,9 +13,6 @@
     --bg:#f6f7f9; --surf:#fff; --tx:#111827; --tx2:#4b5563; --mu:#6b7280; --bd:#e5e7eb; --acc:#2563eb; --warn:#b45309;
     --shadow:0 1px 2px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.08);
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){ --bg:#0f1115; --surf:#171a21; --tx:#f3f4f6; --tx2:#c3c8d1; --mu:#8b93a1; --bd:#262b36; --acc:#6ea0ff; --warn:#f59e0b; --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35); }
-  }
   :root[data-theme="dark"]{ --bg:#0f1115; --surf:#171a21; --tx:#f3f4f6; --tx2:#c3c8d1; --mu:#8b93a1; --bd:#262b36; --acc:#6ea0ff; --warn:#f59e0b; --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35); }
   *{ box-sizing:border-box }
   html,body{ height:100%; margin:0 }
@@ -49,6 +46,7 @@
   <h1>Basemap test</h1>
   <span style="color:var(--mu)" id="provider">Stadia Maps</span>
   <div class="seg" id="styleSeg" role="group" aria-label="Basemap style"></div>
+  <div class="seg" id="themeSeg" role="group" aria-label="Theme"><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div>
   <div class="grow"></div>
   <a href="/">← Back to the app</a>
 </header>
@@ -86,9 +84,12 @@ const ROUTES = [
   { id:'38', colour:'#0891b2' },
 ];
 
-const mq = matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => document.documentElement.dataset.theme
-  ? document.documentElement.dataset.theme === 'dark' : mq.matches;
+// Light by default (this page is for judging a light, modern basemap) — the
+// system theme is deliberately ignored; the switch remembers its own choice.
+const root = document.documentElement;
+let saved = null; try{ saved = localStorage.getItem('test-theme'); }catch(e){}
+root.dataset.theme = saved === 'dark' ? 'dark' : 'light';
+const isDark = () => root.dataset.theme === 'dark';
 
 const map = L.map('map', { zoomControl:true, attributionControl:true, preferCanvas:false }).setView([51.515, -0.11], 12);
 map.attributionControl.setPrefix(false);
@@ -114,7 +115,14 @@ STYLES.forEach((s, i) => {
   });
   seg.appendChild(b);
 });
-mq.addEventListener('change', setBase);
+const themeSeg = document.getElementById('themeSeg');
+const syncTheme = () => themeSeg.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.t === root.dataset.theme));
+themeSeg.addEventListener('click', e => {
+  const t = e.target.closest('button')?.dataset.t; if(!t) return;
+  root.dataset.theme = t; try{ localStorage.setItem('test-theme', t); }catch(err){}
+  syncTheme(); setBase();
+});
+syncTheme();
 setBase();
 
 // Probe one tile so a 401 (domain not registered / no key) is explained.
