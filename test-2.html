@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Map test 2 · London Buses</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous" />
+<script src="https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --bg:#f6f7f9; --surf:#fff; --tx:#111827; --tx2:#4b5563; --mu:#6b7280; --bd:#e5e7eb; --acc:#2563eb; --warn:#b45309;
+    --shadow:0 1px 2px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.08);
+  }
+  *{ box-sizing:border-box }
+  html,body{ height:100%; margin:0 }
+  body{ background:var(--bg); color:var(--tx); font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif; display:flex; flex-direction:column }
+  header{ padding:12px 16px; display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; background:var(--surf); border-bottom:1px solid var(--bd) }
+  header h1{ font-size:15px; margin:0; font-weight:650; letter-spacing:-.01em }
+  header a{ color:var(--acc); text-decoration:none; font-weight:500 }
+  .grow{ flex:1 }
+  .seg{ display:inline-flex; background:var(--bg); border:1px solid var(--bd); border-radius:999px; padding:2px }
+  .seg button{ border:0; background:transparent; color:var(--tx2); font:inherit; font-size:12.5px; padding:5px 12px; border-radius:999px; cursor:pointer }
+  .seg button.on{ background:var(--surf); color:var(--tx); box-shadow:0 1px 3px rgba(0,0,0,.15); font-weight:600 }
+  #wrap{ position:relative; flex:1; min-height:0 }
+  #map{ position:absolute; inset:0; background:var(--bg) }
+  .panel{ position:absolute; z-index:5; left:12px; bottom:28px; background:var(--surf); border:1px solid var(--bd); border-radius:14px; box-shadow:var(--shadow); padding:10px 12px; max-width:calc(100% - 24px) }
+  .panel h2{ font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--mu); margin:0 0 7px; font-weight:650 }
+  .chips{ display:flex; flex-wrap:wrap; gap:6px }
+  .chip{ display:inline-flex; align-items:center; gap:7px; border:1px solid var(--bd); background:var(--surf); color:var(--tx); border-radius:999px; padding:4px 11px 4px 5px; font:inherit; font-size:13px; font-weight:600; cursor:pointer }
+  .chip i{ min-width:26px; text-align:center; color:#fff; border-radius:999px; font-style:normal; font-size:12px; padding:1px 6px }
+  .chip.off{ opacity:.45 }
+  .chip.off i{ background:var(--mu)!important }
+  #banner{ display:none; position:absolute; z-index:6; top:12px; left:50%; transform:translateX(-50%); width:min(560px, calc(100% - 24px)); background:var(--surf); border:1px solid var(--warn); border-radius:12px; box-shadow:var(--shadow); padding:11px 14px; font-size:13px; color:var(--tx2) }
+  .maplibregl-popup-content{ font:inherit; font-weight:650; padding:6px 10px; border-radius:8px }
+  .maplibregl-ctrl-attrib{ font-size:10.5px }
+  .badge{ font-size:11px; font-weight:650; letter-spacing:.04em; text-transform:uppercase; color:var(--mu); border:1px solid var(--bd); border-radius:999px; padding:2px 8px }
+</style>
+</head>
+<body>
+<header>
+  <h1>Basemap test 2</h1>
+  <span style="color:var(--mu)">MapLibre GL + OpenFreeMap</span>
+  <span class="badge">vector</span>
+  <div class="seg" id="styleSeg" role="group" aria-label="Basemap style"></div>
+  <div class="grow"></div>
+  <a href="/test">Stadia (test 1)</a>
+  <a href="/">← Back to the app</a>
+</header>
+<div id="wrap">
+  <div id="map"></div>
+  <div id="banner"></div>
+  <div class="panel"><h2>Routes</h2><div class="chips" id="chips"></div></div>
+</div>
+
+<script>
+/* Vector basemap trial: MapLibre GL JS (the open-source fork of Mapbox GL JS)
+   rendering OpenFreeMap's free vector styles — no account, no API key, no
+   usage cap. Same six routes, view and legend as /test (Stadia, raster) so
+   the two pages can be compared tab-for-tab. Route lines are inserted BELOW
+   the basemap's first label layer, so street and place names stay readable
+   on top of the routes. */
+const STYLES = [
+  { id:'positron', label:'Positron', url:'https://tiles.openfreemap.org/styles/positron' },
+  { id:'bright',   label:'Bright',   url:'https://tiles.openfreemap.org/styles/bright' },
+  { id:'liberty',  label:'Liberty',  url:'https://tiles.openfreemap.org/styles/liberty' },
+];
+const ROUTES = [
+  { id:'25', colour:'#e11d48' },
+  { id:'88', colour:'#2563eb' },
+  { id:'24', colour:'#16a34a' },
+  { id:'12', colour:'#d97706' },
+  { id:'73', colour:'#7c3aed' },
+  { id:'38', colour:'#0891b2' },
+];
+
+const map = new maplibregl.Map({
+  container:'map', style:STYLES[0].url, center:[-0.11, 51.515], zoom:11.2,
+  attributionControl:{ compact:true }, maxPitch:60,
+});
+map.addControl(new maplibregl.NavigationControl({ visualizePitch:true }), 'top-left');
+
+const geo = new Map();        // route id → FeatureCollection (filled once)
+const hidden = new Set();     // route ids toggled off via the legend
+const layerIds = r => ['route-' + r.id + '-case', 'route-' + r.id];
+
+// Idempotent: adds whatever route sources/layers the active style is missing.
+// setStyle() discards custom layers, so this runs on every style.load too.
+// Lines go in BELOW the style's first label layer so names stay on top.
+let styleReady = false;   // isStyleLoaded() is false while tiles stream in, so track it ourselves
+function syncRoutes(){
+  if(!geo.size || !styleReady) return;
+  const firstLabel = map.getStyle().layers.find(l => l.type === 'symbol')?.id;
+  for(const r of ROUTES){
+    const data = geo.get(r.id); if(!data) continue;
+    const src = 'route-' + r.id;
+    if(map.getSource(src)) continue;
+    map.addSource(src, { type:'geojson', data });
+    const layout = { 'line-cap':'round', 'line-join':'round', visibility:hidden.has(r.id) ? 'none' : 'visible' };
+    // White casing under the coloured line keeps routes legible on any style.
+    map.addLayer({ id:src + '-case', type:'line', source:src, layout,
+      paint:{ 'line-color':'#fff', 'line-opacity':.9, 'line-width':['interpolate',['linear'],['zoom'],10,4,16,10] } }, firstLabel);
+    map.addLayer({ id:src, type:'line', source:src, layout,
+      paint:{ 'line-color':r.colour, 'line-width':['interpolate',['linear'],['zoom'],10,2.2,16,6] } }, firstLabel);
+  }
+}
+map.on('style.load', () => { styleReady = true; syncRoutes(); });
+
+// One hover handler for every route (a few px of slack so thin lines are easy to hit).
+const popup = new maplibregl.Popup({ closeButton:false, closeOnClick:false, offset:10 });
+map.on('mousemove', e => {
+  const layers = ROUTES.filter(r => !hidden.has(r.id)).map(r => 'route-' + r.id).filter(id => map.getLayer(id));
+  const hit = layers.length
+    ? map.queryRenderedFeatures([[e.point.x - 5, e.point.y - 5], [e.point.x + 5, e.point.y + 5]], { layers })[0] : null;
+  map.getCanvas().style.cursor = hit ? 'pointer' : '';
+  hit ? popup.setLngLat(e.lngLat).setText('Route ' + hit.properties.routeId).addTo(map) : popup.remove();
+});
+
+// Style switcher
+const seg = document.getElementById('styleSeg');
+STYLES.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.textContent = s.label; b.type = 'button'; b.className = i === 0 ? 'on' : '';
+  b.addEventListener('click', () => {
+    seg.querySelectorAll('button').forEach((x, j) => x.classList.toggle('on', j === i));
+    styleReady = false;
+    map.setStyle(s.url);
+  });
+  seg.appendChild(b);
+});
+
+// Routes + chips (labels from the served destinations data, never hardcoded)
+const chips = document.getElementById('chips');
+Promise.all([
+  Promise.all(ROUTES.map(async r => {
+    try{ geo.set(r.id, await (await fetch(`/data/routes/${r.id}.geojson`)).json()); }
+    catch(e){ console.warn('route', r.id, e); }
+  })),
+  fetch('/data/route_destinations.json').then(r => r.json()).catch(() => ({})),
+]).then(([, d]) => {
+  const dest = d.routes ?? d;
+  const short = x => String(x?.destination ?? '').replace(/,.*$/, '');
+  ROUTES.forEach(r => {
+    const rd = dest[r.id];
+    const c = document.createElement('button');
+    c.className = 'chip'; c.type = 'button';
+    c.innerHTML = `<i style="background:${r.colour}">${r.id}</i>${rd ? `${short(rd.outbound)} – ${short(rd.inbound)}` : ''}`;
+    c.addEventListener('click', () => {
+      const off = c.classList.toggle('off');
+      off ? hidden.add(r.id) : hidden.delete(r.id);
+      for(const id of layerIds(r)) if(map.getLayer(id)) map.setLayoutProperty(id, 'visibility', off ? 'none' : 'visible');
+    });
+    chips.appendChild(c);
+  });
+  syncRoutes();   // style may already be loaded; otherwise style.load picks it up
+  // Same fit as /test: whole network, clear of the legend along the bottom.
+  const b = new maplibregl.LngLatBounds();
+  geo.forEach(fc => fc.features.forEach(f => (f.geometry.type === 'LineString' ? [f.geometry.coordinates] : f.geometry.coordinates)
+    .forEach(line => line.forEach(c => b.extend(c)))));
+  if(!b.isEmpty()){
+    const panelH = document.querySelector('.panel').offsetHeight + 28;
+    map.fitBounds(b, { padding:{ top:40, left:40, right:40, bottom:panelH + 20 }, duration:0 });
+  }
+});
+
+// If OpenFreeMap can't be reached, say so instead of showing a blank map.
+map.on('error', e => {
+  if(e?.error?.status || /Failed to fetch|NetworkError/i.test(String(e?.error?.message ?? ''))){
+    const el = document.getElementById('banner');
+    el.style.display = 'block';
+    el.innerHTML = '<b>Couldn’t load the OpenFreeMap style.</b> Check your connection and reload.';
+  }
+});
+</script>
+</body>
+</html>
