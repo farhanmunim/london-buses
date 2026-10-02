@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-01T10:16:43Z",
+  "generated_at_utc": "2026-10-02T09:54:21Z",
   "route_count": 675,
   "routes": {
     "1": {
@@ -242,15 +242,15 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Euston",
-        "qualifier": "Euston Station",
-        "full": "Euston"
-      },
       "inbound": {
         "destination": "Sudbury",
         "qualifier": "Sudbury & Harrow Road Station",
         "full": "Sudbury"
+      },
+      "outbound": {
+        "destination": "Euston Station",
+        "qualifier": "",
+        "full": "Euston Station"
       }
     },
     "19": {
@@ -1000,14 +1000,14 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "South Kensington",
-        "qualifier": "Queensberry Place",
-        "full": "South Kensington, Queensberry Place"
+        "destination": "Queensberry Place",
+        "qualifier": "",
+        "full": "Queensberry Place"
       },
       "inbound": {
-        "destination": "Chiswick, Business Park",
+        "destination": "Chiswick Business Park",
         "qualifier": "",
-        "full": "Chiswick, Business Park"
+        "full": "Chiswick Business Park"
       }
     },
     "71": {
@@ -1958,9 +1958,9 @@
         "full": "Coney Hall, Chestnut Avenue"
       },
       "inbound": {
-        "destination": "Bromley North",
-        "qualifier": "Bromley North Station",
-        "full": "Bromley North"
+        "destination": "Bromley North Station",
+        "qualifier": "",
+        "full": "Bromley North Station"
       }
     },
     "139": {
@@ -3038,9 +3038,9 @@
         "full": "Battersea Power Station"
       },
       "inbound": {
-        "destination": "Hammersmith",
-        "qualifier": "Hammersmith Bus Station",
-        "full": "Hammersmith"
+        "destination": "Hammersmith Bus Station",
+        "qualifier": "",
+        "full": "Hammersmith Bus Station"
       }
     },
     "212": {
@@ -3323,16 +3323,18 @@
       }
     },
     "233": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Eltham",
-        "qualifier": "",
-        "full": "Eltham"
+        "destination": "Swanley",
+        "qualifier": "Beechenlea Lane",
+        "full": "Swanley, Beechenlea Lane"
       },
       "inbound": {
-        "destination": "Swanley",
-        "qualifier": "",
-        "full": "Swanley"
+        "destination": "Eltham Station",
+        "qualifier": "Eltham Bus Station",
+        "full": "Eltham Station, Eltham Bus Station"
       }
     },
     "234": {
@@ -3879,15 +3881,15 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Shepherd's Bush",
-        "qualifier": "Shepherd's Bush Station",
-        "full": "Shepherd's Bush"
-      },
       "inbound": {
         "destination": "Chiswick, Grove Park",
         "qualifier": "Cavendish Road",
         "full": "Chiswick, Grove Park, Cavendish Road"
+      },
+      "outbound": {
+        "destination": "Shepherd's Bush Station",
+        "qualifier": "",
+        "full": "Shepherd's Bush Station"
       }
     },
     "273": {
@@ -5229,15 +5231,15 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Oakwood",
-        "qualifier": "Oakwood Station",
-        "full": "Oakwood"
-      },
       "inbound": {
         "destination": "Ponders End, Bus Garage",
         "qualifier": "Glyn Road",
         "full": "Ponders End, Bus Garage, Glyn Road"
+      },
+      "outbound": {
+        "destination": "Oakwood Station",
+        "qualifier": "",
+        "full": "Oakwood Station"
       }
     },
     "378": {
@@ -5376,17 +5378,15 @@
       }
     },
     "388": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "London Bridge",
-        "qualifier": "London Bridge Bus Station",
+        "qualifier": "",
         "full": "London Bridge"
       },
       "inbound": {
         "destination": "Stratford City",
-        "qualifier": "Stratford City Bus Station",
+        "qualifier": "",
         "full": "Stratford City"
       }
     },
@@ -5547,33 +5547,29 @@
       }
     },
     "405": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Croydon",
-        "qualifier": "Park Street",
-        "full": "West Croydon, Park Street"
+        "destination": "Croydon Katharine Street",
+        "qualifier": "",
+        "full": "Croydon Katharine Street"
       },
       "inbound": {
         "destination": "Redhill",
-        "qualifier": "Redhill Bus Station",
+        "qualifier": "",
         "full": "Redhill"
       }
     },
     "406": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Epsom",
-        "qualifier": "Epsom Hospital",
-        "full": "Epsom"
+        "destination": "Kingston",
+        "qualifier": "",
+        "full": "Kingston"
       },
       "inbound": {
-        "destination": "Kingston",
-        "qualifier": "Cromwell Road Bus Station",
-        "full": "Kingston, Cromwell Road Bus Station"
+        "destination": "Epsom",
+        "qualifier": "",
+        "full": "Epsom"
       }
     },
     "407": {
@@ -5946,9 +5942,9 @@
         "full": "Vauxhall"
       },
       "inbound": {
-        "destination": "Notting Hill Gate",
-        "qualifier": "Notting Hill Gate Station",
-        "full": "Notting Hill Gate"
+        "destination": "Notting Hill Gate Station",
+        "qualifier": "",
+        "full": "Notting Hill Gate Station"
       }
     },
     "453": {
@@ -6835,45 +6831,45 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Campion School",
-        "qualifier": "The Campion School",
-        "full": "Campion School"
-      },
       "inbound": {
         "destination": "Romford, Parkside Avenue",
         "qualifier": "Cedar Road",
         "full": "Romford, Parkside Avenue, Cedar Road"
+      },
+      "outbound": {
+        "destination": "The Campion School",
+        "qualifier": "",
+        "full": "The Campion School"
       }
     },
     "650": {
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Emerson Park School",
-        "qualifier": "Emerson Park Academy",
-        "full": "Emerson Park School, Emerson Park Academy"
-      },
       "inbound": {
         "destination": "Romford, Parkside Avenue",
         "qualifier": "Cedar Road",
         "full": "Romford, Parkside Avenue, Cedar Road"
+      },
+      "outbound": {
+        "destination": "Emerson Park Academy",
+        "qualifier": "",
+        "full": "Emerson Park Academy"
       }
     },
     "651": {
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Bower Park School",
-        "qualifier": "Chase Cross",
-        "full": "Bower Park School, Chase Cross"
-      },
       "inbound": {
         "destination": "Romford Station",
         "qualifier": "",
         "full": "Romford Station"
+      },
+      "outbound": {
+        "destination": "Chase Cross",
+        "qualifier": "",
+        "full": "Chase Cross"
       }
     },
     "652": {
@@ -7425,18 +7421,16 @@
       }
     },
     "B11": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "South Thamesmead, Yarnton Way",
-        "qualifier": "St Andrew's Parish Church",
-        "full": "South Thamesmead, Yarnton Way, St Andrew's Parish Church"
+        "destination": "Bexleyheath Bus Garage",
+        "qualifier": "",
+        "full": "Bexleyheath Bus Garage"
       },
       "inbound": {
-        "destination": "Bexleyheath, Bus Garage",
+        "destination": "Thamesmead South",
         "qualifier": "",
-        "full": "Bexleyheath, Bus Garage"
+        "full": "Thamesmead South"
       }
     },
     "B12": {
@@ -8394,14 +8388,14 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "Trafalgar Square",
-        "qualifier": "Whitehall / Trafalgar Square",
-        "full": "Trafalgar Square"
+        "destination": "Whitehall / Trafalgar Square",
+        "qualifier": "",
+        "full": "Whitehall / Trafalgar Square"
       },
       "inbound": {
-        "destination": "Harrow Weald, Bus Garage",
-        "qualifier": "Long Elmes",
-        "full": "Harrow Weald, Bus Garage, Long Elmes"
+        "destination": "Long Elmes",
+        "qualifier": "",
+        "full": "Long Elmes"
       }
     },
     "N19": {
@@ -8993,15 +8987,15 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Roehampton, Bessborough Road",
-        "qualifier": "Norley Vale",
-        "full": "Roehampton, Bessborough Road, Norley Vale"
-      },
       "inbound": {
         "destination": "East Acton",
         "qualifier": "Brunel Road",
         "full": "East Acton, Brunel Road"
+      },
+      "outbound": {
+        "destination": "Norley Vale",
+        "qualifier": "",
+        "full": "Norley Vale"
       }
     },
     "N73": {
