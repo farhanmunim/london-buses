@@ -3037,7 +3037,7 @@ async function renderTenders(tab){
     <div class="section"><div class="section-h" id="tCount"></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1380px">
         <thead><tr>
-          <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="op" style="cursor:pointer">Operator</th>
+          <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="prevop" style="cursor:pointer" title="The operator of the route's previous award — blank for a route's first award">Previous operator</th><th data-sort="op" style="cursor:pointer" title="The operator this award went to. Highlighted when it differs from the previous operator">New operator</th>
           <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
           <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th>
           <th class="num" data-sort="miles" style="cursor:pointer" title="Contracted annual mileage — from the TfL result page, or accepted bid ÷ £/mile when it omits one">Miles/yr</th>
@@ -3098,7 +3098,7 @@ async function renderTenders(tab){
   document.getElementById('tabA').addEventListener('click', () => setTab('awards'));
   document.getElementById('tabP').addEventListener('click', () => setTab('programme'));
 
-  const KEY = { date: a => a.awardDate ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1, start: a => a.contractStart ?? '', term: a => a.termYears ?? -1, tranche: a => Number.isFinite(a.tranche) ? a.tranche : -1, miles: a => milesPA(a) ?? -1 };
+  const KEY = { date: a => a.awardDate ?? '', prevop: a => a.fromOperator ?? '', op: a => a.operator ?? '', cpm: a => a.costPerMile ?? -1, acc: a => a.acceptedBid ?? -1, bids: a => a.numberOfTenderers ?? -1, start: a => a.contractStart ?? '', term: a => a.termYears ?? -1, tranche: a => Number.isFinite(a.tranche) ? a.tranche : -1, miles: a => milesPA(a) ?? -1 };
   const filtered = () => {
     const q = st.q.trim().toUpperCase();
     // Routes match EXACTLY (typing "24" means route 24, not 124/240/N241 —
@@ -3109,7 +3109,8 @@ async function renderTenders(tab){
       (!st.op || a.operator === st.op)
       && (!st.yr || String(a.awardDate).startsWith(st.yr))
       && (!q || routeHit(a) || String(a.tranche ?? '') === q
-          || String(a.operator ?? '').toUpperCase().includes(q)));
+          || String(a.operator ?? '').toUpperCase().includes(q)
+          || String(a.fromOperator ?? '').toUpperCase().includes(q)));
     const k = KEY[st.sort];
     list.sort((x,y) => { const a = k(x), b = k(y); return (a < b ? -1 : a > b ? 1 : 0) * st.dir; });
     return list;
@@ -3175,7 +3176,8 @@ async function renderTenders(tab){
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
-      <td>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}${a.operatorChange ? `<div style="font-size:10.5px;color:var(--acc);font-weight:600" title="Operator change">↺ from ${esc(a.fromOperator ?? '')}</div>` : ''}</td>
+      <td style="min-width:140px">${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
+      <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
@@ -3212,14 +3214,14 @@ async function renderTenders(tab){
   document.getElementById('tNext').addEventListener('click', () => { st.page = st.page + 1; draw(); });
   document.querySelectorAll('#main th[data-sort]').forEach(th => th.addEventListener('click', () => {
     const k = th.dataset.sort;
-    if(st.sort === k) st.dir = -st.dir; else { st.sort = k; st.dir = k === 'op' ? 1 : -1; }
+    if(st.sort === k) st.dir = -st.dir; else { st.sort = k; st.dir = (k === 'op' || k === 'prevop') ? 1 : -1; }
     draw();
   }));
   document.getElementById('tExport').addEventListener('click', () => {
     downloadCsv('london-bus-tenders.csv', [
-      ['award_date','route','operator','operator_change','from_operator','cost_per_mile','accepted_bid','lowest_bid','highest_bid','bids_received','contracted_miles_pa',
+      ['award_date','route','previous_operator','new_operator','operator_change','cost_per_mile','accepted_bid','lowest_bid','highest_bid','bids_received','contracted_miles_pa',
        'contract_start','contract_end','term_years','two_year_extension_option','tranche','vehicle','joint_bid','joint_with','notes','source_url'],
-      ...filtered().map(a => [a.awardDate, a.route ?? '', a.operator ?? '', a.operatorChange ? 'yes' : 'no', a.operatorChange ? (a.fromOperator ?? '') : '',
+      ...filtered().map(a => [a.awardDate, a.route ?? '', a.fromOperator ?? '', a.operator ?? '', a.operatorChange ? 'yes' : 'no',
         Number.isFinite(a.costPerMile) ? a.costPerMile : '', Number.isFinite(a.acceptedBid) ? a.acceptedBid : '',
         Number.isFinite(a.lowestBid) ? a.lowestBid : '', Number.isFinite(a.highestBid) ? a.highestBid : '',
         Number.isFinite(a.numberOfTenderers) ? a.numberOfTenderers : '',

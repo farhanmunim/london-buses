@@ -71,12 +71,12 @@ F('route search is exact ("' + q.count + '", routes: ' + [...new Set(q.routes)].
 
 await page.fill('#tq', ''); await page.waitForTimeout(400);
 await page.selectOption('#top', 'Metroline'); await page.waitForTimeout(400);
-const op = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(3)')].slice(0,20).map(td => td.childNodes[0]?.textContent ?? td.textContent));
+const op = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(4)')].slice(0,20).map(td => td.childNodes[0]?.textContent ?? td.textContent));
 F('operator filter (' + op.length + ' sampled)', op.length > 0 && op.every(o => o === 'Metroline'));
 
 await page.selectOption('#top', ''); await page.waitForTimeout(300);
 await page.click('th[data-sort="cpm"]'); await page.waitForTimeout(400);
-const cpms = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(4)')].slice(0,5).map(td => td.textContent));
+const cpms = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(5)')].slice(0,5).map(td => td.textContent));
 F('sort by £/mile desc (top: ' + cpms[0] + ')', cpms.every(c => c.startsWith('£')) && parseFloat(cpms[0].slice(1)) >= parseFloat(cpms[1].slice(1)));
 
 const [dl] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }), page.click('#tExport') ]);
@@ -91,6 +91,45 @@ const wikiSrc = srcLinks.find(h => /fandom\.com/.test(h)) ?? '';
 F('award rows link their TfL result page (' + tflSrc.slice(0, 46) + '…)', /^https:\/\/tfl\.gov\.uk\/forms\/13796\.aspx\?btID=\d+$/.test(tflSrc));
 F('provisional rows link their wiki source page (' + wikiSrc.slice(0, 60) + ')',
   !wikiSrc || /^https:\/\/london-bus-routes\.fandom\.com\/wiki\/Tender_Results_\d{4}$/.test(wikiSrc));
+
+/* previous / new operator columns (replaces the old "↺ from X" note under the operator) */
+const heads = await page.evaluate(() => [...document.querySelectorAll('#tabAwards thead th')].map(th => th.textContent.replace(/ [↓↑]$/, '').trim()));
+F('awards table has separate "Previous operator" and "New operator" columns, in that order',
+  heads.indexOf('Previous operator') === 2 && heads.indexOf('New operator') === 3 && !heads.includes('Operator'));
+const awardsReal = Object.values(tenders.byId).filter(a => a.awardDate && !a.provisional);
+const tok = a => String(a.route).split('/')[0].trim();
+const changed = awardsReal.find(a => a.operatorChange && a.fromOperator);
+const retainedA = awardsReal.find(a => !a.operatorChange && a.fromOperator && a.fromOperator === a.operator);
+const probe = async a => {
+  await page.fill('#tq', tok(a)); await page.waitForTimeout(400);
+  return page.evaluate(() => [...document.querySelectorAll('#tBody tr')].map(tr => {
+    const td = tr.querySelectorAll('td');
+    return { prev: td[2].textContent.trim(), neu: td[3].childNodes[0]?.textContent.trim() ?? '', neuTitle: td[3].getAttribute('title') ?? '', note: tr.textContent.includes('↺') };
+  }));
+};
+let rows = await probe(changed);
+F(`operator change: previous "${changed.fromOperator}" and new "${changed.operator}" sit in their own cells (route ${tok(changed)})`,
+  rows.some(r => r.prev === changed.fromOperator && r.neu === changed.operator && /previously/.test(r.neuTitle)));
+F('no leftover "↺ from …" note in any row', rows.every(r => !r.note));
+rows = await probe(retainedA);
+F(`retained re-tender: previous and new are the same name, not flagged as a change (route ${tok(retainedA)})`,
+  rows.some(r => r.prev === retainedA.fromOperator && r.neu === retainedA.operator && r.neuTitle === ''));
+const first = awardsReal.find(a => !a.fromOperator && a.route && a.operator);
+rows = await probe(first);
+F(`a route's first award shows "—" as the previous operator (route ${tok(first)})`, rows.some(r => r.prev === '—' && r.neu === first.operator));
+await page.fill('#tq', changed.fromOperator.slice(0, 8)); await page.waitForTimeout(400);
+const bySearch = await page.evaluate(() => [...document.querySelectorAll('#tBody tr')].slice(0, 20).map(tr => { const td = tr.querySelectorAll('td'); return td[2].textContent + '|' + td[3].textContent; }));
+F(`search matches the previous operator too ("${changed.fromOperator.slice(0, 8)}" → ${bySearch.length} rows)`,
+  bySearch.length > 0 && bySearch.every(t => t.toUpperCase().includes(changed.fromOperator.slice(0, 8).toUpperCase())));
+await page.fill('#tq', ''); await page.waitForTimeout(400);
+await page.click('th[data-sort="prevop"]'); await page.waitForTimeout(400);
+const prevs = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(3)')].slice(0, 20).map(td => td.textContent.trim().replace('—', '')));
+F('sorting by previous operator orders the column A→Z', prevs.length > 1 && prevs.every((v, i) => i === 0 || prevs[i - 1].localeCompare(v) <= 0));
+const [dl2] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }), page.click('#tExport') ]);
+const csv2 = readFileSync(await dl2.path(), 'utf8');
+const hdr = csv2.split('\r\n')[0];
+F('CSV has previous_operator and new_operator columns (old from_operator column gone)',
+  hdr.includes('previous_operator') && hdr.includes('new_operator') && !hdr.includes('from_operator'));
 
 /* tabs — programme hidden until its tab is selected */
 const tabs0 = await page.evaluate(() => ({
