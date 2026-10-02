@@ -60,8 +60,8 @@ Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran, and Andy Cor
 
 ## Licence
 
-Code is [MIT](LICENSE). The data comes from third-party sources and stays under their terms: [TfL open data](https://tfl.gov.uk/info-for/open-data-users/) (Powered by TfL Open Data; contains OS data © Crown copyright and database rights 2016, Geomni UK Map data © and database rights 2019), public sector information under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) (DfT, DVLA, ONS), [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL), londonbusroutes.net (community reference), and london-bus-routes.fandom.com (community-reported provisional awards, CC BY-SA).
+Code is [MIT](LICENSE). The data comes from third-party sources and stays under their terms: [TfL open data](https://tfl.gov.uk/info-for/open-data-users/) (Powered by TfL Open Data; contains OS data © Crown copyright and database rights 2016, Geomni UK Map data © and database rights 2019), public sector information under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) (DfT, DVLA, ONS), [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL, via [OpenFreeMap](https://openfreemap.org) / [OpenMapTiles](https://openmaptiles.org) and [CARTO](https://carto.com/attributions) basemaps), londonbusroutes.net (community reference), and london-bus-routes.fandom.com (community-reported provisional awards, CC BY-SA).
 
 ## Tech
 
-Vanilla JavaScript and [Leaflet](https://leafletjs.com/). No framework. No bundler. One HTML file.
+Vanilla JavaScript and [Leaflet](https://leafletjs.com/), with the light basemap drawn by [MapLibre GL](https://maplibre.org/) through the maplibre-gl-leaflet bridge (OpenFreeMap vector tiles; CARTO raster tiles for dark mode and as the fallback). No framework. No bundler. One HTML file.

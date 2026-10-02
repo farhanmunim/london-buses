@@ -620,31 +620,134 @@ function garagePopupHtml(g, meta, extraRows = ''){
    registered office — pinning that as the garage would be wrong data. */
 const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g.postcodeSource !== 'company';
 
-/* Base tiles for every map view: a label-free CARTO basemap plus its
-   matching labels-only tiles in their own pane ABOVE the route lines
-   (z420, below markers) — exactly one set of place/road names, never
-   doubled, never buried under thick polylines. CARTO basemaps require an
-   API key since 2026-08 (free tier: 5M tiles/month in exchange for
-   visible CARTO + OSM attribution — added in makeMap below). */
+/* Base map for every map view.
+
+   Light theme: OpenFreeMap "Bright" — free vector tiles, no account, no key,
+   no usage cap — drawn by MapLibre GL through the maplibre-gl-leaflet bridge,
+   so every Leaflet layer in the app (routes, markers, heatmap, popups) is
+   untouched. The style is split across two GL layers to keep the app's label
+   rule: everything except symbols sits in the tile pane, and a labels-only
+   layer sits in its own pane ABOVE the route lines (z420, below markers) —
+   exactly one set of place/road names, never buried under thick polylines.
+
+   Dark theme (OpenFreeMap has no dark style) and ANY vector failure — library
+   blocked or offline, no WebGL, style or tiles unreachable — use CARTO raster
+   tiles instead: a label-free basemap plus its matching labels-only tiles in
+   that same z420 pane. CARTO basemaps require an API key since 2026-08 (free
+   tier: 5M tiles/month in exchange for visible CARTO + OSM attribution).
+   The MapLibre files are fetched lazily (first map, or idle after load), never
+   on pages without a map. After a vector failure the session sticks to CARTO
+   for 5 minutes rather than retrying on every map. */
 const CARTO_KEY = 'cb1_2fm5_1_26615b0300555b1070348b74';
-function baseTiles(map){
+const VEC = {
+  style: 'https://tiles.openfreemap.org/styles/bright',
+  assets: [
+    { type:'css', url:'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css', sri:'sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK' },
+    { type:'js',  url:'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js',  sri:'sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp' },
+    { type:'js',  url:'https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js', sri:'sha384-tXYNKOHx4T02jMP7YYCtBxPIv1B5gaA5mcVPBzqMp6d7VzWzxJgI2aWF/nJLrQdS' },
+  ],
+  downUntil: 0,
+};
+const loadAsset = a => new Promise((res, rej) => {
+  const el = document.createElement(a.type === 'css' ? 'link' : 'script');
+  if(a.type === 'css'){ el.rel = 'stylesheet'; el.href = a.url; } else el.src = a.url;
+  el.integrity = a.sri; el.crossOrigin = 'anonymous';
+  el.onload = () => res(); el.onerror = () => rej(new Error('failed to load ' + a.url));
+  document.head.appendChild(el);
+});
+let _vecLib = null;
+const vectorLib = () => _vecLib ??= (async () => {
+  const [css, lib, bridge] = VEC.assets;
+  await Promise.all([loadAsset(css), loadAsset(lib)]);
+  await loadAsset(bridge);                               // the bridge needs window.maplibregl
+  if(!window.maplibregl || !L.maplibreGL) throw new Error('MapLibre bridge unavailable');
+})().catch(e => { _vecLib = null; throw e; });
+let _vecStyles = null;
+const vectorStyles = () => _vecStyles ??= (async () => {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+  try{
+    const r = await fetch(VEC.style, { signal: ctl.signal });
+    if(!r.ok) throw new Error('style HTTP ' + r.status);
+    const s = await r.json();
+    if(!Array.isArray(s?.layers)) throw new Error('unexpected style payload');
+    // Shop/restaurant pins are noise over route lines; transit POIs stay.
+    const DROP = /^poi_(r20|r7|r1)$/;
+    return {
+      base:   { ...structuredClone(s), layers: s.layers.filter(l => l.type !== 'symbol').map(l => structuredClone(l)) },
+      labels: { ...structuredClone(s), layers: s.layers.filter(l => l.type === 'symbol' && !DROP.test(l.id)).map(l => structuredClone(l)) },
+    };
+  } finally { clearTimeout(t); }
+})().catch(e => { _vecStyles = null; throw e; });
+let _webgl;
+const webglOk = () => _webgl ??= (() => {
+  try{
+    const c = document.createElement('canvas'), gl = c.getContext('webgl2') || c.getContext('webgl');
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
+  }catch(e){ return false; }
+})();
+
+const ATTRIB = {
+  carto: '&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>',
+  ofm:   '<a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a>',
+};
+function setBasemap(map, kind){
+  map.getContainer().dataset.basemap = kind;             // 'loading' | 'vector' | 'carto' (also read by tests)
+  const key = kind === 'carto' ? 'carto' : 'ofm';
+  if(map._attribText) map._attrib.removeAttribution(map._attribText);
+  map._attrib.addAttribution(map._attribText = ATTRIB[key]);
+}
+const labelsPane = map => {
+  const p = map.getPane('placelabels') || map.createPane('placelabels');
+  p.style.zIndex = 420;
+  p.style.pointerEvents = 'none';
+  return p;
+};
+function cartoTiles(map){
   const style = isDark() ? 'dark' : 'voyager';
   L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/${style}_nolabels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { maxZoom:19 }).addTo(map);
-  const lp = map.createPane('placelabels');
-  lp.style.zIndex = 420;
-  lp.style.pointerEvents = 'none';
+  labelsPane(map);
   L.tileLayer(`https://basemaps.cartocdn.com/rastertiles/${style}_only_labels/{z}/{x}/{y}{r}.png?key=${CARTO_KEY}`, { maxZoom:19, pane:'placelabels' }).addTo(map);
+  setBasemap(map, 'carto');
+}
+function baseTiles(map){
+  if(isDark() || Date.now() < VEC.downUntil || !webglOk()) return cartoTiles(map);
+  setBasemap(map, 'loading');
+  let gone = false, fell = false, loaded = false, layers = [];
+  map.once('unload', () => { gone = true; });              // view navigated away mid-setup
+  const fallback = why => {
+    if(gone || fell) return;
+    fell = true;
+    VEC.downUntil = Date.now() + 5 * 60e3;
+    console.warn('Vector basemap unavailable — using CARTO:', why?.message ?? why);
+    for(const l of layers){ try{ map.removeLayer(l); }catch(e){} try{ l.getContainer?.()?.remove(); }catch(e){} }
+    layers = [];
+    cartoTiles(map);
+  };
+  Promise.all([vectorLib(), vectorStyles()]).then(([, st]) => {
+    if(gone || fell) return;
+    labelsPane(map);
+    const add = (style, pane) => {
+      const l = L.maplibreGL({ style, pane, attributionControl:false, fadeDuration:0 });
+      layers.push(l); l.addTo(map); return l;
+    };
+    const gl = add(st.base, 'tilePane').getMaplibreMap();
+    add(st.labels, 'placelabels');
+    const timer = setTimeout(() => { if(!loaded) fallback(new Error('timed out loading style/tiles')); }, 12000);
+    let errs = 0;
+    gl.once('load', () => { loaded = true; clearTimeout(timer); if(!gone && !fell) setBasemap(map, 'vector'); });
+    gl.on('error', e => { if(!loaded && ++errs >= 4){ clearTimeout(timer); fallback(e?.error); } });
+  }).catch(fallback);
 }
 /* Every map view is built through this one constructor — same options, same
-   single-line attribution, same tiles — so the mini maps stay consistent by
-   construction rather than by review. */
+   single-line attribution, same basemap logic — so the mini maps stay
+   consistent by construction rather than by review. */
 function makeMap(el){
-  const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false });
+  // maxZoom is explicit: a vector basemap has no tile layer to imply one.
+  const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false, maxZoom:19 });
+  // Visible credit for whichever basemap is active (a condition of both free tiers).
+  map._attrib = L.control.attribution({ prefix:false }).addTo(map);
   baseTiles(map);
-  // Visible OSM + CARTO credit is the condition of the free basemap tier.
-  L.control.attribution({ prefix:false })
-    .addAttribution('&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>')
-    .addTo(map);
   return map;
 }
 
@@ -912,6 +1015,12 @@ function syncThemeBtn(){
 }
 document.getElementById('themeBtn')?.addEventListener('click', () => setTheme(isDark() ? 'light' : 'dark'));
 syncThemeBtn();
+// Warm the lazy vector-map files while the browser is idle, so the first map
+// doesn't wait on a ~300 KB download (skipped in dark mode, without WebGL, and on Save-Data).
+addEventListener('load', () => (window.requestIdleCallback ?? setTimeout)(() => {
+  if(isDark() || navigator.connection?.saveData || !webglOk()) return;
+  vectorLib().catch(() => {}); vectorStyles().catch(() => {});
+}));
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', e => {
   let stored = null; try { stored = localStorage.getItem('v2-theme'); } catch(err){}
   if(stored !== 'light' && stored !== 'dark'){   // still following the system
@@ -3783,9 +3892,10 @@ async function renderAbout(){
       ${src('DVLA', 'Vehicle make, fuel type and age')}
       ${src('Office for National Statistics', 'The CPI index behind the contract price adjustment rates')}
       ${src('londonbusroutes.net', 'Operators, garages and PVR (community reference)')}
+      ${src('OpenFreeMap', 'The vector basemap (light theme) — OpenMapTiles styling of OpenStreetMap data; CARTO raster tiles are the dark theme and the fallback')}
       ${src('london-bus-routes.fandom.com', 'Provisional tender awards, flagged until TfL publishes the official result')}
     </table></div>
-    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. Code is MIT-licensed; the data stays under its sources' own licences.</p>
+    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), light map by <a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> / <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a>, dark map and fallback tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. Code is MIT-licensed; the data stays under its sources' own licences.</p>
 
     <h2>Live right now</h2>
     <div class="card"><table class="fresh">

@@ -177,9 +177,9 @@ b{font-weight:700}
   <li><b>Routing:</b> the URL hash picks the view. A <code>hashchange</code> listener calls <code>navigate()</code>, which renders into <code>&lt;main&gt;</code>.</li>
   <li><b>Data layer:</b> one small object wraps <code>fetch()</code> for each faux-API file. Each file downloads once per visit.</li>
   <li><b>Async safety:</b> each navigation bumps a token. Renderers check it after every <code>await</code>. A slow fetch from an old view can never overwrite the current one. Timers are cleared and maps destroyed on every navigation.</li>
-  <li><b>Maps:</b> <a href="https://leafletjs.com" rel="noopener" target="_blank">Leaflet</a> with CARTO tiles, light and dark. Optional layers: stops, live buses, garages, low bridges, collision heatmap, street works, traffic orders.</li>
+  <li><b>Maps:</b> <a href="https://leafletjs.com" rel="noopener" target="_blank">Leaflet</a> draws every layer. In the light theme the basemap is <a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> "Bright" (free vector tiles, no key, no usage cap), rendered by <a href="https://maplibre.org" rel="noopener" target="_blank">MapLibre GL</a> through the maplibre-gl-leaflet bridge. It is split into two layers so place and road names sit <i>above</i> the route lines. The dark theme, and any vector failure (library blocked, no WebGL, tiles unreachable), use CARTO raster tiles instead. The MapLibre files load lazily, so pages without a map never download them. Optional layers: stops, live buses, garages, low bridges, collision heatmap, street works, traffic orders.</li>
   <li><b>Theming:</b> CSS variables define both palettes. A tiny script sets the theme before first paint, from the saved choice or the system setting.</li>
-  <li><b>Safety:</b> every remote string that reaches <code>innerHTML</code> goes through one escape helper. CSV exports guard against formula injection. The Leaflet CDN files are pinned with integrity hashes.</li>
+  <li><b>Safety:</b> every remote string that reaches <code>innerHTML</code> goes through one escape helper. CSV exports guard against formula injection. The Leaflet and MapLibre CDN files are pinned with integrity hashes.</li>
 </ul>
 
 <h2 id="sources">5. Data — where it comes from</h2>
@@ -194,6 +194,7 @@ b{font-weight:700}
   <tr><td>ONS</td><td>CPI index for contract price adjustment</td><td>No</td></tr>
   <tr><td>londonbusroutes.net</td><td>Operator, garage, PVR, vehicle type (community reference)</td><td>No</td></tr>
   <tr><td>postcodes.io / OSM</td><td>Geocoding garages</td><td>No</td></tr>
+  <tr><td>OpenFreeMap / CARTO</td><td>Basemap tiles: OpenFreeMap vector tiles (light theme); CARTO raster tiles (dark theme and fallback)</td><td>OpenFreeMap: none. CARTO: a free-tier key, public by design, in the page</td></tr>
   <tr><td>DfT Street Manager open data</td><td>The statutory street-works record, pushed live over SNS and filtered to London's 33 highway authorities + TfL</td><td>Free registration (push-only; needs a GitHub token on Pages — see <a href="#cloudflare">section 11</a>)</td></tr>
   <tr><td>DfT D-TRO service</td><td>The statutory traffic regulation orders behind closures, bus lanes, bus gates and diversions, searched for Greater London</td><td>Free registration (OAuth id + key/secret as Actions secrets)</td></tr>
   <tr><td>TfL Road disruptions (TIMS)</td><td>Live roadworks from TfL's traffic control centre, corridor-joined to bus routes</td><td>No</td></tr>
