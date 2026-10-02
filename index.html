@@ -670,11 +670,9 @@ const vectorStyles = () => _vecStyles ??= (async () => {
     if(!r.ok) throw new Error('style HTTP ' + r.status);
     const s = await r.json();
     if(!Array.isArray(s?.layers)) throw new Error('unexpected style payload');
-    // Shop/restaurant pins are noise over route lines; transit POIs stay.
-    const DROP = /^poi_(r20|r7|r1)$/;
     return {
       base:   { ...structuredClone(s), layers: s.layers.filter(l => l.type !== 'symbol').map(l => structuredClone(l)) },
-      labels: { ...structuredClone(s), layers: s.layers.filter(l => l.type === 'symbol' && !DROP.test(l.id)).map(l => structuredClone(l)) },
+      labels: { ...structuredClone(s), layers: s.layers.filter(l => l.type === 'symbol').map(l => structuredClone(l)) },
     };
   } finally { clearTimeout(t); }
 })().catch(e => { _vecStyles = null; throw e; });

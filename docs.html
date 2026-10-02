@@ -242,7 +242,7 @@ b{font-weight:700}
 <p class="muted">Storage cost is a non-issue. The whole data set is a few tens of megabytes of JSON. Git compresses the daily diffs well.</p>
 
 <h2 id="api">8. The faux-API</h2>
-<p>The app reads these files from <code>data/api/</code>. They are plain JSON, committed to the repo, served as static files:</p>
+<p>The app reads these files from <code>data/api/</code>. They are plain JSON, committed to the repo, served as static files. They are public: no key, and Cloudflare serves them with <code>access-control-allow-origin: *</code>, so other sites can read them straight from the browser. They are not versioned — each file's shape follows the app, so treat <code>manifest.json</code> (per-dataset source, freshness, row count and cadence) as the index.</p>
 <div class="tablewrap"><table>
   <tr><th>File</th><th>Contents</th></tr>
   <tr><td><code>routes.json</code></td><td>Every route id, name and type (regular / night / 24-hour / school).</td></tr>
