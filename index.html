@@ -336,6 +336,14 @@ main.fullbleed{max-width:none;padding:0}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surf);color:var(--tx)}
 .leaflet-tooltip{background:var(--surf);color:var(--tx);border:1px solid var(--bd2);box-shadow:var(--sh)}
 .leaflet-tooltip-top:before{border-top-color:var(--bd2)}
+.lb-attr{display:flex;flex-direction:row-reverse;align-items:center;gap:6px;margin:0 8px 8px 0!important;font:11px/1.35 var(--sans)}
+.lb-attr-btn{width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--bd2);background:color-mix(in srgb,var(--surf) 90%,transparent);color:var(--tx2);font:italic 700 13px/1 Georgia,serif;cursor:pointer;box-shadow:var(--sh)}
+.lb-attr-btn:hover,.lb-attr.open .lb-attr-btn{color:var(--tx)}
+.lb-attr-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.lb-attr-txt{background:color-mix(in srgb,var(--surf) 94%,transparent);color:var(--tx2);border:1px solid var(--bd2);border-radius:8px;padding:5px 10px;box-shadow:var(--sh);max-width:min(360px,calc(100vw - 84px))}
+.lb-attr-txt[hidden]{display:none}
+.lb-attr-txt a{color:var(--acc);text-decoration:none}
+.lb-attr-txt a:hover{text-decoration:underline}
 </style>
 <script>
 /* Stamp the theme before first paint — stored choice wins, else system. */
@@ -634,7 +642,7 @@ const garageLocOk = g => Number.isFinite(g?.lat) && Number.isFinite(g?.lng) && g
    blocked or offline, no WebGL, style or tiles unreachable — use CARTO raster
    tiles instead: a label-free basemap plus its matching labels-only tiles in
    that same z420 pane. CARTO basemaps require an API key since 2026-08 (free
-   tier: 5M tiles/month in exchange for visible CARTO + OSM attribution).
+   tier: 5M tiles/month in exchange for CARTO + OSM attribution, shown in the ⓘ credit control).
    The MapLibre files are fetched lazily (first map, or idle after load), never
    on pages without a map. After a vector failure the session sticks to CARTO
    for 5 minutes rather than retrying on every map. */
@@ -685,6 +693,27 @@ const webglOk = () => _webgl ??= (() => {
   }catch(e){ return false; }
 })();
 
+/* Credit control: a small ⓘ button that expands the credit text on click (the
+   same collapsed pattern MapLibre and Leaflet's own compact controls use),
+   instead of a permanent line across the map. The text stays one click away on
+   every map, and the About page lists every source in full. Closes on a map
+   click, a drag/zoom, or Escape. */
+const AttribControl = L.Control.extend({
+  options: { position:'bottomright' },
+  onAdd(map){
+    const box = L.DomUtil.create('div', 'lb-attr leaflet-control');
+    box.innerHTML = '<button type="button" class="lb-attr-btn" aria-label="Map credits" aria-expanded="false">i</button><div class="lb-attr-txt" role="note" hidden></div>';
+    const btn = box.querySelector('button'), txt = this._txt = box.querySelector('.lb-attr-txt');
+    const set = open => { txt.hidden = !open; box.classList.toggle('open', open); btn.setAttribute('aria-expanded', String(open)); };
+    btn.addEventListener('click', () => set(txt.hidden));
+    box.addEventListener('keydown', e => { if(e.key === 'Escape'){ set(false); btn.focus(); } });
+    map.on('click movestart zoomstart', () => set(false));
+    L.DomEvent.disableClickPropagation(box);
+    L.DomEvent.disableScrollPropagation(box);
+    return box;
+  },
+  setHtml(html){ if(this._txt) this._txt.innerHTML = html; },
+});
 const ATTRIB = {
   carto: '&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>',
   ofm:   '<a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a>',
@@ -692,8 +721,7 @@ const ATTRIB = {
 function setBasemap(map, kind){
   map.getContainer().dataset.basemap = kind;             // 'loading' | 'vector' | 'carto' (also read by tests)
   const key = kind === 'carto' ? 'carto' : 'ofm';
-  if(map._attribText) map._attrib.removeAttribution(map._attribText);
-  map._attrib.addAttribution(map._attribText = ATTRIB[key]);
+  map._attrib.setHtml(ATTRIB[key]);
 }
 const labelsPane = map => {
   const p = map.getPane('placelabels') || map.createPane('placelabels');
@@ -738,13 +766,13 @@ function baseTiles(map){
   }).catch(fallback);
 }
 /* Every map view is built through this one constructor — same options, same
-   single-line attribution, same basemap logic — so the mini maps stay
+   credit control, same basemap logic — so the mini maps stay
    consistent by construction rather than by review. */
 function makeMap(el){
   // maxZoom is explicit: a vector basemap has no tile layer to imply one.
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false, maxZoom:19 });
-  // Visible credit for whichever basemap is active (a condition of both free tiers).
-  map._attrib = L.control.attribution({ prefix:false }).addTo(map);
+  // Credit for whichever basemap is active (a condition of both free tiers), one click away.
+  map._attrib = new AttribControl().addTo(map);
   baseTiles(map);
   return map;
 }

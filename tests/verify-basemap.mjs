@@ -79,7 +79,7 @@ async function scenario(name, { dark=false, style='ok', lib='ok', webgl=true, ha
     glBase: document.querySelectorAll('.leaflet-tile-pane .leaflet-gl-layer canvas').length,
     glLabels: document.querySelectorAll('.leaflet-placelabels-pane .leaflet-gl-layer canvas').length,
     tiles: document.querySelectorAll('.leaflet-tile').length,
-    attr: document.querySelector('.leaflet-control-attribution')?.textContent ?? '',
+    attr: document.querySelector('.lb-attr-txt')?.textContent ?? '',
     routes: document.querySelectorAll('.leaflet-overlay-pane canvas, .leaflet-overlay-pane path').length,
   }));
   if(after) await after(page, seen, F);
@@ -88,7 +88,22 @@ async function scenario(name, { dark=false, style='ok', lib='ok', webgl=true, ha
 }
 
 // A. light + healthy → vector, two GL layers in the right panes, no CARTO traffic
-{ const r = await scenario('vector');
+{ const r = await scenario('vector', { after: async (page, seen, F) => {
+    const st = () => page.evaluate(() => { const t = document.querySelector('.lb-attr-txt'), b = document.querySelector('.lb-attr-btn');
+      return { shown: !!t && !t.hidden && getComputedStyle(t).display !== 'none', btn: !!b && getComputedStyle(b).display !== 'none', exp: b?.getAttribute('aria-expanded'), label: b?.getAttribute('aria-label') }; });
+    const s0 = await st();
+    F('credit: only the ⓘ button shows by default (text collapsed)', s0.btn && !s0.shown && s0.exp === 'false' && s0.label === 'Map credits');
+    await page.click('.lb-attr-btn');
+    const s1 = await st();
+    F('credit: clicking ⓘ reveals the OpenFreeMap / OpenStreetMap credit', s1.shown && s1.exp === 'true'
+      && /OpenFreeMap/.test(await page.textContent('.lb-attr-txt')) && await page.locator('.lb-attr-txt a').count() >= 3);
+    await page.keyboard.press('Escape');
+    F('credit: Escape closes it', !(await st()).shown);
+    await page.click('.lb-attr-btn');
+    const mb = await page.locator('.leaflet-container').boundingBox();
+    await page.mouse.click(mb.x + mb.width / 2, mb.y + mb.height / 2);
+    F('credit: a click on the map closes it', !(await st()).shown);
+  } });
   F(`light: basemap is vector (${r.got})`, r.got === 'vector');
   F(`light: base GL canvas in tile pane, labels GL canvas in labels pane (${r.info.glBase}/${r.info.glLabels})`, r.info.glBase === 1 && r.info.glLabels === 1);
   F('light: no CARTO tiles requested', r.seen.carto === 0);
