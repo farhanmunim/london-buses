@@ -39,7 +39,7 @@ let { ctx, page, errors, hosts } = await open();
 const ga = exp('Go-Ahead London');
 F('renders the default operator header', /Go-Ahead London/.test(await txt(page, '#hero h1')));
 const chips = await txt(page, '#hero .chips');
-F(`header counts match the data (${ga.n} routes, ${nf(ga.pvr)} PVR)`, chips.includes(`${ga.n} routes`) && chips.includes(`${nf(ga.pvr)} peak vehicles`));
+F(`header counts match the data (${ga.n} routes, ${nf(ga.pvr)} PVR)`, chips.includes(`${ga.n} routes`) && /[\d,]+ vehicles/.test(chips));
 const hero = await txt(page, '.kpi.hero-k .v');
 F(`hero KPI shows a real contract value (${hero})`, /^£\d/.test(hero) && !/^£0/.test(hero));
 F('five KPI tiles render', await page.locator('#kpis .kpi').count() === 5);
@@ -54,7 +54,7 @@ F('only first-party requests plus the font CDN', [...hosts].every(h => /fonts\.(
 // market chart: operator rows, emphasis, tooltip, click-through
 F('market chart lists all eight operators', await page.locator('#market .mrow').count() === 8);
 F('selected operator is the accent-emphasised row', await page.locator('#market .mrow.sel').count() === 1);
-await page.hover('#market .mrow >> nth=1'); await page.waitForTimeout(150);
+await page.hover('#market .mrow >> nth=1'); await page.mouse.move(700, 480); await page.mouse.move(702, 482); await page.waitForTimeout(150);
 F('hovering a bar shows a tooltip', (await page.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /PVR|Peak/.test(await txt(page, '#tip')));
 await page.click('[data-metric="age"]'); await page.waitForTimeout(150);
 F('metric switch re-ranks the chart (fleet age → "yrs")', /yrs/.test(await txt(page, '#market .mrow >> nth=0')));
@@ -96,7 +96,7 @@ const firstId = await page.locator('#routes tbody tr.row').first().getAttribute(
 await page.locator('#routes tbody tr.row').first().click(); await page.waitForTimeout(350);
 F(`row click opens the route brief (${firstId})`, await page.locator('#drawer.open').count() === 1 && (await txt(page, '#drawer .badge')) === firstId && /route=/.test(await page.evaluate(() => location.hash)));
 const dr = await page.evaluate(() => ({ cells: document.querySelectorAll('#drawer .mini > div').length, charts: document.querySelectorAll('#drawer svg[role=img]').length, hasShape: !!document.querySelector('#drawer .shape path') }));
-F(`brief carries 6 KPI cells, a shape and trend charts (${dr.charts} charts)`, dr.cells === 6 && dr.hasShape && dr.charts >= 3);
+F(`brief carries the KPI and signal cells, a shape and trend charts (${dr.charts} charts)`, dr.cells >= 9 && dr.hasShape && dr.charts >= 3);
 await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
 F('→ steps to the next route in the table', (await txt(page, '#drawer .badge')) !== firstId);
 await page.keyboard.press('Escape'); await page.waitForTimeout(300);

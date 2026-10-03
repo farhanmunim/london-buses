@@ -103,7 +103,7 @@ main{max-width:1264px;margin:0 auto;padding:28px 28px 80px}
 
 /* KPI tiles --------------------------------------------------------------- */
 .kpi{padding:18px 20px;display:flex;flex-direction:column;min-height:150px;position:relative}
-.kpi .l{font-size:12.5px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px}
+.kpi .l{font-size:12.5px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .kpi .v{font-size:30px;line-height:1.1;font-weight:650;letter-spacing:-.03em;margin-top:8px}
 .kpi .v small{font-size:14px;font-weight:550;color:var(--ink-3);letter-spacing:0;margin-left:3px}
 .kpi .d{font-size:12.5px;color:var(--ink-2);margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
@@ -249,6 +249,97 @@ table.rt .sub{overflow:hidden;text-overflow:ellipsis;max-width:210px}
 .loading{opacity:.55;transition:opacity .2s}
 .err{margin:60px auto;max-width:480px;text-align:center;color:var(--ink-2)}
 
+/* briefing + intelligence components ---------------------------------------- */
+.ch h2{display:flex;align-items:center;gap:7px}
+.spk{width:16px;height:16px;color:var(--accent);flex:none}
+.brief{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 28px}
+.bi{display:grid;grid-template-columns:86px 1fr;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.bi:nth-child(-n+2){border-top:0}
+.bk{font-size:11px;font-weight:650;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-ink);padding-top:2px}
+.bi p{margin:0;color:var(--ink-2);font-size:13.5px;line-height:1.55}
+.bi p b{color:var(--ink);font-weight:600}
+.bi:last-child:nth-child(odd){grid-column:1/-1}
+.kpi.sm{min-height:112px;padding:15px 16px}
+.kpi.sm .v{font-size:23px;margin-top:6px}
+.kpi.sm .v small{font-size:12px}
+.kpi.sm .d{font-size:12px;padding-top:6px}
+.mh{margin:16px 0 6px!important;font-size:12px!important;color:var(--ink-3)!important;font-weight:600!important;text-transform:none!important;letter-spacing:0!important}
+.hh{display:grid;grid-template-columns:104px 1fr 1fr 34px;align-items:center;gap:0;padding:6px 0;font-size:12.5px}
+.hh .nm{display:flex;align-items:center;gap:7px;color:var(--ink-2);min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.hh .l,.hh .r{display:flex;align-items:center;gap:6px;height:14px}
+.hh .l{justify-content:flex-end;padding-right:2px}
+.hh .r{border-left:1px solid var(--line-2);padding-left:2px}
+.hh .l i{display:block;height:14px;background:var(--crit);border-radius:4px 0 0 4px;opacity:.9;min-width:0}
+.hh .r i{display:block;height:14px;background:var(--accent);border-radius:0 4px 4px 0;min-width:0}
+.hh b{font-weight:600;font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hh .n{text-align:right;font-weight:650;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.hh .n.pos{color:var(--accent-ink)}.hh .n.neg{color:#b42318}
+.hhead{font-size:11px;color:var(--ink-3);font-weight:550;padding-bottom:2px}
+.hhead .l{justify-content:flex-end;height:auto}.hhead .r{border-left:1px solid var(--line-2);height:auto}.hhead .n{font-weight:550}
+.hist{display:flex;gap:2px;align-items:flex-end;height:112px;padding-top:6px}
+.hc{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.hc .b{width:100%;max-width:24px;border-radius:4px 4px 0 0;min-height:2px}
+.hc .n{font-size:11px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;min-height:15px}
+.hc .x{font-size:11px;color:var(--ink-3);border-top:1px solid var(--line-2);width:100%;text-align:center;padding-top:3px;margin-top:0}
+.kv.mk{display:grid;grid-template-columns:110px 1fr 40px;gap:10px;align-items:center;padding:6px 0}
+.kv.mk b{text-align:right}
+.dp{display:grid;grid-template-columns:132px 1fr 40px 62px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.dp:last-of-type{border-bottom:0}
+.dp .nm{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.dp .u{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.dp .meter{height:8px}
+.meter.warn{background:#fdf1d3}.meter.warn i{background:var(--warn)}
+.meter.crit{background:#f8dcdc}.meter.crit i{background:var(--crit)}
+.sigs{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+.sig{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:999px;background:#fff6e5;color:var(--warn-ink);font-size:11.5px;font-weight:600}
+.sig svg{width:11px;height:11px}
+.wl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
+.wr{align-items:flex-start;padding:10px 4px}
+.wm{flex:1;min-width:0;display:flex;flex-direction:column}
+.wm .cor{max-width:none}
+@media (max-width:1100px){.brief{grid-template-columns:1fr}.bi:nth-child(2){border-top:1px solid var(--line)}.wl{grid-template-columns:1fr}}
+@media (max-width:860px){.bi{grid-template-columns:1fr;gap:3px}.hh{grid-template-columns:96px 1fr 1fr 30px}.dp{grid-template-columns:96px 1fr 36px 54px}}
+
+/* route map: floating glass UI in the same language as the dashboard ---------- */
+.mapbox{position:relative;height:360px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--sunken);box-shadow:var(--shadow);transition:height .25s ease}
+.mapbox.big{height:560px}
+#dmapHost.dmaphost{position:absolute;inset:0;width:100%;height:100%}
+.dmaphost:not([data-state="ready"]){background:linear-gradient(100deg,#f2f4f7 30%,#fafbfc 50%,#f2f4f7 70%) 0 0/200% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.mapui{position:absolute;z-index:5;display:flex;gap:8px;align-items:flex-start}
+.mapui.tl{top:10px;left:10px}.mapui.tr2{top:10px;right:50px}.lyrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.float{background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(16,24,40,.08);box-shadow:0 2px 8px rgba(16,24,40,.12)}
+.seg.float{padding:2px;border-radius:11px}
+.seg.float button{font-size:12px;padding:5px 11px;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.ib.float{width:32px;height:32px;border-radius:10px}
+.ly{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 12px 0 10px;border-radius:999px;font:inherit;font-size:12px;font-weight:550;color:var(--ink-3);cursor:pointer;background:var(--surface);border:1px solid var(--line)}
+.ly:hover{border-color:#cfd4dc}
+.ly.on{background:var(--accent-soft);border-color:#bcd6f6;color:var(--ink)}
+.ly:not(.on) .sw{filter:grayscale(1);opacity:.5}
+.ly.off{opacity:.55}
+.ly .cnt{color:var(--ink-3);font-variant-numeric:tabular-nums;font-weight:500}
+.sw{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%}
+.sw.st{background:#fff;border:1.5px solid var(--ink)}
+.sw.cl{background:#eb6834;box-shadow:0 0 0 1.5px #fff}
+.sw.br{background:#fab219;box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px #d03b3b}
+.sw.lv{background:var(--ink);box-shadow:0 0 0 3px rgba(42,120,214,.3)}
+.sw.wk{width:12px;height:11px;border-radius:0;background:#fab219;clip-path:polygon(50% 0,100% 100%,0 100%)}
+.pin{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(16,24,40,.35);font-family:inherit}
+.gpin{width:28px;height:28px;border-radius:9px;background:var(--ink);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(16,24,40,.4)}
+.maplibregl-map{font-family:inherit}
+.maplibregl-ctrl-group{border-radius:10px!important;border:1px solid rgba(16,24,40,.08);box-shadow:0 2px 8px rgba(16,24,40,.12)!important;overflow:hidden;background:rgba(255,255,255,.92)!important}
+.maplibregl-ctrl-group button{width:32px;height:32px}
+.maplibregl-ctrl-group button+button{border-top:1px solid var(--line)}
+.maplibregl-ctrl-attrib{background:rgba(255,255,255,.8)!important;border-radius:8px 0 0 0;font-size:10.5px!important}
+.maplibregl-ctrl-attrib a{color:var(--ink-3)!important}
+.maplibregl-popup-content{border-radius:12px!important;padding:11px 13px!important;font-size:12.5px;line-height:1.45;color:var(--ink-2);box-shadow:var(--pop)!important;border:1px solid var(--line)}
+.maplibregl-popup-content b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:2px}
+.maplibregl-popup-content .pp{color:var(--ink-3);font-size:12px}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip{border-top-color:#fff!important}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip{border-bottom-color:#fff!important}
+.maplibregl-cooperative-gesture-screen{font-family:inherit;font-size:13px;font-weight:500;background:rgba(16,24,40,.55)!important}
+@media (max-width:860px){.mapbox{height:300px}.mapbox.big{height:440px}.mapui.tr2{right:48px}.seg.float button{max-width:112px;padding:5px 9px}}
+
 @media (max-width:1100px){
   .foot{display:none}
   .s8,.s7,.s5,.s4{grid-column:span 12}.s2{grid-column:span 6}
@@ -390,21 +481,37 @@ const grp = name => {                    // tender-form names → the 8 contract
 
 async function load(){
   const [meta, tenders] = await Promise.all([get('/data/api/route-meta.json'), get('/data/api/tenders.json')]);
-  const [fleet, garages, prog, perf, sched, crowd, status, dest, overview, manifest] = await Promise.all([
+  const [fleet, garages, prog, perf, sched, crowd, status, dest, overview, manifest, vehicles, cpi, divhist, works] = await Promise.all([
     opt('/data/api/fleet.json'), opt('/data/api/garages.json'), opt('/data/api/tender-programme.json'),
     opt('/data/api/route-performance.json'), opt('/data/api/scheduled-mileage.json'), opt('/data/api/crowding.json'),
     opt('/data/api/line-status.json'), opt('/data/route_destinations.json'), opt('/data/api/routes-overview.json'),
-    opt('/data/api/manifest.json'),
+    opt('/data/api/manifest.json'), opt('/data/api/vehicles.json'), opt('/data/api/cpi-cpa.json'),
+    opt('/data/api/diversion-history.json'), opt('/data/api/roadworks.json'),
   ]);
   return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:garages?.garages ?? [], prog:prog?.entries ?? [],
            perf, sched:sched?.routes ?? {}, crowd:crowd?.routes ?? {}, status:status?.rows ?? [], dest:dest?.routes ?? dest ?? {},
-           overview, manifest };
+           overview, manifest, veh:vehicles?.byReg ?? {}, cpi:cpi?.months ?? [], divhist:divhist?.entries ?? [], works:works?.disruptions ?? [] };
 }
+
+const FLAG = {
+  rel:{ label:'Reliability', long:'Reliability is more than 10% worse than the contractual standard' },
+  op: { label:'Mileage',     long:'Operated mileage is more than 2 points below the contractual minimum' },
+  end:{ label:'Contract <12 mo', long:'Contract ends within 12 months' },
+  load:{ label:'Crowded',    long:'Peak load is at or above 80% of capacity' },
+  dis:{ label:'Disrupted',   long:'Disrupted right now' },
+  age:{ label:'Old fleet',   long:'Average fleet age is over 12 years' },
+};
+const prevYear = p => String(p).replace(/(\d{2})\/(\d{2})$/, (m, a, b) => `${String(+a - 1).padStart(2, '0')}/${String(+b - 1).padStart(2, '0')}`);
+const yrsLeft = r => r.cEnd ? Math.max(0, (Date.parse(r.cEnd) - TODAY.getTime()) / 3.15576e10) : null;
 
 function build(raw){
   const periods = raw.perf?.periods ?? [];
   const last13 = periods.slice(-13);
   const statusBy = new Map(raw.status.map(r => [r.route, r]));
+  const worksBy = new Map();
+  for(const w of raw.works) for(const rid of w.routes ?? []) (worksBy.get(rid) ?? worksBy.set(rid, []).get(rid)).push(w);
+  const d30 = new Date(TODAY.getTime() - 30 * 864e5).toISOString().slice(0, 10), divDays = new Map();
+  for(const e of raw.divhist) for(const day of e.days ?? []) if(day >= d30) (divDays.get(e.route) ?? divDays.set(e.route, new Set()).get(e.route)).add(day);
   // earliest still-future programme entry per route token
   const progBy = new Map();
   for(const e of [...raw.prog].filter(e => e.contractStart >= TODAY_ISO).sort((a, b) => a.contractStart.localeCompare(b.contractStart)))
@@ -426,25 +533,60 @@ function build(raw){
     const latest = obj => { for(let i = periods.length - 1; i >= 0; i--){ const v = obj?.[periods[i]]; if(Number.isFinite(v)) return { v, p:periods[i], i }; } return null; };
     const op = latest(pf?.operatedPct), rel = latest(pf?.reliability);
     const prevOp = op ? (() => { for(let i = op.i - 1; i >= 0; i--){ const v = pf.operatedPct[periods[i]]; if(Number.isFinite(v)) return v; } return null; })() : null;
-    const d = raw.dest[id];
+    const opLY = op ? pf?.operatedPct?.[prevYear(op.p)] : null;
+    const d = raw.dest[id], dk = raw.sched[id]?.dailyKm ?? null;
     routes.push({
       id, op:m.operator, company:m.company, garage:m.garage, garageName:m.garageName, pvr:m.pvr ?? 0, tvr:m.tvr, vehicle:m.fleet,
       prop:m.propulsion ?? 'diesel', deck:m.deck, freq:m.frequency, km:m.lengthKm, type:m.type,
       cStart:m.contractStart ?? null, cEnd:m.contractEnd ?? null,
       from:short(d?.outbound), to:short(d?.inbound),
       age:fl?.avgAgeYears ?? null, fleetN:fl?.count ?? 0, makes:fl?.makes ?? [],
-      cur, hist,
+      cur, hist, bids:cur?.numberOfTenderers > 0 ? cur.numberOfTenderers : null,
       cpm:cur?.costPerMile > 0 ? cur.costPerMile : null,
       opPct:op?.v ?? null, opPeriod:op?.p ?? null, opPrev:prevOp, opMin:pf?.operatedMinStandard ?? null,
+      opLY:Number.isFinite(opLY) ? opLY : null, opYoY:op && Number.isFinite(opLY) ? op.v - opLY : null,
       rel:rel?.v ?? null, relMetric:pf?.reliabilityMetric ?? null, relStd:pf?.reliabilityMinStandard ?? null, pf,
-      dailyKm:raw.sched[id]?.dailyKm?.weekday ?? null,
+      dailyKm:dk?.weekday ?? null, dk, trips:raw.sched[id]?.trips?.weekday ?? null, periodKm:dk ? 20 * (dk.weekday || 0) + 4 * (dk.saturday || 0) + 4 * (dk.sunday || 0) : null,
       crowd:raw.crowd[id] ?? null, status:statusBy.get(id) ?? null,
       next:progBy.get(id) ?? progBy.get(id.replace(/^N/, '')) ?? null,
+      works:worksBy.get(id) ?? [], divDays:divDays.get(id)?.size ?? 0,
     });
   }
   const byId = new Map(routes.map(r => [r.id, r]));
   const netMedianCpm = median(routes.map(r => r.cpm));
   const relPass = r => r.rel != null && r.relStd != null ? (/EWT/.test(r.relMetric) ? r.rel <= r.relStd : r.rel >= r.relStd) : null;
+
+  // attention signals — transparent rules, each one a fact the data can state
+  for(const r of routes){
+    const f = [];
+    // material misses only: most routes sit a little under their standards, so a bare miss is the norm, not a signal
+    if(relPass(r) === false && Math.abs(r.rel - r.relStd) / r.relStd >= 0.10) f.push('rel');
+    if(r.opPct != null && r.opMin != null && r.opPct < r.opMin - 2) f.push('op');
+    if(r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(12)) f.push('end');
+    if(r.crowd?.peakVC >= 0.8) f.push('load');
+    if(r.status && r.status.status !== 'Good Service') f.push('dis');
+    if(r.age != null && r.age > 12) f.push('age');
+    r.flags = f;
+  }
+
+  // the fleet register: every registered vehicle, grouped to its parent brand
+  const YEAR = TODAY.getUTCFullYear(), BANDS = [[0, 2, '0–2'], [3, 5, '3–5'], [6, 8, '6–8'], [9, 11, '9–11'], [12, 99, '12+']];
+  const mkFleet = vs => {
+    const aged = vs.filter(v => v.year); const ages = aged.map(v => YEAR - v.year);
+    return {
+      n:vs.length, avg:ages.length ? ages.reduce((a, b) => a + b, 0) / ages.length : null,
+      ze:vs.length ? vs.filter(v => propClass(v.propulsion) === 'zero').length / vs.length * 100 : null,
+      young:ages.length ? ages.filter(a => a <= 3).length / ages.length * 100 : null,
+      old:ages.length ? ages.filter(a => a >= 12).length / ages.length * 100 : null,
+      oldest:aged.length ? Math.min(...aged.map(v => v.year)) : null,
+      hist:BANDS.map(([lo, hi, label]) => ({ label, n:ages.filter(a => a >= lo && a <= hi).length })),
+      makes:(() => { const c = {}; for(const v of vs) if(v.make) c[v.make] = (c[v.make] ?? 0) + 1; return Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, 3); })(),
+      mix:Object.fromEntries(Object.keys(CLASS).map(k => [k, vs.length ? vs.filter(v => propClass(v.propulsion) === k).length / vs.length * 100 : 0])),
+    };
+  };
+  const vlist = Object.values(raw.veh);
+  const FLEET = Object.fromEntries(OPS.map(o => [o, mkFleet(vlist.filter(v => grp(v.operator) === o))]));
+  const FNET = mkFleet(vlist.filter(v => OPS.includes(grp(v.operator))));
 
   const agg = list => {
     const pvr = sum(list, r => r.pvr);
@@ -453,6 +595,10 @@ function build(raw){
     const opd = list.filter(r => r.opPct != null);
     const series = last13.map(p => { const rs = list.filter(r => Number.isFinite(r.pf?.operatedPct?.[p])); const t = sum(rs, w); return t ? sum(rs, r => r.pf.operatedPct[p] * w(r)) / t : null; });
     const rp = list.map(relPass).filter(v => v != null);
+    const priced = list.filter(r => r.cur?.acceptedBid > 0), wv = priced.filter(r => yrsLeft(r) != null);
+    const both = list.filter(r => r.opPct != null && r.opLY != null);
+    const exp24 = list.filter(r => r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(24));
+    const bidded = list.filter(r => r.bids);
     return {
       list, n:list.length, pvr,
       value:sum(list, r => r.cur?.acceptedBid),
@@ -463,28 +609,65 @@ function build(raw){
       mix:Object.fromEntries(Object.keys(CLASS).map(k => [k, pvr ? sum(list.filter(r => propClass(r.prop) === k), r => r.pvr) / pvr * 100 : 0])),
       opPct:opd.length ? sum(opd, r => r.opPct * w(r)) / sum(opd, w) : null,
       opSeries:series,
+      yoy:both.length ? sum(both, r => (r.opPct - r.opLY) * w(r)) / sum(both, w) : null,
+      lostKm:sum(list.filter(r => r.periodKm && r.opPct != null), r => r.periodKm * (1 - r.opPct / 100)),
       relPassPct:rp.length ? rp.filter(Boolean).length / rp.length * 100 : null, relN:rp.length,
       crowded:list.filter(r => r.crowd?.peakVC >= 0.8).length,
       disrupted:list.filter(r => r.status && r.status.status !== 'Good Service').length,
-      exp24:list.filter(r => r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(24)),
+      attention:list.filter(r => r.flags.length >= 3),
+      exp24, renewalValue:sum(exp24, r => r.cur?.acceptedBid), exp24InProg:exp24.filter(r => r.next).length,
+      waut:wv.length ? sum(wv, r => r.cur.acceptedBid * yrsLeft(r)) / sum(wv, r => r.cur.acceptedBid) : null,
+      valuePerPvr:(() => { const l = priced.filter(r => r.pvr > 0); return l.length ? sum(l, r => r.cur.acceptedBid) / sum(l, r => r.pvr) : null; })(),
+      kmPerPvr:(() => { const l = list.filter(r => r.dailyKm && r.pvr > 0); return l.length ? sum(l, r => r.dailyKm) / sum(l, r => r.pvr) : null; })(),
+      singleBid:bidded.length ? bidded.filter(r => r.bids === 1).length / bidded.length * 100 : null, bidN:bidded.length,
       garages:new Set(list.map(r => r.garage)).size,
       companies:new Set(list.map(r => r.company).filter(Boolean)).size,
     };
   };
   const ST = Object.fromEntries(OPS.map(o => [o, agg(routes.filter(r => r.op === o))]));
   const NET = agg(routes);
+  for(const o of OPS) ST[o].spare = ST[o].pvr ? FLEET[o].n / ST[o].pvr : null;
+  NET.spare = NET.pvr ? FNET.n / NET.pvr : null;
 
-  // tender record, five years
+  // tender record and head-to-head, five years
   const from5 = plusMonths(-60);
-  const REC = Object.fromEntries(OPS.map(o => [o, { retained:0, lost:0, won:0 }]));
+  const REC = Object.fromEntries(OPS.map(o => [o, { retained:0, lost:0, won:0, wonFrom:{}, lostTo:{} }]));
   for(const a of Object.values(raw.tenders.byId ?? {})){
     if(!a.awardDate || a.awardDate < from5) continue;
     const g = grp(a.operator), f = grp(a.fromOperator);
     if(!g || !f) continue;
     if(g === f){ if(REC[g]) REC[g].retained++; }
-    else { if(REC[f]) REC[f].lost++; if(REC[g]) REC[g].won++; }
+    else {
+      if(REC[f]){ REC[f].lost++; REC[f].lostTo[g] = (REC[f].lostTo[g] ?? 0) + 1; }
+      if(REC[g]){ REC[g].won++; REC[g].wonFrom[f] = (REC[g].wonFrom[f] ?? 0) + 1; }
+    }
   }
-  return { routes, byId, ST, NET, REC, netMedianCpm, relPass, last13, lines, periods };
+
+  // award price per mile by year, nominal and in today's money (CPI-deflated)
+  const cpiBy = new Map(raw.cpi.map(m => [m.month, +m.cpi])), cpiNow = +raw.cpi.at(-1)?.cpi || null;
+  const PY0 = 2015, PY1 = TODAY.getUTCFullYear(), byYear = {};
+  for(const a of Object.values(raw.tenders.byId ?? {})){
+    if(!a.awardDate || !(a.costPerMile > 0) || a.costPerMile > 35) continue;   // above £35/mile is school/special work or a data slip, and would swamp the median
+    const y = +a.awardDate.slice(0, 4); if(y < PY0 || y > PY1) continue;
+    const g = grp(a.operator), f = cpiBy.get(a.awardDate.slice(0, 7)), real = f && cpiNow ? a.costPerMile * cpiNow / f : null;
+    const slot = (byYear[y] ??= { net:[], ops:{} }); slot.net.push([a.costPerMile, real]);
+    if(OPS.includes(g)) (slot.ops[g] ??= []).push([a.costPerMile, real]);
+  }
+  const PRICE = { years:Array.from({ length:PY1 - PY0 + 1 }, (_, i) => PY0 + i), byYear, cpiNow };
+  PRICE.series = (op, real) => PRICE.years.map(y => {
+    const pick = arr => arr?.map(x => x[real ? 1 : 0]).filter(Number.isFinite);
+    const n = pick(byYear[y]?.net), o = op ? pick(byYear[y]?.ops?.[op]) : null;
+    return { x:String(y), net:n?.length >= 10 ? median(n) : null, op:o?.length >= 4 ? median(o) : null, nn:n?.length ?? 0, on:o?.length ?? 0 };
+  });
+
+  // depots: peak vehicles against licensed operating-centre capacity
+  const gByCode = new Map(raw.garages.map(g => [g.code, g]));
+  const DEPOTS = Object.fromEntries(OPS.map(o => {
+    const by = {}; for(const r of ST[o].list) (by[r.garage] ??= { code:r.garage, name:r.garageName, pvr:0, routes:0 }), by[r.garage].pvr += r.pvr, by[r.garage].routes++;
+    const rows = Object.values(by).map(d => { const g = gByCode.get(d.code); return { ...d, capacity:g?.capacity ?? null, util:g?.capacity ? d.pvr / g.capacity : null, g }; }).sort((a, b) => b.pvr - a.pvr);
+    return [o, rows];
+  }));
+  return { routes, byId, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, netMedianCpm, relPass, last13, lines, periods, worksBy };
 }
 
 /* ── geometry: tile-free cartography ─────────────────────────────────────── */
@@ -515,11 +698,12 @@ function glyph(r){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-const S = { op:OPS[0], metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
-            sort:{ k:'pvr', dir:-1 }, shown:30, route:null };
+const S = { op:OPS[0], real:true, metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
+            sort:{ k:'pvr', dir:-1 }, shown:30, route:null, dir:'outbound', mapBig:false, ml:{ stops:true, works:true, coll:false, bridges:false, live:false } };
 
 /* ── view: header + KPIs ─────────────────────────────────────────────────── */
 const initials = o => o.replace(/London|Bus/g, '').trim().split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const shortOp = o => ({ 'Go-Ahead London':'Go-Ahead', 'Stagecoach London':'Stagecoach', 'Transport UK London Bus':'Transport UK', 'First Bus London':'First', 'Arriva London':'Arriva' }[o] ?? o);
 const rank = (metricFn, op, desc = true) => { const v = OPS.map(o => [o, metricFn(D.ST[o])]).filter(([, x]) => x != null).sort((a, b) => desc ? b[1] - a[1] : a[1] - b[1]); return v.findIndex(([o]) => o === op) + 1; };
 const delta = (v, base, { good = null, unit = '%' } = {}) => {
   if(!Number.isFinite(v) || !Number.isFinite(base) || !base) return '';
@@ -543,28 +727,54 @@ function footprint(op){
   const dots = gs.map(g => { const [x, y] = P(g.lng, g.lat); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.5 + Math.sqrt(g.pvr || 10) * .32).toFixed(1)}" fill="${opColour(op)}" stroke="#fff" stroke-width="2" data-tip="${esc(g.name)} garage\n${esc(g.pvr)} PVR"/>`; }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(op)} route footprint across London">${ghost}${own}${dots}</svg><span class="cap">${D.ST[op].garages} garages · ${D.ST[op].n} routes</span>`;
 }
+const pctd = (v, base) => Number.isFinite(v) && Number.isFinite(base) && base ? (v / base - 1) * 100 : null;
+const dTxt = (p, suffix = '% vs network') => p == null ? '' : `<span class="delta nu">${p >= 0 ? '▲' : '▼'} ${Math.abs(p).toFixed(p > -10 && p < 10 ? 1 : 0)}${suffix}</span>`;
+function briefing(o){
+  const s = D.ST[o], r = D.REC[o], F = D.FLEET[o], N = D.NET;
+  const share = N.pvr ? s.pvr / N.pvr * 100 : null, vshare = N.value ? s.value / N.value * 100 : null;
+  const contested = r.retained + r.lost, ret = contested ? r.retained / contested * 100 : null;
+  const topLoss = Object.entries(r.lostTo).sort((a, b) => b[1] - a[1])[0], topWin = Object.entries(r.wonFrom).sort((a, b) => b[1] - a[1])[0];
+  const gap = Number.isFinite(s.opPct) && Number.isFinite(N.opPct) ? s.opPct - N.opPct : null;
+  return [
+    { k:'Position', t:`${esc(o)} runs <b>${fPct(share, 1)}</b> of London's peak buses (#${rank(x => x.pvr, o)} of ${OPS.length}) and holds <b>${fPct(vshare, 1)}</b> of contract value, at a median <b>£${fNum(s.cpm, 2)}/mile</b>${Number.isFinite(s.cpm) && D.netMedianCpm ? ` (${s.cpm >= D.netMedianCpm ? '+' : '−'}${Math.abs(pctd(s.cpm, D.netMedianCpm)).toFixed(1)}% vs network)` : ''}.` },
+    { k:'Renewals', t:s.exp24.length ? `<b>${s.exp24.length} routes</b> worth <b>${fGbp(s.renewalValue)}</b> a year (${fPct(s.value ? s.renewalValue / s.value * 100 : null, 0)} of the portfolio) reach contract end within 24 months; <b>${s.exp24InProg}</b> already appear in TfL's tender programme.` : 'No contracts end within the next 24 months.' },
+    { k:'Competition', t:`Kept <b>${fPct(ret, 0)}</b> of its re-tenders over five years and is <b>${r.won - r.lost >= 0 ? '+' : '−'}${Math.abs(r.won - r.lost)}</b> routes net against rivals${topWin ? ` — most wins from ${esc(topWin[0])} (+${topWin[1]})` : ''}${topLoss ? `, most losses to ${esc(topLoss[0])} (−${topLoss[1]})` : ''}.` },
+    { k:'Delivery', t:`Operated <b>${fPct(s.opPct, 1)}</b> of scheduled mileage${gap != null ? ` (${gap >= 0 ? '+' : '−'}${Math.abs(gap).toFixed(2)} pts vs network)` : ''}; <b>${fPct(100 - (s.relPassPct ?? 0), 0)}</b> of routes miss their reliability standard and <b>${s.attention.length}</b> show three or more attention signals.` },
+    { k:'Fleet', t:`<b>${fInt(F.n)}</b> vehicles, average age <b>${fNum(F.avg, 1)} yrs</b>; <b>${fPct(F.young, 0)}</b> registered in the last three years, <b>${fPct(F.old, 0)}</b> are 12+, and <b>${fPct(s.ze, 0)}</b> of peak vehicles are zero-emission.` },
+  ];
+}
 function renderHero(){
-  const o = S.op, s = D.ST[o], c = opColour(o);
+  const o = S.op, s = D.ST[o], c = opColour(o), F = D.FLEET[o], N = D.NET, FN = D.FNET;
   $('#opDot').style.background = c; $('#opName').textContent = o;
-  const kind = (key, label, v, d, extra = '') => `<div class="card kpi s2"><div class="l">${label}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
-  const sh = D.NET.pvr ? s.pvr / D.NET.pvr * 100 : null;
-  const cpmD = delta(s.cpm, D.netMedianCpm);
+  const kind = (label, v, d, extra = '', tipText = '') => `<div class="card kpi s2"><div class="l">${label}${tipText ? ` <i class="info" tabindex="0" data-tip="${esc(tipText)}">i</i>` : ''}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
+  const sm = (label, v, d, tipText) => `<div class="card kpi sm s2"><div class="l">${label} <i class="info" tabindex="0" data-tip="${esc(tipText)}">i</i></div><div class="v">${v}</div><div class="d">${d}</div></div>`;
+  const sh = N.pvr ? s.pvr / N.pvr * 100 : null;
   const opLast = s.opSeries.filter(Number.isFinite), opDelta = opLast.length > 1 ? opLast[opLast.length - 1] - opLast[opLast.length - 2] : null;
   $('#hero').innerHTML = `
     <div class="card hero"><div class="who">
       <div class="mono" style="background:${c}1f;color:${c === '#eda100' ? '#8a5a00' : c}">${esc(initials(o))}</div>
       <div style="min-width:0"><h1>${esc(o)}</h1>
-        <div class="chips"><span class="chip"><b>${s.n}</b> routes</span><span class="chip"><b>${s.garages}</b> garages</span><span class="chip"><b>${s.companies}</b> operating companies</span><span class="chip"><b>${fInt(s.pvr)}</b> peak vehicles</span></div>
+        <div class="chips"><span class="chip"><b>${s.n}</b> routes</span><span class="chip"><b>${s.garages}</b> garages</span><span class="chip"><b>${s.companies}</b> operating companies</span><span class="chip"><b>${fInt(F.n)}</b> vehicles</span></div>
         <div class="acts"><button class="btn primary" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Export routes</button><button class="btn" id="linkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span id="linkTxt">Copy link</span></button></div></div>
     </div><div class="foot" id="foot">${footprint(o)}</div></div>`;
+  $('#brief').innerHTML = `<div class="ch"><div><h2><svg class="spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>Briefing</h2><p>What the data says about ${esc(o)} right now — generated from the figures below</p></div></div>
+    <div class="cb"><div class="brief">${briefing(o).map(b => `<div class="bi"><span class="bk">${b.k}</span><p>${b.t}</p></div>`).join('')}</div></div>`;
   $('#kpis').innerHTML = `
     <div class="card kpi hero-k s4"><div class="l">Est. annual contract value <i class="info" tabindex="0" data-tip="Sum of the accepted annual bid of each route's current contract (TfL award data). An estimate: it excludes later variations, incentives and mileage changes.">i</i></div>
       <div class="v">${fGbp(s.value)}</div>
-      <div class="d"><span>${fPct(D.NET.value ? s.value / D.NET.value * 100 : null)} of network contract value</span><span>·</span><span>#${rank(x => x.value, o)} of ${OPS.length} operators</span></div></div>
-    ${kind('routes', 'Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(D.NET.pvr)} PVR</span><span>·</span><span>#${rank(x => x.pvr, o)} of ${OPS.length}</span>`)}
-    ${kind('cpm', 'Median price', `${Number.isFinite(s.cpm) ? '£' + s.cpm.toFixed(2) : '—'}<small>/mile</small>`, `${cpmD || ''}<span>vs network £${fNum(D.netMedianCpm, 2)}</span>`)}
-    ${kind('fleet', 'Fleet age', `${fNum(s.age, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span><span>·</span><span>${fPct(s.dd, 0)} double-deck</span>`)}
-    ${kind('ops', 'Operated mileage', `${fPct(s.opPct)}`, `${opDelta != null ? `<span class="delta ${opDelta >= 0 ? 'up' : 'dn'}">${opDelta >= 0 ? '▲' : '▼'} ${Math.abs(opDelta).toFixed(2)} pts</span><span>vs prior period</span>` : ''}`, spark(s.opSeries))}`;
+      <div class="d"><span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>·</span><span>#${rank(x => x.value, o)} of ${OPS.length} operators</span></div></div>
+    ${kind('Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>·</span><span>#${rank(x => x.pvr, o)} of ${OPS.length}</span>`)}
+    ${kind('Median price', `${Number.isFinite(s.cpm) ? '£' + s.cpm.toFixed(2) : '—'}<small>/mile</small>`, `${delta(s.cpm, D.netMedianCpm)}<span>vs network £${fNum(D.netMedianCpm, 2)}</span>`)}
+    ${kind('Fleet age', `${fNum(F.avg, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span><span>·</span><span>network ${fNum(D.FNET.avg, 1)} y</span>`, '', 'Age is from the fleet register: every registered vehicle, by year of first registration. Zero-emission is the share of peak vehicles.')}
+    ${kind('Operated mileage', `${fPct(s.opPct)}`, `${opDelta != null ? `<span class="delta ${opDelta >= 0 ? 'up' : 'dn'}">${opDelta >= 0 ? '▲' : '▼'} ${Math.abs(opDelta).toFixed(2)} pts</span><span>vs prior period</span>` : ''}`, spark(s.opSeries))}`;
+  const waD = Number.isFinite(s.waut) && Number.isFinite(N.waut) ? s.waut - N.waut : null;
+  $('#kpis2').innerHTML = `
+    ${sm('Up for renewal', fGbp(s.renewalValue), `<span>${s.exp24.length} routes · next 24 mo</span>`, 'Annual value of contracts whose end date falls within 24 months. Routes already in the tender programme: ' + s.exp24InProg)}
+    ${sm('Remaining term', `${fNum(s.waut, 1)}<small>yrs</small>`, `${waD != null ? `<span class="delta ${waD >= 0 ? 'up' : 'nu'}">${waD >= 0 ? '▲' : '▼'} ${Math.abs(waD).toFixed(1)} yrs</span><span>vs network</span>` : ''}`, 'Contract-value-weighted average time left on current contracts. Longer means more secure revenue.')}
+    ${sm('Value / vehicle', `${Number.isFinite(s.valuePerPvr) ? '£' + Math.round(s.valuePerPvr / 1000) + 'k' : '—'}<small>/yr</small>`, `${dTxt(pctd(s.valuePerPvr, N.valuePerPvr))}`, 'Annual contract value divided by peak vehicle requirement: what each bus the contract needs is paid per year.')}
+    ${sm('Km / vehicle', `${fInt(s.kmPerPvr)}<small>km/day</small>`, `${dTxt(pctd(s.kmPerPvr, N.kmPerPvr))}`, 'Scheduled weekday kilometres per peak vehicle: how hard each bus the contract needs is worked. Higher means better vehicle utilisation.')}
+    ${sm('Single-bid', `${fPct(s.singleBid, 0)}`, `<span>of ${s.bidN} current contracts</span><span>·</span><span>network ${fPct(N.singleBid, 0)}</span>`, 'Share of current contracts that attracted only one bid when tendered: low competition.')}
+    ${sm('New vehicles', `${fPct(F.young, 0)}`, `<span>${fPct(F.old, 0)} are 12+ yrs</span><span>·</span><span>network ${fPct(D.FNET.young, 0)}</span>`, 'Share of the fleet register first registered in the last three years: a proxy for recent investment.')}`;
 }
 
 /* ── view: market position ───────────────────────────────────────────────── */
@@ -615,8 +825,8 @@ function renderRunway(){
     <div class="cb">${body}</div>`;
 }
 
-/* ── view: record / fleet / quality ──────────────────────────────────────── */
-function renderCards(){
+/* ── view: record / head-to-head / price ────────────────────────────────── */
+function renderRecord(){
   const s = D.ST[S.op], rec = D.REC[S.op], contested = rec.retained + rec.lost;
   const ret = contested ? rec.retained / contested * 100 : null;
   const inProg = s.list.filter(r => r.next);
@@ -625,25 +835,95 @@ function renderCards(){
       <div class="meter" data-tip="${rec.retained} retained · ${rec.lost} lost"><i style="width:${ret ?? 0}%"></i></div>
       <div class="pair"><div class="won"><b>+${rec.won}</b><span class="sub">won from rivals</span></div><div class="lost"><b>−${rec.lost}</b><span class="sub">lost to rivals</span></div></div>
       <div class="kv" style="margin-top:10px"><span>Net routes</span><b>${rec.won - rec.lost >= 0 ? '+' : '−'}${Math.abs(rec.won - rec.lost)}</b></div>
-      <div class="kv"><span>In the tender programme</span><b>${inProg.length} routes · ${fInt(sum(inProg, r => r.pvr))} PVR</b></div></div>`;
-  const mixOrder = ['diesel', 'hybrid', 'zero'];
-  const makes = {}; for(const r of s.list) for(const m of r.makes) makes[m.make] = (makes[m.make] ?? 0) + m.n;
-  const topMakes = Object.entries(makes).sort((a, b) => b[1] - a[1]).slice(0, 3), mk = topMakes[0]?.[1] || 1, mkT = Object.values(makes).reduce((a, b) => a + b, 0) || 1;
-  const title = x => x.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-  $('#fleet').innerHTML = `<div class="ch"><div><h2>Fleet profile</h2><p>Share of peak vehicles by propulsion</p></div></div>
-    <div class="cb"><div class="stack" role="img" aria-label="Propulsion mix">${mixOrder.map(k => s.mix[k] > 0 ? `<i style="width:${s.mix[k]}%;background:${CLASS[k].c}" data-tip="${CLASS[k].label}\n${fPct(s.mix[k])} of PVR"></i>` : '').join('')}</div>
+      <div class="kv"><span>In the tender programme</span><b>${inProg.length} routes · ${fGbp(sum(inProg, r => r.cur?.acceptedBid))}</b></div></div>`;
+}
+function renderH2H(){
+  const rec = D.REC[S.op], rivals = [...OPS.filter(x => x !== S.op), 'Other'];
+  const rows = rivals.map(r => ({ r, won:rec.wonFrom[r] ?? 0, lost:rec.lostTo[r] ?? 0 })).filter(x => x.won || x.lost).sort((a, b) => (b.won - b.lost) - (a.won - a.lost) || b.won - a.won);
+  const max = Math.max(1, ...rows.flatMap(x => [x.won, x.lost]));
+  $('#h2h').innerHTML = `<div class="ch"><div><h2>Head-to-head</h2><p>Routes won from and lost to each rival, five years</p></div></div>
+    <div class="cb"><div class="hh hhead"><span></span><span class="l">◂ Lost to</span><span class="r">Won from ▸</span><span class="n">Net</span></div>
+      ${rows.length ? rows.map(x => `<div class="hh" data-tip="${esc(x.r)}\nWon from them: ${x.won}\nLost to them: ${x.lost}"><span class="nm"><i class="dot" style="background:${opColour(x.r)}"></i>${esc(shortOp(x.r))}</span>
+        <span class="l"><b>${x.lost ? '−' + x.lost : ''}</b><i style="width:${x.lost / max * 100}%"></i></span><span class="r"><i style="width:${x.won / max * 100}%"></i><b>${x.won ? '+' + x.won : ''}</b></span>
+        <span class="n ${x.won - x.lost > 0 ? 'pos' : x.won - x.lost < 0 ? 'neg' : ''}">${x.won - x.lost > 0 ? '+' : x.won - x.lost < 0 ? '−' : ''}${Math.abs(x.won - x.lost) || '0'}</span></div>`).join('') : '<div class="sub">No cross-operator changes in the last five years.</div>'}
+      <div class="sub" style="margin-top:10px">Subsidiaries count as their parent brand; moves within a group are not shown.</div></div>`;
+}
+function priceChart(pts){
+  const W = 440, H = 190, L = 40, R = 14, T = 12, B = 24, vals = pts.flatMap(p => [p.op, p.net]).filter(Number.isFinite);
+  if(vals.length < 2) return '<div class="sub">Not enough priced awards.</div>';
+  let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo || 1) * .15; lo = Math.max(0, lo - pad); hi += pad;
+  const X = i => L + i * (W - L - R) / (pts.length - 1), Y = v => H - B - (v - lo) / (hi - lo) * (H - B - T);
+  const path = key => { let d = '', pen = false; pts.forEach((p, i) => { if(Number.isFinite(p[key])){ d += (pen ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p[key]).toFixed(1); pen = true; } else pen = false; }); return d; };
+  const last = key => { for(let i = pts.length - 1; i >= 0; i--) if(Number.isFinite(pts[i][key])) return [X(i), Y(pts[i][key])]; return null; };
+  const ticks = [0, .33, .66, 1].map(f => lo + f * (hi - lo));
+  const lo_ = last('op'), ln_ = last('net'), step = (W - L - R) / (pts.length - 1);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Award price per mile by year">
+    ${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}" stroke="var(--line)"/><text x="${L - 6}" y="${(Y(t) + 3.5).toFixed(1)}" text-anchor="end" font-size="10.5" fill="var(--ink-3)">£${t.toFixed(t < 10 ? 1 : 0)}</text>`).join('')}
+    <path d="${path('net')}" fill="none" stroke="#98a2b3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="${path('op')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${ln_ ? `<circle cx="${ln_[0].toFixed(1)}" cy="${ln_[1].toFixed(1)}" r="4" fill="#98a2b3" stroke="#fff" stroke-width="2"/>` : ''}${lo_ ? `<circle cx="${lo_[0].toFixed(1)}" cy="${lo_[1].toFixed(1)}" r="4" fill="var(--accent)" stroke="#fff" stroke-width="2"/>` : ''}
+    ${pts.map((p, i) => i % 2 === 0 || i === pts.length - 1 ? `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">${p.x}</text>` : '').join('')}
+    ${pts.map((p, i) => `<rect x="${(X(i) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${H}" fill="transparent" data-tip="${p.x}\n${esc(S.op)}: ${Number.isFinite(p.op) ? '£' + p.op.toFixed(2) + ' (' + p.on + ' awards)' : 'too few awards'}\nNetwork median: ${Number.isFinite(p.net) ? '£' + p.net.toFixed(2) + ' (' + p.nn + ' awards)' : '—'}"/>`).join('')}</svg>`;
+}
+function renderPrice(){
+  const pts = D.PRICE.series(S.op, S.real), live = pts.filter(p => Number.isFinite(p.op) && Number.isFinite(p.net)), l = live.at(-1);
+  const gap = l ? (l.op / l.net - 1) * 100 : null;
+  $('#price').innerHTML = `<div class="ch"><div><h2>Price per mile</h2><p>Awards by year${S.real ? ", in today's money (CPI-adjusted)" : ', as awarded'}</p></div>
+    <div class="ctl"><div class="seg" role="group" aria-label="Basis"><button class="${S.real ? 'on' : ''}" data-real="1">Real</button><button class="${!S.real ? 'on' : ''}" data-real="0">Nominal</button></div></div></div>
+    <div class="cb">${priceChart(pts)}
+      <div class="legend"><span><i style="background:var(--accent)"></i>${esc(S.op)}</span><span><i style="background:#98a2b3"></i>Network median</span></div>
+      ${l ? `<div class="kv" style="margin-top:8px"><span>${l.x}: vs network median</span><b>${gap >= 0 ? '+' : '−'}${Math.abs(gap).toFixed(1)}%</b></div>` : ''}</div>`;
+}
+
+/* ── view: fleet register / depots / quality ─────────────────────────────── */
+function renderFleet(){
+  const F = D.FLEET[S.op], N = D.FNET, s = D.ST[S.op], mixOrder = ['diesel', 'hybrid', 'zero'], maxH = Math.max(1, ...F.hist.map(h => h.n));
+  const ramp = ['var(--seq-1)', 'var(--seq-2)', 'var(--seq-3)', 'var(--seq-4)', 'var(--seq-5)'];
+  $('#fleet').innerHTML = `<div class="ch"><div><h2>Fleet register</h2><p>${fInt(F.n)} registered vehicles · ${fNum(s.spare, 2)}× its peak requirement</p></div></div>
+    <div class="cb"><div class="sub" style="margin-bottom:6px">Peak vehicles by propulsion</div><div class="stack" role="img" aria-label="Propulsion mix">${mixOrder.map(k => s.mix[k] > 0 ? `<i style="width:${s.mix[k]}%;background:${CLASS[k].c}" data-tip="${CLASS[k].label}\n${fPct(s.mix[k])} of peak vehicles"></i>` : '').join('')}</div>
       <div class="legend">${mixOrder.map(k => `<span><i style="background:${CLASS[k].c}"></i>${CLASS[k].label} <b style="color:var(--ink)">${fPct(s.mix[k], 0)}</b></span>`).join('')}</div>
-      <div style="margin-top:12px"><div class="kv"><span>Average age</span><b>${fNum(s.age, 1)} yrs</b></div><div class="kv"><span>Double-deck share</span><b>${fPct(s.dd, 0)}</b></div></div>
-      <h4 style="margin:14px 0 6px;font-size:12px;color:var(--ink-3);font-weight:600">Most-seen makes</h4>
-      ${topMakes.map(([n, c]) => `<div class="kv" style="display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;padding:6px 0"><span>${esc(title(n))}</span><span class="meter" style="height:6px"><i style="width:${c / mk * 100}%"></i></span><b style="text-align:right">${Math.round(c / mkT * 100)}%</b></div>`).join('') || '<div class="sub">No fleet observations yet.</div>'}</div>`;
-  const gap = Number.isFinite(s.opPct) && Number.isFinite(D.NET.opPct) ? s.opPct - D.NET.opPct : null;
+      <h4 class="mh">Age profile · years since first registration</h4>
+      <div class="hist" role="img" aria-label="Vehicle age profile">${F.hist.map((h, i) => `<div class="hc" data-tip="${h.label} years\n${fInt(h.n)} vehicles (${fPct(F.n ? h.n / F.n * 100 : null, 0)})"><span class="n">${h.n ? fInt(h.n) : ''}</span><span class="b" style="height:${h.n / maxH * 100}%;background:${ramp[i]}"></span><span class="x">${h.label}</span></div>`).join('')}</div>
+      <div style="margin-top:12px"><div class="kv"><span>Average age</span><b>${fNum(F.avg, 1)} yrs <span class="sub" style="font-weight:400">· network ${fNum(N.avg, 1)}</span></b></div>
+      <div class="kv"><span>Registered in the last 3 years</span><b>${fPct(F.young, 0)}</b></div><div class="kv"><span>12 years or older</span><b>${fPct(F.old, 0)}</b></div></div>
+      <h4 class="mh">Most common makes</h4>
+      ${F.makes.map(([n, c]) => `<div class="kv mk"><span>${esc(n.length <= 4 ? n : n.toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase()))}</span><span class="meter" style="height:6px"><i style="width:${c / (F.makes[0]?.[1] || 1) * 100}%"></i></span><b>${Math.round(c / F.n * 100)}%</b></div>`).join('')}</div>`;
+}
+function renderDepots(){
+  const rows = D.DEPOTS[S.op], total = sum(rows, d => d.pvr), top = rows[0];
+  const shown = rows.slice(0, 6), withCap = rows.filter(d => d.util != null);
+  $('#depots').innerHTML = `<div class="ch"><div><h2>Depots</h2><p>Peak vehicles against licensed capacity</p></div></div>
+    <div class="cb">${top ? `<div class="big">${fPct(total ? top.pvr / total * 100 : null, 0)}</div><div class="sub" style="margin:2px 0 12px">of peak vehicles run from its largest depot, ${esc(top.name)}</div>` : ''}
+      ${shown.map(d => { const u = d.util, sev = u == null ? '' : u > 1 ? 'crit' : u >= .9 ? 'warn' : '';
+        return `<div class="dp" data-tip="${esc(d.name)} (${esc(d.code)})\n${d.pvr} peak vehicles · ${d.routes} routes${d.capacity ? '\nLicensed capacity ' + d.capacity : '\nCapacity not published'}"><span class="nm">${esc(d.name)}<span class="sub"> ${esc(d.code)}</span></span>
+          <span class="meter ${sev}"><i style="width:${u == null ? 0 : Math.min(100, u * 100)}%"></i></span><span class="u">${u == null ? '—' : Math.round(u * 100) + '%'}</span><span class="fl">${sev === 'crit' ? `<span class="flag">${warnIcon}Over</span>` : sev === 'warn' ? `<span class="flag">${warnIcon}Tight</span>` : ''}</span></div>`; }).join('')}
+      ${rows.length > 6 ? `<div class="sub" style="margin-top:6px">+ ${rows.length - 6} more depots</div>` : ''}
+      <div class="sub" style="margin-top:10px">${withCap.length} of ${rows.length} depots have a published licence capacity. Peak vehicles exclude spares, so utilisation is a floor.</div></div>`;
+}
+function renderQuality(){
+  const s = D.ST[S.op], N = D.NET;
+  const gap = Number.isFinite(s.opPct) && Number.isFinite(N.opPct) ? s.opPct - N.opPct : null;
+  const worst = [...s.list].filter(r => r.opPct != null).sort((a, b) => a.opPct - b.opPct).slice(0, 3);
   $('#quality').innerHTML = `<div class="ch"><div><h2>Service quality</h2><p>TfL's latest reported period</p></div></div>
     <div class="cb"><div class="big">${fPct(s.opPct)}</div><div class="sub" style="margin:2px 0 10px">of scheduled mileage operated${gap != null ? ` · ${gap >= 0 ? '+' : '−'}${Math.abs(gap).toFixed(2)} pts vs network` : ''}</div>
       <div class="meter" data-tip="Operated mileage ${fPct(s.opPct, 2)}"><i style="width:${Math.max(0, Math.min(100, (s.opPct - 80) / 20 * 100))}%"></i></div><div class="sub" style="display:flex;justify-content:space-between;margin-top:3px"><span>80%</span><span>100%</span></div>
-      <div style="margin-top:10px"><div class="kv"><span>Routes meeting their reliability standard</span><b>${fPct(s.relPassPct, 0)}</b></div>
+      <div style="margin-top:10px"><div class="kv"><span>Same period last year</span><b>${s.yoy != null ? `<span class="delta ${s.yoy >= 0 ? 'up' : 'dn'}">${s.yoy >= 0 ? '▲' : '▼'} ${Math.abs(s.yoy).toFixed(2)} pts</span>` : '—'}</b></div>
+      <div class="kv"><span>Est. mileage lost per period</span><b>${fInt(s.lostKm)} km</b></div>
+      <div class="kv"><span>Routes meeting reliability standard</span><b>${fPct(s.relPassPct, 0)}</b></div>
       <div class="kv"><span>Routes at ≥80% of capacity at peak</span><b>${s.crowded}</b></div>
-      <div class="kv"><span>Disrupted right now</span><b>${s.disrupted} <span class="sub" style="font-weight:400">of ${s.n}</span></b></div></div></div>`;
+      <div class="kv"><span>Disrupted right now</span><b>${s.disrupted} <span class="sub" style="font-weight:400">of ${s.n}</span></b></div></div>
+      ${worst.length ? `<h4 class="mh">Lowest operated mileage</h4>${worst.map(r => `<button class="nx" data-r="${esc(r.id)}"><span class="badge" style="height:22px;min-width:38px;font-size:11.5px">${esc(r.id)}</span><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><b style="font-weight:600">${r.opPct.toFixed(1)}%</b></button>`).join('')}` : ''}</div>`;
 }
+function renderWatch(){
+  const s = D.ST[S.op], list = [...s.attention].sort((a, b) => b.flags.length - a.flags.length || b.pvr - a.pvr);
+  const chips = r => r.flags.map(k => `<span class="sig" data-tip="${esc(FLAG[k].long)}">${warnIcon}${esc(FLAG[k].label)}</span>`).join('');
+  $('#watch').innerHTML = `<div class="ch"><div><h2><svg class="spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>Needs attention</h2>
+      <p>${list.length} of ${s.n} routes show three or more signals from: materially poor reliability or mileage, contract ending within a year, crowding, disruption, an ageing fleet</p></div>
+      <div class="ctl"><button class="btn" id="watchAll">View all in table</button></div></div>
+    <div class="cb"><div class="wl">${list.slice(0, 8).map(r => `<button class="nx wr" data-r="${esc(r.id)}"><span class="badge" style="height:24px;min-width:40px;font-size:12px">${esc(r.id)}</span>
+      <span class="wm"><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><span class="sigs">${chips(r)}</span></span><span class="sub" style="white-space:nowrap">${fInt(r.pvr)} PVR</span></button>`).join('') || '<div class="empty">No routes with three or more signals.</div>'}</div></div>`;
+}
+function renderCards(){ renderRecord(); renderH2H(); renderPrice(); renderFleet(); renderDepots(); renderQuality(); renderWatch(); }
 
 /* ── view: routes table ──────────────────────────────────────────────────── */
 const SORTS = {
@@ -658,6 +938,7 @@ function filtered(){
     (!S.flags.has('exp') || (r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= lim)) &&
     (!S.flags.has('high') || r.freq === 'high') &&
     (!S.flags.has('dis') || (r.status && r.status.status !== 'Good Service')) &&
+    (!S.flags.has('attn') || r.flags.length >= 3) &&
     (S.year == null || (r.cEnd && r.cEnd >= TODAY_ISO && (S.year === 'later' ? +r.cEnd.slice(0, 4) >= TODAY.getUTCFullYear() + 10 : +r.cEnd.slice(0, 4) === S.year))));
   const k = SORTS[S.sort.k]; list.sort((a, b) => { const x = k(a), y = k(b); return (x < y ? -1 : x > y ? 1 : 0) * S.sort.dir; });
   return list;
@@ -687,7 +968,7 @@ function renderTable(){
     <div class="tools"><label class="sfield"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rq" placeholder="Filter by route, place or garage" value="${esc(S.q)}" aria-label="Filter routes"></label>
       ${[['all', 'All'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['zero', 'Zero-emission']].map(([k, l]) => chip(k, l, S.prop === k, `data-prop="${k}"`)).join('')}
       <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>
-      ${chip('exp', 'Ends ≤ 24 months', S.flags.has('exp'), 'data-flag="exp"')}${chip('high', 'High frequency', S.flags.has('high'), 'data-flag="high"')}${chip('dis', 'Disrupted now', S.flags.has('dis'), 'data-flag="dis"')}
+      ${chip('exp', 'Ends ≤ 24 months', S.flags.has('exp'), 'data-flag="exp"')}${chip('high', 'High frequency', S.flags.has('high'), 'data-flag="high"')}${chip('dis', 'Disrupted now', S.flags.has('dis'), 'data-flag="dis"')}${chip('attn', 'Needs attention', S.flags.has('attn'), 'data-flag="attn"')}
       ${S.year != null ? `<button class="fchip on" data-clearyear>Contract ends ${S.year === 'later' ? 'later' : S.year} ✕</button>` : ''}</div>
     <div class="tw"><table class="rt"><thead><tr>${COLS.map(([k, l, c]) => `<th class="${c ?? ''}" ${k ? `data-sort="${k}"` : ''} scope="col">${l}${S.sort.k === k ? `<span class="ar">${S.sort.dir < 0 ? '↓' : '↑'}</span>` : ''}</th>`).join('')}</tr></thead>
     <tbody>${list.slice(0, S.shown).map(r => rowHtml(r, maxPvr)).join('') || ''}</tbody></table>${list.length ? '' : '<div class="empty">No routes match these filters.</div>'}</div>
@@ -722,42 +1003,268 @@ function shapeSvg(r){
     <circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="4.5" fill="#fff" stroke="${opColour(r.op)}" stroke-width="2.5"/><circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="5" fill="${opColour(r.op)}" stroke="#fff" stroke-width="2"/>
     ${gp ? `<rect x="${(gp[0] - 5).toFixed(1)}" y="${(gp[1] - 5).toFixed(1)}" width="10" height="10" rx="2.5" fill="var(--ink)" stroke="#fff" stroke-width="2" data-tip="${esc(r.garageName)} garage"/>` : ''}</svg>`;
 }
+/* ── lazy datasets + corridor maths for the route brief ──────────────────── */
+const LZ = {};
+const lazy = (k, url) => LZ[k] ??= get(url).catch(e => { delete LZ[k]; throw e; });
+const routeGeo = id => lazy('geo:' + id, `/data/routes/${encodeURIComponent(id)}.geojson`);
+const stopsData = () => lazy('stops', '/data/api/route-stops.json');
+const profileData = () => lazy('profile', '/data/api/crowding-profile.json');
+const accData = () => lazy('acc', '/data/api/accidents.json');
+const bridgeData = () => lazy('bridges', '/data/api/bridges.json');
+function runsOf(geo, dir){
+  const feats = geo?.features ?? [], want = dir === 'outbound' ? '1' : '2';
+  const use = feats.filter(f => String(f.properties?.direction) === want); const src = use.length ? use : feats;
+  const runs = []; for(const f of src){ const g = f.geometry; if(g?.type === 'LineString') runs.push(g.coordinates); else if(g?.type === 'MultiLineString') runs.push(...g.coordinates); }
+  return runs;
+}
+const lenKm = runs => runs.reduce((t, run) => { for(let i = 1; i < run.length; i++){ const [x0, y0] = run[i - 1], [x1, y1] = run[i]; t += Math.hypot((x1 - x0) * KX, y1 - y0) * 111.32; } return t; }, 0);
+function nearRuns(lon, lat, runs, maxM){
+  const kx = 111320 * Math.cos(lat * Math.PI / 180), ky = 111320;
+  for(const run of runs) for(let i = 1; i < run.length; i++){
+    const ax = (run[i - 1][0] - lon) * kx, ay = (run[i - 1][1] - lat) * ky, bx = (run[i][0] - lon) * kx, by = (run[i][1] - lat) * ky;
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy; let t = l2 ? -(ax * dx + ay * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+    if(Math.hypot(ax + t * dx, ay + t * dy) <= maxM) return true;
+  }
+  return false;
+}
+const CORR = new Map();
+async function corridor(r){
+  if(CORR.has(r.id)) return CORR.get(r.id);
+  const [geo, acc, br] = await Promise.all([routeGeo(r.id), accData().catch(() => null), bridgeData().catch(() => null)]);
+  const runs = [...runsOf(geo, 'outbound'), ...runsOf(geo, 'inbound')], bb = bounds(runs.length ? runs : [[[0, 0]]]), pad = .002;
+  const inBox = (lo, la) => lo >= bb.minLon - pad && lo <= bb.maxLon + pad && la >= bb.minLat - pad && la <= bb.maxLat + pad;
+  const coll = (acc?.accidents ?? []).filter(a => inBox(a.lng, a.lat) && nearRuns(a.lng, a.lat, runs, 100));
+  const bridges = (br?.bridges ?? []).filter(b => inBox(b.lng, b.lat) && nearRuns(b.lng, b.lat, runs, 25));
+  const out = { coll, bridges, period:acc?.period ?? '2021–2025', ok:!!acc };
+  CORR.set(r.id, out); return out;
+}
+
+/* ── the route map (MapLibre, loaded on first use) ────────────────────────── */
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+const LIB = [
+  { type:'css', url:'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.css', sri:'sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK' },
+  { type:'js',  url:'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js',  sri:'sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp' },
+];
+const loadAsset = a => new Promise((res, rej) => {
+  const el = document.createElement(a.type === 'css' ? 'link' : 'script');
+  if(a.type === 'css'){ el.rel = 'stylesheet'; el.href = a.url; } else el.src = a.url;
+  el.integrity = a.sri; el.crossOrigin = 'anonymous'; el.onload = () => res(); el.onerror = () => rej(new Error('failed to load ' + a.url));
+  document.head.appendChild(el);
+});
+const webglOk = (() => { let v; return () => v ??= (() => { try{ const c = document.createElement('canvas'), g = c.getContext('webgl2') || c.getContext('webgl'); g?.getExtension('WEBGL_lose_context')?.loseContext(); return !!g; }catch(e){ return false; } })(); })();
+const MH = Object.assign(document.createElement('div'), { id:'dmapHost', className:'dmaphost' });   // one persistent host, re-attached on every brief
+const MP = { map:null, ready:null, failed:false, tok:0, markers:[], liveT:null, popup:null };
+const EMPTY = { type:'FeatureCollection', features:[] };
+const fc = (pts, props = () => ({})) => ({ type:'FeatureCollection', features:pts.map((p, i) => ({ type:'Feature', properties:props(p, i), geometry:{ type:'Point', coordinates:[p.lng ?? p.lon, p.lat] } })) });
+function chevron(){
+  const c = document.createElement('canvas'); c.width = c.height = 32; const x = c.getContext('2d');
+  x.lineWidth = 5; x.lineCap = x.lineJoin = 'round'; x.strokeStyle = '#fff'; x.beginPath(); x.moveTo(11, 8); x.lineTo(21, 16); x.lineTo(11, 24); x.stroke();
+  return x.getImageData(0, 0, 32, 32);
+}
+function warnIcon32(){
+  const c = document.createElement('canvas'); c.width = c.height = 40; const x = c.getContext('2d');
+  x.lineJoin = 'round'; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(20, 5); x.lineTo(35, 33); x.lineTo(5, 33); x.closePath();
+  x.fillStyle = '#fab219'; x.strokeStyle = '#fff'; x.lineWidth = 5; x.stroke(); x.fill();
+  x.strokeStyle = '#101828'; x.lineWidth = 3; x.beginPath(); x.moveTo(20, 15); x.lineTo(20, 24); x.stroke();
+  x.fillStyle = '#101828'; x.beginPath(); x.arc(20, 29, 1.8, 0, 7); x.fill();
+  return x.getImageData(0, 0, 40, 40);
+}
+// Positron, retuned: cool pastel land and water that sit behind the dashboard palette, quieter roads and labels
+function tuneBasemap(map){
+  const set = (id, prop, v) => { try{ if(map.getLayer(id)) map.setPaintProperty(id, prop, v); }catch(e){} };
+  set('background', 'background-color', '#f4f6f9');
+  set('park', 'fill-color', '#e4eee8'); set('landcover_wood', 'fill-color', '#dce9e1');
+  set('water', 'fill-color', '#d3e3f4'); set('waterway', 'line-color', '#c3d9ef');
+  set('landuse_residential', 'fill-color', '#f0f2f6'); set('building', 'fill-color', '#e8ebf0');
+  for(const id of ['highway_minor', 'highway_path']) set(id, 'line-color', '#e4e8ee');
+  for(const id of ['highway_major_casing', 'highway_motorway_casing', 'highway_motorway_bridge_casing', 'tunnel_motorway_casing']) set(id, 'line-color', '#dde1e8');
+  for(const id of ['railway', 'railway_transit', 'railway_service']) set(id, 'line-color', '#d8dce4');
+  for(const id of ['highway-name-minor', 'highway-name-major', 'highway-name-path']) set(id, 'text-color', '#7a8497');
+  for(const id of ['label_other', 'label_village', 'label_town']) set(id, 'text-color', '#475467');
+  for(const id of ['label_city', 'label_city_capital', 'label_country_1', 'label_country_2', 'label_country_3', 'label_state']) set(id, 'text-color', '#101828');
+  for(const id of ['water_name_point_label', 'water_name_line_label']) set(id, 'text-color', '#6f8fbd');
+}
+let pulseRaf = null;
+function pulse(){
+  cancelAnimationFrame(pulseRaf);
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const t0 = performance.now();
+  const step = t => { if(!S.ml.live || !MP.map || !S.route || !MP.map.getLayer('live-halo')) return; const k = ((t - t0) % 1800) / 1800; MP.map.setPaintProperty('live-halo', 'circle-radius', 9 + k * 14); MP.map.setPaintProperty('live-halo', 'circle-opacity', .3 * (1 - k)); pulseRaf = requestAnimationFrame(step); };
+  pulseRaf = requestAnimationFrame(step);
+}
+function mapEnsure(){
+  return MP.ready ??= (async () => {
+    if(!webglOk()) throw new Error('WebGL unavailable');
+    await Promise.all(LIB.map(loadAsset)); if(!window.maplibregl) throw new Error('MapLibre unavailable');
+    const map = new maplibregl.Map({ container:MH, style:MAP_STYLE, center:[-0.11, 51.51], zoom:10, attributionControl:{ compact:true }, cooperativeGestures:true, fadeDuration:0 });
+    map.addControl(new maplibregl.NavigationControl({ showCompass:false }), 'top-right');
+    await new Promise((res, rej) => { const t = setTimeout(() => rej(new Error('map style timed out')), 12000); map.once('load', () => { clearTimeout(t); res(); }); });
+    tuneBasemap(map);
+    map.addImage('chev', chevron(), { pixelRatio:2 }); map.addImage('warn', warnIcon32(), { pixelRatio:2 });
+    for(const id of ['route', 'stops', 'works', 'coll', 'bridges', 'live']) map.addSource(id, { type:'geojson', data:EMPTY });
+    const W = ['interpolate', ['linear'], ['zoom'], 9, 1, 16, 1];   // keep the expression helpers readable
+    map.addLayer({ id:'coll', type:'circle', source:'coll', paint:{ 'circle-radius':4.5, 'circle-color':['match', ['get', 'sev'], 'fatal', '#101828', '#eb6834'], 'circle-stroke-color':'#fff', 'circle-stroke-width':1.5, 'circle-opacity':.9 } });
+    map.addLayer({ id:'bridges', type:'circle', source:'bridges', paint:{ 'circle-radius':5.5, 'circle-color':['case', ['<', ['get', 'h'], 4.2], '#d03b3b', '#fab219'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2 } });
+    map.addLayer({ id:'route-glow', type:'line', source:'route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#2a78d6', 'line-opacity':.28, 'line-blur':7, 'line-width':['interpolate', ['linear'], ['zoom'], 9, 9, 16, 22] } });
+    map.addLayer({ id:'route-case', type:'line', source:'route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#fff', 'line-opacity':.95, 'line-width':['interpolate', ['linear'], ['zoom'], 9, 5, 16, 13] } });
+    map.addLayer({ id:'route-line', type:'line', source:'route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#2a78d6', 'line-width':['interpolate', ['linear'], ['zoom'], 9, 3, 16, 7.5] } });
+    map.addLayer({ id:'route-chev', type:'symbol', source:'route', layout:{ 'symbol-placement':'line', 'symbol-spacing':70, 'icon-image':'chev', 'icon-size':.5, 'icon-allow-overlap':true, 'icon-rotation-alignment':'map' } });
+    map.addLayer({ id:'stops', type:'circle', source:'stops', paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 10, ['case', ['get', 'term'], 3.6, 1.8], 15, ['case', ['get', 'term'], 6.5, 4.4]], 'circle-color':'#fff', 'circle-stroke-color':'#2a78d6', 'circle-stroke-width':['case', ['get', 'term'], 2.6, 1.6] } });
+    map.addLayer({ id:'works', type:'symbol', source:'works', layout:{ 'icon-image':'warn', 'icon-size':.62, 'icon-allow-overlap':true } });
+    map.addLayer({ id:'live-halo', type:'circle', source:'live', paint:{ 'circle-radius':11, 'circle-color':'#2a78d6', 'circle-opacity':.2 } });
+    map.addLayer({ id:'live', type:'circle', source:'live', paint:{ 'circle-radius':6.5, 'circle-color':'#101828', 'circle-stroke-color':'#fff', 'circle-stroke-width':2 } });
+    map.addLayer({ id:'live-dir', type:'symbol', source:'live', layout:{ 'icon-image':'chev', 'icon-size':.34, 'icon-allow-overlap':true, 'icon-rotate':['-', ['coalesce', ['get', 'bearing'], 90], 90], 'icon-rotation-alignment':'map' } });
+    // hover + click popups, built from text nodes (labels are data, never HTML)
+    MP.popup = new maplibregl.Popup({ closeButton:false, closeOnClick:true, offset:12, maxWidth:'260px' });
+    const say = (e, title, rows) => { const d = document.createElement('div'); const b = document.createElement('b'); b.textContent = title; d.append(b); rows.filter(Boolean).forEach(t => { const p = document.createElement('div'); p.className = 'pp'; p.textContent = t; d.append(p); }); MP.popup.setLngLat(e.lngLat).setDOMContent(d).addTo(map); };
+    const on = (layer, fn) => { map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer'); map.on('mouseleave', layer, () => map.getCanvas().style.cursor = ''); map.on('click', layer, e => fn(e, e.features[0].properties)); };
+    on('stops', (e, p) => say(e, p.name, [p.letter ? 'Stop ' + p.letter : '', p.lines ? 'Also served by: ' + p.lines : '']));
+    on('works', (e, p) => say(e, p.location, [p.sev + ' · ' + p.status, p.until ? 'Until ' + p.until : '', p.note]));
+    on('coll', (e, p) => say(e, (p.sev === 'fatal' ? 'Fatal' : 'Serious') + ' collision', [p.date, p.road]));
+    on('bridges', (e, p) => say(e, p.name || 'Height restriction', [p.h ? 'Clearance ' + p.h + ' m' : '', p.kind]));
+    on('live', (e, p) => say(e, 'Bus ' + p.reg, [p.dest ? 'To ' + p.dest : '', p.rec ? 'Updated ' + p.rec : '']));
+    return map;
+  })().catch(e => { MP.failed = true; MP.ready = null; throw e; });
+}
+const setVis = (map, ids, on) => ids.forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
+function applyLayers(map){
+  setVis(map, ['stops'], S.ml.stops); setVis(map, ['works'], S.ml.works); setVis(map, ['coll'], S.ml.coll);
+  setVis(map, ['bridges'], S.ml.bridges); setVis(map, ['live-halo', 'live', 'live-dir'], S.ml.live);
+}
+function chipCount(key, n){ const el = $(`#drawer [data-ml="${key}"] .cnt`); if(el) el.textContent = n == null ? '' : ' · ' + n; }
+function liveStop(){ clearTimeout(MP.liveT); MP.liveT = null; cancelAnimationFrame(pulseRaf); }
+async function livePoll(r, tok){
+  if(!S.ml.live || tok !== MP.tok) return;
+  const chip = $('#drawer [data-ml="live"]');
+  try{
+    const res = await fetch('/api/live/vehicles?line=' + encodeURIComponent(r.id)); if(!res.ok) throw new Error('feed ' + res.status);
+    const j = await res.json(); if(tok !== MP.tok || !S.ml.live) return;
+    const rows = (j.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng));
+    MP.map.getSource('live').setData(fc(rows, v => ({ reg:v.reg, bearing:v.bearing, dest:v.destination, rec:v.recordedAt ? new Date(v.recordedAt).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '' })));
+    chipCount('live', rows.length); chip?.classList.remove('off'); chip?.removeAttribute('title'); pulse();
+    MP.liveT = setTimeout(() => livePoll(r, tok), 10000);
+  }catch(e){ chipCount('live', null); chip?.classList.add('off'); chip?.classList.add('off'); chip?.setAttribute('title', 'The live feed is not available right now'); }
+}
+async function mapShow(r){
+  const tok = ++MP.tok; liveStop();
+  let map; try{ map = await mapEnsure(); }catch(e){ console.warn('Route map unavailable:', e.message); mapFallback(r); return; }
+  if(tok !== MP.tok) return;
+  MP.map = map; MH.dataset.state = 'ready'; map.resize(); applyLayers(map);
+  for(const id of ['route', 'stops', 'coll', 'bridges', 'live']) map.getSource(id).setData(EMPTY);
+  MP.markers.forEach(m => m.remove()); MP.markers = [];
+  for(const [id, prop] of [['route-line', 'line-color'], ['route-glow', 'line-color']]) map.setPaintProperty(id, prop, opColour(r.op));
+  map.setPaintProperty('stops', 'circle-stroke-color', opColour(r.op));
+  const geo = await routeGeo(r.id).catch(() => null); if(tok !== MP.tok) return;
+  const runs = runsOf(geo, S.dir);
+  map.getSource('route').setData({ type:'FeatureCollection', features:runs.map(c => ({ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:c } })) });
+  const all = runs.flat();
+  if(all.length){ map.resize(); const bb = bounds([all]); map.fitBounds([[bb.minLon, bb.minLat], [bb.maxLon, bb.maxLat]], { padding:{ top:56, bottom:40, left:44, right:56 }, duration:0, maxZoom:15 }); }
+  const pin = (txt, bg) => { const el = document.createElement('div'); el.className = 'pin'; el.style.background = bg; el.textContent = txt; return el; };
+  if(all.length){
+    const last = runs[runs.length - 1], a = runs[0][0], b = last[last.length - 1];
+    MP.markers.push(new maplibregl.Marker({ element:pin('A', '#fff') }).setLngLat(a).addTo(map), new maplibregl.Marker({ element:pin('B', opColour(r.op)) }).setLngLat(b).addTo(map));
+    MP.markers[0].getElement().style.color = opColour(r.op); MP.markers[0].getElement().style.border = `2.5px solid ${opColour(r.op)}`;
+  }
+  const g = D.garages.find(x => x.code === r.garage);
+  if(g && Number.isFinite(g.lat)){ const el = document.createElement('div'); el.className = 'gpin'; el.title = `${g.name} garage`; el.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>'; MP.markers.push(new maplibregl.Marker({ element:el }).setLngLat([g.lng, g.lat]).addTo(map)); }
+  // roadworks the TIMS feed has joined to this route
+  const wk = r.works.filter(w => Number.isFinite(w.lat));
+  map.getSource('works').setData(fc(wk, w => ({ location:String(w.location ?? '').replace(/\s*\(.*$/, ''), sev:w.severity, status:w.status, until:w.endDateTime ? fDate(w.endDateTime) : '', note:String(w.currentUpdate ?? w.comments ?? '').slice(0, 140) })));
+  chipCount('works', wk.length);
+  stopsData().then(sd => {
+    if(tok !== MP.tok) return;
+    const list = sd?.routes?.[r.id]?.[S.dir] ?? [];
+    map.getSource('stops').setData(fc(list, (st, i) => ({ term:i === 0 || i === list.length - 1, name:st.name, letter:st.letter ?? '', lines:(st.lines ?? []).filter(l => l !== r.id).slice(0, 8).join(', ') })));
+    chipCount('stops', list.length);
+    const km = lenKm(runs); const nm = $('#mapNote'); if(nm) nm.textContent = `${fNum(km, 1)} km · ${list.length} stops${list.length > 1 && km ? ` · one every ${Math.round(km * 1000 / (list.length - 1))} m` : ''} · ${S.dir === 'outbound' ? 'towards ' + r.from : 'towards ' + r.to}`;
+  }).catch(() => chipCount('stops', null));
+  corridor(r).then(c => {
+    if(tok !== MP.tok) return;
+    map.getSource('coll').setData(fc(c.coll.filter(a => a.severity !== 'slight'), a => ({ sev:a.severity, date:fDate(a.date), road:[a.roadType, a.speedLimit].filter(Boolean).join(' · ') })));
+    map.getSource('bridges').setData(fc(c.bridges, b => ({ h:b.height_m ?? null, name:b.name ?? b.road, kind:b.structure_type })));
+    chipCount('coll', c.coll.filter(a => a.severity !== 'slight').length); chipCount('bridges', c.bridges.length);
+  }).catch(() => {});
+  if(S.ml.live) livePoll(r, tok);
+}
+function mapFallback(r){ const slot = $('#drawer .mapbox'); if(slot) slot.innerHTML = `<div class="shape" style="border:0;border-radius:0">${shapeSvg(r)}</div>`; $('#drawer .mapbar')?.setAttribute('hidden', ''); }
+
+/* ── drawer charts ───────────────────────────────────────────────────────── */
+function profileChart(prof){
+  if(!prof?.length) return '<div class="sub">No load profile for this route.</div>';
+  const w = 460, h = 130, n = prof.length, X = i => 8 + i * (w - 52) / Math.max(1, n - 1), Y = v => h - 20 - Math.min(1.3, v) / 1.3 * (h - 36);
+  const pts = prof.map((p, i) => [X(i), Y(p.vc), p]), path = pts.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1)).join('');
+  const peak = pts.reduce((m, p) => p[2].vc > m[2].vc ? p : m, pts[0]), step = (w - 52) / Math.max(1, n - 1), t = s => String(s).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Passenger load along the route, peaking at ${Math.round(peak[2].vc * 100)}%">
+    ${[0, .5, .8, 1].map(v => `<line x1="0" x2="${w - 40}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="${v === .8 ? 'var(--warn)' : 'var(--line)'}"/><text x="${w - 36}" y="${(Y(v) + 3.5).toFixed(1)}" font-size="10.5" fill="var(--ink-3)">${Math.round(v * 100)}%</text>`).join('')}
+    <path d="${path}L${pts[n - 1][0].toFixed(1)} ${Y(0)}L${pts[0][0].toFixed(1)} ${Y(0)}Z" fill="var(--accent)" fill-opacity=".1"/>
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${peak[0].toFixed(1)}" cy="${peak[1].toFixed(1)}" r="4" fill="var(--accent)" stroke="#fff" stroke-width="2"/>
+    <text x="${Math.min(peak[0] + 8, w - 120).toFixed(1)}" y="${(peak[1] - 7).toFixed(1)}" font-size="11.5" font-weight="600" fill="var(--ink)">${Math.round(peak[2].vc * 100)}% at ${esc(t(peak[2].name).slice(0, 22))}</text>
+    <text x="8" y="${h - 3}" font-size="10.5" fill="var(--ink-3)">${esc(t(prof[0].name).slice(0, 24))}</text><text x="${w - 40}" y="${h - 3}" font-size="10.5" fill="var(--ink-3)" text-anchor="end">${esc(t(prof[n - 1].name).slice(0, 24))}</text>
+    ${pts.map(([x, , p]) => `<rect x="${(x - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${h}" fill="transparent" data-tip="${esc(t(p.name))}\nPeak load ${Math.round(p.vc * 100)}% of capacity"/>`).join('')}</svg>`;
+}
 function renderDrawer(r){
   const rel = D.relPass(r), pf = r.pf;
   const cpmD = r.cpm && D.netMedianCpm ? (r.cpm / D.netMedianCpm - 1) * 100 : null;
   const opSeries = D.last13.map(p => ({ x:p, y:pf?.operatedPct?.[p] })), relSeries = D.last13.map(p => ({ x:p, y:pf?.reliability?.[p] }));
   const hist = [...r.hist].reverse().filter(a => a.costPerMile > 0).map(a => ({ x:String(a.awardDate).slice(0, 4), y:a.costPerMile }));
   const cr = r.crowd, st = r.status, good = !st || st.status === 'Good Service';
-  const idx = filtered().findIndex(x => x.id === r.id);
+  const idx = filtered().findIndex(x => x.id === r.id), kmPv = r.dailyKm && r.pvr ? r.dailyKm / r.pvr : null;
+  const ly = (k, label, sw) => `<button class="ly ${S.ml[k] ? 'on' : ''}" data-ml="${k}" aria-pressed="${S.ml[k]}"><i class="sw ${sw}"></i>${label}<span class="cnt"></span></button>`;
   $('#drawer').innerHTML = `<div class="dh"><span class="badge">${esc(r.id)}</span><div style="min-width:0"><h3 id="dTitle">${esc(r.from || '—')} ⇄ ${esc(r.to || '—')}</h3>
       <div class="chips" style="margin-top:6px"><span class="chip"><i class="dot" style="background:${opColour(r.op)}"></i>${esc(r.op)}</span><span class="chip">${esc(r.garageName)} (${esc(r.garage)})</span>${r.type && r.type !== 'regular' ? `<span class="chip">${esc(r.type)}</span>` : ''}</div></div>
       <div class="x"><button class="ib" id="dPrev" aria-label="Previous route" ${idx <= 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ib" id="dNext" aria-label="Next route" ${idx < 0 || idx >= filtered().length - 1 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button><button class="ib" id="dClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
     <div class="db">
       <div class="status-line ${good ? 'good' : 'bad'}">${good ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><span><b>Good service</b> right now</span>' : `${warnIcon}<span><b>${esc(st.status)}</b> — ${esc(String(st.reason ?? '').slice(0, 220))}${String(st.reason ?? '').length > 220 ? '…' : ''}</span>`}</div>
+      ${r.flags.length ? `<section><h4>Attention signals</h4><div class="sigs">${r.flags.map(k => `<span class="sig" data-tip="${esc(FLAG[k].long)}">${warnIcon}${esc(FLAG[k].long)}</span>`).join('')}</div></section>` : ''}
       <div class="mini">
         <div><div class="l">Peak vehicles</div><div class="v">${fInt(r.pvr)}</div><div class="s">${r.tvr ? fInt(r.tvr) + ' total' : '&nbsp;'}</div></div>
         <div><div class="l">Fleet age</div><div class="v">${r.age != null ? fNum(r.age, 1) + ' y' : '—'}</div><div class="s">${esc(PROP_LABEL[r.prop] ?? r.prop)}${r.deck ? ' · ' + esc(r.deck) + '-deck' : ''}</div></div>
         <div><div class="l">Price</div><div class="v">${r.cpm ? '£' + r.cpm.toFixed(2) : '—'}</div><div class="s">${cpmD != null ? (cpmD >= 0 ? '+' : '−') + Math.abs(cpmD).toFixed(0) + '% vs network' : 'per mile'}</div></div>
-        <div><div class="l">Operated</div><div class="v">${r.opPct != null ? r.opPct.toFixed(1) + '%' : '—'}</div><div class="s">${r.opPrev != null && r.opPct != null ? (r.opPct - r.opPrev >= 0 ? '▲ ' : '▼ ') + Math.abs(r.opPct - r.opPrev).toFixed(1) + ' pts' : esc(r.opPeriod ?? '')}</div></div>
+        <div><div class="l">Operated</div><div class="v">${r.opPct != null ? r.opPct.toFixed(1) + '%' : '—'}</div><div class="s">${r.opYoY != null ? (r.opYoY >= 0 ? '▲ ' : '▼ ') + Math.abs(r.opYoY).toFixed(1) + ' pts vs last year' : esc(r.opPeriod ?? '')}</div></div>
         <div><div class="l">Reliability</div><div class="v">${r.rel != null ? r.rel.toFixed(r.rel < 10 ? 2 : 1) : '—'}</div><div class="s">${rel == null ? esc(r.relMetric ?? '') : rel ? '✓ meets ' + esc(r.relStd) : '⚠ below ' + esc(r.relStd)} ${rel == null ? '' : '· ' + esc((r.relMetric ?? '').replace(' (mins)', ''))}</div></div>
         <div><div class="l">Peak load</div><div class="v">${cr ? Math.round(cr.peakVC * 100) + '%' : '—'}</div><div class="s">${cr ? esc(cr.band) + ' · ' + esc(String(cr.stopname ?? '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).slice(0, 22)) : '&nbsp;'}</div></div>
       </div>
-      <section><h4>Shape &amp; garage</h4><div class="shape">${shapeSvg(r)}</div><div class="sub" style="margin-top:6px">${r.km ? fNum(r.km, 0) + ' km · ' : ''}${esc(r.vehicle ?? '')} · drawn from TfL geometry, in the context of ${esc(r.op)}'s network</div></section>
+      <section><h4>Route map</h4>
+        <div class="mapbox ${S.mapBig ? 'big' : ''}" id="mapbox">${MP.failed ? `<div class="shape" style="border:0;border-radius:0;height:100%">${shapeSvg(r)}</div>` : '<div id="mapSlot" class="mapslot"></div>'}
+          ${MP.failed ? '' : `<div class="mapui tl"><div class="seg float" id="dirSeg" role="group" aria-label="Direction"><button class="${S.dir === 'outbound' ? 'on' : ''}" data-dir="outbound" data-tip="Towards ${esc(r.from)}">→ ${esc((r.from || 'Outbound').slice(0, 16))}</button><button class="${S.dir === 'inbound' ? 'on' : ''}" data-dir="inbound" data-tip="Towards ${esc(r.to)}">→ ${esc((r.to || 'Inbound').slice(0, 16))}</button></div></div>
+          <div class="mapui tr2"><button class="ib float" id="mapBig" aria-label="Expand map" data-tip="Expand map"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button></div>
+`} </div>
+        ${MP.failed ? '' : `<div class="lyrow">          ${ly('stops', 'Stops', 'st')}${ly('works', 'Roadworks', 'wk')}${ly('coll', 'Collisions', 'cl')}${ly('bridges', 'Low bridges', 'br')}${ly('live', 'Live buses', 'lv')}</div>`}
+        <div class="sub" id="mapNote" style="margin-top:8px">${r.km ? fNum(r.km, 0) + ' km · ' : ''}${esc(r.vehicle ?? '')}</div></section>
+      <section><h4>Network &amp; productivity</h4>
+        <div class="kv"><span>Scheduled weekday distance</span><b>${r.dailyKm ? fInt(r.dailyKm) + ' km' : '—'}${r.trips ? ` <span class="sub" style="font-weight:400">· ${r.trips.outbound + r.trips.inbound} trips</span>` : ''}</b></div>
+        <div class="kv"><span>Km per peak vehicle per day</span><b>${kmPv ? fInt(kmPv) : '—'} ${kmPv && D.NET.kmPerPvr ? `<span class="sub" style="font-weight:400">· network ${fInt(D.NET.kmPerPvr)}</span>` : ''}</b></div>
+        <div class="kv"><span>Diversion notices, last 30 days</span><b>${r.divDays} <span class="sub" style="font-weight:400">of 30 days</span></b></div>
+        <div class="kv"><span>Roadworks on the route now</span><b>${r.works.length}</b></div></section>
       <section><h4>Contract</h4>
         <div class="kv"><span>Current contract</span><b>${fMon(r.cStart)} → ${fMon(r.cEnd)}</b></div>
         <div class="kv"><span>Annual value (accepted bid)</span><b>${fGbp(r.cur?.acceptedBid)}</b></div>
-        <div class="kv"><span>Bids received</span><b>${r.cur?.numberOfTenderers ?? '—'}</b></div>
+        <div class="kv"><span>Bids received</span><b>${r.cur?.numberOfTenderers ?? '—'}${r.cur?.lowestBid && r.cur?.acceptedBid ? ` <span class="sub" style="font-weight:400">· accepted ${r.cur.acceptedBid <= r.cur.lowestBid ? 'the lowest' : '+' + ((r.cur.acceptedBid / r.cur.lowestBid - 1) * 100).toFixed(1) + '% over lowest'}</span>` : ''}</b></div>
         ${r.next ? `<div class="kv"><span>Next tender</span><b>issues ${fMon(r.next.issueDate)} · starts ${fMon(r.next.contractStart)}</b></div>` : ''}</section>
+      <section><h4>Peak load along the route</h4><div id="profBox"><div class="sub">Loading…</div></div></section>
       <section><h4>Operated mileage · last 13 periods</h4>${lineChart(opSeries, { fmt:v => v.toFixed(1) + '%', ref:r.opMin, refLabel:r.opMin != null ? 'Min ' + r.opMin + '%' : '' })}</section>
       <section><h4>Reliability · ${esc(r.relMetric ?? '—')}</h4>${lineChart(relSeries, { fmt:v => v.toFixed(2), ref:r.relStd, refLabel:r.relStd != null ? 'Std ' + r.relStd : '' })}<div class="sub">${/EWT/.test(r.relMetric ?? '') ? 'Lower is better.' : 'Higher is better.'}</div></section>
+      <section><h4>Corridor risk</h4><div id="riskBox"><div class="sub">Loading…</div></div></section>
       <section><h4>Price history · £ per mile at award</h4>${lineChart(hist, { fmt:v => '£' + v.toFixed(2), h:110 })}</section>
       <section><h4>Award history</h4><div class="tl">${r.hist.map(a => { const g = grp(a.operator); return `<div class="it"><i class="dot" style="background:${opColour(g)}"></i><div><div class="t">${esc(a.operator)}${a.operatorChange ? ' <span class="tag blue" style="margin-left:4px">Operator change</span>' : ''}</div><div class="m">${esc(fDate(a.awardDate))} · ${a.numberOfTenderers ?? '?'} bid${a.numberOfTenderers === 1 ? '' : 's'}${a.fromOperator && a.operatorChange ? ' · from ' + esc(a.fromOperator) : ''}</div></div><div class="p">${a.costPerMile ? '£' + a.costPerMile.toFixed(2) : '—'}<div class="m" style="font-weight:400">${fGbp(a.acceptedBid)}/yr</div></div></div>`; }).join('') || '<div class="sub">No award history.</div>'}</div></section>
     </div>`;
+  $('#mapSlot')?.replaceWith(MH);
+  if(!MP.failed) mapShow(r);
+  profileData().then(pd => { const b = $('#profBox'); if(b && S.route === r.id) b.innerHTML = profileChart(pd?.routes?.[r.id]?.loadProfile) + '<div class="sub">Share of capacity used at each stop in the busiest period; the amber line is 80%.</div>'; }).catch(() => { const b = $('#profBox'); if(b) b.innerHTML = '<div class="sub">Load profile unavailable.</div>'; });
+  corridor(r).then(c => {
+    const b = $('#riskBox'); if(!b || S.route !== r.id) return;
+    const sv = c.coll.filter(a => a.severity === 'serious').length, fa = c.coll.filter(a => a.severity === 'fatal').length, low = c.bridges.filter(x => Number.isFinite(x.height_m)).sort((x, y) => x.height_m - y.height_m)[0];
+    b.innerHTML = c.ok ? `<div class="mini" style="grid-template-columns:repeat(3,1fr)"><div><div class="l">Collisions</div><div class="v">${c.coll.length}</div><div class="s">${esc(c.period)}, ≤100 m</div></div><div><div class="l">Serious or fatal</div><div class="v">${sv + fa}</div><div class="s">${sv} serious · ${fa} fatal</div></div><div><div class="l">Lowest bridge</div><div class="v">${low ? low.height_m + ' m' : '—'}</div><div class="s">${low ? esc(low.name ?? low.road ?? '') .slice(0, 22) : 'none within 25 m'}</div></div></div>
+      <div class="sub" style="margin-top:8px">Bus and coach collisions near the route line (DfT STATS19), not an operator safety measure. A double-decker needs about 4.4 m.</div>` : '<div class="sub">Collision data unavailable.</div>';
+  }).catch(() => { const b = $('#riskBox'); if(b) b.innerHTML = '<div class="sub">Corridor data unavailable.</div>'; });
 }
 let lastFocus = null;
 function openRoute(id, push = true){
   const r = D.byId.get(id); if(!r) return;
   if(S.op !== r.op){ S.op = r.op; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; renderAll(); }
+  if(S.route !== id) S.dir = 'outbound';
   S.route = id; renderDrawer(r);
   $('#drawer').classList.add('open'); $('#drawer').setAttribute('aria-hidden', 'false'); $('#scrim').classList.add('open');
   lastFocus ??= document.activeElement; $('#dClose')?.focus();
@@ -766,6 +1273,7 @@ function openRoute(id, push = true){
 }
 function closeRoute(){
   if(!S.route) return; S.route = null;
+  liveStop(); MP.tok++;
   $('#drawer').classList.remove('open'); $('#drawer').setAttribute('aria-hidden', 'true'); $('#scrim').classList.remove('open');
   $$('tr.row.sel').forEach(t => t.classList.remove('sel')); lastFocus?.focus?.(); lastFocus = null; syncHash();
 }
@@ -820,6 +1328,12 @@ function csv(){
 document.addEventListener('click', e => {
   const t = e.target;
   const op = t.closest('[data-op]'); if(op){ setOp(op.dataset.op); return; }
+  const ml = t.closest('[data-ml]'); if(ml){ const k = ml.dataset.ml; S.ml[k] = !S.ml[k]; ml.classList.toggle('on', S.ml[k]); ml.setAttribute('aria-pressed', String(S.ml[k]));
+    if(MP.map){ applyLayers(MP.map); if(k === 'live'){ if(S.ml.live) livePoll(D.byId.get(S.route), MP.tok); else { liveStop(); MP.map.getSource('live').setData(EMPTY); } } } return; }
+  const dr = t.closest('[data-dir]'); if(dr){ S.dir = dr.dataset.dir; $$('#dirSeg button').forEach(b => b.classList.toggle('on', b === dr)); mapShow(D.byId.get(S.route)); return; }
+  if(t.closest('#mapBig')){ S.mapBig = !S.mapBig; $('#mapbox').classList.toggle('big', S.mapBig); setTimeout(() => MP.map?.resize(), 280); return; }
+  const rl = t.closest('[data-real]'); if(rl){ S.real = rl.dataset.real === '1'; renderPrice(); return; }
+  if(t.closest('#watchAll')){ S.flags.add('attn'); S.shown = 30; renderTable(); $('#routes').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const m = t.closest('[data-metric]'); if(m){ S.metric = m.dataset.metric; renderMarket(); return; }
   const mv = t.closest('[data-mview]'); if(mv){ S.mView = mv.dataset.mview; renderMarket(); return; }
   const rw = t.closest('[data-rw]'); if(rw){ S.rwMetric = rw.dataset.rw; renderRunway(); return; }
@@ -880,10 +1394,13 @@ $('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
     D.bb = D.lines.size ? robustBounds([...D.lines.values()]) : { minLon:-0.5, maxLon:0.3, minLat:51.3, maxLat:51.7 };
     const gen = raw.manifest?.generatedAt;
     $('#fresh').innerHTML = `<i></i>Data as of ${gen ? esc(fDate(gen)) : 'recently'}`;
-    $('#app').innerHTML = `<section id="overview"><div id="hero"></div><div class="grid sec" id="kpis"></div></section>
+    $('#app').innerHTML = `<section id="overview"><div id="hero"></div><section class="card sec" id="brief" aria-label="Briefing"></section><div class="grid sec" id="kpis"></div><div class="grid sec" id="kpis2" aria-label="Commercial and operational signals"></div></section>
       <div class="grid sec"><section class="card s5" id="market" aria-label="Market position"></section><section class="card s7" id="runway" aria-label="Contract runway"></section></div>
-      <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="fleet" aria-label="Fleet profile"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
+      <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="h2h" aria-label="Head-to-head"></section><section class="card s4" id="price" aria-label="Price per mile"></section></div>
+      <div class="grid sec"><section class="card s4" id="fleet" aria-label="Fleet register"></section><section class="card s4" id="depots" aria-label="Depots"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
+      <section class="card sec" id="watch" aria-label="Needs attention"></section>
       <section class="card sec" id="routes" aria-label="Routes"></section>`;
+    if(new URLSearchParams(location.search).has('debug')) window.__v3 = { D, S };
     const orig = fromHash(); renderAll();
     // rail: "Contracts" jumps to the runway card, "Fleet" to the fleet card; the section in view is highlighted
     const spy = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting) $$('.rail a.nav[data-sec]').forEach(a => a.classList.toggle('on', a.dataset.sec === en.target.dataset.spy)); }), { rootMargin:'-30% 0px -60% 0px' });
