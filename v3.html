@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Operator Intelligence · London Buses (v3 concept)</title>
+<meta name="description" content="Concept: a London bus operator intelligence dashboard built on the project's open data.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f5f6f8; --surface:#fff; --sunken:#f2f4f7; --hover:#f9fafb;
+  --line:#e6e8ec; --line-2:#d5d9e0;
+  --ink:#101828; --ink-2:#475467; --ink-3:#667085;
+  --accent:#2a78d6; --accent-ink:#184f95; --accent-soft:#eaf2fd; --accent-line:#b7d3f6;
+  --seq-1:#cde2fb; --seq-2:#9ec5f4; --seq-3:#6da7ec; --seq-4:#2a78d6; --seq-5:#184f95;
+  --good:#0ca30c; --good-ink:#006300; --warn:#fab219; --warn-ink:#8a5a00; --crit:#d03b3b;
+  --gray-bar:#d0d5dd;
+  --zero:#104281; --hybrid:#2a78d6; --diesel:#86b6ef;
+  --radius:16px; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 1px rgba(16,24,40,.03);
+  --pop:0 16px 40px rgba(16,24,40,.16),0 2px 8px rgba(16,24,40,.06);
+  --rail:72px; --top:64px;
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:8px 12px;border-radius:8px;z-index:300}
+.skip:focus{left:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* shell ------------------------------------------------------------------ */
+.rail{position:fixed;inset:0 auto 0 0;width:var(--rail);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;z-index:50}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--ink);display:grid;place-items:center;margin-bottom:14px}
+.rail a.nav{width:56px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border-radius:12px;color:var(--ink-3);text-decoration:none;font-size:10.5px;font-weight:500}
+.rail a.nav svg{width:20px;height:20px}
+.rail a.nav:hover{background:var(--sunken);color:var(--ink)}
+.rail a.nav.on{background:var(--accent-soft);color:var(--accent-ink)}
+.rail .sp{flex:1}
+.col{margin-left:var(--rail);min-width:0}
+.top{position:sticky;top:0;z-index:40;height:var(--top);display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(255,255,255,.82);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.top .mlogo{display:none}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-size:13px;font-weight:500;box-shadow:var(--shadow)}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#1d2939}
+.btn svg{width:16px;height:16px;flex:none}
+.opsw{position:relative}
+.opsw>.btn{font-weight:600;padding:0 10px 0 8px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.menu{position:absolute;left:0;top:44px;min-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--pop);padding:6px;z-index:60}
+.menu[hidden]{display:none}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:9px}
+.menu button:hover,.menu button[aria-current=true]{background:var(--sunken)}
+.menu .nm{font-weight:550;flex:1;white-space:nowrap}
+.menu .mt{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.searchbtn{flex:1;max-width:420px;justify-content:flex-start;color:var(--ink-3);font-weight:400;background:var(--sunken);box-shadow:none;border-color:transparent}
+.searchbtn:hover{background:#eaecf0}
+kbd{margin-left:auto;font:inherit;font-size:11px;color:var(--ink-3);border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:0 6px;line-height:18px}
+.grow{flex:1}
+.fresh{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.fresh i{width:7px;height:7px;border-radius:50%;background:var(--good)}
+main{max-width:1264px;margin:0 auto;padding:28px 28px 80px}
+.sec{margin-top:20px}
+
+/* cards ------------------------------------------------------------------ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.ch{display:flex;align-items:flex-start;gap:12px;padding:18px 20px 0}
+.ch h2{margin:0;font-size:14px;font-weight:600;letter-spacing:-.005em}
+.ch p{margin:2px 0 0;font-size:12.5px;color:var(--ink-3)}
+.ch{flex-wrap:wrap}
+.ch .ctl{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ch>div:first-child{flex:1 1 220px;min-width:0}
+.ch .row2{width:100%}
+.cb{padding:16px 20px 20px}
+.seg{display:inline-flex;background:var(--sunken);border-radius:10px;padding:2px}
+.seg button{border:0;background:none;font-size:12px;font-weight:500;color:var(--ink-2);padding:5px 10px;border-radius:8px}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.12)}
+.seg button:not(.on):hover{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s2{grid-column:span 2}.s3{grid-column:span 3}
+
+/* operator header --------------------------------------------------------- */
+.hero{display:flex;gap:24px;align-items:stretch;overflow:hidden;position:relative}
+.hero .who{padding:24px;display:flex;gap:18px;align-items:flex-start;flex:1;min-width:0}
+.mono{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;font-size:19px;letter-spacing:-.02em;flex:none}
+.hero h1{margin:0;font-size:26px;line-height:1.15;letter-spacing:-.025em;font-weight:650}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:var(--sunken);color:var(--ink-2);font-size:12px;font-weight:500;white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.hero .acts{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.foot{flex:0 0 440px;position:relative;background:linear-gradient(90deg,var(--surface) 0,rgba(255,255,255,0) 22%),var(--sunken);border-left:1px solid var(--line)}
+.foot svg{position:absolute;inset:0;width:100%;height:100%}
+.foot .cap{position:absolute;left:14px;bottom:10px;font-size:11px;color:var(--ink-3);background:rgba(255,255,255,.85);padding:1px 7px;border-radius:999px}
+.foot path.hl{stroke-width:2.2!important;opacity:1!important}
+
+/* KPI tiles --------------------------------------------------------------- */
+.kpi{padding:18px 20px;display:flex;flex-direction:column;min-height:150px;position:relative}
+.kpi .l{font-size:12.5px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:30px;line-height:1.1;font-weight:650;letter-spacing:-.03em;margin-top:8px}
+.kpi .v small{font-size:14px;font-weight:550;color:var(--ink-3);letter-spacing:0;margin-left:3px}
+.kpi .d{font-size:12.5px;color:var(--ink-2);margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.kpi.hero-k{background:linear-gradient(180deg,#f4f8fe 0,#fff 85%);border-color:var(--accent-line)}
+.kpi.hero-k .v{font-size:52px;letter-spacing:-.04em;margin-top:6px}
+.kpi svg.spark{width:100%;max-width:150px;height:30px;margin-top:6px}
+.delta{display:inline-flex;align-items:center;gap:3px;font-weight:550;font-variant-numeric:tabular-nums}
+.delta.up{color:var(--good-ink)}.delta.dn{color:#b42318}.delta.nu{color:var(--ink-2)}
+.info{width:15px;height:15px;border-radius:50%;border:1px solid var(--line-2);color:var(--ink-3);font-size:10px;display:inline-grid;place-items:center;font-style:normal;cursor:help}
+
+/* charts ------------------------------------------------------------------ */
+.mrows{display:flex;flex-direction:column;gap:2px}
+.mrow{display:grid;grid-template-columns:184px 1fr 104px;align-items:center;gap:12px;border:0;background:none;padding:7px 8px;border-radius:10px;text-align:left;width:100%}
+.mrow:hover{background:var(--hover)}
+.mrow .nm{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-2);min-width:0}
+.mrow .nm span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow.sel .nm{color:var(--ink);font-weight:600}
+.mrow .tr{height:14px;background:transparent}
+.mrow .tr i{display:block;height:14px;background:var(--gray-bar);border-radius:0 4px 4px 0;min-width:2px}
+.mrow.sel .tr i{background:var(--accent)}
+.mrow .vv{font-size:12.5px;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.mrow.sel .vv{color:var(--ink);font-weight:600}
+.cols{display:flex;align-items:flex-end;gap:2px;height:196px;padding-top:22px;border-bottom:1px solid var(--line-2);background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 25%;position:relative}
+.colw{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;border:0;background:none;padding:0 2px;border-radius:6px 6px 0 0}
+.colw:hover{background:rgba(42,120,214,.06)}
+.colw.sel{background:var(--accent-soft)}
+.colw .n{font-size:11.5px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums;min-height:16px}
+.colw .b{width:100%;max-width:24px;border-radius:4px 4px 0 0;background:var(--seq-2);min-height:2px}
+.colw.near .b{background:var(--seq-5)}
+.xl{display:flex;gap:2px;margin-top:6px}
+.xl span{flex:1;text-align:center;font-size:11px;color:var(--ink-3)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:12px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+table.dt{width:100%;border-collapse:collapse;font-size:13px}
+table.dt th{font-weight:550;text-align:left;color:var(--ink-3);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line)}
+table.dt td{padding:8px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+table.dt td.r,table.dt th.r{text-align:right}
+.meter{height:8px;border-radius:999px;background:var(--seq-1);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.stack{display:flex;gap:2px;height:22px}
+.stack i{display:block;height:100%;border-radius:4px;min-width:3px}
+.sub{color:var(--ink-3);font-size:12px}
+.big{font-size:34px;font-weight:650;letter-spacing:-.03em;line-height:1.1}
+.kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv b{font-weight:600;font-variant-numeric:tabular-nums}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.pair>div{background:var(--sunken);border-radius:12px;padding:10px 12px}
+.pair b{font-size:20px;font-weight:650;letter-spacing:-.02em;display:block}
+.pair .won b{color:var(--accent-ink)}.pair .lost b{color:#b42318}
+
+/* routes table ------------------------------------------------------------ */
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 20px 0}
+.sfield{display:flex;align-items:center;gap:8px;height:36px;border:1px solid var(--line-2);border-radius:10px;padding:0 10px;background:var(--surface);min-width:210px}
+.sfield input{border:0;outline:0;font:inherit;width:100%;background:none}
+.sfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.fchip{height:30px;border-radius:999px;border:1px solid var(--line-2);background:var(--surface);padding:0 12px;font-size:12.5px;font-weight:500;color:var(--ink-2)}
+.fchip:hover{background:var(--hover)}
+.fchip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+.tw{overflow-x:auto;margin-top:12px}
+table.rt{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:1040px}
+table.rt th{position:sticky;top:0;text-align:left;font-weight:550;font-size:12px;color:var(--ink-3);padding:9px 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fcfcfd;white-space:nowrap;cursor:pointer;user-select:none}
+table.rt th:hover{color:var(--ink)}
+table.rt th.num,table.rt td.num{text-align:right}
+table.rt th .ar{font-size:10px;margin-left:3px;color:var(--accent-ink)}
+table.rt td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.rt tr.row{cursor:pointer}
+table.rt tr.row:hover td{background:var(--hover)}
+table.rt tr.row.sel td{background:var(--accent-soft)}
+table.rt td.num{font-variant-numeric:tabular-nums}
+table.rt td{white-space:nowrap}
+table.rt .sub{overflow:hidden;text-overflow:ellipsis;max-width:210px}
+.badge{display:inline-grid;place-items:center;min-width:40px;height:26px;padding:0 8px;border-radius:8px;background:var(--ink);color:#fff;font-weight:650;font-size:12.5px;letter-spacing:-.01em}
+.rcell{display:flex;align-items:center;gap:10px}
+.glyph{width:46px;height:26px;color:var(--ink-3);flex:none}
+.cor{font-weight:500;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pvr{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.pvr .bar{width:54px;height:6px;background:var(--sunken);border-radius:999px;overflow:hidden}
+.pvr .bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500}
+.runway{display:inline-block;width:52px;height:6px;background:var(--sunken);border-radius:999px;overflow:hidden;vertical-align:middle;margin-left:8px}
+.runway i{display:block;height:100%;background:var(--seq-3);border-radius:999px}
+.runway.soon i{background:var(--warn)}
+.flag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--warn-ink);margin-left:6px}
+.flag svg{width:12px;height:12px}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:550;background:var(--sunken);color:var(--ink-2)}
+.tag.blue{background:var(--accent-soft);color:var(--accent-ink)}
+.more{display:flex;justify-content:center;padding:14px}
+.nx{display:flex;align-items:center;gap:10px;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:8px 4px;text-align:left;font-size:13px}
+.nx:hover{background:var(--hover)}
+.nx .cor{max-width:none;flex:1;min-width:0}
+.empty{padding:40px;text-align:center;color:var(--ink-3)}
+
+/* drawer / overlays ---------------------------------------------------------*/
+.scrim{position:fixed;inset:0;background:rgba(16,24,40,.32);z-index:120;opacity:0;pointer-events:none;transition:opacity .18s}
+.scrim.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100vw);background:var(--surface);z-index:130;box-shadow:var(--pop);transform:translateX(104%);transition:transform .22s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.dh{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;gap:14px;align-items:flex-start}
+.dh .badge{height:34px;min-width:54px;font-size:16px;border-radius:10px}
+.dh h3{margin:0;font-size:17px;letter-spacing:-.015em;line-height:1.25}
+.dh .x{margin-left:auto;display:flex;gap:4px}
+.ib{width:34px;height:34px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);display:grid;place-items:center}
+.ib:hover{background:var(--hover)}
+.ib svg{width:16px;height:16px}
+.db{overflow:auto;padding:18px 22px 36px;display:flex;flex-direction:column;gap:22px}
+.db h4{margin:0 0 10px;font-size:12px;font-weight:600;color:var(--ink-3);letter-spacing:.02em;text-transform:uppercase}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mini>div{border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.mini .l{font-size:11.5px;color:var(--ink-3);font-weight:500}
+.mini .v{font-size:20px;font-weight:650;letter-spacing:-.02em;margin-top:2px}
+.mini .s{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.shape{border:1px solid var(--line);border-radius:12px;background:var(--sunken);overflow:hidden}
+.shape svg{display:block;width:100%;height:auto}
+.tl{display:flex;flex-direction:column}
+.tl .it{display:grid;grid-template-columns:18px 1fr auto;gap:10px;padding:0 0 14px;position:relative}
+.tl .it:before{content:"";position:absolute;left:5px;top:14px;bottom:-2px;width:1px;background:var(--line-2)}
+.tl .it:last-child:before{display:none}
+.tl .it .dot{margin-top:4px}
+.tl .t{font-weight:550;font-size:13px}
+.tl .m{font-size:12px;color:var(--ink-3)}
+.tl .p{font-size:13px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.status-line{display:flex;gap:8px;align-items:flex-start;border-radius:12px;padding:10px 12px;font-size:12.5px}
+.status-line.good{background:#f0faf0;color:var(--good-ink)}
+.status-line.bad{background:#fff6e5;color:var(--warn-ink)}
+.status-line svg{width:16px;height:16px;flex:none;margin-top:1px}
+.modal{position:fixed;inset:0;z-index:200;display:grid;justify-items:center;align-items:start;padding:12vh 16px 16px;background:rgba(16,24,40,.38)}
+.modal[hidden]{display:none}
+.pal{width:min(620px,100%);background:var(--surface);border-radius:16px;box-shadow:var(--pop);overflow:hidden}
+.pal input{width:100%;border:0;border-bottom:1px solid var(--line);padding:16px 18px;font:inherit;font-size:15px;outline:0}
+.pal ul{list-style:none;margin:0;padding:6px;max-height:340px;overflow:auto}
+.pal li button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;text-align:left;padding:9px 12px;border-radius:10px}
+.pal li button.act{background:var(--sunken)}
+.pal .grp{padding:8px 12px 4px;font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}
+.pal .hint{padding:10px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);display:flex;gap:14px}
+.about{width:min(640px,100%);background:var(--surface);border-radius:18px;box-shadow:var(--pop);padding:26px 28px;max-height:84vh;overflow:auto}
+.about h2{margin:0 0 4px;font-size:20px;letter-spacing:-.02em}
+.about h5{margin:18px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
+.about ul{margin:0;padding-left:18px;color:var(--ink-2)}
+.about li{margin:3px 0}
+#tip{position:fixed;z-index:400;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.4;padding:7px 10px;border-radius:9px;box-shadow:var(--pop);max-width:280px;opacity:0;transition:opacity .08s;white-space:pre-line}
+#tip.on{opacity:1}#tip b{font-weight:650}
+.loading{opacity:.55;transition:opacity .2s}
+.err{margin:60px auto;max-width:480px;text-align:center;color:var(--ink-2)}
+
+@media (max-width:1100px){
+  .foot{display:none}
+  .s8,.s7,.s5,.s4{grid-column:span 12}.s2{grid-column:span 6}
+  .kpi.hero-k{grid-column:span 12}
+}
+@media (max-width:860px){
+  :root{--rail:0px}
+  .rail{display:none}
+  .top{padding:0 14px}.top .mlogo{display:grid;width:34px;height:34px;border-radius:10px;background:var(--ink);place-items:center}
+  .fresh,.searchbtn kbd,.top .abtn span{display:none}
+  .searchbtn{max-width:none}
+  .searchbtn .stxt{display:none}
+  .searchbtn{flex:0 0 auto;width:38px;padding:0;justify-content:center}
+  .menu{min-width:min(380px,calc(100vw - 28px))}
+  main{padding:18px 14px 70px}
+  .hero .who{padding:18px;flex-direction:column;gap:12px}
+  .hero h1{font-size:22px}
+  .mrow{grid-template-columns:128px 1fr 92px}
+  .mini{grid-template-columns:repeat(2,1fr)}
+  .kpi.hero-k .v{font-size:44px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="rail" aria-label="Sections">
+  <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h4a4 4 0 0 0 4-4v-1a4 4 0 0 1 4-4"/></svg></div>
+  <a class="nav on" href="#overview" data-sec="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</a>
+  <a class="nav" href="#market" data-sec="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Market</a>
+  <a class="nav" href="#contracts" data-sec="contracts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Contracts</a>
+  <a class="nav" href="#fleet" data-sec="fleet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="13" rx="2.5"/><path d="M4 11h16M8 21v-4M16 21v-4"/></svg>Fleet</a>
+  <a class="nav" href="#routes" data-sec="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="5" r="2.2"/><path d="M8 19h5a4 4 0 0 0 4-4V9a4 4 0 0 1 0-1.8"/></svg>Routes</a>
+  <div class="sp"></div>
+  <a class="nav" href="/" title="The current app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Current</a>
+</nav>
+
+<div class="col">
+  <header class="top">
+    <div class="mlogo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h4a4 4 0 0 0 4-4v-1a4 4 0 0 1 4-4"/></svg></div>
+    <div class="opsw">
+      <button class="btn" id="opBtn" aria-haspopup="listbox" aria-expanded="false"><i class="dot" id="opDot"></i><span id="opName">Operator</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="menu" id="opMenu" role="listbox" hidden></div>
+    </div>
+    <button class="btn searchbtn" id="searchBtn" aria-label="Search routes and operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="stxt">Search routes &amp; operators</span><kbd>⌘K</kbd></button>
+    <div class="grow"></div>
+    <span class="fresh" id="fresh"></span>
+    <button class="btn abtn" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg><span>Concept notes</span></button>
+  </header>
+
+  <main id="main">
+    <div id="app"><div class="err">Loading operator data…</div></div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" aria-hidden="true"></aside>
+<div class="modal" id="pal" hidden role="dialog" aria-modal="true" aria-label="Search">
+  <div class="pal"><input id="palIn" placeholder="Search a route (25, N38, X68) or an operator…" autocomplete="off" aria-label="Search"><ul id="palList"></ul>
+    <div class="hint"><span>↑↓ navigate</span><span>↵ open</span><span>esc close</span></div></div>
+</div>
+<div class="modal" id="aboutM" hidden role="dialog" aria-modal="true" aria-label="Concept notes"><div class="about" id="aboutBody"></div></div>
+<div id="tip" role="tooltip"></div>
+
+<script type="module">
+/* ═══════════════════════════════════════════════════════════════════════════
+   Operator Intelligence — v3 concept.
+   One idea: every route is the same compact "brief" (shape · PVR · fleet ·
+   £/mile · operated % · contract runway · next tender) whether it is a table
+   row or the detail drawer, and operator KPIs are the roll-up of those same
+   fields, so the numbers always agree. All data is this project's own static
+   JSON (data/api/*.json); route shapes are drawn as plain SVG — no map tiles.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+/* ── tokens that charts need in JS ──────────────────────────────────────── */
+// Operator identity: the validated 8-slot categorical order (fixed per operator).
+const OPS = ['Go-Ahead London','Stagecoach London','Metroline','Arriva London','Transport UK London Bus','First Bus London','Uno','Falcon Coaches'];
+const CAT = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#4a3aa7','#e34948'];
+const opColour = o => CAT[OPS.indexOf(o)] ?? '#98a2b3';
+// Propulsion is an ordered scale → one ordinal blue ramp (validated), not hues.
+const CLASS = { diesel:{ label:'Diesel', c:'#86b6ef' }, hybrid:{ label:'Hybrid', c:'#2a78d6' }, zero:{ label:'Zero-emission', c:'#104281' } };
+const propClass = p => p === 'electric' || p === 'hydrogen' ? 'zero' : p === 'hybrid' ? 'hybrid' : 'diesel';
+const PROP_LABEL = { diesel:'Diesel', hybrid:'Hybrid', electric:'Electric', hydrogen:'Hydrogen' };
+
+/* ── formatting ──────────────────────────────────────────────────────────── */
+const nf = new Intl.NumberFormat('en-GB');
+const fInt = n => Number.isFinite(n) ? nf.format(Math.round(n)) : '—';
+const fNum = (n, d = 1) => Number.isFinite(n) ? n.toFixed(d) : '—';
+const fPct = (n, d = 1) => Number.isFinite(n) ? n.toFixed(d) + '%' : '—';
+const fGbp = n => !Number.isFinite(n) ? '—' : n >= 1e9 ? '£' + (n / 1e9).toFixed(2) + 'bn' : n >= 1e6 ? '£' + (n / 1e6).toFixed(n >= 1e8 ? 0 : 1) + 'm' : n >= 1e3 ? '£' + Math.round(n / 1e3) + 'k' : '£' + Math.round(n);
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fMon = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear() : '—'; };
+const fDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + ' ' + d.getUTCFullYear() : '—'; };
+const sum = (a, f) => a.reduce((s, x) => s + (f(x) || 0), 0);
+const median = a => { const v = a.filter(Number.isFinite).sort((x, y) => x - y); if (!v.length) return null; const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+const natKey = id => { const m = /^([A-Za-z]*)(\d+)/.exec(id) ?? []; return (m[1] ?? '').toUpperCase().padEnd(3, ' ') + String(m[2] ?? '').padStart(5, '0') + id; };
+
+/* ── tooltip (text only — labels are data, never HTML) ───────────────────── */
+const tip = $('#tip');
+function tipShow(text, x, y){
+  tip.replaceChildren();
+  String(text).split('\n').forEach((line, i) => { const n = document.createElement(i === 0 ? 'b' : 'span'); n.textContent = (i ? '\n' : '') + line; tip.append(n); });
+  tip.classList.add('on');
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.max(8, Math.min(innerWidth - r.width - 8, x + 12)) + 'px';
+  tip.style.top  = Math.max(8, Math.min(innerHeight - r.height - 8, y + 14)) + 'px';
+}
+const tipHide = () => tip.classList.remove('on');
+document.addEventListener('pointermove', e => { const t = e.target.closest?.('[data-tip]'); t ? tipShow(t.dataset.tip, e.clientX, e.clientY) : tipHide(); });
+document.addEventListener('pointerleave', tipHide, true);
+document.addEventListener('focusin', e => { const t = e.target.closest?.('[data-tip]'); if(t){ const r = t.getBoundingClientRect(); tipShow(t.dataset.tip, r.left + r.width / 2, r.top - 34); } });
+document.addEventListener('focusout', tipHide);
+addEventListener('scroll', tipHide, { passive:true });
+
+/* ── data ────────────────────────────────────────────────────────────────── */
+const get = p => fetch(p).then(r => r.ok ? r.json() : Promise.reject(new Error(p + ' → ' + r.status)));
+const opt = p => get(p).catch(() => null);
+let D;                                   // everything below hangs off this
+const TODAY = new Date(); const TODAY_ISO = TODAY.toISOString().slice(0, 10);
+const plusMonths = n => { const d = new Date(TODAY); d.setMonth(d.getMonth() + n); return d.toISOString().slice(0, 10); };
+
+const grp = name => {                    // tender-form names → the 8 contracted groups
+  const n = String(name ?? '').toLowerCase();
+  if(!n || n === '?' ) return null;
+  if(n.includes('stagecoach')) return 'Stagecoach London';
+  if(n.startsWith('first')) return 'First Bus London';
+  if(n.includes('arriva')) return 'Arriva London';
+  if(n.includes('go-ahead')) return 'Go-Ahead London';
+  if(n.includes('metroline')) return 'Metroline';
+  if(n.includes('transport uk') || n.includes('abellio')) return 'Transport UK London Bus';
+  if(n === 'uno') return 'Uno';
+  if(n.includes('falcon')) return 'Falcon Coaches';
+  return 'Other';
+};
+
+async function load(){
+  const [meta, tenders] = await Promise.all([get('/data/api/route-meta.json'), get('/data/api/tenders.json')]);
+  const [fleet, garages, prog, perf, sched, crowd, status, dest, overview, manifest] = await Promise.all([
+    opt('/data/api/fleet.json'), opt('/data/api/garages.json'), opt('/data/api/tender-programme.json'),
+    opt('/data/api/route-performance.json'), opt('/data/api/scheduled-mileage.json'), opt('/data/api/crowding.json'),
+    opt('/data/api/line-status.json'), opt('/data/route_destinations.json'), opt('/data/api/routes-overview.json'),
+    opt('/data/api/manifest.json'),
+  ]);
+  return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:garages?.garages ?? [], prog:prog?.entries ?? [],
+           perf, sched:sched?.routes ?? {}, crowd:crowd?.routes ?? {}, status:status?.rows ?? [], dest:dest?.routes ?? dest ?? {},
+           overview, manifest };
+}
+
+function build(raw){
+  const periods = raw.perf?.periods ?? [];
+  const last13 = periods.slice(-13);
+  const statusBy = new Map(raw.status.map(r => [r.route, r]));
+  // earliest still-future programme entry per route token
+  const progBy = new Map();
+  for(const e of [...raw.prog].filter(e => e.contractStart >= TODAY_ISO).sort((a, b) => a.contractStart.localeCompare(b.contractStart)))
+    for(const t of String(e.route).split('/').map(x => x.trim())) if(!progBy.has(t)) progBy.set(t, e);
+  // route geometry (direction 1 preferred), for glyphs and the footprint
+  const lines = new Map();
+  for(const f of raw.overview?.features ?? []){
+    const id = f.properties?.routeId; if(!id) continue;
+    const g = f.geometry; const coords = g?.type === 'LineString' ? g.coordinates : g?.type === 'MultiLineString' ? g.coordinates.flat() : null;
+    if(!coords?.length) continue;
+    if(!lines.has(id) || String(f.properties.direction) === '1') lines.set(id, coords);
+  }
+  const short = x => String(x?.destination ?? '').replace(/,.*$/, '').trim();
+  const routes = [];
+  for(const [id, m] of Object.entries(raw.meta)){
+    const hist = [...(raw.tenders.byRoute?.[id] ?? [])].sort((a, b) => String(b.awardDate).localeCompare(String(a.awardDate)));
+    const cur = hist.find(a => a.contractStart && a.contractStart <= TODAY_ISO) ?? hist[0] ?? null;
+    const fl = raw.fleet[id]; const pf = raw.perf?.routes?.[id];
+    const latest = obj => { for(let i = periods.length - 1; i >= 0; i--){ const v = obj?.[periods[i]]; if(Number.isFinite(v)) return { v, p:periods[i], i }; } return null; };
+    const op = latest(pf?.operatedPct), rel = latest(pf?.reliability);
+    const prevOp = op ? (() => { for(let i = op.i - 1; i >= 0; i--){ const v = pf.operatedPct[periods[i]]; if(Number.isFinite(v)) return v; } return null; })() : null;
+    const d = raw.dest[id];
+    routes.push({
+      id, op:m.operator, company:m.company, garage:m.garage, garageName:m.garageName, pvr:m.pvr ?? 0, tvr:m.tvr, vehicle:m.fleet,
+      prop:m.propulsion ?? 'diesel', deck:m.deck, freq:m.frequency, km:m.lengthKm, type:m.type,
+      cStart:m.contractStart ?? null, cEnd:m.contractEnd ?? null,
+      from:short(d?.outbound), to:short(d?.inbound),
+      age:fl?.avgAgeYears ?? null, fleetN:fl?.count ?? 0, makes:fl?.makes ?? [],
+      cur, hist,
+      cpm:cur?.costPerMile > 0 ? cur.costPerMile : null,
+      opPct:op?.v ?? null, opPeriod:op?.p ?? null, opPrev:prevOp, opMin:pf?.operatedMinStandard ?? null,
+      rel:rel?.v ?? null, relMetric:pf?.reliabilityMetric ?? null, relStd:pf?.reliabilityMinStandard ?? null, pf,
+      dailyKm:raw.sched[id]?.dailyKm?.weekday ?? null,
+      crowd:raw.crowd[id] ?? null, status:statusBy.get(id) ?? null,
+      next:progBy.get(id) ?? progBy.get(id.replace(/^N/, '')) ?? null,
+    });
+  }
+  const byId = new Map(routes.map(r => [r.id, r]));
+  const netMedianCpm = median(routes.map(r => r.cpm));
+  const relPass = r => r.rel != null && r.relStd != null ? (/EWT/.test(r.relMetric) ? r.rel <= r.relStd : r.rel >= r.relStd) : null;
+
+  const agg = list => {
+    const pvr = sum(list, r => r.pvr);
+    const aged = list.filter(r => r.age != null && r.fleetN > 0);
+    const w = r => r.dailyKm ?? r.pvr ?? 1;
+    const opd = list.filter(r => r.opPct != null);
+    const series = last13.map(p => { const rs = list.filter(r => Number.isFinite(r.pf?.operatedPct?.[p])); const t = sum(rs, w); return t ? sum(rs, r => r.pf.operatedPct[p] * w(r)) / t : null; });
+    const rp = list.map(relPass).filter(v => v != null);
+    return {
+      list, n:list.length, pvr,
+      value:sum(list, r => r.cur?.acceptedBid),
+      cpm:median(list.map(r => r.cpm)),
+      age:aged.length ? sum(aged, r => r.age * r.fleetN) / sum(aged, r => r.fleetN) : null,
+      ze:pvr ? sum(list.filter(r => propClass(r.prop) === 'zero'), r => r.pvr) / pvr * 100 : null,
+      dd:pvr ? sum(list.filter(r => r.deck === 'double'), r => r.pvr) / pvr * 100 : null,
+      mix:Object.fromEntries(Object.keys(CLASS).map(k => [k, pvr ? sum(list.filter(r => propClass(r.prop) === k), r => r.pvr) / pvr * 100 : 0])),
+      opPct:opd.length ? sum(opd, r => r.opPct * w(r)) / sum(opd, w) : null,
+      opSeries:series,
+      relPassPct:rp.length ? rp.filter(Boolean).length / rp.length * 100 : null, relN:rp.length,
+      crowded:list.filter(r => r.crowd?.peakVC >= 0.8).length,
+      disrupted:list.filter(r => r.status && r.status.status !== 'Good Service').length,
+      exp24:list.filter(r => r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(24)),
+      garages:new Set(list.map(r => r.garage)).size,
+      companies:new Set(list.map(r => r.company).filter(Boolean)).size,
+    };
+  };
+  const ST = Object.fromEntries(OPS.map(o => [o, agg(routes.filter(r => r.op === o))]));
+  const NET = agg(routes);
+
+  // tender record, five years
+  const from5 = plusMonths(-60);
+  const REC = Object.fromEntries(OPS.map(o => [o, { retained:0, lost:0, won:0 }]));
+  for(const a of Object.values(raw.tenders.byId ?? {})){
+    if(!a.awardDate || a.awardDate < from5) continue;
+    const g = grp(a.operator), f = grp(a.fromOperator);
+    if(!g || !f) continue;
+    if(g === f){ if(REC[g]) REC[g].retained++; }
+    else { if(REC[f]) REC[f].lost++; if(REC[g]) REC[g].won++; }
+  }
+  return { routes, byId, ST, NET, REC, netMedianCpm, relPass, last13, lines, periods };
+}
+
+/* ── geometry: tile-free cartography ─────────────────────────────────────── */
+function robustBounds(coordsList, lo = .01, hi = .99){
+  const xs = [], ys = []; for(const cs of coordsList) for(const [x, y] of cs){ xs.push(x); ys.push(y); }
+  xs.sort((a, b) => a - b); ys.sort((a, b) => a - b);
+  const q = (a, f) => a[Math.min(a.length - 1, Math.max(0, Math.round(f * (a.length - 1))))];
+  return { minLon:q(xs, lo), maxLon:q(xs, hi), minLat:q(ys, lo), maxLat:q(ys, hi) };
+}
+function bounds(coordsList){
+  let a = 99, b = -99, c = 99, d = -99;
+  for(const cs of coordsList) for(const [x, y] of cs){ if(x < c) c = x; if(x > d) d = x; if(y < a) a = y; if(y > b) b = y; }
+  return { minLon:c, maxLon:d, minLat:a, maxLat:b };
+}
+const KX = Math.cos(51.5 * Math.PI / 180);
+function projector(bb, w, h, pad = 8){
+  const sx = (bb.maxLon - bb.minLon) * KX, sy = bb.maxLat - bb.minLat;
+  const k = Math.min((w - 2 * pad) / sx, (h - 2 * pad) / sy);
+  const ox = (w - sx * k) / 2, oy = (h - sy * k) / 2;
+  return (lon, lat) => [ox + (lon - bb.minLon) * KX * k, oy + (bb.maxLat - lat) * k];
+}
+const pathD = (coords, P) => coords.map(([x, y], i) => { const [px, py] = P(x, y); return (i ? 'L' : 'M') + px.toFixed(1) + ' ' + py.toFixed(1); }).join('');
+function glyph(r){
+  const cs = D.lines.get(r.id); if(!cs) return '<svg class="glyph" viewBox="0 0 54 30" aria-hidden="true"></svg>';
+  const P = projector(bounds([cs]), 54, 30, 4);
+  const [x0, y0] = P(...cs[0]), [x1, y1] = P(...cs[cs.length - 1]);
+  return `<svg class="glyph" viewBox="0 0 54 30" aria-hidden="true"><path d="${pathD(cs, P)}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="2" fill="#fff" stroke="currentColor" stroke-width="1.3"/><circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="2.2" fill="currentColor"/></svg>`;
+}
+
+/* ── state ───────────────────────────────────────────────────────────────── */
+const S = { op:OPS[0], metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
+            sort:{ k:'pvr', dir:-1 }, shown:30, route:null };
+
+/* ── view: header + KPIs ─────────────────────────────────────────────────── */
+const initials = o => o.replace(/London|Bus/g, '').trim().split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const rank = (metricFn, op, desc = true) => { const v = OPS.map(o => [o, metricFn(D.ST[o])]).filter(([, x]) => x != null).sort((a, b) => desc ? b[1] - a[1] : a[1] - b[1]); return v.findIndex(([o]) => o === op) + 1; };
+const delta = (v, base, { good = null, unit = '%' } = {}) => {
+  if(!Number.isFinite(v) || !Number.isFinite(base) || !base) return '';
+  const p = (v / base - 1) * 100; const up = p >= 0;
+  const cls = good === null ? 'nu' : (up === good ? 'up' : 'dn');
+  return `<span class="delta ${cls}">${up ? '▲' : '▼'} ${Math.abs(p).toFixed(1)}${unit}</span>`;
+};
+function spark(series){
+  const v = series.filter(Number.isFinite); if(v.length < 2) return '';
+  const lo = Math.min(...v), hi = Math.max(...v), rng = (hi - lo) || 1;
+  const pts = series.map((y, i) => Number.isFinite(y) ? [4 + i / (series.length - 1) * 138, 26 - (y - lo) / rng * 20] : null).filter(Boolean);
+  const [lx, ly] = pts[pts.length - 1];
+  return `<svg class="spark" viewBox="0 0 150 30" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Operated mileage, last ${series.length} periods"><path d="${pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('')}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" fill="var(--accent)" stroke="#fff" stroke-width="2"/></svg>`;
+}
+function footprint(op){
+  const W = 440, H = 190, P = projector(D.bb, W, H, 12);
+  const mine = new Set(D.ST[op].list.map(r => r.id));
+  let ghost = '', own = '';
+  for(const [id, cs] of D.lines){ const d = pathD(cs, P); if(mine.has(id)) own += `<path data-r="${esc(id)}" d="${d}" fill="none" stroke="${opColour(op)}" stroke-width="1" stroke-opacity=".6" stroke-linecap="round" stroke-linejoin="round"/>`; else ghost += `<path d="${d}" fill="none" stroke="#dfe2e8" stroke-width=".7"/>`; }
+  const gs = [...new Map(D.ST[op].list.map(r => [r.garage, r])).keys()].map(code => D.garages.find(g => g.code === code)).filter(g => g && Number.isFinite(g.lat));
+  const dots = gs.map(g => { const [x, y] = P(g.lng, g.lat); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.5 + Math.sqrt(g.pvr || 10) * .32).toFixed(1)}" fill="${opColour(op)}" stroke="#fff" stroke-width="2" data-tip="${esc(g.name)} garage\n${esc(g.pvr)} PVR"/>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(op)} route footprint across London">${ghost}${own}${dots}</svg><span class="cap">${D.ST[op].garages} garages · ${D.ST[op].n} routes</span>`;
+}
+function renderHero(){
+  const o = S.op, s = D.ST[o], c = opColour(o);
+  $('#opDot').style.background = c; $('#opName').textContent = o;
+  const kind = (key, label, v, d, extra = '') => `<div class="card kpi s2"><div class="l">${label}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
+  const sh = D.NET.pvr ? s.pvr / D.NET.pvr * 100 : null;
+  const cpmD = delta(s.cpm, D.netMedianCpm);
+  const opLast = s.opSeries.filter(Number.isFinite), opDelta = opLast.length > 1 ? opLast[opLast.length - 1] - opLast[opLast.length - 2] : null;
+  $('#hero').innerHTML = `
+    <div class="card hero"><div class="who">
+      <div class="mono" style="background:${c}1f;color:${c === '#eda100' ? '#8a5a00' : c}">${esc(initials(o))}</div>
+      <div style="min-width:0"><h1>${esc(o)}</h1>
+        <div class="chips"><span class="chip"><b>${s.n}</b> routes</span><span class="chip"><b>${s.garages}</b> garages</span><span class="chip"><b>${s.companies}</b> operating companies</span><span class="chip"><b>${fInt(s.pvr)}</b> peak vehicles</span></div>
+        <div class="acts"><button class="btn primary" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Export routes</button><button class="btn" id="linkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span id="linkTxt">Copy link</span></button></div></div>
+    </div><div class="foot" id="foot">${footprint(o)}</div></div>`;
+  $('#kpis').innerHTML = `
+    <div class="card kpi hero-k s4"><div class="l">Est. annual contract value <i class="info" tabindex="0" data-tip="Sum of the accepted annual bid of each route's current contract (TfL award data). An estimate: it excludes later variations, incentives and mileage changes.">i</i></div>
+      <div class="v">${fGbp(s.value)}</div>
+      <div class="d"><span>${fPct(D.NET.value ? s.value / D.NET.value * 100 : null)} of network contract value</span><span>·</span><span>#${rank(x => x.value, o)} of ${OPS.length} operators</span></div></div>
+    ${kind('routes', 'Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(D.NET.pvr)} PVR</span><span>·</span><span>#${rank(x => x.pvr, o)} of ${OPS.length}</span>`)}
+    ${kind('cpm', 'Median price', `${Number.isFinite(s.cpm) ? '£' + s.cpm.toFixed(2) : '—'}<small>/mile</small>`, `${cpmD || ''}<span>vs network £${fNum(D.netMedianCpm, 2)}</span>`)}
+    ${kind('fleet', 'Fleet age', `${fNum(s.age, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span><span>·</span><span>${fPct(s.dd, 0)} double-deck</span>`)}
+    ${kind('ops', 'Operated mileage', `${fPct(s.opPct)}`, `${opDelta != null ? `<span class="delta ${opDelta >= 0 ? 'up' : 'dn'}">${opDelta >= 0 ? '▲' : '▼'} ${Math.abs(opDelta).toFixed(2)} pts</span><span>vs prior period</span>` : ''}`, spark(s.opSeries))}`;
+}
+
+/* ── view: market position ───────────────────────────────────────────────── */
+const METRICS = {
+  pvr:  { label:'Peak vehicles', f:s => s.pvr,   show:(s) => `${fInt(s.pvr)} · ${fPct(s.pvr / D.NET.pvr * 100, 0)}`, desc:true },
+  val:  { label:'Contract value', f:s => s.value, show:(s) => `${fGbp(s.value)} · ${fPct(s.value / D.NET.value * 100, 0)}`, desc:true },
+  ze:   { label:'Zero-emission', f:s => s.ze,    show:(s) => fPct(s.ze, 1), desc:true },
+  age:  { label:'Fleet age', f:s => s.age,       show:(s) => `${fNum(s.age, 1)} yrs`, desc:false },
+};
+function renderMarket(){
+  const m = METRICS[S.metric];
+  const rows = OPS.map(o => ({ o, s:D.ST[o], v:m.f(D.ST[o]) })).filter(r => Number.isFinite(r.v)).sort((a, b) => m.desc ? b.v - a.v : a.v - b.v);
+  const max = Math.max(...rows.map(r => r.v)) || 1;
+  const body = S.mView === 'table'
+    ? `<table class="dt"><thead><tr><th>Operator</th><th class="r">${esc(m.label)}</th><th class="r">Routes</th><th class="r">PVR</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.o)}</td><td class="r">${esc(m.show(r.s))}</td><td class="r">${r.s.n}</td><td class="r">${fInt(r.s.pvr)}</td></tr>`).join('')}</tbody></table>`
+    : `<div class="mrows" role="list">${rows.map(r => `<button class="mrow ${r.o === S.op ? 'sel' : ''}" data-op="${esc(r.o)}" role="listitem" data-tip="${esc(r.o)}\n${esc(m.label)}: ${esc(m.show(r.s))}\nClick to open">
+        <span class="nm"><i class="dot" style="background:${opColour(r.o)}"></i><span>${esc(r.o)}</span></span><span class="tr"><i style="width:${(r.v / max * 100).toFixed(1)}%"></i></span><span class="vv">${esc(m.show(r.s))}</span></button>`).join('')}</div>`;
+  $('#market').innerHTML = `<div class="ch"><div><h2>Market position</h2><p>${esc(S.op)} against the other contracted operators${m.desc ? '' : ' (youngest first)'}</p></div>
+      <div class="ctl"><div class="seg" role="group" aria-label="View"><button class="${S.mView === 'chart' ? 'on' : ''}" data-mview="chart">Chart</button><button class="${S.mView === 'table' ? 'on' : ''}" data-mview="table">Table</button></div></div>
+      <div class="row2"><div class="seg" role="group" aria-label="Metric">${Object.entries(METRICS).map(([k, v]) => `<button class="${k === S.metric ? 'on' : ''}" data-metric="${k}">${v.label}</button>`).join('')}</div></div></div>
+    <div class="cb">${body}</div>`;
+}
+
+/* ── view: contract runway ───────────────────────────────────────────────── */
+function runwayBuckets(){
+  const y0 = TODAY.getUTCFullYear(), list = D.ST[S.op].list.filter(r => r.cEnd && r.cEnd >= TODAY_ISO);
+  const b = []; for(let y = y0; y <= y0 + 9; y++) b.push({ label:String(y), year:y, rs:[] });
+  b.push({ label:`${y0 + 10}+`, year:'later', rs:[] });
+  for(const r of list){ const y = +r.cEnd.slice(0, 4); (b[Math.min(y - y0, 10)] ?? b[10]).rs.push(r); }
+  const limit = plusMonths(24);
+  for(const x of b) x.near = x.rs.some(r => r.cEnd <= limit) && x.year !== 'later';
+  const ended = D.ST[S.op].list.filter(r => r.cEnd && r.cEnd < TODAY_ISO);
+  return { b, ended, undated:D.ST[S.op].list.filter(r => !r.cEnd).length };
+}
+function renderRunway(){
+  const { b, ended, undated } = runwayBuckets(); const val = x => S.rwMetric === 'pvr' ? sum(x.rs, r => r.pvr) : x.rs.length;
+  const max = Math.max(1, ...b.map(val)); const s = D.ST[S.op];
+  const next4 = [...s.list].filter(r => r.cEnd && r.cEnd >= TODAY_ISO).sort((a, b) => a.cEnd.localeCompare(b.cEnd) || b.pvr - a.pvr).slice(0, 4);
+  const body = S.rwView === 'table'
+    ? `<table class="dt"><thead><tr><th>Contracts ending</th><th class="r">Routes</th><th class="r">PVR</th></tr></thead><tbody>${b.map(x => `<tr><td>${x.label}</td><td class="r">${x.rs.length}</td><td class="r">${fInt(sum(x.rs, r => r.pvr))}</td></tr>`).join('')}</tbody></table>`
+    : `<div class="cols" role="group" aria-label="Contracts ending by year">${b.map(x => `<button class="colw ${x.near ? 'near' : ''} ${S.year === x.year ? 'sel' : ''}" data-year="${x.year}" data-tip="${esc(x.label)}\n${x.rs.length} routes · ${fInt(sum(x.rs, r => r.pvr))} PVR${x.rs.length ? '\nLargest: ' + esc([...x.rs].sort((p, q) => q.pvr - p.pvr).slice(0, 5).map(r => r.id).join(', ')) + '\nClick to filter the table' : ''}"><span class="n">${val(x) || ''}</span><span class="b" style="height:${(val(x) / max * 100).toFixed(1)}%"></span></button>`).join('')}</div>
+       <div class="xl">${b.map(x => `<span>${x.label}</span>`).join('')}</div>
+       <div class="legend"><span><i style="background:var(--seq-5)"></i>Ends within 24 months</span><span><i style="background:var(--seq-2)"></i>Later</span></div>
+       ${next4.length ? `<h4 style="margin:18px 0 6px;font-size:12px;color:var(--ink-3);font-weight:600">Next to expire</h4>${next4.map(r => `<button class="nx" data-r="${esc(r.id)}"><span class="badge" style="height:22px;min-width:38px;font-size:11.5px">${esc(r.id)}</span><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><span class="sub" style="margin-left:auto;white-space:nowrap">${fInt(r.pvr)} PVR</span><b style="min-width:76px;text-align:right;font-weight:600">${fMon(r.cEnd)}</b></button>`).join('')}` : ''}`;
+  $('#runway').innerHTML = `<div class="ch"><div><h2>Contract runway</h2><p><b style="color:var(--ink)">${s.exp24.length}</b> routes (${fInt(sum(s.exp24, r => r.pvr))} PVR, ${fPct(s.pvr ? sum(s.exp24, r => r.pvr) / s.pvr * 100 : null, 0)} of the portfolio) end within 24 months${ended.length ? ` · ${ended.length} past their end date` : ''}${undated ? ` · ${undated} undated` : ''}</p></div>
+      <div class="ctl"><div class="seg" role="group" aria-label="Measure"><button class="${S.rwMetric === 'routes' ? 'on' : ''}" data-rw="routes">Routes</button><button class="${S.rwMetric === 'pvr' ? 'on' : ''}" data-rw="pvr">PVR</button></div>
+      <div class="seg" role="group" aria-label="View"><button class="${S.rwView === 'chart' ? 'on' : ''}" data-rwview="chart">Chart</button><button class="${S.rwView === 'table' ? 'on' : ''}" data-rwview="table">Table</button></div></div></div>
+    <div class="cb">${body}</div>`;
+}
+
+/* ── view: record / fleet / quality ──────────────────────────────────────── */
+function renderCards(){
+  const s = D.ST[S.op], rec = D.REC[S.op], contested = rec.retained + rec.lost;
+  const ret = contested ? rec.retained / contested * 100 : null;
+  const inProg = s.list.filter(r => r.next);
+  $('#record').innerHTML = `<div class="ch"><div><h2>Tender record</h2><p>Re-tenders and wins, last five years</p></div></div>
+    <div class="cb"><div class="big">${fPct(ret, 0)}</div><div class="sub" style="margin:2px 0 10px">incumbent retention · ${rec.retained} of ${contested} re-tenders</div>
+      <div class="meter" data-tip="${rec.retained} retained · ${rec.lost} lost"><i style="width:${ret ?? 0}%"></i></div>
+      <div class="pair"><div class="won"><b>+${rec.won}</b><span class="sub">won from rivals</span></div><div class="lost"><b>−${rec.lost}</b><span class="sub">lost to rivals</span></div></div>
+      <div class="kv" style="margin-top:10px"><span>Net routes</span><b>${rec.won - rec.lost >= 0 ? '+' : '−'}${Math.abs(rec.won - rec.lost)}</b></div>
+      <div class="kv"><span>In the tender programme</span><b>${inProg.length} routes · ${fInt(sum(inProg, r => r.pvr))} PVR</b></div></div>`;
+  const mixOrder = ['diesel', 'hybrid', 'zero'];
+  const makes = {}; for(const r of s.list) for(const m of r.makes) makes[m.make] = (makes[m.make] ?? 0) + m.n;
+  const topMakes = Object.entries(makes).sort((a, b) => b[1] - a[1]).slice(0, 3), mk = topMakes[0]?.[1] || 1, mkT = Object.values(makes).reduce((a, b) => a + b, 0) || 1;
+  const title = x => x.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  $('#fleet').innerHTML = `<div class="ch"><div><h2>Fleet profile</h2><p>Share of peak vehicles by propulsion</p></div></div>
+    <div class="cb"><div class="stack" role="img" aria-label="Propulsion mix">${mixOrder.map(k => s.mix[k] > 0 ? `<i style="width:${s.mix[k]}%;background:${CLASS[k].c}" data-tip="${CLASS[k].label}\n${fPct(s.mix[k])} of PVR"></i>` : '').join('')}</div>
+      <div class="legend">${mixOrder.map(k => `<span><i style="background:${CLASS[k].c}"></i>${CLASS[k].label} <b style="color:var(--ink)">${fPct(s.mix[k], 0)}</b></span>`).join('')}</div>
+      <div style="margin-top:12px"><div class="kv"><span>Average age</span><b>${fNum(s.age, 1)} yrs</b></div><div class="kv"><span>Double-deck share</span><b>${fPct(s.dd, 0)}</b></div></div>
+      <h4 style="margin:14px 0 6px;font-size:12px;color:var(--ink-3);font-weight:600">Most-seen makes</h4>
+      ${topMakes.map(([n, c]) => `<div class="kv" style="display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;padding:6px 0"><span>${esc(title(n))}</span><span class="meter" style="height:6px"><i style="width:${c / mk * 100}%"></i></span><b style="text-align:right">${Math.round(c / mkT * 100)}%</b></div>`).join('') || '<div class="sub">No fleet observations yet.</div>'}</div>`;
+  const gap = Number.isFinite(s.opPct) && Number.isFinite(D.NET.opPct) ? s.opPct - D.NET.opPct : null;
+  $('#quality').innerHTML = `<div class="ch"><div><h2>Service quality</h2><p>TfL's latest reported period</p></div></div>
+    <div class="cb"><div class="big">${fPct(s.opPct)}</div><div class="sub" style="margin:2px 0 10px">of scheduled mileage operated${gap != null ? ` · ${gap >= 0 ? '+' : '−'}${Math.abs(gap).toFixed(2)} pts vs network` : ''}</div>
+      <div class="meter" data-tip="Operated mileage ${fPct(s.opPct, 2)}"><i style="width:${Math.max(0, Math.min(100, (s.opPct - 80) / 20 * 100))}%"></i></div><div class="sub" style="display:flex;justify-content:space-between;margin-top:3px"><span>80%</span><span>100%</span></div>
+      <div style="margin-top:10px"><div class="kv"><span>Routes meeting their reliability standard</span><b>${fPct(s.relPassPct, 0)}</b></div>
+      <div class="kv"><span>Routes at ≥80% of capacity at peak</span><b>${s.crowded}</b></div>
+      <div class="kv"><span>Disrupted right now</span><b>${s.disrupted} <span class="sub" style="font-weight:400">of ${s.n}</span></b></div></div></div>`;
+}
+
+/* ── view: routes table ──────────────────────────────────────────────────── */
+const SORTS = {
+  id:r => natKey(r.id), rel:r => { const p = D.relPass(r); return p === null ? -1 : p ? 1 : 0; }, pvr:r => r.pvr, age:r => r.age ?? -1, cpm:r => r.cpm ?? -1, op:r => r.opPct ?? -1, end:r => r.cEnd ?? '9999', next:r => r.next?.contractStart ?? '9999',
+};
+const COLS = [['id','Route'],[null,'Corridor'],['pvr','PVR','num'],['age','Fleet'],['cpm','£/mile','num'],['op','Operated','num'],['rel','Reliability','num'],['end','Contract runway'],['next','Next tender']];
+function filtered(){
+  const q = S.q.trim().toLowerCase(), lim = plusMonths(24);
+  let list = D.ST[S.op].list.filter(r =>
+    (!q || r.id.toLowerCase() === q || r.id.toLowerCase().startsWith(q) || `${r.from} ${r.to} ${r.garageName}`.toLowerCase().includes(q)) &&
+    (S.prop === 'all' || propClass(r.prop) === S.prop) &&
+    (!S.flags.has('exp') || (r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= lim)) &&
+    (!S.flags.has('high') || r.freq === 'high') &&
+    (!S.flags.has('dis') || (r.status && r.status.status !== 'Good Service')) &&
+    (S.year == null || (r.cEnd && r.cEnd >= TODAY_ISO && (S.year === 'later' ? +r.cEnd.slice(0, 4) >= TODAY.getUTCFullYear() + 10 : +r.cEnd.slice(0, 4) === S.year))));
+  const k = SORTS[S.sort.k]; list.sort((a, b) => { const x = k(a), y = k(b); return (x < y ? -1 : x > y ? 1 : 0) * S.sort.dir; });
+  return list;
+}
+const relTxt = r => /EWT/.test(r.relMetric ?? '') ? r.rel.toFixed(2) + ' min' : r.rel.toFixed(1) + '%';
+const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/></svg>';
+function rowHtml(r, maxPvr){
+  const cls = propClass(r.prop), rel = D.relPass(r);
+  const d = r.cpm && D.netMedianCpm ? (r.cpm / D.netMedianCpm - 1) * 100 : null;
+  const tot = r.cStart && r.cEnd ? Date.parse(r.cEnd) - Date.parse(r.cStart) : null, left = r.cEnd ? Date.parse(r.cEnd) - TODAY.getTime() : null;
+  const frac = tot > 0 && left != null ? Math.max(0, Math.min(1, left / tot)) : null, soon = r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(12);
+  return `<tr class="row ${S.route === r.id ? 'sel' : ''}" data-r="${esc(r.id)}" tabindex="0" aria-label="Route ${esc(r.id)}, open brief">
+    <td><div class="rcell"><span class="badge">${esc(r.id)}</span>${glyph(r)}</div></td>
+    <td><div class="cor" title="${esc(r.from)} ⇄ ${esc(r.to)}">${esc(r.from || '—')} <span class="sub">⇄</span> ${esc(r.to || '—')}</div><div class="sub">${r.status && r.status.status !== 'Good Service' ? `<span class="flag" style="margin:0 6px 0 0" data-tip="${esc(r.status.status)} right now">${warnIcon}Disrupted</span>` : ''}${esc(r.garageName)} (${esc(r.garage)})</div></td>
+    <td class="num"><div class="pvr"><span>${fInt(r.pvr)}</span><span class="bar"><i style="width:${(r.pvr / maxPvr * 100).toFixed(0)}%"></i></span></div></td>
+    <td><span class="pill"><i class="dot" style="background:${CLASS[cls].c}"></i>${esc(PROP_LABEL[r.prop] ?? r.prop)}</span> <span class="sub">${r.age != null ? fNum(r.age, 1) + ' y' : ''}</span></td>
+    <td class="num">${r.cpm ? '£' + r.cpm.toFixed(2) : '—'} ${d != null ? `<span class="sub" data-tip="vs network median £${fNum(D.netMedianCpm, 2)}">${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)}%</span>` : ''}</td>
+    <td class="num">${r.opPct != null ? `<span data-tip="${esc(r.opPeriod)}${r.opMin != null ? '\nMinimum standard ' + r.opMin + '%' : ''}">${r.opPct.toFixed(1)}%</span>` : '—'}</td>
+    <td class="num">${r.rel != null ? `<span data-tip="${esc(r.relMetric)}: ${esc(relTxt(r))}\nStandard ${esc(r.relStd)}${/EWT/.test(r.relMetric) ? ' (lower is better)' : ' (higher is better)'}">${esc(relTxt(r))}</span>${rel === false ? ` <span class="flag" data-tip="Below the reliability standard">${warnIcon}Below</span>` : ''}` : '<span class="sub">—</span>'}</td>
+    <td>${r.cEnd ? `<span>${fMon(r.cEnd)}</span>${frac != null ? `<span class="runway ${soon ? 'soon' : ''}" data-tip="${Math.round(frac * 100)}% of the contract term remaining"><i style="width:${(frac * 100).toFixed(0)}%"></i></span>` : ''}${soon ? `<span class="flag">${warnIcon}&lt;12 mo</span>` : ''}` : '<span class="sub">—</span>'}</td>
+    <td>${r.next ? `<span class="tag blue" data-tip="Tender issues ${esc(fDate(r.next.issueDate))}\nNew contract starts ${esc(fDate(r.next.contractStart))}">${esc(fMon(r.next.contractStart))}</span>` : '<span class="sub">—</span>'}</td></tr>`;
+}
+function renderTable(){
+  const list = filtered(), s = D.ST[S.op], maxPvr = Math.max(1, ...s.list.map(r => r.pvr));
+  const chip = (k, label, on, attr) => `<button class="fchip ${on ? 'on' : ''}" ${attr}>${label}</button>`;
+  $('#routes').innerHTML = `<div class="ch"><div><h2>Routes</h2><p>${list.length} of ${s.n} routes · every row is a route brief — click for the full picture</p></div></div>
+    <div class="tools"><label class="sfield"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rq" placeholder="Filter by route, place or garage" value="${esc(S.q)}" aria-label="Filter routes"></label>
+      ${[['all', 'All'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['zero', 'Zero-emission']].map(([k, l]) => chip(k, l, S.prop === k, `data-prop="${k}"`)).join('')}
+      <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>
+      ${chip('exp', 'Ends ≤ 24 months', S.flags.has('exp'), 'data-flag="exp"')}${chip('high', 'High frequency', S.flags.has('high'), 'data-flag="high"')}${chip('dis', 'Disrupted now', S.flags.has('dis'), 'data-flag="dis"')}
+      ${S.year != null ? `<button class="fchip on" data-clearyear>Contract ends ${S.year === 'later' ? 'later' : S.year} ✕</button>` : ''}</div>
+    <div class="tw"><table class="rt"><thead><tr>${COLS.map(([k, l, c]) => `<th class="${c ?? ''}" ${k ? `data-sort="${k}"` : ''} scope="col">${l}${S.sort.k === k ? `<span class="ar">${S.sort.dir < 0 ? '↓' : '↑'}</span>` : ''}</th>`).join('')}</tr></thead>
+    <tbody>${list.slice(0, S.shown).map(r => rowHtml(r, maxPvr)).join('') || ''}</tbody></table>${list.length ? '' : '<div class="empty">No routes match these filters.</div>'}</div>
+    ${list.length > S.shown ? `<div class="more"><button class="btn" id="moreBtn">Show ${Math.min(30, list.length - S.shown)} more</button></div>` : ''}`;
+}
+
+/* ── drawer: the route brief ─────────────────────────────────────────────── */
+function lineChart(points, { w = 460, h = 120, ref = null, refLabel = '', fmt = v => v, pad = 0.15, lower = false } = {}){
+  const ys = points.map(p => p.y).filter(Number.isFinite); if(ys.length < 2) return '<div class="sub">Not enough history yet.</div>';
+  let lo = Math.min(...ys, ref ?? Infinity), hi = Math.max(...ys, ref ?? -Infinity); const r = (hi - lo) || 1; lo -= r * pad; hi += r * pad;
+  const X = i => 8 + i * (w - 52) / Math.max(1, points.length - 1), Y = v => h - 18 - (v - lo) / (hi - lo) * (h - 34);
+  const live = points.map((p, i) => Number.isFinite(p.y) ? [X(i), Y(p.y), p] : null).filter(Boolean);
+  const path = live.map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1)).join('');
+  const [lx, ly, lp] = live[live.length - 1];
+  const step = (w - 52) / Math.max(1, points.length - 1);
+  const grid = [0, .5, 1].map(f => { const y = 12 + f * (h - 34); return `<line x1="0" x2="${w - 40}" y1="${y}" y2="${y}" stroke="var(--line)"/>`; }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Trend, latest ${esc(fmt(lp.y))}">${grid}
+    ${ref != null ? `<line x1="0" x2="${w - 40}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="0"/><text x="${w - 38}" y="${Y(ref) + 4}" font-size="10.5" fill="var(--ink-3)">${esc(refLabel)}</text>` : ''}
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lx.toFixed(1)}" cy="${ly.toFixed(1)}" r="4" fill="var(--accent)" stroke="#fff" stroke-width="2"/>
+    <text x="${(lx + 8).toFixed(1)}" y="${(ly + 4).toFixed(1)}" font-size="11.5" font-weight="600" fill="var(--ink)">${esc(fmt(lp.y))}</text>
+    <text x="8" y="${h - 3}" font-size="10.5" fill="var(--ink-3)">${esc(points[0].x)}</text><text x="${w - 40}" y="${h - 3}" font-size="10.5" fill="var(--ink-3)" text-anchor="end">${esc(points[points.length - 1].x)}</text>
+    ${points.map((p, i) => Number.isFinite(p.y) ? `<rect x="${(X(i) - step / 2).toFixed(1)}" y="0" width="${step.toFixed(1)}" height="${h}" fill="transparent" data-tip="${esc(p.x)}\n${esc(fmt(p.y))}${ref != null ? '\nStandard ' + esc(refLabel.replace(/^(Min|Std)\s*/, '')) : ''}"/>` : '').join('')}</svg>`;
+}
+function shapeSvg(r){
+  const cs = D.lines.get(r.id); if(!cs) return '';
+  const W = 476, H = 200, P = projector(D.bb, W, H, 8);
+  let ghost = ''; for(const o of D.ST[r.op]?.list ?? []){ const c = D.lines.get(o.id); if(c && o.id !== r.id) ghost += `<path d="${pathD(c, P)}" fill="none" stroke="#d9dde4" stroke-width=".8"/>`; }
+  const d = pathD(cs, P), [x0, y0] = P(...cs[0]), [x1, y1] = P(...cs[cs.length - 1]);
+  const g = D.garages.find(x => x.code === r.garage), gp = g && Number.isFinite(g.lat) ? P(g.lng, g.lat) : null;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Route ${esc(r.id)} shape across London">${ghost}<path d="${d}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${opColour(r.op)}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${x0.toFixed(1)}" cy="${y0.toFixed(1)}" r="4.5" fill="#fff" stroke="${opColour(r.op)}" stroke-width="2.5"/><circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="5" fill="${opColour(r.op)}" stroke="#fff" stroke-width="2"/>
+    ${gp ? `<rect x="${(gp[0] - 5).toFixed(1)}" y="${(gp[1] - 5).toFixed(1)}" width="10" height="10" rx="2.5" fill="var(--ink)" stroke="#fff" stroke-width="2" data-tip="${esc(r.garageName)} garage"/>` : ''}</svg>`;
+}
+function renderDrawer(r){
+  const rel = D.relPass(r), pf = r.pf;
+  const cpmD = r.cpm && D.netMedianCpm ? (r.cpm / D.netMedianCpm - 1) * 100 : null;
+  const opSeries = D.last13.map(p => ({ x:p, y:pf?.operatedPct?.[p] })), relSeries = D.last13.map(p => ({ x:p, y:pf?.reliability?.[p] }));
+  const hist = [...r.hist].reverse().filter(a => a.costPerMile > 0).map(a => ({ x:String(a.awardDate).slice(0, 4), y:a.costPerMile }));
+  const cr = r.crowd, st = r.status, good = !st || st.status === 'Good Service';
+  const idx = filtered().findIndex(x => x.id === r.id);
+  $('#drawer').innerHTML = `<div class="dh"><span class="badge">${esc(r.id)}</span><div style="min-width:0"><h3 id="dTitle">${esc(r.from || '—')} ⇄ ${esc(r.to || '—')}</h3>
+      <div class="chips" style="margin-top:6px"><span class="chip"><i class="dot" style="background:${opColour(r.op)}"></i>${esc(r.op)}</span><span class="chip">${esc(r.garageName)} (${esc(r.garage)})</span>${r.type && r.type !== 'regular' ? `<span class="chip">${esc(r.type)}</span>` : ''}</div></div>
+      <div class="x"><button class="ib" id="dPrev" aria-label="Previous route" ${idx <= 0 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ib" id="dNext" aria-label="Next route" ${idx < 0 || idx >= filtered().length - 1 ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button><button class="ib" id="dClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></div>
+    <div class="db">
+      <div class="status-line ${good ? 'good' : 'bad'}">${good ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg><span><b>Good service</b> right now</span>' : `${warnIcon}<span><b>${esc(st.status)}</b> — ${esc(String(st.reason ?? '').slice(0, 220))}${String(st.reason ?? '').length > 220 ? '…' : ''}</span>`}</div>
+      <div class="mini">
+        <div><div class="l">Peak vehicles</div><div class="v">${fInt(r.pvr)}</div><div class="s">${r.tvr ? fInt(r.tvr) + ' total' : '&nbsp;'}</div></div>
+        <div><div class="l">Fleet age</div><div class="v">${r.age != null ? fNum(r.age, 1) + ' y' : '—'}</div><div class="s">${esc(PROP_LABEL[r.prop] ?? r.prop)}${r.deck ? ' · ' + esc(r.deck) + '-deck' : ''}</div></div>
+        <div><div class="l">Price</div><div class="v">${r.cpm ? '£' + r.cpm.toFixed(2) : '—'}</div><div class="s">${cpmD != null ? (cpmD >= 0 ? '+' : '−') + Math.abs(cpmD).toFixed(0) + '% vs network' : 'per mile'}</div></div>
+        <div><div class="l">Operated</div><div class="v">${r.opPct != null ? r.opPct.toFixed(1) + '%' : '—'}</div><div class="s">${r.opPrev != null && r.opPct != null ? (r.opPct - r.opPrev >= 0 ? '▲ ' : '▼ ') + Math.abs(r.opPct - r.opPrev).toFixed(1) + ' pts' : esc(r.opPeriod ?? '')}</div></div>
+        <div><div class="l">Reliability</div><div class="v">${r.rel != null ? r.rel.toFixed(r.rel < 10 ? 2 : 1) : '—'}</div><div class="s">${rel == null ? esc(r.relMetric ?? '') : rel ? '✓ meets ' + esc(r.relStd) : '⚠ below ' + esc(r.relStd)} ${rel == null ? '' : '· ' + esc((r.relMetric ?? '').replace(' (mins)', ''))}</div></div>
+        <div><div class="l">Peak load</div><div class="v">${cr ? Math.round(cr.peakVC * 100) + '%' : '—'}</div><div class="s">${cr ? esc(cr.band) + ' · ' + esc(String(cr.stopname ?? '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).slice(0, 22)) : '&nbsp;'}</div></div>
+      </div>
+      <section><h4>Shape &amp; garage</h4><div class="shape">${shapeSvg(r)}</div><div class="sub" style="margin-top:6px">${r.km ? fNum(r.km, 0) + ' km · ' : ''}${esc(r.vehicle ?? '')} · drawn from TfL geometry, in the context of ${esc(r.op)}'s network</div></section>
+      <section><h4>Contract</h4>
+        <div class="kv"><span>Current contract</span><b>${fMon(r.cStart)} → ${fMon(r.cEnd)}</b></div>
+        <div class="kv"><span>Annual value (accepted bid)</span><b>${fGbp(r.cur?.acceptedBid)}</b></div>
+        <div class="kv"><span>Bids received</span><b>${r.cur?.numberOfTenderers ?? '—'}</b></div>
+        ${r.next ? `<div class="kv"><span>Next tender</span><b>issues ${fMon(r.next.issueDate)} · starts ${fMon(r.next.contractStart)}</b></div>` : ''}</section>
+      <section><h4>Operated mileage · last 13 periods</h4>${lineChart(opSeries, { fmt:v => v.toFixed(1) + '%', ref:r.opMin, refLabel:r.opMin != null ? 'Min ' + r.opMin + '%' : '' })}</section>
+      <section><h4>Reliability · ${esc(r.relMetric ?? '—')}</h4>${lineChart(relSeries, { fmt:v => v.toFixed(2), ref:r.relStd, refLabel:r.relStd != null ? 'Std ' + r.relStd : '' })}<div class="sub">${/EWT/.test(r.relMetric ?? '') ? 'Lower is better.' : 'Higher is better.'}</div></section>
+      <section><h4>Price history · £ per mile at award</h4>${lineChart(hist, { fmt:v => '£' + v.toFixed(2), h:110 })}</section>
+      <section><h4>Award history</h4><div class="tl">${r.hist.map(a => { const g = grp(a.operator); return `<div class="it"><i class="dot" style="background:${opColour(g)}"></i><div><div class="t">${esc(a.operator)}${a.operatorChange ? ' <span class="tag blue" style="margin-left:4px">Operator change</span>' : ''}</div><div class="m">${esc(fDate(a.awardDate))} · ${a.numberOfTenderers ?? '?'} bid${a.numberOfTenderers === 1 ? '' : 's'}${a.fromOperator && a.operatorChange ? ' · from ' + esc(a.fromOperator) : ''}</div></div><div class="p">${a.costPerMile ? '£' + a.costPerMile.toFixed(2) : '—'}<div class="m" style="font-weight:400">${fGbp(a.acceptedBid)}/yr</div></div></div>`; }).join('') || '<div class="sub">No award history.</div>'}</div></section>
+    </div>`;
+}
+let lastFocus = null;
+function openRoute(id, push = true){
+  const r = D.byId.get(id); if(!r) return;
+  if(S.op !== r.op){ S.op = r.op; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; renderAll(); }
+  S.route = id; renderDrawer(r);
+  $('#drawer').classList.add('open'); $('#drawer').setAttribute('aria-hidden', 'false'); $('#scrim').classList.add('open');
+  lastFocus ??= document.activeElement; $('#dClose')?.focus();
+  $$('tr.row').forEach(t => t.classList.toggle('sel', t.dataset.r === id));
+  if(push) syncHash();
+}
+function closeRoute(){
+  if(!S.route) return; S.route = null;
+  $('#drawer').classList.remove('open'); $('#drawer').setAttribute('aria-hidden', 'true'); $('#scrim').classList.remove('open');
+  $$('tr.row.sel').forEach(t => t.classList.remove('sel')); lastFocus?.focus?.(); lastFocus = null; syncHash();
+}
+function stepRoute(d){ const l = filtered(), i = l.findIndex(x => x.id === S.route); const n = l[i + d]; if(n) openRoute(n.id); }
+
+/* ── command palette & menus ─────────────────────────────────────────────── */
+let palIdx = 0, palItems = [];
+function palRender(){
+  const q = $('#palIn').value.trim().toLowerCase();
+  const ops = OPS.filter(o => !q || o.toLowerCase().includes(q)).slice(0, 8).map(o => ({ t:'op', o }));
+  const rs = q ? D.routes.filter(r => r.id.toLowerCase().startsWith(q) || `${r.from} ${r.to}`.toLowerCase().includes(q)).sort((a, b) => (b.id.toLowerCase() === q) - (a.id.toLowerCase() === q) || natKey(a.id).localeCompare(natKey(b.id))).slice(0, 8).map(r => ({ t:'route', r })) : [];
+  palItems = [...ops, ...rs]; palIdx = Math.min(palIdx, Math.max(0, palItems.length - 1));
+  let html = '', g = '';
+  palItems.forEach((it, i) => {
+    if(it.t !== g){ g = it.t; html += `<li class="grp">${g === 'op' ? 'Operators' : 'Routes'}</li>`; }
+    html += it.t === 'op'
+      ? `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><i class="dot" style="background:${opColour(it.o)}"></i><b style="font-weight:550">${esc(it.o)}</b><span class="sub" style="margin-left:auto">${D.ST[it.o].n} routes</span></button></li>`
+      : `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><span class="badge" style="height:22px;min-width:36px;font-size:11.5px">${esc(it.r.id)}</span><span>${esc(it.r.from)} ⇄ ${esc(it.r.to)}</span><span class="sub" style="margin-left:auto">${esc(it.r.op)}</span></button></li>`;
+  });
+  $('#palList').innerHTML = html || '<li class="empty">No matches</li>';
+  $('#palList .act')?.scrollIntoView({ block:'nearest' });
+}
+function palOpen(){ $('#pal').hidden = false; $('#palIn').value = ''; palIdx = 0; palRender(); $('#palIn').focus(); }
+function palClose(){ $('#pal').hidden = true; }
+function palPick(i){ const it = palItems[i]; if(!it) return; palClose(); if(it.t === 'op') setOp(it.o); else openRoute(it.r.id); }
+function menuRender(){
+  $('#opMenu').innerHTML = OPS.map(o => `<button role="option" aria-current="${o === S.op}" data-op="${esc(o)}"><i class="dot" style="background:${opColour(o)}"></i><span class="nm">${esc(o)}</span><span class="mt">${D.ST[o].n} routes · ${fPct(D.ST[o].pvr / D.NET.pvr * 100, 0)}</span></button>`).join('');
+}
+
+/* ── wiring ──────────────────────────────────────────────────────────────── */
+function renderAll(){
+  renderHero(); renderMarket(); renderRunway(); renderCards(); renderTable(); menuRender();
+  $('#opBtn').setAttribute('aria-expanded', 'false'); $('#opMenu').hidden = true;
+}
+function setOp(o){ S.op = o; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
+function syncHash(){
+  const h = '#op=' + encodeURIComponent(S.op) + (S.route ? '&route=' + encodeURIComponent(S.route) : '');
+  if(location.hash !== h) history.replaceState(null, '', h);
+}
+function fromHash(){
+  const p = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if(OPS.includes(p.get('op'))) S.op = p.get('op');
+  return p.get('route');
+}
+function csv(){
+  const q = v => { let s = String(v ?? ''); if(/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [['route','from','to','garage','pvr','propulsion','fleet_age_years','gbp_per_mile','operated_pct','contract_end','next_tender_start'],
+    ...filtered().map(r => [r.id, r.from, r.to, r.garageName, r.pvr, r.prop, r.age ?? '', r.cpm ?? '', r.opPct ?? '', r.cEnd ?? '', r.next?.contractStart ?? ''])];
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type:'text/csv' }));
+  a.download = `${S.op.toLowerCase().replace(/\W+/g, '-')}-routes.csv`; document.body.append(a); a.click(); a.remove();
+}
+document.addEventListener('click', e => {
+  const t = e.target;
+  const op = t.closest('[data-op]'); if(op){ setOp(op.dataset.op); return; }
+  const m = t.closest('[data-metric]'); if(m){ S.metric = m.dataset.metric; renderMarket(); return; }
+  const mv = t.closest('[data-mview]'); if(mv){ S.mView = mv.dataset.mview; renderMarket(); return; }
+  const rw = t.closest('[data-rw]'); if(rw){ S.rwMetric = rw.dataset.rw; renderRunway(); return; }
+  const rv = t.closest('[data-rwview]'); if(rv){ S.rwView = rv.dataset.rwview; renderRunway(); return; }
+  const y = t.closest('[data-year]'); if(y){ const v = y.dataset.year === 'later' ? 'later' : +y.dataset.year; S.year = S.year === v ? null : v; S.shown = 30; renderRunway(); renderTable(); if(S.year != null) $('#routes').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+  if(t.closest('[data-clearyear]')){ S.year = null; renderRunway(); renderTable(); return; }
+  const p = t.closest('[data-prop]'); if(p){ S.prop = p.dataset.prop; S.shown = 30; renderTable(); return; }
+  const f = t.closest('[data-flag]'); if(f){ S.flags.has(f.dataset.flag) ? S.flags.delete(f.dataset.flag) : S.flags.add(f.dataset.flag); S.shown = 30; renderTable(); return; }
+  const th = t.closest('th[data-sort]'); if(th){ const k = th.dataset.sort; S.sort = S.sort.k === k ? { k, dir:-S.sort.dir } : { k, dir:k === 'id' || k === 'end' || k === 'next' ? 1 : -1 }; renderTable(); return; }
+  if(t.closest('#moreBtn')){ S.shown += 30; renderTable(); return; }
+  const row = t.closest('tr.row, .nx[data-r]'); if(row){ openRoute(row.dataset.r); return; }
+  if(t.closest('#dClose') || t.id === 'scrim'){ closeRoute(); return; }
+  if(t.closest('#dPrev')){ stepRoute(-1); return; } if(t.closest('#dNext')){ stepRoute(1); return; }
+  if(t.closest('#opBtn')){ const o = $('#opMenu'); o.hidden = !o.hidden; $('#opBtn').setAttribute('aria-expanded', String(!o.hidden)); return; }
+  if(!t.closest('.opsw')){ $('#opMenu').hidden = true; $('#opBtn').setAttribute('aria-expanded', 'false'); }
+  if(t.closest('#searchBtn')){ palOpen(); return; }
+  const pi = t.closest('[data-pi]'); if(pi){ palPick(+pi.dataset.pi); return; }
+  if(t.id === 'pal'){ palClose(); return; }
+  if(t.closest('#aboutBtn')){ $('#aboutM').hidden = false; return; } if(t.id === 'aboutM'){ $('#aboutM').hidden = true; return; }
+  if(t.closest('#exportBtn')){ csv(); return; }
+  if(t.closest('#linkBtn')){ navigator.clipboard?.writeText(location.href).then(() => { $('#linkTxt').textContent = 'Copied'; setTimeout(() => $('#linkTxt') && ($('#linkTxt').textContent = 'Copy link'), 1400); }); return; }
+});
+document.addEventListener('input', e => { if(e.target.id === 'rq'){ S.q = e.target.value; S.shown = 30; const pos = e.target.selectionStart; renderTable(); const i = $('#rq'); i.focus(); i.setSelectionRange(pos, pos); } if(e.target.id === 'palIn'){ palIdx = 0; palRender(); } });
+document.addEventListener('keydown', e => {
+  if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); $('#pal').hidden ? palOpen() : palClose(); return; }
+  if(!$('#pal').hidden){
+    if(e.key === 'Escape') palClose();
+    else if(e.key === 'ArrowDown'){ e.preventDefault(); palIdx = Math.min(palItems.length - 1, palIdx + 1); palRender(); }
+    else if(e.key === 'ArrowUp'){ e.preventDefault(); palIdx = Math.max(0, palIdx - 1); palRender(); }
+    else if(e.key === 'Enter'){ e.preventDefault(); palPick(palIdx); }
+    return;
+  }
+  if(e.key === 'Escape'){ if(!$('#aboutM').hidden) $('#aboutM').hidden = true; else if(S.route) closeRoute(); else $('#opMenu').hidden = true; return; }
+  if(e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); palOpen(); return; }
+  if(S.route && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ if(e.key === 'ArrowRight') stepRoute(1); if(e.key === 'ArrowLeft') stepRoute(-1); }
+  if((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('tr.row')){ e.preventDefault(); openRoute(e.target.dataset.r); }
+});
+document.addEventListener('pointerover', e => {                      // footprint ↔ table coupling
+  const row = e.target.closest?.('tr.row'); $$('#foot path.hl').forEach(p => p.classList.remove('hl'));
+  if(row) $(`#foot path[data-r="${CSS.escape(row.dataset.r)}"]`)?.classList.add('hl');
+});
+addEventListener('hashchange', () => { const r = fromHash(); renderAll(); r ? openRoute(r, false) : closeRoute(); });
+
+$('#aboutBody').innerHTML = `<h2>Operator intelligence · v3 concept</h2><p style="margin:0;color:var(--ink-2)">A design exploration for the next evolution of this project: from a route explorer to an operator-level intelligence dashboard. Everything here is real data from the project's own open dataset; nothing is mocked.</p>
+  <h5>The idea</h5><ul><li><b>One route brief, everywhere.</b> A route's shape, PVR, fleet, price, operated mileage, contract runway and next tender form one compact unit — a table row and the detail drawer show the same fields.</li><li><b>Operator KPIs are roll-ups of those fields,</b> so headline numbers always agree with the rows beneath them.</li><li><b>Market → Contracts → Fleet → Routes</b> is the reading order: where you stand, what is at risk, what you run, then every route.</li></ul>
+  <h5>What is live</h5><ul><li>Operator switcher, ⌘K search, sortable and filterable routes, per-route drawer (←/→ to step), CSV export, shareable links.</li><li>Contract runway buckets are clickable and filter the table.</li><li>Route shapes and the operator footprint are plain SVG from TfL geometry — no map tiles.</li></ul>
+  <h5>Caveats worth knowing</h5><ul><li>Contract value is the sum of accepted annual bids per route's current contract — an estimate.</li><li>Tender record groups subsidiaries into their parent brand and counts only cross-group changes.</li><li>Operated mileage and reliability are TfL's reported figures for the latest published period.</li></ul>
+  <h5>Next ideas</h5><ul><li>Compare two operators side by side; saved watchlists of routes.</li><li>Alerts when a contract nears its end or a tender is issued.</li><li>Garage view: capacity, utilisation, allocation by route.</li><li>Scenario tool: what a re-tender at the network median price would change.</li></ul>
+  <div style="margin-top:18px;display:flex;justify-content:flex-end"><button class="btn primary" id="aboutClose">Close</button></div>`;
+$('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
+
+/* ── boot ────────────────────────────────────────────────────────────────── */
+(async () => {
+  try{
+    const raw = await load();
+    D = build(raw);
+    D.garages = raw.garages;
+    D.bb = D.lines.size ? robustBounds([...D.lines.values()]) : { minLon:-0.5, maxLon:0.3, minLat:51.3, maxLat:51.7 };
+    const gen = raw.manifest?.generatedAt;
+    $('#fresh').innerHTML = `<i></i>Data as of ${gen ? esc(fDate(gen)) : 'recently'}`;
+    $('#app').innerHTML = `<section id="overview"><div id="hero"></div><div class="grid sec" id="kpis"></div></section>
+      <div class="grid sec"><section class="card s5" id="market" aria-label="Market position"></section><section class="card s7" id="runway" aria-label="Contract runway"></section></div>
+      <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="fleet" aria-label="Fleet profile"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
+      <section class="card sec" id="routes" aria-label="Routes"></section>`;
+    const orig = fromHash(); renderAll();
+    // rail: "Contracts" jumps to the runway card, "Fleet" to the fleet card; the section in view is highlighted
+    const spy = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting) $$('.rail a.nav[data-sec]').forEach(a => a.classList.toggle('on', a.dataset.sec === en.target.dataset.spy)); }), { rootMargin:'-30% 0px -60% 0px' });
+    [['overview', '#overview'], ['market', '#market'], ['contracts', '#runway'], ['fleet', '#fleet'], ['routes', '#routes']].forEach(([k, sel]) => { const el = $(sel); if(el){ el.dataset.spy = k; spy.observe(el); } });
+    $$('.rail a.nav[data-sec]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const id = { contracts:'runway', fleet:'fleet' }[a.dataset.sec] ?? a.dataset.sec; document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); $$('.rail a.nav').forEach(x => x.classList.toggle('on', x === a)); }));
+    if(orig) openRoute(orig, false); else syncHash();
+  }catch(e){
+    console.error(e);
+    $('#app').innerHTML = `<div class="err"><b>Couldn't load the operator data.</b><br>${esc(e.message)}<br><a href="/v3">Reload</a></div>`;
+  }
+})();
+</script>
+</body>
+</html>
