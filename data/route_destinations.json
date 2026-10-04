@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-10-03T09:18:17Z",
-  "route_count": 674,
+  "generated_at_utc": "2026-10-04T09:58:14Z",
+  "route_count": 672,
   "routes": {
     "1": {
       "service_types": [
@@ -1017,9 +1017,9 @@
         "full": "South Kensington, Queensberry Place"
       },
       "inbound": {
-        "destination": "Chiswick Business Park",
+        "destination": "Chiswick, Business Park",
         "qualifier": "",
-        "full": "Chiswick Business Park"
+        "full": "Chiswick, Business Park"
       }
     },
     "71": {
@@ -3123,68 +3123,78 @@
       }
     },
     "215": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Walthamstow",
-        "qualifier": "",
-        "full": "Walthamstow"
+        "destination": "Walthamstow Central",
+        "qualifier": "Walthamstow Bus Station",
+        "full": "Walthamstow Central, Walthamstow Bus Station"
       },
       "inbound": {
-        "destination": "Lee Valley Campsite",
+        "destination": "Lee Valley Camp Site",
         "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "full": "Lee Valley Camp Site"
       }
     },
     "216": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Kingston",
-        "qualifier": "",
-        "full": "Kingston"
+        "qualifier": "Cromwell Road Bus Station",
+        "full": "Kingston, Cromwell Road Bus Station"
       },
       "inbound": {
         "destination": "Staines",
-        "qualifier": "",
+        "qualifier": "Staines Bus Station",
         "full": "Staines"
       }
     },
     "217": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Wood Green Turnpike Lane Station",
-        "qualifier": "",
-        "full": "Wood Green Turnpike Lane Station"
+        "destination": "Turnpike Lane Station",
+        "qualifier": "Turnpike Lane Bus Station",
+        "full": "Turnpike Lane Station, Turnpike Lane Bus Station"
       },
       "inbound": {
         "destination": "Waltham Cross",
-        "qualifier": "",
+        "qualifier": "Waltham Cross Bus Station",
         "full": "Waltham Cross"
       }
     },
     "218": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Hammersmith",
-        "qualifier": "",
-        "full": "Hammersmith"
+        "destination": "North Acton",
+        "qualifier": "North Acton Station",
+        "full": "North Acton"
       },
       "inbound": {
-        "destination": "North Acton",
-        "qualifier": "",
-        "full": "North Acton"
+        "destination": "Hammersmith",
+        "qualifier": "Hammersmith Bus Station",
+        "full": "Hammersmith"
       }
     },
     "219": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Clapham Junction Asda",
-        "qualifier": "",
-        "full": "Clapham Junction Asda"
+        "destination": "Clapham Junction",
+        "qualifier": "Falcon Lane",
+        "full": "Clapham Junction, Falcon Lane"
       },
       "inbound": {
         "destination": "Wimbledon",
-        "qualifier": "",
-        "full": "Wimbledon"
+        "qualifier": "Francis Grove",
+        "full": "Wimbledon, Francis Grove"
       }
     },
     "220": {
@@ -4463,18 +4473,16 @@
       }
     },
     "309": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Bethnal Green, Bonner Road",
-        "qualifier": "Bonner Road",
-        "full": "Bethnal Green, Bonner Road"
+        "destination": "London Chest Hospital",
+        "qualifier": "",
+        "full": "London Chest Hospital"
       },
       "inbound": {
-        "destination": "Canning Town",
-        "qualifier": "Canning Town Station",
-        "full": "Canning Town"
+        "destination": "Canning Town Station",
+        "qualifier": "",
+        "full": "Canning Town Station"
       }
     },
     "310": {
@@ -5202,14 +5210,14 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "Harts Lane Estate",
-        "qualifier": "",
-        "full": "Harts Lane Estate"
+        "destination": "Barking, Harts Lane",
+        "qualifier": "Harts Lane Estate",
+        "full": "Barking, Harts Lane, Harts Lane Estate"
       },
       "inbound": {
-        "destination": "Wangey Road",
-        "qualifier": "",
-        "full": "Wangey Road"
+        "destination": "Chadwell Heath",
+        "qualifier": "Wangey Road",
+        "full": "Chadwell Heath, Wangey Road"
       }
     },
     "370": {
@@ -5243,29 +5251,33 @@
       }
     },
     "372": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Hornchurch",
-        "qualifier": "",
-        "full": "Hornchurch"
+        "destination": "Lakeside",
+        "qualifier": "Lakeside Bus Station",
+        "full": "Lakeside"
       },
       "inbound": {
-        "destination": "Lakeside",
+        "destination": "Hornchurch, Town Centre",
         "qualifier": "",
-        "full": "Lakeside"
+        "full": "Hornchurch, Town Centre"
       }
     },
     "375": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Romford",
-        "qualifier": "",
-        "full": "Romford"
-      },
-      "inbound": {
         "destination": "Passingford Bridge",
         "qualifier": "",
         "full": "Passingford Bridge"
+      },
+      "inbound": {
+        "destination": "Romford Station",
+        "qualifier": "",
+        "full": "Romford Station"
       }
     },
     "376": {
@@ -6911,36 +6923,6 @@
         "destination": "Noak Hill",
         "qualifier": "Wincanton Road",
         "full": "Noak Hill, Wincanton Road"
-      }
-    },
-    "649": {
-      "service_types": [
-        "Regular"
-      ],
-      "outbound": {
-        "destination": "The Campion School",
-        "qualifier": "",
-        "full": "The Campion School"
-      },
-      "inbound": {
-        "destination": "Cedar Road",
-        "qualifier": "",
-        "full": "Cedar Road"
-      }
-    },
-    "651": {
-      "service_types": [
-        "Regular"
-      ],
-      "outbound": {
-        "destination": "Chase Cross",
-        "qualifier": "",
-        "full": "Chase Cross"
-      },
-      "inbound": {
-        "destination": "Romford Station",
-        "qualifier": "",
-        "full": "Romford Station"
       }
     },
     "652": {
