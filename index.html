@@ -3176,7 +3176,7 @@ async function renderTenders(tab){
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
-      <td style="min-width:140px">${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
+      <td style="min-width:140px"${a.fromOperatorRaw ? ` title="TfL lists ${esc(a.fromOperatorRaw)}, whose London bus business Stagecoach bought in August 2022"` : ''}>${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
       <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>

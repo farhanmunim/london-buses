@@ -284,6 +284,9 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   // TfL's award pages carry typos and stray test values; canonicalise the
   // display operator (operatorRaw keeps the page's exact text). Applied
   // BEFORE the per-route chronology so operatorChange never fires on a typo.
+  // Operator business sales: awards dated on/after `on` treat the buyer as the incumbent.
+  // HCT Group (CT Plus) went into administration 27 Aug 2022; Stagecoach bought its TfL bus operations (17 routes).
+  const OPERATOR_SALES = [{ from: /^(CT Plus|HCT Group)$/i, to: 'Stagecoach East London', on: '2022-08-27' }];
   const TENDER_OP_FIX = {
     'STagecoach East London': 'Stagecoach East London',
     'Stagecoach Eat London': 'Stagecoach East London',
@@ -445,7 +448,10 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       const a = asc[i];
       const prevA = asc[i - 1];
       a.fromOperator = prevA?.operator ?? null;
-      a.operatorChange = !!(prevA?.operator && a.operator && prevA.operator !== a.operator);
+      // A business sale is not a re-tender: once the buyer owns a contract, a later award is measured against the buyer.
+      const sale = a.fromOperator && a.awardDate && OPERATOR_SALES.find(x => x.from.test(a.fromOperator) && a.awardDate >= x.on);
+      if (sale) { a.fromOperatorRaw = a.fromOperator; a.fromOperator = sale.to; }
+      a.operatorChange = !!(a.fromOperator && a.operator && a.fromOperator !== a.operator);
       if (a.awardDate) {
         const lo = a.awardDate, hi = (Number(a.awardDate.slice(0, 4)) + 2) + a.awardDate.slice(4, 10);
         const pe = prog.find(e => e.contract_start_date >= lo && (!hi || e.contract_start_date <= hi));
@@ -506,7 +512,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   for (const [btID, copies] of Object.entries(tokenCopies)) {
     const primary = copies[0];
     if (!primary) continue;
-    for (const f of ['fromOperator', 'operatorChange', 'contractStart', 'tranche', 'vehicle', 'twoYearExtension', 'contractEnd', 'termYears'])
+    for (const f of ['fromOperator', 'fromOperatorRaw', 'operatorChange', 'contractStart', 'tranche', 'vehicle', 'twoYearExtension', 'contractEnd', 'termYears'])
       if (f in primary) byId[btID][f] = primary[f];
   }
   write(API('tenders.json'), {
