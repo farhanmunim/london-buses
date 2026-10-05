@@ -61,6 +61,7 @@ a{color:var(--accent-ink)}
 .menu button:hover,.menu button[aria-current=true]{background:var(--sunken)}
 .menu .nm{font-weight:550;flex:1;white-space:nowrap}
 .menu .mt{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.searchbtn .stxt{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .searchbtn{flex:1;max-width:420px;justify-content:flex-start;color:var(--ink-3);font-weight:400;background:var(--sunken);box-shadow:none;border-color:transparent}
 .searchbtn:hover{background:#eaecf0}
 kbd{margin-left:auto;font:inherit;font-size:11px;color:var(--ink-3);border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:0 6px;line-height:18px}
@@ -327,7 +328,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .sw.lv{background:var(--ink);box-shadow:0 0 0 3px rgba(42,120,214,.3)}
 .sw.wk{width:12px;height:11px;border-radius:0;background:#fab219;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .pin{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(16,24,40,.35);font-family:inherit}
-.gpin{width:28px;height:28px;border-radius:9px;background:var(--ink);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(16,24,40,.4)}
+.gpin{position:relative;width:28px;height:28px;border-radius:9px;background:var(--ink);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(16,24,40,.4)}
 .maplibregl-map{font-family:inherit}
 .maplibregl-ctrl-group{border-radius:10px!important;border:1px solid rgba(16,24,40,.08);box-shadow:0 2px 8px rgba(16,24,40,.12)!important;overflow:hidden;background:rgba(255,255,255,.92)!important}
 .maplibregl-ctrl-group button{width:32px;height:32px}
@@ -342,6 +343,11 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .maplibregl-cooperative-gesture-screen{font-family:inherit;font-size:13px;font-weight:500;background:rgba(16,24,40,.55)!important}
 @media (max-width:860px){.mapbox{height:300px}.mapbox.big{height:440px}.mapui.tr2{right:48px}.seg.float button{max-width:112px;padding:5px 9px}}
 
+.garleg{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 130px);padding:7px 10px;border-radius:10px;font-size:11.5px;color:var(--ink-2)}
+.garleg[hidden]{display:none}.garleg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.garleg .dot{width:9px;height:9px}
+.mapfs .garleg{bottom:72px;left:12px}
+.hoverpop{pointer-events:none}
+.gpl{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;white-space:nowrap;font-size:11.5px;font-weight:600;color:var(--ink);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
 /* info buttons, tender tags */
 .card,.drawer section,.mini>div{position:relative}
 .info.corner{position:absolute;top:10px;right:10px;width:16px;height:16px;border-color:transparent;background:transparent;color:var(--ink-3);opacity:.4;font-size:10.5px;font-weight:600;border:1px solid var(--line-2);transition:opacity .12s,background .12s;z-index:2}
@@ -374,7 +380,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .gq{display:flex;align-items:center;gap:8px;padding:6px 10px 8px;color:var(--ink-3);position:sticky;top:-6px;background:var(--surface);z-index:1}
 .gq input{flex:1;border:0;outline:0;font:inherit;font-size:13px;background:none;color:var(--ink);min-width:0}
 .expand{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;border:1px solid rgba(16,24,40,.08);background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(16,24,40,.12);color:var(--ink)}
-.expand:hover{background:#fff}.expand svg{width:16px;height:16px}
+.expand:hover{background:#fff}.expand svg,.foot .expand svg{position:static;inset:auto;width:16px;height:16px;display:block}
 .foot .expand{opacity:0;transition:opacity .15s}.foot:hover .expand,.foot .expand:focus-visible{opacity:1}
 .agel{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:550;color:var(--warn-ink);margin:3px 0 5px}
 .agel svg{width:13px;height:13px;flex:none}
@@ -441,7 +447,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
       <button class="btn" id="gBtn" aria-haspopup="listbox" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 4l9 6.5V20H3z"/><path d="M8 20v-6h8v6"/></svg><span id="gName">All garages</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <div class="menu gm" id="gMenu" role="listbox" hidden><label class="gq"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="gq" placeholder="Find a garage" aria-label="Find a garage" autocomplete="off"></label><div id="gList"></div></div>
     </div>
-    <button class="btn searchbtn" id="searchBtn" aria-label="Search routes and operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="stxt">Search routes, garages &amp; operators</span><kbd>⌘K</kbd></button>
+    <button class="btn searchbtn" id="searchBtn" aria-label="Search routes and operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="stxt">Search routes, garages, operators</span><kbd>⌘K</kbd></button>
     <div class="grow"></div>
     <span class="fresh" id="fresh"></span>
     <button class="btn abtn" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg><span>Concept notes</span></button>
@@ -1314,13 +1320,24 @@ function popupSay(map, popup, e, title, rows, action){
   if(action){ const a = document.createElement('button'); a.className = 'pbtn'; a.textContent = action.label; a.addEventListener('click', () => { popup.remove(); action.fn(); }); d.append(a); }
   popup.setLngLat(e.lngLat).setDOMContent(d).addTo(map);
 }
-const garData = skip => fc(D.garages.filter(g => Number.isFinite(g.lat) && g.code !== skip && D.DEPOTS[ALL].some(d => d.code === g.code)), g => ({ name:g.name, code:g.code, op:g.operator, pvr:g.pvr ?? 0, cap:g.capacity ?? 0, c:opColour(g.operator) }));
+const garData = skip => fc(D.garages.filter(g => Number.isFinite(g.lat) && g.code !== skip && D.DEPOTS[ALL].some(d => d.code === g.code)), g => ({ name:g.name, code:g.code, op:g.operator, ops:shortOp(g.operator), pvr:g.pvr ?? 0, cap:g.capacity ?? 0, c:opColour(g.operator) }));
+const GAR_LABEL = ['format', ['get', 'name'], {}, '\n', {}, ['get', 'ops'], { 'font-scale':.82, 'text-color':'#667085' }];
+const garLegend = () => `<div class="garleg float" ${S.ml.gar ? '' : 'hidden'}>${OPS.map(o => `<span><i class="dot" style="background:${opColour(o)}"></i>${esc(shortOp(o))}</span>`).join('')}</div>`;
+// hover card on a garage marker: name, code, operator, size
+function garHover(map, layers){
+  const pop = new maplibregl.Popup({ closeButton:false, closeOnClick:false, offset:14, className:'hoverpop', maxWidth:'240px' });
+  for(const l of layers){
+    map.on('mousemove', l, e => { const p = e.features[0].properties; popupSay(map, pop, e, p.name + ' garage', [p.code + ' · ' + p.op, p.pvr + ' peak vehicles' + (+p.cap ? ' · capacity ' + p.cap : '')]); });
+    map.on('mouseleave', l, () => pop.remove());
+  }
+}
 function mapEnsure(){
   return MP.ready ??= (async () => {
     const map = await mapBase(MH);
     for(const id of ['route', 'stops', 'works', 'coll', 'bridges', 'live', 'gars']) map.addSource(id, { type:'geojson', data:EMPTY });
     const W = ['interpolate', ['linear'], ['zoom'], 9, 1, 16, 1];   // keep the expression helpers readable
-    map.addLayer({ id:'gars', type:'circle', source:'gars', paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, 4, 14, ['+', 6, ['*', ['sqrt', ['get', 'pvr']], .35]]], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2, 'circle-opacity':.9 } });
+    map.addLayer({ id:'gars', type:'circle', source:'gars', paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, 6, 14, ['+', 8, ['*', ['sqrt', ['get', 'pvr']], .4]]], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2.6 } });
+    map.addLayer({ id:'gars-lbl', type:'symbol', source:'gars', minzoom:9, layout:{ 'text-field':GAR_LABEL, 'text-font':['Noto Sans Regular'], 'text-size':11.5, 'text-offset':[0, 1.3], 'text-anchor':'top' }, paint:{ 'text-color':'#101828', 'text-halo-color':'#fff', 'text-halo-width':1.8 } });
     map.addLayer({ id:'coll', type:'circle', source:'coll', paint:{ 'circle-radius':4.5, 'circle-color':['match', ['get', 'sev'], 'fatal', '#101828', '#eb6834'], 'circle-stroke-color':'#fff', 'circle-stroke-width':1.5, 'circle-opacity':.9 } });
     map.addLayer({ id:'bridges', type:'circle', source:'bridges', paint:{ 'circle-radius':5.5, 'circle-color':['case', ['<', ['get', 'h'], 4.2], '#d03b3b', '#fab219'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2 } });
     map.addLayer({ id:'route-glow', type:'line', source:'route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#2a78d6', 'line-opacity':.28, 'line-blur':7, 'line-width':['interpolate', ['linear'], ['zoom'], 9, 9, 16, 22] } });
@@ -1337,6 +1354,7 @@ function mapEnsure(){
     const say = (e, title, rows) => { const d = document.createElement('div'); const b = document.createElement('b'); b.textContent = title; d.append(b); rows.filter(Boolean).forEach(t => { const p = document.createElement('div'); p.className = 'pp'; p.textContent = t; d.append(p); }); MP.popup.setLngLat(e.lngLat).setDOMContent(d).addTo(map); };
     const on = (layer, fn) => { map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer'); map.on('mouseleave', layer, () => map.getCanvas().style.cursor = ''); map.on('click', layer, e => fn(e, e.features[0].properties)); };
     on('gars', (e, p) => say(e, p.name + ' garage', [p.code + ' · ' + p.op, p.pvr + ' peak vehicles' + (p.cap ? ' · capacity ' + p.cap : '')]));
+    garHover(map, ['gars']);
     on('stops', (e, p) => say(e, p.name, [p.letter ? 'Stop ' + p.letter : '', p.lines ? 'Also served by: ' + p.lines : '']));
     on('works', (e, p) => say(e, p.location, [p.sev + ' · ' + p.status, p.until ? 'Until ' + p.until : '', p.note]));
     on('coll', (e, p) => say(e, (p.sev === 'fatal' ? 'Fatal' : 'Serious') + ' collision', [p.date, p.road]));
@@ -1348,7 +1366,7 @@ function mapEnsure(){
 const setVis = (map, ids, on) => ids.forEach(id => map.getLayer(id) && map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none'));
 function applyLayers(map){
   setVis(map, ['stops'], S.ml.stops); setVis(map, ['works'], S.ml.works); setVis(map, ['coll'], S.ml.coll);
-  setVis(map, ['bridges'], S.ml.bridges); setVis(map, ['gars'], S.ml.gar); setVis(map, ['live-halo', 'live', 'live-dir'], S.ml.live);
+  setVis(map, ['bridges'], S.ml.bridges); setVis(map, ['gars', 'gars-lbl'], S.ml.gar); setVis(map, ['live-halo', 'live', 'live-dir'], S.ml.live);
 }
 function chipCount(key, n){ $$(`[data-ml="${key}"] .cnt`).forEach(el => el.textContent = n == null ? '' : ' · ' + n); }
 function liveStop(){ clearTimeout(MP.liveT); MP.liveT = null; cancelAnimationFrame(pulseRaf); }
@@ -1386,7 +1404,7 @@ async function mapShow(r){
     MP.markers[0].getElement().style.color = opColour(r.op); MP.markers[0].getElement().style.border = `2.5px solid ${opColour(r.op)}`;
   }
   const g = D.garages.find(x => x.code === r.garage);
-  if(g && Number.isFinite(g.lat)){ const el = document.createElement('div'); el.className = 'gpin'; el.title = `${g.name} garage`; el.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>'; MP.markers.push(new maplibregl.Marker({ element:el }).setLngLat([g.lng, g.lat]).addTo(map)); }
+  if(g && Number.isFinite(g.lat)){ const el = document.createElement('div'); el.className = 'gpin'; el.title = `${g.name} garage`; el.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>'; const lb = document.createElement('span'); lb.className = 'gpl'; lb.textContent = g.name; el.append(lb); MP.markers.push(new maplibregl.Marker({ element:el }).setLngLat([g.lng, g.lat]).addTo(map)); }
   // roadworks the TIMS feed has joined to this route
   const wk = r.works.filter(w => Number.isFinite(w.lat));
   map.getSource('works').setData(fc(wk, w => ({ location:String(w.location ?? '').replace(/\s*\(.*$/, ''), sev:w.severity, status:w.status, until:w.endDateTime ? fDate(w.endDateTime) : '', note:String(w.currentUpdate ?? w.comments ?? '').slice(0, 140) })));
@@ -1419,13 +1437,14 @@ function netEnsure(){
     map.addLayer({ id:'ghost', type:'line', source:'net', filter:['==', ['get', 'in'], 0], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#9aa6ba', 'line-opacity':.55, 'line-width':['interpolate', ['linear'], ['zoom'], 8, .8, 14, 2.2] } });
     map.addLayer({ id:'net-case', type:'line', source:'net', filter:['==', ['get', 'in'], 1], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#fff', 'line-opacity':.85, 'line-width':['interpolate', ['linear'], ['zoom'], 8, 2.4, 12, 5, 16, 9] } });
     map.addLayer({ id:'net', type:'line', source:'net', filter:['==', ['get', 'in'], 1], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get', 'c'], 'line-opacity':.9, 'line-width':wide } });
-    map.addLayer({ id:'gars-other', type:'circle', source:'gars', filter:['==', ['get', 'in'], 0], paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, 3.5, 14, 7], 'circle-color':'#98a2b3', 'circle-stroke-color':'#fff', 'circle-stroke-width':2, 'circle-opacity':.95 } });
+    map.addLayer({ id:'gars-other', type:'circle', source:'gars', filter:['==', ['get', 'in'], 0], paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, 5, 14, 9], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2.4 } });
+    map.addLayer({ id:'gars-other-lbl', type:'symbol', source:'gars', minzoom:9.5, filter:['==', ['get', 'in'], 0], layout:{ 'text-field':GAR_LABEL, 'text-font':['Noto Sans Regular'], 'text-size':11, 'text-offset':[0, 1.2], 'text-anchor':'top' }, paint:{ 'text-color':'#475467', 'text-halo-color':'#fff', 'text-halo-width':1.8 } });
     map.addLayer({ id:'gars', type:'circle', source:'gars', filter:['==', ['get', 'in'], 1], paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, ['+', 3.5, ['*', ['sqrt', ['get', 'pvr']], .22]], 14, ['+', 6, ['*', ['sqrt', ['get', 'pvr']], .5]]], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2.2 } });
-    map.addLayer({ id:'gars-lbl', type:'symbol', source:'gars', minzoom:10.5, layout:{ 'text-field':['get', 'name'], 'text-font':['Noto Sans Regular'], 'text-size':11.5, 'text-offset':[0, 1.25], 'text-anchor':'top', 'text-optional':true }, paint:{ 'text-color':'#101828', 'text-halo-color':'#fff', 'text-halo-width':1.6 } });
+    map.addLayer({ id:'gars-lbl', type:'symbol', source:'gars', minzoom:10.5, layout:{ 'text-field':GAR_LABEL, 'text-font':['Noto Sans Regular'], 'text-size':11.5, 'text-offset':[0, 1.25], 'text-anchor':'top', 'text-optional':true }, paint:{ 'text-color':'#101828', 'text-halo-color':'#fff', 'text-halo-width':1.6 } });
     NP.popup = new maplibregl.Popup({ closeButton:false, closeOnClick:true, offset:12, maxWidth:'260px' });
     const on = (layer, fn) => { map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer'); map.on('mouseleave', layer, () => map.getCanvas().style.cursor = ''); map.on('click', layer, e => { e.originalEvent.__hit = true; fn(e, e.features[0].properties); }); };
     const garPop = (e, p) => popupSay(map, NP.popup, e, p.name + ' garage', [p.code + ' · ' + p.op, p.pvr + ' peak vehicles' + (+p.cap ? ' · capacity ' + p.cap + ' (' + Math.round(p.pvr / p.cap * 100) + '%)' : '')], S.garage === p.code ? null : { label:'Open garage view', fn:() => { mapClose(); setGarage(p.code); } });
-    on('gars', garPop); on('gars-other', garPop);
+    on('gars', garPop); on('gars-other', garPop); garHover(map, ['gars', 'gars-other']);
     const routePop = (e, p) => { const r = D.byId.get(p.id); popupSay(map, NP.popup, e, 'Route ' + p.id, [r ? `${r.from} ⇄ ${r.to}` : '', p.op + (r ? ' · ' + r.pvr + ' PVR' : '')], { label:'Open route brief', fn:() => { mapClose(); openRoute(p.id); } }); };
     on('net', routePop); on('ghost', routePop);
     return map;
@@ -1440,13 +1459,13 @@ function netBounds(sc){
 function applyNetLayers(){
   const map = NP.map; if(!map) return; const sc = SC();
   setVis(map, ['ghost'], S.nl.ghost); setVis(map, ['gars'], S.nl.gars); setVis(map, ['gars-lbl'], S.nl.gars && S.nl.names);
-  setVis(map, ['gars-other'], sc.kind === 'all' ? false : S.nl.other);
+  setVis(map, ['gars-other', 'gars-other-lbl'], sc.kind === 'all' ? false : S.nl.other);
 }
 async function netShow(){
   const sc = SC(), map = NP.map; if(!map) return;
   const mine = new Set(sc.list.map(r => r.id)), gset = new Set(sc.list.map(r => r.garage));
   map.getSource('net').setData({ type:'FeatureCollection', features:[...D.lines].map(([id, cs]) => { const r = D.byId.get(id); return { type:'Feature', properties:{ id, c:opColour(r?.op), op:r?.op ?? '', in:mine.has(id) ? 1 : 0 }, geometry:{ type:'LineString', coordinates:cs } }; }) });
-  map.getSource('gars').setData(fc(D.garages.filter(g => Number.isFinite(g.lat) && D.DEPOTS[ALL].some(d => d.code === g.code)), g => ({ name:g.name, code:g.code, op:g.operator, pvr:g.pvr ?? 0, cap:g.capacity ?? 0, c:opColour(g.operator), in:gset.has(g.code) ? 1 : 0 })));
+  map.getSource('gars').setData(fc(D.garages.filter(g => Number.isFinite(g.lat) && D.DEPOTS[ALL].some(d => d.code === g.code)), g => ({ name:g.name, code:g.code, op:g.operator, pvr:g.pvr ?? 0, cap:g.capacity ?? 0, c:opColour(g.operator), ops:shortOp(g.operator), in:gset.has(g.code) ? 1 : 0 })));
   applyNetLayers();
   map.resize(); const bb = netBounds(sc);
   map.fitBounds([[bb.minLon, bb.minLat], [bb.maxLon, bb.maxLat]], { padding:{ top:70, bottom:70, left:50, right:50 }, duration:0, maxZoom:14 });
@@ -1461,7 +1480,7 @@ async function mapOpen(kind){
   $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${sc.st.n} routes · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
   $('#mfClose').focus();
   if(kind === 'route'){
-    body.append(MH); body.insertAdjacentHTML('beforeend', `<div class="mapui tl">${dirSeg(r)}</div><div class="lyrow over">${routeChips()}</div>`);
+    body.append(MH); body.insertAdjacentHTML('beforeend', `${garLegend()}<div class="mapui tl">${dirSeg(r)}</div><div class="lyrow over">${routeChips()}</div>`);
     MP.map?.cooperativeGestures?.disable?.(); MP.map?.resize(); if(MP.map && MP.fit) MP.map.fitBounds(MP.fit, { padding:{ top:70, bottom:80, left:60, right:60 }, duration:0, maxZoom:15 });
     for(const k of Object.keys(S.ml)) chipRefresh(k);
   } else {
@@ -1522,7 +1541,7 @@ function renderDrawer(r){
       </div>
       <section><h4>Route map</h4>
         <div class="mapbox" id="mapbox">${MP.failed ? `<div class="shape" style="border:0;border-radius:0;height:100%">${shapeSvg(r)}</div>` : '<div id="mapSlot" class="mapslot"></div>'}
-          ${MP.failed ? '' : `<div class="mapui tl">${dirSeg(r)}</div>
+          ${MP.failed ? '' : `${garLegend()}<div class="mapui tl">${dirSeg(r)}</div>
           <div class="mapui tr2"><button class="ib float" data-expand="route" aria-label="Open the map full page" data-tip="Open full page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button></div>`}</div>
         ${MP.failed ? '' : `<div class="lyrow">${routeChips()}</div>`}
         <div class="sub" id="mapNote" style="margin-top:8px">${r.km ? fNum(r.km, 0) + ' km · ' : ''}${esc(r.vehicle ?? '')}</div></section>
@@ -1609,47 +1628,53 @@ function gMenuRender(){
 }
 
 /* ── info buttons: a faint ⓘ in the corner of every KPI, card and table ──── */
-const INFO = () => { const P = D.latestPeriod ? ` Latest period: ${D.latestPeriod}.` : '';
+const INFO = () => { const P = D.latestPeriod ? ` (${D.latestPeriod})` : '';
   return {
-  'Briefing':'Plain-English sentences generated from the figures on this page; nothing is written by hand. Tender facts cover the last five years; delivery uses TfL’s latest period.' + P,
-  'Est. annual contract value':'Adds up each route’s current contract: the accepted annual bid in TfL’s tender results. An estimate: it leaves out extensions, incentives and mileage changes.',
-  'Peak vehicles':'Peak vehicle requirement (PVR): the buses routes need on the road at their busiest time, from TfL and garage data. Registered vehicles come from the fleet register.',
-  'Share of peak vehicles':'This view’s peak vehicle requirement (PVR) as a share of London’s total: how many buses its routes need at the busiest time.',
-  'Median price':'The middle £ per live mile of current contracts, from each award’s cost per mile in TfL’s tender results. Compared with the London median.',
-  'Fleet age':'Average age of registered vehicles: this year minus the year of first registration (DVLA). Zero-emission is the share of peak vehicles.',
-  'Operated mileage':'Share of scheduled mileage actually run, weighted by route size, from TfL’s route performance reports.' + P + ' The line shows the last 13 periods.',
-  'Market position':'Compares the eight contracted operators on one measure: peak vehicles, contract value, zero-emission share or fleet age. Uses current routes and the fleet register.',
-  'Contract runway':'Counts current contracts by the year they end (TfL tender and programme dates). Dark bars end within 24 months. Click a bar to filter the routes table.',
-  'Tender record':'Re-tenders awarded in the last five years. “Retained” means the incumbent won again. Subsidiaries count as their parent brand; HCT Group’s 2022 sale to Stagecoach is not counted as a loss.',
-  'Head-to-head':'Routes won from, and lost to, each rival in the last five years of TfL award results. Subsidiaries count as their parent brand.',
-  'Tender momentum':'Routes each operator won and lost in re-tenders over the last five years (TfL award results). Every move is one operator’s win and another’s loss.',
-  'Price per mile':'Median £ per live mile of awards made each year (TfL tender results). “Real” adjusts for inflation using ONS CPI. Years with too few awards are left blank.',
-  'Fleet register':'Every vehicle in the fleet register (London arrivals matched to DVLA records), by year of first registration. Peak vehicles by propulsion come from the route data.',
-  'Depots':'Peak vehicles at each garage against its licensed capacity (DVSA operator licences). Peak vehicles exclude spares, so utilisation is a floor.',
-  'Garage':'Peak vehicles at this garage against its licensed capacity (DVSA operator licence). Peak vehicles exclude spares, so utilisation is a floor.',
-  'Service quality':'Operated mileage and reliability from TfL’s route performance reports.' + P + ' Lost mileage is an estimate from scheduled kilometres.',
-  'Replacement runway':`Buses grouped by the year they reach ${AGE_LIMIT} years old (first-registration year + ${AGE_LIMIT}), TfL’s maximum vehicle age. Buses past it may be on approved extensions or in reserve.`,
-  'Needs attention':'Routes showing three or more signals: materially poor reliability or mileage, contract ending within a year, heavy peak loads, disruption now, or an ageing fleet.',
-  'Routes':'One row per route. Hover a column heading to see what it measures. Click a row for the full route brief.',
-  'Route map':'The route line and stops (TfL). Layers add current roadworks (TfL), serious and fatal bus collisions (DfT, last five years), low bridges, other garages and live bus positions.',
-  'Reliability':'Excess wait time (lower is better) on high-frequency routes, or on-time % on others, against TfL’s minimum standard. Latest period.',
-  'Price history':'£ per live mile at each award on this route (TfL tender results), not adjusted for inflation.',
-  'Peak load along the route':'Busiest-period passenger load at each stop as a share of capacity (TfL BUSTO survey). 80% is the “crowded” line.',
-  'Operated mileage · last 13 periods':'Share of scheduled mileage run, per TfL reporting period, for the last 13 periods. The dotted line is TfL’s minimum standard.',
-  'Network & productivity':'Scheduled weekday distance and trips come from timetables × route geometry (an estimate). Km per peak vehicle shows how hard each bus is worked.',
-  'Corridor risk':'Bus and coach collisions within 100 m of the route line (DfT STATS19), plus low bridges along it. Not an operator safety measure.',
-  'Contract':'Current contract dates and value from TfL’s tender results and tendering programme.',
-  'Award history':'Every published TfL award for this route: who won, the price per mile and number of bids.',
-  'Attention signals':'Facts the data can state about this route right now: reliability, mileage, contract end, crowding, disruption, fleet age.',
-  'r:Peak vehicles':'Peak vehicle requirement (PVR): buses this route needs on the road at its busiest time.',
-  'Price':'This route’s current contract price per live mile, against the London median.',
-  'Operated':'Share of scheduled mileage run in TfL’s latest period.' + P,
-  'Peak load':'Highest passenger load along the route in the busiest period, as a share of capacity.',
-  'Collisions':'Bus and coach collisions near the route line in the DfT STATS19 period shown.',
-  'Serious or fatal':'The serious or fatal collisions among those near the route line (DfT STATS19).',
-  'Lowest bridge':'The lowest height restriction on the route corridor. A double-decker needs about 4.4 m.',
+  'Briefing':'Sentences generated from the figures below. Tenders: 5 years.',
+  'Est. annual contract value':'Sum of each route’s current accepted annual bid (TfL).',
+  'Peak vehicles':'Buses needed at the busiest time (PVR).',
+  'Share of peak vehicles':'This view’s PVR ÷ London’s PVR.',
+  'Median price':'Middle £ per live mile of current contracts (TfL).',
+  'Fleet age':'Average of this year − first-registration year (DVLA).',
+  'Operated mileage':'Mileage run ÷ scheduled, latest period' + P + '.',
+  'Up for renewal':'Annual value of contracts ending within 24 months.',
+  'Remaining term':'Years left on current contracts, weighted by value.',
+  'Value / vehicle':'Annual contract value ÷ PVR.',
+  'Km / vehicle':'Scheduled weekday km ÷ PVR.',
+  'Single-bid':'Current contracts that drew one bid ÷ all current contracts.',
+  'Ageing out':`Buses first registered ${AGE_LIMIT - 2}+ years ago: they reach ${AGE_LIMIT} by ${D.YEAR + 2}.`,
+  'Market position':'Operators ranked on the chosen measure.',
+  'Contract runway':'Current contracts by end year. Click a bar to filter.',
+  'Tender record':'Re-tenders in the last 5 years: kept vs changed operator.',
+  'Head-to-head':'Routes won from and lost to each rival, 5 years.',
+  'Tender momentum':'Routes each operator won and lost, 5 years.',
+  'Price per mile':'Median award £ per live mile by year. Real = CPI-adjusted.',
+  'Fleet register':'Registered vehicles by first-registration year (DVLA).',
+  'Depots':'Peak vehicles ÷ licensed capacity per garage. Spares excluded.',
+  'Garage':'Peak vehicles ÷ licensed capacity. Spares excluded.',
+  'Service quality':'Operated mileage and reliability from TfL' + P + '.',
+  'Replacement runway':`Buses by the year they reach ${AGE_LIMIT} (registration year + ${AGE_LIMIT}).`,
+  'Needs attention':'Routes with 3+ signals: reliability, mileage, contract end, crowding, disruption, old fleet.',
+  'Routes':'One row per route. Hover headings for definitions.',
+  'Route map':'Route and stops (TfL). Layers add roadworks, collisions, bridges, garages, live buses.',
+  'Reliability':'EWT (lower is better) or on-time % vs TfL’s standard.',
+  'Price history':'£ per live mile at each award on this route.',
+  'Peak load along the route':'Busiest-period load per stop vs capacity (TfL BUSTO).',
+  'Operated mileage · last 13 periods':'Mileage run ÷ scheduled per period. Dotted = TfL minimum.',
+  'Network & productivity':'Weekday km and trips from timetables (estimate).',
+  'Corridor risk':'Bus collisions within 100 m (DfT STATS19) and low bridges.',
+  'Contract':'Current contract dates and value (TfL).',
+  'Award history':'Every published TfL award for this route.',
+  'Attention signals':'Facts flagged for this route right now.',
+  'r:Peak vehicles':'Buses this route needs at its busiest time (PVR).',
+  'Price':'Current contract £ per live mile vs London median.',
+  'Operated':'Mileage run ÷ scheduled, latest period' + P + '.',
+  'Peak load':'Highest load along the route vs capacity.',
+  'Collisions':'Bus collisions near the route (DfT STATS19).',
+  'Serious or fatal':'Serious or fatal among those collisions.',
+  'Lowest bridge':'Lowest height limit on the corridor. Double-deck needs ~4.4 m.',
 }; };
-const COL_TIPS = { Route:'Route number. The sketch is its shape.', Corridor:'The route’s two ends and the garage it runs from.', PVR:'Peak vehicle requirement: buses needed at the busiest time.', Fleet:'Propulsion type and average age (years) of the buses seen on the route.', '£/mile':'Contract price per live mile at award (TfL tender results), and how far it sits above or below the London median.', Operated:'Share of scheduled mileage actually run in TfL’s latest period.', Reliability:'Excess wait time (lower is better) or on-time % (higher is better), against TfL’s standard.', 'Contract runway':'When the current contract ends. The bar shows how much of its term is left.', 'Tender status':'Awarded: a new contract was awarded in the last 9 months or has yet to start. Tender: the route is upcoming or out to tender in TfL’s programme.' };
+const COL_TIPS = { Route:'Route number and shape.', Corridor:'Route ends and its garage.', PVR:'Peak vehicles needed.', Fleet:'Propulsion and average vehicle age.', '£/mile':'Contract £ per live mile, vs London median.', Operated:'Mileage run ÷ scheduled, latest period.', Reliability:'EWT (lower is better) or on-time % vs standard.', 'Contract runway':'Contract end date; bar = term left.', 'Tender status':'Awarded: new contract awarded in 9 months or not yet started. Tender: in TfL’s programme.' };
 let infoMap = null;
 function decorate(root = document){
   infoMap ??= (D ? INFO() : null); if(!infoMap) return;
@@ -1658,8 +1683,8 @@ function decorate(root = document){
   for(const el of root.querySelectorAll('.card, .kpi, .mini > div, .drawer section')){
     if(el.dataset.i || el.closest('.menu')) continue;
     const t = titleOf(el); if(!t) continue;
-    const key = el.dataset.info ? t : (el.matches('.mini > div') && infoMap['r:' + t] ? 'r:' + t : keys.find(k => !k.startsWith('r:') && (t === k.trim() || t.startsWith(k.trim() + ' ·'))));
-    const text = el.dataset.info || (key && infoMap[key]); if(!text) continue;
+    const key = el.matches('.mini > div') && infoMap['r:' + t] ? 'r:' + t : keys.find(k => !k.startsWith('r:') && (t === k.trim() || t.startsWith(k.trim() + ' ·')));
+    const text = (key && infoMap[key]) || el.dataset.info; if(!text) continue;
     el.dataset.i = '1';
     const i = document.createElement('i'); i.className = 'info corner'; i.tabIndex = 0; i.textContent = 'i'; i.dataset.tip = t.replace(/ ·.*$/, '') + '\n' + text; i.setAttribute('role', 'note'); i.setAttribute('aria-label', 'About ' + t);
     el.append(i);
@@ -1698,7 +1723,7 @@ document.addEventListener('click', e => {
   const t = e.target;
   const gr = t.closest('[data-gar]'); if(gr){ setGarage(gr.dataset.gar); return; }
   const op = t.closest('[data-op]'); if(op){ setOp(op.dataset.op); return; }
-  const ml = t.closest('[data-ml]'); if(ml){ const k = ml.dataset.ml; S.ml[k] = !S.ml[k]; $$(`[data-ml="${k}"]`).forEach(c => { c.classList.toggle('on', S.ml[k]); c.setAttribute('aria-pressed', String(S.ml[k])); });
+  const ml = t.closest('[data-ml]'); if(ml){ const k = ml.dataset.ml; S.ml[k] = !S.ml[k]; $$(`[data-ml="${k}"]`).forEach(c => { c.classList.toggle('on', S.ml[k]); c.setAttribute('aria-pressed', String(S.ml[k])); }); if(k === 'gar') $$('.garleg').forEach(e => e.hidden = !S.ml.gar);
     if(MP.map){ applyLayers(MP.map); if(k === 'live'){ if(S.ml.live) livePoll(D.byId.get(S.route), MP.tok); else { liveStop(); MP.map.getSource('live').setData(EMPTY); } } } return; }
   const dr = t.closest('[data-dir]'); if(dr){ S.dir = dr.dataset.dir; $$('.dirSeg button').forEach(b => b.classList.toggle('on', b.dataset.dir === S.dir)); mapShow(D.byId.get(S.route)); return; }
   const ex = t.closest('[data-expand]'); if(ex){ mapOpen(ex.dataset.expand); return; }
