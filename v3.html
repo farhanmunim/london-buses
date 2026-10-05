@@ -480,6 +480,8 @@ const grp = name => {                    // tender-form names → the 8 contract
   if(n.includes('falcon')) return 'Falcon Coaches';
   return 'Other';
 };
+// a rival in the head-to-head: the eight groups keep their names; anyone else is named, not lumped
+const rival = name => { const g = grp(name); if(g !== 'Other') return g; const n = String(name).trim(); return /ct plus|hct/i.test(n) ? 'HCT Group (CT Plus)' : n; };
 
 async function load(){
   const [meta, tenders] = await Promise.all([get('/data/api/route-meta.json'), get('/data/api/tenders.json')]);
@@ -636,8 +638,8 @@ function build(raw){
   const REC = Object.fromEntries(OPS.map(o => [o, { retained:0, lost:0, won:0, wonFrom:{}, lostTo:{} }]));
   for(const a of Object.values(raw.tenders.byId ?? {})){
     if(!a.awardDate || a.awardDate < from5) continue;
-    const g = grp(a.operator), f = grp(a.fromOperator);
-    if(!g || !f) continue;
+    const g = rival(a.operator), f = rival(a.fromOperator);
+    if(!grp(a.operator) || !grp(a.fromOperator)) continue;
     if(g === f){ if(REC[g]) REC[g].retained++; }
     else {
       if(REC[f]){ REC[f].lost++; REC[f].lostTo[g] = (REC[f].lostTo[g] ?? 0) + 1; }
@@ -705,7 +707,7 @@ const S = { op:OPS[0], real:true, metric:'pvr', rwMetric:'routes', mView:'chart'
 
 /* ── view: header + KPIs ─────────────────────────────────────────────────── */
 const initials = o => o.replace(/London|Bus/g, '').trim().split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
-const shortOp = o => ({ 'Go-Ahead London':'Go-Ahead', 'Stagecoach London':'Stagecoach', 'Transport UK London Bus':'Transport UK', 'First Bus London':'First', 'Arriva London':'Arriva' }[o] ?? o);
+const shortOp = o => ({ 'Go-Ahead London':'Go-Ahead', 'Stagecoach London':'Stagecoach', 'Transport UK London Bus':'Transport UK', 'First Bus London':'First', 'Arriva London':'Arriva', 'HCT Group (CT Plus)':'HCT Group' }[o] ?? o);
 const rank = (metricFn, op, desc = true) => { const v = OPS.map(o => [o, metricFn(D.ST[o])]).filter(([, x]) => x != null).sort((a, b) => desc ? b[1] - a[1] : a[1] - b[1]); return v.findIndex(([o]) => o === op) + 1; };
 const delta = (v, base, { good = null, unit = '%' } = {}) => {
   if(!Number.isFinite(v) || !Number.isFinite(base) || !base) return '';
@@ -840,7 +842,7 @@ function renderRecord(){
       <div class="kv"><span>In the tender programme</span><b>${inProg.length} routes · ${fGbp(sum(inProg, r => r.cur?.acceptedBid))}</b></div></div>`;
 }
 function renderH2H(){
-  const rec = D.REC[S.op], rivals = [...OPS.filter(x => x !== S.op), 'Other'];
+  const rec = D.REC[S.op], rivals = [...new Set([...Object.keys(rec.wonFrom), ...Object.keys(rec.lostTo)])];
   const rows = rivals.map(r => ({ r, won:rec.wonFrom[r] ?? 0, lost:rec.lostTo[r] ?? 0 })).filter(x => x.won || x.lost).sort((a, b) => (b.won - b.lost) - (a.won - a.lost) || b.won - a.won);
   const max = Math.max(1, ...rows.flatMap(x => [x.won, x.lost]));
   $('#h2h').innerHTML = `<div class="ch"><div><h2>Head-to-head</h2><p>Routes won from and lost to each rival, five years</p></div></div>
@@ -848,7 +850,7 @@ function renderH2H(){
       ${rows.length ? rows.map(x => `<div class="hh" data-tip="${esc(x.r)}\nWon from them: ${x.won}\nLost to them: ${x.lost}"><span class="nm"><i class="dot" style="background:${opColour(x.r)}"></i>${esc(shortOp(x.r))}</span>
         <span class="l"><b>${x.lost ? '−' + x.lost : ''}</b><i style="width:${x.lost / max * 100}%"></i></span><span class="r"><i style="width:${x.won / max * 100}%"></i><b>${x.won ? '+' + x.won : ''}</b></span>
         <span class="n ${x.won - x.lost > 0 ? 'pos' : x.won - x.lost < 0 ? 'neg' : ''}">${x.won - x.lost > 0 ? '+' : x.won - x.lost < 0 ? '−' : ''}${Math.abs(x.won - x.lost) || '0'}</span></div>`).join('') : '<div class="sub">No cross-operator changes in the last five years.</div>'}
-      <div class="sub" style="margin-top:10px">Subsidiaries count as their parent brand; moves within a group are not shown.</div></div>`;
+      <div class="sub" style="margin-top:10px">Subsidiaries count as their parent brand; moves within a group are not shown. Smaller operators are named individually.</div></div>`;
 }
 function priceChart(pts){
   const W = 440, H = 190, L = 40, R = 14, T = 12, B = 24, vals = pts.flatMap(p => [p.op, p.net]).filter(Number.isFinite);
