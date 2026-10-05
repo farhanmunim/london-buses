@@ -153,6 +153,23 @@ F('a route map expands to full page', !rmap.open ? true : /Route 25/.test(rmap.t
 await page.keyboard.press('Escape'); await ctx.close();
 F('zero page errors (scopes and maps)', errors.length === 0);
 
+/* ── tender tags, quick filters and info buttons ───────────────────────── */
+({ ctx, page, errors } = await open(1440, 900));
+const nInfo = await page.locator('.info.corner').count();
+F(`every KPI and card carries an info button (${nInfo})`, nInfo >= 20 && await page.locator('.card:not([data-i])').count() <= 1);
+await page.locator('#kpis .kpi .info.corner').first().hover(); await page.waitForTimeout(150);
+F('hovering an info button explains the figure', (await page.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /contract/i.test(await txt(page, '#tip')));
+const thTip = await page.locator('#routes th[data-tip]').count();
+F(`route-table columns explain themselves (${thTip})`, thTip >= 8);
+await page.click('[data-flag="awd"]'); await page.waitForTimeout(200);
+const awN = await page.locator('#routes tbody tr.row').count();
+F(`"Just awarded" filters to awarded routes (${awN} shown)`, awN > 0 && awN === await page.locator('#routes tbody tr.row:has(.tag.good)').count());
+await page.click('[data-flag="awd"]'); await page.click('[data-flag="prog"]'); await page.waitForTimeout(200);
+const pgN = await page.locator('#routes tbody tr.row').count();
+F(`"In tender programme" filters to routes in the programme (${pgN} shown)`, pgN > 0 && pgN === await page.locator('#routes tbody tr.row:has(.tag.blue)').count());
+await ctx.close();
+F('zero page errors (tags and info)', errors.length === 0);
+
 /* ── deep link + mobile ──────────────────────────────────────────────────── */
 ({ ctx, page, errors } = await open(1440, 900, '#op=Metroline&route=' + ofOp('Metroline')[0][0]));
 F('a shared link restores operator and route brief', /Metroline/.test(await txt(page, '#hero h1')) && await page.locator('#drawer.open').count() === 1);

@@ -246,7 +246,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .about h5{margin:18px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-3)}
 .about ul{margin:0;padding-left:18px;color:var(--ink-2)}
 .about li{margin:3px 0}
-#tip{position:fixed;z-index:400;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.4;padding:7px 10px;border-radius:9px;box-shadow:var(--pop);max-width:280px;opacity:0;transition:opacity .08s;white-space:pre-line}
+#tip{position:fixed;z-index:400;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.4;padding:7px 10px;border-radius:9px;box-shadow:var(--pop);max-width:320px;opacity:0;transition:opacity .08s;white-space:pre-line}
 #tip.on{opacity:1}#tip b{font-weight:650}
 .loading{opacity:.55;transition:opacity .2s}
 .err{margin:60px auto;max-width:480px;text-align:center;color:var(--ink-2)}
@@ -342,6 +342,17 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .maplibregl-cooperative-gesture-screen{font-family:inherit;font-size:13px;font-weight:500;background:rgba(16,24,40,.55)!important}
 @media (max-width:860px){.mapbox{height:300px}.mapbox.big{height:440px}.mapui.tr2{right:48px}.seg.float button{max-width:112px;padding:5px 9px}}
 
+/* info buttons, tender tags */
+.card,.drawer section,.mini>div{position:relative}
+.info.corner{position:absolute;top:10px;right:10px;width:16px;height:16px;border-color:transparent;background:transparent;color:var(--ink-3);opacity:.4;font-size:10.5px;font-weight:600;border:1px solid var(--line-2);transition:opacity .12s,background .12s;z-index:2}
+.info.corner:hover,.info.corner:focus-visible{opacity:1;background:var(--sunken);color:var(--ink);outline:0}
+.card>.ch{padding-right:40px}
+.kpi .info.corner{top:12px;right:12px}.mini>div .info.corner{top:7px;right:7px;width:14px;height:14px;font-size:9.5px}
+.drawer section .info.corner{top:2px;right:0}
+.tcol{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.tstat{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tag.good{background:#e6f5ec;color:#15693a;gap:4px}.tag.good svg{width:11px;height:11px}
+.fchip .cn{margin-left:5px;font-variant-numeric:tabular-nums;color:var(--ink-3);font-weight:500}.fchip.on .cn{color:var(--accent-ink)}
 /* full-page map */
 .mapfs{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;flex-direction:column}
 .mapfs[hidden]{display:none}
@@ -601,6 +612,14 @@ function build(raw){
       works:worksBy.get(id) ?? [], divDays:divDays.get(id)?.size ?? 0,
     });
   }
+  for(const r of routes){
+    // just awarded: the latest award was made in the last 9 months, or its contract has not started yet
+    const a = r.hist[0];
+    r.award = a?.awardDate && (a.awardDate >= plusMonths(-9) || (a.contractStart && a.contractStart > TODAY_ISO)) ? a : null;
+    // in the programme: a future tender that is not simply the contract we just awarded
+    const n = r.next, same = n && r.award?.contractStart && Math.abs(Date.parse(n.contractStart) - Date.parse(r.award.contractStart)) < 150 * 864e5;
+    r.pipe = n && !same ? n : null;
+  }
   const byId = new Map(routes.map(r => [r.id, r]));
   const YEAR = TODAY.getUTCFullYear();
   const vlist = Object.values(raw.veh);
@@ -753,7 +772,7 @@ function build(raw){
     if(op === ALL) return { kind:'all', key:ALL, name:ALL, op:ALL, st:NET, F:FNET, rec:REC[ALL], depots:DEPOTS[ALL], colour:'#2a78d6', list:NET.list };
     return { kind:'op', key:op, name:op, op, st:ST[op], F:FLEET[op], rec:REC[op], depots:DEPOTS[op], colour:opColour(op), list:ST[op].list };
   };
-  return { routes, byId, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, scope, garageScope, YEAR, netMedianCpm, relPass, last13, lines, periods, worksBy };
+  return { routes, byId, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
 }
 
 /* ── geometry: tile-free cartography ─────────────────────────────────────── */
@@ -853,8 +872,8 @@ function renderHero(){
   $('#opDot').style.background = S.op === ALL ? '#2a78d6' : opColour(S.op); $('#opName').textContent = S.op;
   $('#gName').textContent = S.garage ? sc.g.name : 'All garages';
   const mono = sc.kind === 'all' ? 'LN' : sc.kind === 'garage' ? sc.code : initials(o);
-  const kind = (label, v, d, extra = '', tipText = '') => `<div class="card kpi s2"><div class="l">${label}${tipText ? ` <i class="info" tabindex="0" data-tip="${esc(tipText)}">i</i>` : ''}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
-  const sm = (label, v, d, tipText) => `<div class="card kpi sm s2"><div class="l">${label} <i class="info" tabindex="0" data-tip="${esc(tipText)}">i</i></div><div class="v">${v}</div><div class="d">${d}</div></div>`;
+  const kind = (label, v, d, extra = '', tipText = '') => `<div class="card kpi s2" ${tipText ? `data-info="${esc(tipText)}"` : ''}><div class="l">${label}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
+  const sm = (label, v, d, tipText) => `<div class="card kpi sm s2" data-info="${esc(tipText)}"><div class="l">${label}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
   const sh = N.pvr ? s.pvr / N.pvr * 100 : null, L = F.limit, nearly = L.soon + L.at;
   const rk = fn => sc.kind === 'op' ? `#${rank(fn, o)} of ${OPS.length}` : sc.kind === 'all' ? `${OPS.length} operators` : `${fPct(D.ST[sc.op].pvr ? s.pvr / D.ST[sc.op].pvr * 100 : null, 0)} of ${esc(shortOp(sc.op))}`;
   const vsNet = (v, base, opts) => sc.kind === 'all' ? '' : delta(v, base, opts);
@@ -871,7 +890,7 @@ function renderHero(){
   $('#brief').innerHTML = `<div class="ch"><div><h2><svg class="spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>Briefing</h2><p>What the data says about ${esc(o)} right now — generated from the figures below</p></div></div>
     <div class="cb"><div class="brief">${briefing(sc).map(b => `<div class="bi"><span class="bk">${b.k}</span><p>${b.t}</p></div>`).join('')}</div></div>`;
   $('#kpis').innerHTML = `
-    <div class="card kpi hero-k s4"><div class="l">Est. annual contract value <i class="info" tabindex="0" data-tip="Sum of the accepted annual bid of each route's current contract (TfL award data). An estimate: it excludes later variations, incentives and mileage changes.">i</i></div>
+    <div class="card kpi hero-k s4"><div class="l">Est. annual contract value</div>
       <div class="v">${fGbp(s.value)}</div>
       <div class="d">${sc.kind === 'all' ? `<span>${s.n} routes</span><span>·</span><span>${OPS.length} operators</span>` : `<span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>·</span><span>${rk(x => x.value)}</span>`}</div></div>
     ${sc.kind === 'all' ? kind('Peak vehicles', fInt(s.pvr), `<span>${fInt(FN.n)} registered</span><span>·</span><span>${fNum(NET_SPARE(), 2)}× spare</span>`) : kind('Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>·</span><span>${rk(x => x.pvr)}</span>`)}
@@ -1097,9 +1116,9 @@ function renderCards(){ renderRecord(); renderH2H(); renderPrice(); renderFleet(
 
 /* ── view: routes table ──────────────────────────────────────────────────── */
 const SORTS = {
-  id:r => natKey(r.id), rel:r => { const p = D.relPass(r); return p === null ? -1 : p ? 1 : 0; }, pvr:r => r.pvr, age:r => r.age ?? -1, cpm:r => r.cpm ?? -1, op:r => r.opPct ?? -1, end:r => r.cEnd ?? '9999', next:r => r.next?.contractStart ?? '9999',
+  id:r => natKey(r.id), rel:r => { const p = D.relPass(r); return p === null ? -1 : p ? 1 : 0; }, pvr:r => r.pvr, age:r => r.age ?? -1, cpm:r => r.cpm ?? -1, op:r => r.opPct ?? -1, end:r => r.cEnd ?? '9999', next:r => r.pipe?.contractStart ?? r.award?.contractStart ?? '9999',
 };
-const COLS = [['id','Route'],[null,'Corridor'],['pvr','PVR','num'],['age','Fleet'],['cpm','£/mile','num'],['op','Operated','num'],['rel','Reliability','num'],['end','Contract runway'],['next','Next tender']];
+const COLS = [['id','Route'],[null,'Corridor'],['pvr','PVR','num'],['age','Fleet'],['cpm','£/mile','num'],['op','Operated','num'],['rel','Reliability','num'],['end','Contract runway'],['next','Tender status']];
 function filtered(){
   const q = S.q.trim().toLowerCase(), lim = plusMonths(24);
   let list = SC().st.list.filter(r =>
@@ -1109,12 +1128,25 @@ function filtered(){
     (!S.flags.has('high') || r.freq === 'high') &&
     (!S.flags.has('dis') || (r.status && r.status.status !== 'Good Service')) &&
     (!S.flags.has('attn') || r.flags.length >= 3) &&
+    (!S.flags.has('prog') || r.pipe) && (!S.flags.has('awd') || r.award) &&
     (S.year == null || (r.cEnd && r.cEnd >= TODAY_ISO && (S.year === 'later' ? +r.cEnd.slice(0, 4) >= TODAY.getUTCFullYear() + 10 : +r.cEnd.slice(0, 4) === S.year))));
   const k = SORTS[S.sort.k]; list.sort((a, b) => { const x = k(a), y = k(b); return (x < y ? -1 : x > y ? 1 : 0) * S.sort.dir; });
   return list;
 }
 const relTxt = r => /EWT/.test(r.relMetric ?? '') ? r.rel.toFixed(2) + ' min' : r.rel.toFixed(1) + '%';
 const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.01"/></svg>';
+function tenderCell(r){
+  const out = [];
+  if(r.award){
+    const a = r.award, chg = a.operatorChange;
+    out.push(`<span class="tstat"><span class="tag good" data-tip="Awarded ${esc(fDate(a.awardDate))}\n${chg ? 'Changes from ' + esc(a.fromOperator ?? '—') + ' to ' + esc(a.operator) : esc(a.operator) + ' keeps the route'}${a.contractStart ? '\nNew contract starts ' + esc(fDate(a.contractStart)) : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Awarded</span>${chg ? `<span class="sub">→ ${esc(shortOp(a.operator))}</span>` : ''}</span>`);
+  }
+  if(r.pipe){
+    const e = r.pipe, open = e.issueDate && e.issueDate <= TODAY_ISO;
+    out.push(`<span class="tstat"><span class="tag blue" data-tip="${open ? 'Out to tender now' : 'Tender due to be issued ' + esc(fDate(e.issueDate))}\n${e.returnDate ? 'Bids due ' + esc(fDate(e.returnDate)) : ''}${e.awardEstimated ? '\nAward expected ' + esc(e.awardEstimated) : ''}\nNew contract starts ${esc(fDate(e.contractStart))}\nSource: TfL tendering programme">${open ? 'Out to tender' : 'Tender ' + esc(fMon(e.issueDate))}</span></span>`);
+  }
+  return out.length ? `<div class="tcol">${out.join('')}</div>` : '<span class="sub">—</span>';
+}
 function rowHtml(r){
   const cls = propClass(r.prop), rel = D.relPass(r);
   const d = r.cpm && D.netMedianCpm ? (r.cpm / D.netMedianCpm - 1) * 100 : null;
@@ -1129,7 +1161,7 @@ function rowHtml(r){
     <td class="num">${r.opPct != null ? `<span data-tip="${esc(r.opPeriod)}${r.opMin != null ? '\nMinimum standard ' + r.opMin + '%' : ''}">${r.opPct.toFixed(1)}%</span>` : '—'}</td>
     <td class="num">${r.rel != null ? `<span data-tip="${esc(r.relMetric)}: ${esc(relTxt(r))}\nStandard ${esc(r.relStd)}${/EWT/.test(r.relMetric) ? ' (lower is better)' : ' (higher is better)'}">${esc(relTxt(r))}</span>${rel === false ? ` <span class="flag" data-tip="Below the reliability standard">${warnIcon}Below</span>` : ''}` : '<span class="sub">—</span>'}</td>
     <td>${r.cEnd ? `<span>${fMon(r.cEnd)}</span>${frac != null ? `<span class="runway ${soon ? 'soon' : ''}" data-tip="${Math.round(frac * 100)}% of the contract term remaining"><i style="width:${(frac * 100).toFixed(0)}%"></i></span>` : ''}${soon ? `<span class="flag">${warnIcon}&lt;12 mo</span>` : ''}` : '<span class="sub">—</span>'}</td>
-    <td>${r.next ? `<span class="tag blue" data-tip="Tender issues ${esc(fDate(r.next.issueDate))}\nNew contract starts ${esc(fDate(r.next.contractStart))}">${esc(fMon(r.next.contractStart))}</span>` : '<span class="sub">—</span>'}</td></tr>`;
+    <td>${tenderCell(r)}</td></tr>`;
 }
 function renderTable(){
   const list = filtered(), s = SC().st;
@@ -1139,8 +1171,10 @@ function renderTable(){
       ${[['all', 'All'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['zero', 'Zero-emission']].map(([k, l]) => chip(k, l, S.prop === k, `data-prop="${k}"`)).join('')}
       <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>
       ${chip('exp', 'Ends ≤ 24 months', S.flags.has('exp'), 'data-flag="exp"')}${chip('high', 'High frequency', S.flags.has('high'), 'data-flag="high"')}${chip('dis', 'Disrupted now', S.flags.has('dis'), 'data-flag="dis"')}${chip('attn', 'Needs attention', S.flags.has('attn'), 'data-flag="attn"')}
+      <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>
+      ${chip('prog', `In tender programme <span class="cn">${s.list.filter(r => r.pipe).length}</span>`, S.flags.has('prog'), 'data-flag="prog"')}${chip('awd', `Just awarded <span class="cn">${s.list.filter(r => r.award).length}</span>`, S.flags.has('awd'), 'data-flag="awd"')}
       ${S.year != null ? `<button class="fchip on" data-clearyear>Contract ends ${S.year === 'later' ? 'later' : S.year} ✕</button>` : ''}</div>
-    <div class="tw"><table class="rt"><thead><tr>${COLS.map(([k, l, c]) => `<th class="${c ?? ''}" ${k ? `data-sort="${k}"` : ''} scope="col">${l}${S.sort.k === k ? `<span class="ar">${S.sort.dir < 0 ? '↓' : '↑'}</span>` : ''}</th>`).join('')}</tr></thead>
+    <div class="tw"><table class="rt"><thead><tr>${COLS.map(([k, l, c]) => `<th class="${c ?? ''}" ${k ? `data-sort="${k}"` : ''} ${COL_TIPS[l] ? `data-tip="${esc(l)}\n${esc(COL_TIPS[l])}"` : ''} scope="col">${l}${S.sort.k === k ? `<span class="ar">${S.sort.dir < 0 ? '↓' : '↑'}</span>` : ''}</th>`).join('')}</tr></thead>
     <tbody>${list.slice(0, S.shown).map(r => rowHtml(r)).join('') || ''}</tbody></table>${list.length ? '' : '<div class="empty">No routes match these filters.</div>'}</div>
     ${list.length > S.shown ? `<div class="more"><button class="btn" id="moreBtn">Show ${Math.min(30, list.length - S.shown)} more</button></div>` : ''}`;
 }
@@ -1574,6 +1608,68 @@ function gMenuRender(){
     || '<div class="empty" style="padding:16px">No garages match.</div>';
 }
 
+/* ── info buttons: a faint ⓘ in the corner of every KPI, card and table ──── */
+const INFO = () => { const P = D.latestPeriod ? ` Latest period: ${D.latestPeriod}.` : '';
+  return {
+  'Briefing':'Plain-English sentences generated from the figures on this page; nothing is written by hand. Tender facts cover the last five years; delivery uses TfL’s latest period.' + P,
+  'Est. annual contract value':'Adds up each route’s current contract: the accepted annual bid in TfL’s tender results. An estimate: it leaves out extensions, incentives and mileage changes.',
+  'Peak vehicles':'Peak vehicle requirement (PVR): the buses routes need on the road at their busiest time, from TfL and garage data. Registered vehicles come from the fleet register.',
+  'Share of peak vehicles':'This view’s peak vehicle requirement (PVR) as a share of London’s total: how many buses its routes need at the busiest time.',
+  'Median price':'The middle £ per live mile of current contracts, from each award’s cost per mile in TfL’s tender results. Compared with the London median.',
+  'Fleet age':'Average age of registered vehicles: this year minus the year of first registration (DVLA). Zero-emission is the share of peak vehicles.',
+  'Operated mileage':'Share of scheduled mileage actually run, weighted by route size, from TfL’s route performance reports.' + P + ' The line shows the last 13 periods.',
+  'Market position':'Compares the eight contracted operators on one measure: peak vehicles, contract value, zero-emission share or fleet age. Uses current routes and the fleet register.',
+  'Contract runway':'Counts current contracts by the year they end (TfL tender and programme dates). Dark bars end within 24 months. Click a bar to filter the routes table.',
+  'Tender record':'Re-tenders awarded in the last five years. “Retained” means the incumbent won again. Subsidiaries count as their parent brand; HCT Group’s 2022 sale to Stagecoach is not counted as a loss.',
+  'Head-to-head':'Routes won from, and lost to, each rival in the last five years of TfL award results. Subsidiaries count as their parent brand.',
+  'Tender momentum':'Routes each operator won and lost in re-tenders over the last five years (TfL award results). Every move is one operator’s win and another’s loss.',
+  'Price per mile':'Median £ per live mile of awards made each year (TfL tender results). “Real” adjusts for inflation using ONS CPI. Years with too few awards are left blank.',
+  'Fleet register':'Every vehicle in the fleet register (London arrivals matched to DVLA records), by year of first registration. Peak vehicles by propulsion come from the route data.',
+  'Depots':'Peak vehicles at each garage against its licensed capacity (DVSA operator licences). Peak vehicles exclude spares, so utilisation is a floor.',
+  'Garage':'Peak vehicles at this garage against its licensed capacity (DVSA operator licence). Peak vehicles exclude spares, so utilisation is a floor.',
+  'Service quality':'Operated mileage and reliability from TfL’s route performance reports.' + P + ' Lost mileage is an estimate from scheduled kilometres.',
+  'Replacement runway':`Buses grouped by the year they reach ${AGE_LIMIT} years old (first-registration year + ${AGE_LIMIT}), TfL’s maximum vehicle age. Buses past it may be on approved extensions or in reserve.`,
+  'Needs attention':'Routes showing three or more signals: materially poor reliability or mileage, contract ending within a year, heavy peak loads, disruption now, or an ageing fleet.',
+  'Routes':'One row per route. Hover a column heading to see what it measures. Click a row for the full route brief.',
+  'Route map':'The route line and stops (TfL). Layers add current roadworks (TfL), serious and fatal bus collisions (DfT, last five years), low bridges, other garages and live bus positions.',
+  'Reliability':'Excess wait time (lower is better) on high-frequency routes, or on-time % on others, against TfL’s minimum standard. Latest period.',
+  'Price history':'£ per live mile at each award on this route (TfL tender results), not adjusted for inflation.',
+  'Peak load along the route':'Busiest-period passenger load at each stop as a share of capacity (TfL BUSTO survey). 80% is the “crowded” line.',
+  'Operated mileage · last 13 periods':'Share of scheduled mileage run, per TfL reporting period, for the last 13 periods. The dotted line is TfL’s minimum standard.',
+  'Network & productivity':'Scheduled weekday distance and trips come from timetables × route geometry (an estimate). Km per peak vehicle shows how hard each bus is worked.',
+  'Corridor risk':'Bus and coach collisions within 100 m of the route line (DfT STATS19), plus low bridges along it. Not an operator safety measure.',
+  'Contract':'Current contract dates and value from TfL’s tender results and tendering programme.',
+  'Award history':'Every published TfL award for this route: who won, the price per mile and number of bids.',
+  'Attention signals':'Facts the data can state about this route right now: reliability, mileage, contract end, crowding, disruption, fleet age.',
+  'r:Peak vehicles':'Peak vehicle requirement (PVR): buses this route needs on the road at its busiest time.',
+  'Price':'This route’s current contract price per live mile, against the London median.',
+  'Operated':'Share of scheduled mileage run in TfL’s latest period.' + P,
+  'Peak load':'Highest passenger load along the route in the busiest period, as a share of capacity.',
+  'Collisions':'Bus and coach collisions near the route line in the DfT STATS19 period shown.',
+  'Serious or fatal':'The serious or fatal collisions among those near the route line (DfT STATS19).',
+  'Lowest bridge':'The lowest height restriction on the route corridor. A double-decker needs about 4.4 m.',
+}; };
+const COL_TIPS = { Route:'Route number. The sketch is its shape.', Corridor:'The route’s two ends and the garage it runs from.', PVR:'Peak vehicle requirement: buses needed at the busiest time.', Fleet:'Propulsion type and average age (years) of the buses seen on the route.', '£/mile':'Contract price per live mile at award (TfL tender results), and how far it sits above or below the London median.', Operated:'Share of scheduled mileage actually run in TfL’s latest period.', Reliability:'Excess wait time (lower is better) or on-time % (higher is better), against TfL’s standard.', 'Contract runway':'When the current contract ends. The bar shows how much of its term is left.', 'Tender status':'Awarded: a new contract was awarded in the last 9 months or has yet to start. Tender: the route is upcoming or out to tender in TfL’s programme.' };
+let infoMap = null;
+function decorate(root = document){
+  infoMap ??= (D ? INFO() : null); if(!infoMap) return;
+  const keys = Object.keys(infoMap).sort((a, b) => b.length - a.length);
+  const titleOf = el => (el.matches('.kpi, .mini > div') ? el.querySelector('.l')?.firstChild?.textContent ?? el.querySelector('.l')?.textContent : el.matches('.drawer section') ? el.querySelector('h4')?.textContent : el.querySelector('.ch h2')?.textContent)?.trim();
+  for(const el of root.querySelectorAll('.card, .kpi, .mini > div, .drawer section')){
+    if(el.dataset.i || el.closest('.menu')) continue;
+    const t = titleOf(el); if(!t) continue;
+    const key = el.dataset.info ? t : (el.matches('.mini > div') && infoMap['r:' + t] ? 'r:' + t : keys.find(k => !k.startsWith('r:') && (t === k.trim() || t.startsWith(k.trim() + ' ·'))));
+    const text = el.dataset.info || (key && infoMap[key]); if(!text) continue;
+    el.dataset.i = '1';
+    const i = document.createElement('i'); i.className = 'info corner'; i.tabIndex = 0; i.textContent = 'i'; i.dataset.tip = t.replace(/ ·.*$/, '') + '\n' + text; i.setAttribute('role', 'note'); i.setAttribute('aria-label', 'About ' + t);
+    el.append(i);
+  }
+}
+{ let q = 0; new MutationObserver(() => { cancelAnimationFrame(q); q = requestAnimationFrame(() => decorate()); }).observe(document.body, { childList:true, subtree:true }); }
+document.addEventListener('focusin', e => { const t = e.target.closest?.('.info[data-tip]'); if(t){ const r = t.getBoundingClientRect(); tipShow(t.dataset.tip, r.left - 140, r.bottom); } });
+document.addEventListener('focusout', e => { if(e.target.closest?.('.info')) tipHide(); });
+document.addEventListener('click', e => { const t = e.target.closest?.('.info[data-tip]'); if(t){ const r = t.getBoundingClientRect(); tipShow(t.dataset.tip, Math.max(8, r.left - 220), r.bottom); } });
+
 /* ── wiring ──────────────────────────────────────────────────────────────── */
 function renderAll(){
   renderHero(); renderMarket(); renderRunway(); renderCards(); renderTable(); menuRender();
@@ -1593,8 +1689,8 @@ function fromHash(){
 }
 function csv(){
   const q = v => { let s = String(v ?? ''); if(/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-  const rows = [['route','from','to','garage','pvr','propulsion','fleet_age_years','gbp_per_mile','operated_pct','contract_end','next_tender_start'],
-    ...filtered().map(r => [r.id, r.from, r.to, r.garageName, r.pvr, r.prop, r.age ?? '', r.cpm ?? '', r.opPct ?? '', r.cEnd ?? '', r.next?.contractStart ?? ''])];
+  const rows = [['route','from','to','garage','pvr','propulsion','fleet_age_years','gbp_per_mile','operated_pct','contract_end','tender_status'],
+    ...filtered().map(r => [r.id, r.from, r.to, r.garageName, r.pvr, r.prop, r.age ?? '', r.cpm ?? '', r.opPct ?? '', r.cEnd ?? '', r.pipe ? 'programme: tender ' + r.pipe.issueDate : r.award ? 'awarded ' + r.award.awardDate : ''])];
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type:'text/csv' }));
   a.download = `${SC().name.toLowerCase().replace(/\W+/g, '-')}-routes.csv`; document.body.append(a); a.click(); a.remove();
 }
