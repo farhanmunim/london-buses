@@ -85,7 +85,7 @@ const cors = await page.evaluate(() => [...document.querySelectorAll('#routes tb
 F(`search filters by place (${cors.length} routes)`, cors.length > 0 && cors.every(c => c.includes('canning')));
 await page.fill('#rq', ''); await page.waitForTimeout(200);
 await page.click('th[data-sort="pvr"]'); await page.waitForTimeout(150);   // already desc → flips to asc
-const asc = await page.evaluate(() => [...document.querySelectorAll('#routes tbody tr td:nth-child(3) .pvr span:first-child')].map(s => +s.textContent.replace(/,/g, '')));
+const asc = await page.evaluate(() => [...document.querySelectorAll('#routes tbody tr td:nth-child(3)')].map(s => +s.textContent.replace(/,/g, '')));
 F('sorting by PVR toggles direction', asc.length > 5 && asc.every((v, i) => i === 0 || asc[i - 1] <= v));
 await page.click('th[data-sort="pvr"]');
 await page.click('#moreBtn'); await page.waitForTimeout(150);

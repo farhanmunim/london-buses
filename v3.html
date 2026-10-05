@@ -67,7 +67,7 @@ kbd{margin-left:auto;font:inherit;font-size:11px;color:var(--ink-3);border:1px s
 .grow{flex:1}
 .fresh{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:7px;white-space:nowrap}
 .fresh i{width:7px;height:7px;border-radius:50%;background:var(--good)}
-main{max-width:1264px;margin:0 auto;padding:28px 28px 80px}
+main{max-width:1520px;margin:0 auto;padding:28px 32px 80px}
 .sec{margin-top:20px}
 
 /* cards ------------------------------------------------------------------ */
@@ -164,22 +164,24 @@ table.dt td.r,table.dt th.r{text-align:right}
 .fchip:hover{background:var(--hover)}
 .fchip.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
 .tw{overflow-x:auto;margin-top:12px}
-table.rt{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:1040px}
-table.rt th{position:sticky;top:0;text-align:left;font-weight:550;font-size:12px;color:var(--ink-3);padding:9px 8px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fcfcfd;white-space:nowrap;cursor:pointer;user-select:none}
+table.rt{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:1100px}
+table.rt th{position:sticky;top:0;text-align:left;font-weight:550;font-size:12px;color:var(--ink-3);padding:11px 11px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fcfcfd;white-space:nowrap;cursor:pointer;user-select:none}
 table.rt th:hover{color:var(--ink)}
 table.rt th.num,table.rt td.num{text-align:right}
 table.rt th .ar{font-size:10px;margin-left:3px;color:var(--accent-ink)}
-table.rt td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.rt td{padding:14px 11px;border-bottom:1px solid var(--line);vertical-align:middle}
 table.rt tr.row{cursor:pointer}
 table.rt tr.row:hover td{background:var(--hover)}
 table.rt tr.row.sel td{background:var(--accent-soft)}
 table.rt td.num{font-variant-numeric:tabular-nums}
 table.rt td{white-space:nowrap}
-table.rt .sub{overflow:hidden;text-overflow:ellipsis;max-width:210px}
+table.rt .sub{overflow:hidden;text-overflow:ellipsis;max-width:270px}
+table.rt .sub .flag:first-child{margin-left:0}
+table.rt td .sub:not(:only-child){margin-left:2px}
 .badge{display:inline-grid;place-items:center;min-width:40px;height:26px;padding:0 8px;border-radius:8px;background:var(--ink);color:#fff;font-weight:650;font-size:12.5px;letter-spacing:-.01em}
-.rcell{display:flex;align-items:center;gap:10px}
-.glyph{width:46px;height:26px;color:var(--ink-3);flex:none}
-.cor{font-weight:500;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcell{display:flex;align-items:center;gap:12px}
+.glyph{width:40px;height:26px;color:var(--ink-3);flex:none}
+.cor{font-weight:500;max-width:270px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pvr{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .pvr .bar{width:54px;height:6px;background:var(--sunken);border-radius:999px;overflow:hidden}
 .pvr .bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
@@ -952,8 +954,8 @@ function rowHtml(r, maxPvr){
   const frac = tot > 0 && left != null ? Math.max(0, Math.min(1, left / tot)) : null, soon = r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= plusMonths(12);
   return `<tr class="row ${S.route === r.id ? 'sel' : ''}" data-r="${esc(r.id)}" tabindex="0" aria-label="Route ${esc(r.id)}, open brief">
     <td><div class="rcell"><span class="badge">${esc(r.id)}</span>${glyph(r)}</div></td>
-    <td><div class="cor" title="${esc(r.from)} ⇄ ${esc(r.to)}">${esc(r.from || '—')} <span class="sub">⇄</span> ${esc(r.to || '—')}</div><div class="sub">${r.status && r.status.status !== 'Good Service' ? `<span class="flag" style="margin:0 6px 0 0" data-tip="${esc(r.status.status)} right now">${warnIcon}Disrupted</span>` : ''}${esc(r.garageName)} (${esc(r.garage)})</div></td>
-    <td class="num"><div class="pvr"><span>${fInt(r.pvr)}</span><span class="bar"><i style="width:${(r.pvr / maxPvr * 100).toFixed(0)}%"></i></span></div></td>
+    <td><div class="cor" title="${esc(r.from)} ⇄ ${esc(r.to)}">${esc(r.from || '—')} <span class="sub">⇄</span> ${esc(r.to || '—')}</div><div class="sub">${r.status && r.status.status !== 'Good Service' ? `<span class="flag" style="margin:0 12px 0 0" data-tip="${esc(r.status.status)} right now">${warnIcon}Disrupted</span>` : ''}${esc(r.garageName)} (${esc(r.garage)})</div></td>
+    <td class="num">${fInt(r.pvr)}</td>
     <td><span class="pill"><i class="dot" style="background:${CLASS[cls].c}"></i>${esc(PROP_LABEL[r.prop] ?? r.prop)}</span> <span class="sub">${r.age != null ? fNum(r.age, 1) + ' y' : ''}</span></td>
     <td class="num">${r.cpm ? '£' + r.cpm.toFixed(2) : '—'} ${d != null ? `<span class="sub" data-tip="vs network median £${fNum(D.netMedianCpm, 2)}">${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(0)}%</span>` : ''}</td>
     <td class="num">${r.opPct != null ? `<span data-tip="${esc(r.opPeriod)}${r.opMin != null ? '\nMinimum standard ' + r.opMin + '%' : ''}">${r.opPct.toFixed(1)}%</span>` : '—'}</td>
