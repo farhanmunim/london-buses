@@ -6,7 +6,7 @@ An interactive map and data explorer for every bus route in London. Search route
 
 ## What it does
 
-The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Traffic orders, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`. `/v3` is an unlinked concept page — an operator-intelligence dashboard prototype on the same data, for planning what comes next.
+The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Traffic orders, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`. `/v3` is an unlinked concept page — an operator-intelligence dashboard prototype on the same data, for planning what comes next. It opens on the whole network and can be scoped to one operator or one garage; its maps (network, garages, route) expand to full page, and its fleet view tracks how many buses reach TfL's 14-year age limit by year.
 
 - Draws the whole network as one colour-coded map. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender.
 - Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, bus-involved **collisions** as a heatmap, current **street works** from the DfT Street Manager feed, and statutory **traffic orders** (D-TRO) with each closure's official diversion route drawn.

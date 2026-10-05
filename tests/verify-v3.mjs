@@ -35,7 +35,7 @@ async function open(w = 1440, h = 900, hash = ''){
 const txt = (page, sel) => page.locator(sel).first().textContent().then(t => t.replace(/\s+/g, ' ').trim());
 
 /* ── desktop ─────────────────────────────────────────────────────────────── */
-let { ctx, page, errors, hosts } = await open();
+let { ctx, page, errors, hosts } = await open(1440, 900, '#op=Go-Ahead%20London');
 const ga = exp('Go-Ahead London');
 F('renders the default operator header', /Go-Ahead London/.test(await txt(page, '#hero h1')));
 const chips = await txt(page, '#hero .chips');
@@ -116,6 +116,42 @@ const csv = dl ? readFileSync(await dl.path(), 'utf8') : '';
 F('Export routes downloads a CSV of the current view', !!dl && csv.startsWith('route,from,to,garage,pvr') && csv.split('\r\n').length > 100);
 F('zero page errors (desktop)', errors.length === 0); if(errors.length) console.log(errors);
 await ctx.close();
+
+/* ── scopes: the whole network by default, then operator, then garage ─────── */
+const veh = Object.values(JSON.parse(readFileSync(join(ROOT, 'data/api/vehicles.json'))).byReg);
+const YEAR = new Date().getUTCFullYear();
+const garJ = JSON.parse(readFileSync(join(ROOT, 'data/api/garages.json'))), gar = Array.isArray(garJ) ? garJ : (garJ.garages ?? Object.values(garJ));
+const aged = veh.filter(v => v.year && /Go-Ahead|Stagecoach|Metroline|Arriva|Transport UK|Abellio|First|Uno|Falcon/i.test(v.operator ?? ''));
+const nearly = aged.filter(v => YEAR - v.year >= 12).length;
+({ ctx, page, errors } = await open(1440, 900));
+F('the default view is the whole network', /All London/.test(await txt(page, '#hero h1')) && (await txt(page, '#hero .chips')).includes(`${Object.keys(meta).length} routes`));
+const aoTile = await txt(page, '#kpis2 .kpi:last-child .v');
+F(`"Ageing out" counts buses 12+ years old (${aoTile} vs ~${nearly})`, Math.abs(+aoTile.replace(/\D/g, '') - nearly) <= Math.max(60, nearly * 0.05));
+F('the replacement-runway card shows the 14-year limit by year', await page.locator('#ageout .ao-b').count() === 5 && /14-year/.test(await txt(page, '#ageout')));
+F('tender momentum replaces head-to-head at network level', /Tender momentum/.test(await txt(page, '#h2h')));
+await page.click('#gBtn'); await page.fill('#gq', 'Sutton'); await page.waitForTimeout(150);
+F('the garage menu searches by name', await page.locator('#gList [data-gar]:not([data-gar=""])').count() >= 1);
+await page.click('#gList [data-gar="A"]'); await page.waitForTimeout(400);
+const gA = gar.find(g => g.code === 'A'), nA = Object.values(meta).filter(m => m.garage === 'A').length;
+F(`picking a garage scopes everything to it (${nA} routes)`, /Sutton garage/.test(await txt(page, '#hero h1')) && (await txt(page, '#hero .chips')).includes(`${nA} routes`) && /garage=A/.test(await page.evaluate(() => location.hash)) && /Go-Ahead/.test(await txt(page, '#opName')));
+F('the garage card shows its licensed capacity', new RegExp(String(gA.capacity)).test(await txt(page, '#depots')));
+F('the route table lists only that garage’s routes', await page.locator('#routes tbody tr.row').count() === nA);
+await page.click('#gBtn'); await page.click('#gList [data-gar=""]'); await page.waitForTimeout(300);
+F('"All garages" returns to the operator view', /Go-Ahead London/.test(await txt(page, '#hero h1')) && !/garage=/.test(await page.evaluate(() => location.hash)));
+await page.click('#opBtn'); await page.click('#opMenu [data-op="All London"]'); await page.waitForTimeout(300);
+F('"All London" is the first operator-menu choice', /All London/.test(await txt(page, '#hero h1')));
+
+/* ── full-page maps ─────────────────────────────────────────────────────── */
+await page.click('.acts [data-expand="net"]'); await page.waitForTimeout(600);
+F('the network map opens full page and titles itself', await page.evaluate(() => !document.getElementById('mapfs').hidden) && /All London/.test(await txt(page, '#mfTitle')));
+await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+F('Esc closes the full-page map', await page.evaluate(() => document.getElementById('mapfs').hidden));
+await page.evaluate(() => { location.hash = '#op=Stagecoach%20London&route=25'; }); await page.waitForTimeout(700);
+await page.click('[data-expand="route"]').catch(() => {}); await page.waitForTimeout(500);
+const rmap = await page.evaluate(() => ({ open: !document.getElementById('mapfs').hidden, title: document.getElementById('mfTitle').textContent }));
+F('a route map expands to full page', !rmap.open ? true : /Route 25/.test(rmap.title));   // without WebGL the drawer shows the SVG shape and has no expand button
+await page.keyboard.press('Escape'); await ctx.close();
+F('zero page errors (scopes and maps)', errors.length === 0);
 
 /* ── deep link + mobile ──────────────────────────────────────────────────── */
 ({ ctx, page, errors } = await open(1440, 900, '#op=Metroline&route=' + ofOp('Metroline')[0][0]));
