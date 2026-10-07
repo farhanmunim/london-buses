@@ -2,7 +2,7 @@ import { chromium } from 'playwright-core';
 import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import { extname, join } from 'path';
-const ROOT = '/home/user/london-buses';
+const ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const srv = createServer((req, res) => {
   try{
     const p = join(ROOT, decodeURIComponent(new URL(req.url, 'http://x').pathname).replace(/\/$/, '/index.html'));

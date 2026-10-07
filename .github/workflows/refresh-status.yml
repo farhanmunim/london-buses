@@ -59,7 +59,7 @@ jobs:
 
       - name: Drain Street Manager events (if any)
         # Folds inbox/<id>.json files from the streetworks-inbox branch
-        # (written by the /api/streetworks Pages Function) into the archive
+        # (written by the /api/streetworks receiver) into the archive
         # using plain git — no extra secrets. Soft-skips until the branch
         # exists (i.e. until registration is done). See data.md.
         run: node scripts/drain-streetworks.js

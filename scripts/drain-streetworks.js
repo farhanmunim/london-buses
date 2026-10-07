@@ -2,7 +2,7 @@
  * drain-streetworks.js — Fold Street Manager events from the inbox branch
  * into the committed archive.
  *
- * Counterpart of functions/api/streetworks.js: the Pages Function receives
+ * Counterpart of functions/api/streetworks.js: the receiver endpoint receives
  * London-filtered Street Manager SNS events and commits each one as
  * inbox/<MessageId>.json on the dedicated `streetworks-inbox` branch (git
  * IS the queue — no external storage). This script (status workflow +
@@ -311,7 +311,7 @@ function main() {
     enc(f, f in e ? e[f] : (e.latest?.[f] ?? null))));
   writeStable(API_PATH, sanitizeRecord({
     generatedAt: nowIso,
-    source: 'DfT Street Manager open data (SNS → Pages Function → streetworks-inbox branch → this archive), London highway authorities only',
+    source: 'DfT Street Manager open data (SNS → /api/streetworks → streetworks-inbox branch → this archive), London highway authorities only',
     note: 'Current and recently-ended works (14-day window), columnar-encoded; the complete archive lives in data/source/streetworks-history.json.',
     totalArchived: Object.keys(entries).length,
     count: rows.length,

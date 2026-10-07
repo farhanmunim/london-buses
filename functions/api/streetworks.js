@@ -1,5 +1,5 @@
 /**
- * /api/streetworks — DfT Street Manager open-data receiver (Pages Function)
+ * /api/streetworks — DfT Street Manager open-data receiver (Cloudflare Pages Functions runtime; see SETUP.md for other hosts)
  *
  * Street Manager open data is PUSH-ONLY: after registering at
  * manage-roadworks.service.gov.uk/open-data-onboarding you give DfT this
@@ -36,8 +36,7 @@
  * Setup (one-time):
  *   - Fine-grained GitHub PAT, THIS repo only, permission Contents:
  *     Read & write → Pages project env var GITHUB_TOKEN (encrypted).
- *   - Optional GITHUB_REPO env var (owner/repo), defaults to
- *     farhanmunim/london-buses.
+ *   - GITHUB_REPO env var (owner/repo of the repository the data lives in).
  *   - GET this endpoint until it reports ready:true, THEN register.
  *
  * GET  → health JSON (token ok? inbox branch? queued file count?)
@@ -77,7 +76,6 @@ const LONDON_SWA = {
 // carry a name) the name regex.
 const isLondonHa = (ha) => !!ha && (ha in LONDON_SWA || LONDON_HA.test(ha));
 
-const DEFAULT_REPO = 'farhanmunim/london-buses';
 const INBOX_BRANCH = 'streetworks-inbox';
 const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';   // git's well-known empty tree
 
@@ -173,7 +171,7 @@ function highwayAuthorityOf(msg) {
 
 /* ── GitHub inbox ───────────────────────────────────────────────────────── */
 function gh(env) {
-  const repo = env.GITHUB_REPO ?? DEFAULT_REPO;
+  const repo = env.GITHUB_REPO;
   const headers = {
     'authorization': `Bearer ${env.GITHUB_TOKEN}`,
     'accept': 'application/vnd.github+json',
@@ -268,9 +266,9 @@ async function storeEvent(env, msg, ha) {
 
 /* ── Handlers ───────────────────────────────────────────────────────────── */
 export async function onRequestGet({ request, env }) {
-  if (!env.GITHUB_TOKEN) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
     return json({ service: 'street-manager open-data receiver', ready: false,
-                  hint: 'Set the GITHUB_TOKEN env var (fine-grained PAT, this repo, Contents read/write) on the Pages project.' }, 503);
+                  hint: 'Set the GITHUB_REPO (owner/repo) and GITHUB_TOKEN (fine-grained PAT, that repo only, Contents read/write) environment variables.' }, 503);
   }
   const g = gh(env);
   const repoRes = await fetch(g.api(''), { headers: g.headers });

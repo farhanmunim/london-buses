@@ -9,7 +9,7 @@
  * still load from the committed static files directly.
  *
  * Live data is never stored: bus positions come from /api/live/vehicles
- * (a Cloudflare Pages Function proxying BODS SIRI-VM) and live per-route
+ * (a small server endpoint proxying BODS SIRI-VM) and live per-route
  * status comes straight from TfL's CORS-open Unified API.
  *
  * All responses are cached in memory for the session.
@@ -484,7 +484,7 @@ export async function fetchCrowdingProfile() {
 
 /**
  * Live GPS positions of the buses on one route (BODS SIRI-VM via this
- * site's /api/live/vehicles Pages Function, ~10 s fresh). Returns
+ * site's /api/live/vehicles endpoint, ~10 s fresh). Returns
  * [{ reg, direction, lat, lng, bearing, destination }] or null when the
  * feed is unreachable. Never cached — callers poll.
  */

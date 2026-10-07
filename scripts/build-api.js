@@ -589,7 +589,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   console.log(`routes-overview.json — ${features.length} features`);
 
   // Per-route bounding boxes [minLng, minLat, maxLng, maxLat], padded ~500 m.
-  // The live-vehicles Pages Function uses these to bound its BODS SIRI-VM
+  // The /api/live/vehicles endpoint uses these to bound its BODS SIRI-VM
   // query — TfL's SIRI LineRef is the internal iBus number, so the function
   // filters by PublishedLineName within the route's bbox instead.
   const PAD = 0.006;

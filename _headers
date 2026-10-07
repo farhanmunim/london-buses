@@ -23,3 +23,5 @@
   Cache-Control: public, max-age=0, must-revalidate
 /archive/v1/css/*
   Cache-Control: public, max-age=0, must-revalidate
+/site-banner.js
+  Cache-Control: public, max-age=0, must-revalidate

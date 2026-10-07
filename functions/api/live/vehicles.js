@@ -1,5 +1,5 @@
 /**
- * /api/live/vehicles?line=88 — live bus positions (Cloudflare Pages Function)
+ * /api/live/vehicles?line=88 — live bus positions (Cloudflare Pages Functions runtime; see SETUP.md for other hosts)
  *
  * Proxies the DfT Bus Open Data Service SIRI-VM datafeed (which has no CORS
  * and needs a secret key) into the envelope both front-ends already consume:
@@ -58,7 +58,7 @@ export async function onRequestGet(context) {
   upstream.searchParams.set('operatorRef', 'TFLO');
   upstream.searchParams.set('api_key', env.BODS_API_KEY);
 
-  const res = await fetch(upstream, { headers: { 'User-Agent': 'london-buses.farhan.app live proxy' } });
+  const res = await fetch(upstream, { headers: { 'User-Agent': `${url.hostname} live proxy` } });
   // 503, not 502 — Cloudflare swallows a Worker's 502/504 body and serves
   // its own branded error page, which hides this diagnostic JSON.
   if (!res.ok) {

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>London Buses — farhan.app</title>
+<title>London Buses</title>
 <meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed straight from TfL and other public sources." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -315,8 +315,6 @@ main.fullbleed{max-width:none;padding:0}
 .nm-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
 .nm-term{transform:translate(-50%,-50%);display:inline-block;color:#fff;border:1.5px solid #fff;border-radius:7px;padding:1px 5px;font-family:var(--mono);font-weight:700;font-size:9.5px;white-space:nowrap;box-shadow:0 2px 7px rgba(0,0,0,.35)}
-.expchip{display:inline-block;vertical-align:1px;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:999px;padding:1px 8px;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-left:6px}
-:root[data-theme="dark"] .expchip{background:#33260b;color:#fcd34d;border-color:#5c4a16}
 .nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -501,7 +499,7 @@ const D = {
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
   accidents:   () => get('/accidents').then(d => d ?? null),             // static snapshot — DfT STATS19, bus/coach-involved
   liveStatus:  (r) => tflLive(TFL + '/Line/' + encodeURIComponent(r) + '/Status'),                 // never cached — re-polled
-  liveVehicles:(r) => liveGet('/api/live/vehicles?line=' + encodeURIComponent(r)),                 // BODS via our Pages Function
+  liveVehicles:(r) => liveGet('/api/live/vehicles?line=' + encodeURIComponent(r)),                 // BODS via our /api/live/vehicles endpoint
   arrivals:    (s) => tflLive(TFL + '/StopPoint/' + encodeURIComponent(s) + '/Arrivals'),          // never cached — polled
 };
 /* D-TRO regulation types arrive camelCased with a namespace prefix
@@ -3909,7 +3907,7 @@ async function renderAbout(){
     <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
 
     <p>London Buses is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
-    <p>There is no server. Scheduled pipelines fetch each dataset from its public source, validate it, and publish it as static files — every number on the site can be traced to where it came from. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
+    <p>Scheduled pipelines fetch each dataset from its public source, validate it, and publish it as static files — every number on the site can be traced to where it came from. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
 
     <h2>Where the data comes from</h2>
     <div class="card"><table class="fresh">
@@ -3924,7 +3922,7 @@ async function renderAbout(){
       ${src('OpenFreeMap', 'The vector basemap (light theme) — OpenMapTiles styling of OpenStreetMap data; CARTO raster tiles are the dark theme and the fallback')}
       ${src('london-bus-routes.fandom.com', 'Provisional tender awards, flagged until TfL publishes the official result')}
     </table></div>
-    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), light map by <a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> / <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a>, dark map and fallback tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. Code is MIT-licensed; the data stays under its sources' own licences.</p>
+    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), light map by <a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> / <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a>, dark map and fallback tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. The data stays under its sources' own licences.</p>
 
     <h2>Live right now</h2>
     <div class="card"><table class="fresh">

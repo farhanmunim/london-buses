@@ -46,9 +46,9 @@ capacity/_crops/
 # ── Pipeline intermediates ─────────────────────────────────────────────────
 # Most files in data/source/ are pipeline working state. The weekly workflow
 # `force-adds` the few we want to persist across runs (vehicle-fleet.json,
-# route-vehicles.json, route-performance.json, route-performance-raw.txt,
+# route-vehicles.json, route-performance.json,
 # tenders.json, tender-programme.json, geocode_cache.json) — see
-# .github/workflows/refresh-data.yml for the exhaustive list.
+# .github/workflows/weekly-refresh.yml for the exhaustive list.
 data/source/
 
 # ── Temp / backup ──────────────────────────────────────────────────────────

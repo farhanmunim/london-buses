@@ -34,7 +34,6 @@ a{color:var(--accent-ink)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:8px 12px;border-radius:8px;z-index:300}
 .skip:focus{left:8px}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* shell ------------------------------------------------------------------ */
 .rail{position:fixed;inset:var(--banner-h,0px) auto 0 0;width:var(--rail);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;z-index:50}
@@ -86,7 +85,7 @@ main{max-width:1520px;margin:0 auto;padding:28px 32px 80px}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.12)}
 .seg button:not(.on):hover{color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
-.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s2{grid-column:span 2}.s3{grid-column:span 3}
+.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s2{grid-column:span 2}
 
 /* operator header --------------------------------------------------------- */
 .hero{display:flex;gap:24px;align-items:stretch;overflow:hidden;position:relative}
@@ -397,7 +396,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 @media (max-width:1100px){.ao{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:1100px){
   .foot{display:none}
-  .s8,.s7,.s5,.s4{grid-column:span 12}.s2{grid-column:span 6}
+  .s7,.s5,.s4{grid-column:span 12}.s2{grid-column:span 6}
   .kpi.hero-k{grid-column:span 12}
 }
 @media (max-width:860px){
@@ -883,7 +882,6 @@ function renderHero(){
   const sm = (label, v, d, tipText) => `<div class="card kpi sm s2" data-info="${esc(tipText)}"><div class="l">${label}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
   const sh = N.pvr ? s.pvr / N.pvr * 100 : null, L = F.limit, nearly = L.soon + L.at;
   const rk = fn => sc.kind === 'op' ? `#${rank(fn, o)} of ${OPS.length}` : sc.kind === 'all' ? `${OPS.length} operators` : `${fPct(D.ST[sc.op].pvr ? s.pvr / D.ST[sc.op].pvr * 100 : null, 0)} of ${esc(shortOp(sc.op))}`;
-  const vsNet = (v, base, opts) => sc.kind === 'all' ? '' : delta(v, base, opts);
   const opLast = s.opSeries.filter(Number.isFinite), opDelta = opLast.length > 1 ? opLast[opLast.length - 1] - opLast[opLast.length - 2] : null;
   const chips = sc.kind === 'all' ? [[s.n, 'routes'], [s.garages, 'garages'], [OPS.length, 'operators'], [fInt(FN.n), 'vehicles']]
     : sc.kind === 'garage' ? [[s.n, 'routes'], [fInt(s.pvr), 'peak vehicles'], [sc.g.capacity ?? '—', 'licensed capacity']] : [[s.n, 'routes'], [s.garages, 'garages'], [s.companies, 'operating companies'], [fInt(F.n), 'vehicles']];

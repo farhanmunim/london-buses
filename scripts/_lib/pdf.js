@@ -83,16 +83,3 @@ export async function extractPdfRowsByPage(buffer) {
   }
   return pages;
 }
-
-/**
- * Convenience: same as `extractPdfRowsByPage` but flattened to a single
- * row[] (page boundaries discarded). Suitable for PDFs whose tables are
- * naturally one continuous list (per-route MPS, programme tables).
- *
- * @param {Buffer|Uint8Array} buffer
- * @returns {Promise<string[][]>}
- */
-export async function extractPdfRows(buffer) {
-  const pages = await extractPdfRowsByPage(buffer);
-  return pages.flat();
-}

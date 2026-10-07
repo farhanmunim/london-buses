@@ -1430,11 +1430,11 @@ html.changelog-page .topbar{position:sticky;top:0;z-index:40;flex-shrink:0}
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   ORIGINAL-SITE PARITY — ported verbatim from github.com/farhanmunim/london-buses
-   @ HEAD and re-pointed at the v2.5 token palette via the bridge below. This
+   ORIGINAL-SITE PARITY — ported verbatim from the original site
+   and re-pointed at the v2.5 token palette via the bridge below. This
    block overrides any earlier footer / modal / changelog declarations so the
    About dialog, Changelog page, and app footer all match the
-   live site at london-buses.farhan.app. ══════════════════════════════════ */
+   current site. ══════════════════════════════════════════════════════ */
 
 /* ── Legacy token bridge ────────────────────────────────────────────────── */
 :root{

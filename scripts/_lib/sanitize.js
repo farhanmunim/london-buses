@@ -72,6 +72,8 @@ function decodeNumericEntity(match, body) {
  * @param {boolean}[opts.preserveNewlines=false]  If true, \n is kept; otherwise collapsed to space.
  * @returns {string|null}
  */
+const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+
 export function sanitizeText(value, opts = {}) {
   if (value == null) return null;
   if (typeof value !== 'string') value = String(value);
@@ -101,6 +103,11 @@ export function sanitizeText(value, opts = {}) {
   } else {
     out = out.replace(/\s+/g, ' ');
   }
+
+  // 4b. Personal contact details: upstream free text (street-works
+  //     descriptions, permit notes) sometimes carries a named officer's
+  //     email address. Nothing we publish needs one.
+  out = out.replace(EMAIL_RE, '[email removed]');
 
   out = out.trim();
 
