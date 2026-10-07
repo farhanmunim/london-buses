@@ -37,7 +37,7 @@ a{color:var(--accent-ink)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* shell ------------------------------------------------------------------ */
-.rail{position:fixed;inset:0 auto 0 0;width:var(--rail);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;z-index:50}
+.rail{position:fixed;inset:var(--banner-h,0px) auto 0 0;width:var(--rail);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;z-index:50}
 .logo{width:40px;height:40px;border-radius:12px;background:var(--ink);display:grid;place-items:center;margin-bottom:14px}
 .rail a.nav{width:56px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border-radius:12px;color:var(--ink-3);text-decoration:none;font-size:10.5px;font-weight:500}
 .rail a.nav svg{width:20px;height:20px}
@@ -423,6 +423,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 </style>
 </head>
 <body>
+<script src="/site-banner.js"></script>
 <a class="skip" href="#main">Skip to content</a>
 
 <nav class="rail" aria-label="Sections">

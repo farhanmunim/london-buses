@@ -1,5 +1,6 @@
-/* Banner suite — the sunset banner was removed 2026-09-08. The main app and
-   404 must carry NO banner at all; the archived v1 pages keep only their
+/* Banner suite — the sunset banner was removed 2026-09-08. (The site-wide
+   migration notice in site-banner.js is separate and is checked below.) The main app and
+   404 must carry NO sunset banner at all; the archived v1 pages keep only their
    "Archived v1" notice (no sunset wording anywhere).
    Run: node tests/verify-banner.mjs */
 import { chromium } from 'playwright-core';
@@ -34,6 +35,8 @@ for(const [url, scheme, wantArchiveNote] of [
     };
   });
   F(`${url} (${scheme}): no "sunset soon" text anywhere`, !b.bodyHasSunset);
+  const mb = await page.evaluate(() => { const e = document.getElementById('site-banner'); if(!e) return null; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { top:Math.round(r.top), w:Math.round(r.width), bg:c.backgroundColor, fg:c.color, text:e.textContent }; });
+  F(`${url} (${scheme}): slim black migration banner at the very top, full width`, !!mb && mb.top === 0 && mb.w >= 1270 && mb.bg === 'rgb(11, 11, 12)' && mb.fg === 'rgb(255, 255, 255)' && /System upgrade in progress/.test(mb.text));
   if(wantArchiveNote){
     F(`${url}: archive notice present ("${(b.bannerText ?? '').slice(0,40)}…")`,
       !!b.bannerText && /Archived v1/.test(b.bannerText));
