@@ -1,7 +1,7 @@
 {
   "name": "tfl-bus-map",
   "version": "2.19.3",
-  "description": "Interactive London bus route map \u2014 farhan.app",
+  "description": "Interactive London bus route map — farhan.app",
   "type": "module",
   "scripts": {
     "refresh": "node scripts/refresh.js",
@@ -34,7 +34,8 @@
     "fetch-scheduled-mileage": "node scripts/fetch-scheduled-mileage.js",
     "fetch-roadworks": "node scripts/fetch-roadworks.js",
     "drain-streetworks": "node scripts/drain-streetworks.js",
-    "fetch-dtro": "node scripts/fetch-dtro.js"
+    "fetch-dtro": "node scripts/fetch-dtro.js",
+    "test:fixtures": "node tests/fetch-fixtures.mjs"
   },
   "engines": {
     "node": ">=18"
