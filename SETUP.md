@@ -57,6 +57,7 @@ The site is static files from `main`, plus two endpoints. Either host below work
 - Send `Access-Control-Allow-Origin: *` on `/data/api/*` (the faux-API is public by design).
 - Apply the 301s in `_redirects` (`/v2*` → `/`, `/changelog.html` → `/archive/v1/changelog.html`).
 - Serve `/404.html` for unknown paths.
+- Serve clean URLs the way Cloudflare Pages does: `/docs` ⇒ `docs.html` (and redirect `/docs.html` → `/docs`), likewise `/v3`. Do **not** add an `/docs → /docs.html` rule on a host that already does this — it loops.
 - Run `/api/live/vehicles` and `/api/streetworks` from `functions/api/` with the variables in §2. Both are written for the Cloudflare Pages Functions runtime (`onRequestGet` / `onRequestPost` taking `{ request, env }`, plus `caches.default` and `env.ASSETS` in the live proxy). On any other host they need a thin adapter — the logic itself is plain `fetch` and Web Crypto.
 
 **Option A — Cloudflare Pages (how it runs today)**
