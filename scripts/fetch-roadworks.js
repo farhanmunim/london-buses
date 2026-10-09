@@ -106,10 +106,27 @@ function routesNear(lon, lat, geoms) {
 }
 
 // ── Fetch + shape ───────────────────────────────────────────────────────────
-async function fetchDisruptions() {
-  const res = await fetchWithTimeout('https://api.tfl.gov.uk/Road/all/Disruption', { headers: userAgentHeaders(SCRIPT) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+// TfL occasionally answers 200 with a non-array body (throttle / error
+// envelope) or a 5xx. Validate the shape and retry before giving up, so one
+// bad response can't fail the whole status run.
+async function fetchDisruptions(attempts = 3) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const res = await fetchWithTimeout('https://api.tfl.gov.uk/Road/all/Disruption', { headers: userAgentHeaders(SCRIPT) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = await res.json();
+      if (!Array.isArray(body)) {
+        throw new Error(`unexpected response shape: ${JSON.stringify(body).slice(0, 200)}`);
+      }
+      return body;
+    } catch (err) {
+      lastErr = err;
+      console.warn(`  disruption fetch attempt ${i}/${attempts} failed: ${err.message}`);
+      if (i < attempts) await new Promise(r => setTimeout(r, 5_000 * i));
+    }
+  }
+  throw lastErr;
 }
 
 const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim() || null;
