@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-08T10:56:42Z",
+  "generated_at_utc": "2026-10-09T10:53:11Z",
   "route_count": 675,
   "routes": {
     "1": [
@@ -41506,6 +41506,205 @@
       },
       {
         "id": "490000234W1"
+      },
+      {
+        "id": "490000234C",
+        "towards": "Streatham"
+      },
+      {
+        "id": "490013709R",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490003295U",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490005830E",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490006319E",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490010284E",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490012269E",
+        "towards": "Mitcham Or Streatham"
+      },
+      {
+        "id": "490014022S",
+        "towards": "Mitcham"
+      },
+      {
+        "id": "490003408S",
+        "towards": "Carshalton Or Morden"
+      },
+      {
+        "id": "490012725S",
+        "towards": "Carshalton Or Morden"
+      },
+      {
+        "id": "490013565S1",
+        "towards": "Carshalton Or Morden"
+      },
+      {
+        "id": "490006164B",
+        "towards": "Carshalton, Croydon Or Rosehill"
+      },
+      {
+        "id": "490009949Y",
+        "towards": "Carshalton Or St Helier"
+      },
+      {
+        "id": "490007213M",
+        "towards": "Hackbridge, Morden Or Rosehill"
+      },
+      {
+        "id": "490009944V",
+        "towards": "Hackbridge Or St Helier"
+      },
+      {
+        "id": "490009952S",
+        "towards": "Hackbridge Or St Helier"
+      },
+      {
+        "id": "490014723E",
+        "towards": "Hackbridge Or St Helier"
+      },
+      {
+        "id": "490004824E",
+        "towards": "Hackbridge Or St Helier"
+      },
+      {
+        "id": "490001194A",
+        "towards": "Carshalton Or Sutton"
+      },
+      {
+        "id": "490013377S",
+        "towards": "Carshalton"
+      },
+      {
+        "id": "490009898S",
+        "towards": "Carshalton"
+      },
+      {
+        "id": "490012014S",
+        "towards": "Carshalton"
+      },
+      {
+        "id": "490010610N1",
+        "towards": "Carshalton"
+      },
+      {
+        "id": "490007616C",
+        "towards": "Carshalton"
+      },
+      {
+        "id": "490005599S2",
+        "towards": "Carshalton Pond Or Rosehill"
+      },
+      {
+        "id": "490010270S",
+        "towards": "Carshalton Pond Or Rosehill"
+      },
+      {
+        "id": "490012915S",
+        "towards": "Carshalton Pond Or Rosehill"
+      },
+      {
+        "id": "490004819S",
+        "towards": "Wallington"
+      },
+      {
+        "id": "490001051B",
+        "towards": "Wallington"
+      },
+      {
+        "id": "490004823C",
+        "towards": "Wallington"
+      },
+      {
+        "id": "490004821D",
+        "towards": "Beddington Or Wallington"
+      },
+      {
+        "id": "490010783S",
+        "towards": "Purley Or Waddon"
+      },
+      {
+        "id": "490010770S",
+        "towards": "Purley Or Waddon"
+      },
+      {
+        "id": "490001306A",
+        "towards": "Purley Or Croydon"
+      },
+      {
+        "id": "490003775J",
+        "towards": "Coulsdon, Purley Or Roundshaw"
+      },
+      {
+        "id": "490012466H",
+        "towards": "Coulsdon, Purley Or Roundshaw"
+      },
+      {
+        "id": "490004100S",
+        "towards": "Coulsdon, Purley Or Roundshaw"
+      },
+      {
+        "id": "490007680S",
+        "towards": "Coulsdon, Purley Or Roundshaw"
+      },
+      {
+        "id": "490014138S",
+        "towards": "Coulsdon, Purley Or Roundshaw"
+      },
+      {
+        "id": "490009358S",
+        "towards": "Coulsdon Or Purley"
+      },
+      {
+        "id": "490006747S",
+        "towards": "Coulsdon Or Purley"
+      },
+      {
+        "id": "490012205E",
+        "towards": "Purley"
+      },
+      {
+        "id": "490015514E",
+        "towards": "Purley"
+      },
+      {
+        "id": "490014828E",
+        "towards": "Purley"
+      },
+      {
+        "id": "490013272E",
+        "towards": "Purley"
+      },
+      {
+        "id": "490011062S",
+        "towards": "Purley"
+      },
+      {
+        "id": "490011272A",
+        "towards": "Kenley"
+      },
+      {
+        "id": "490011258C",
+        "towards": "Kenley Or Reedham"
+      },
+      {
+        "id": "490011270M",
+        "towards": "Kenley Or Sanderstead"
+      },
+      {
+        "id": "490001229J"
       }
     ],
     "128": [
