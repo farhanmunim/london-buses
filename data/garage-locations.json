@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-09T11:13:42.836Z",
+  "generatedAt": "2026-10-10T10:24:47.832Z",
   "count": 76,
   "garages": {
     "A": {
@@ -429,7 +429,7 @@
       "address": "208 New Cross Road, London, SE14 5UH",
       "lat": 51.474579,
       "lon": -0.04417,
-      "pvr": 189,
+      "pvr": 190,
       "capacity": 229
     },
     "PB": {
@@ -739,7 +739,7 @@
       "address": "301 Camberwell New Road, London, SE5 0TF",
       "lat": 51.475441,
       "lon": -0.095974,
-      "pvr": 154,
+      "pvr": 153,
       "capacity": 185
     },
     "WN": {
