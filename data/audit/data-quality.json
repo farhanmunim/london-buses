@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-10-13T11:13:28.403Z",
+  "generatedAt": "2026-10-14T09:20:32.531Z",
   "summary": {
     "critical": 0,
-    "warn": 135,
+    "warn": 138,
     "info": 4
   },
   "issues": [
@@ -84,8 +84,8 @@
       "id": "41",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.74",
-      "note": "fleetSize=71 pvr=19"
+      "actual": "3.84",
+      "note": "fleetSize=73 pvr=19"
     },
     {
       "severity": "WARN",
@@ -192,8 +192,8 @@
       "id": "75",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.07",
-      "note": "fleetSize=91 pvr=15"
+      "actual": "6.13",
+      "note": "fleetSize=92 pvr=15"
     },
     {
       "severity": "WARN",
@@ -219,8 +219,8 @@
       "id": "81",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.00",
-      "note": "fleetSize=96 pvr=16"
+      "actual": "6.06",
+      "note": "fleetSize=97 pvr=16"
     },
     {
       "severity": "WARN",
@@ -237,8 +237,17 @@
       "id": "88",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.09",
-      "note": "fleetSize=90 pvr=22"
+      "actual": "4.14",
+      "note": "fleetSize=91 pvr=22"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "90",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.06",
+      "note": "fleetSize=52 pvr=17"
     },
     {
       "severity": "WARN",
@@ -327,8 +336,8 @@
       "id": "125",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.11",
-      "note": "fleetSize=56 pvr=18"
+      "actual": "3.17",
+      "note": "fleetSize=57 pvr=18"
     },
     {
       "severity": "WARN",
@@ -392,6 +401,15 @@
       "expected": "0.2..3",
       "actual": "4.25",
       "note": "fleetSize=68 pvr=16"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "155",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.06",
+      "note": "fleetSize=52 pvr=17"
     },
     {
       "severity": "WARN",
@@ -489,8 +507,8 @@
       "id": "186",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.28",
-      "note": "fleetSize=77 pvr=18"
+      "actual": "4.33",
+      "note": "fleetSize=78 pvr=18"
     },
     {
       "severity": "WARN",
@@ -525,8 +543,8 @@
       "id": "204",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.27",
-      "note": "fleetSize=49 pvr=15"
+      "actual": "3.33",
+      "note": "fleetSize=50 pvr=15"
     },
     {
       "severity": "WARN",
@@ -597,8 +615,8 @@
       "id": "229",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.67",
-      "note": "fleetSize=66 pvr=18"
+      "actual": "3.72",
+      "note": "fleetSize=67 pvr=18"
     },
     {
       "severity": "WARN",
@@ -624,8 +642,8 @@
       "id": "242",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.07",
-      "note": "fleetSize=57 pvr=14"
+      "actual": "4.21",
+      "note": "fleetSize=59 pvr=14"
     },
     {
       "severity": "WARN",
@@ -698,6 +716,15 @@
       "expected": "0.2..3",
       "actual": "3.15",
       "note": "fleetSize=41 pvr=13"
+    },
+    {
+      "severity": "WARN",
+      "scope": "rc",
+      "id": "275",
+      "field": "fleetSize/pvr ratio",
+      "expected": "0.2..3",
+      "actual": "3.08",
+      "note": "fleetSize=40 pvr=13"
     },
     {
       "severity": "WARN",
@@ -777,8 +804,8 @@
       "id": "307",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.20",
-      "note": "fleetSize=63 pvr=15"
+      "actual": "4.50",
+      "note": "fleetSize=63 pvr=14"
     },
     {
       "severity": "WARN",
@@ -840,8 +867,8 @@
       "id": "371",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "6.09",
-      "note": "fleetSize=67 pvr=11"
+      "actual": "6.18",
+      "note": "fleetSize=68 pvr=11"
     },
     {
       "severity": "WARN",
@@ -930,8 +957,8 @@
       "id": "436",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "5.38",
-      "note": "fleetSize=70 pvr=13"
+      "actual": "5.46",
+      "note": "fleetSize=71 pvr=13"
     },
     {
       "severity": "WARN",
@@ -957,8 +984,8 @@
       "id": "466",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "3.27",
-      "note": "fleetSize=49 pvr=15"
+      "actual": "3.47",
+      "note": "fleetSize=52 pvr=15"
     },
     {
       "severity": "WARN",
@@ -1092,8 +1119,8 @@
       "id": "N21",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.50",
-      "note": "fleetSize=45 pvr=10"
+      "actual": "4.70",
+      "note": "fleetSize=47 pvr=10"
     },
     {
       "severity": "WARN",
@@ -1155,8 +1182,8 @@
       "id": "R68",
       "field": "fleetSize/pvr ratio",
       "expected": "0.2..3",
-      "actual": "4.10",
-      "note": "fleetSize=41 pvr=10"
+      "actual": "4.20",
+      "note": "fleetSize=42 pvr=10"
     },
     {
       "severity": "WARN",
@@ -1218,7 +1245,7 @@
         "deck": 672,
         "ewtOrOtp": 0,
         "mileageMps": 0,
-        "age": 646
+        "age": 647
       },
       "note": "of 675"
     },
@@ -1266,7 +1293,7 @@
       "field": "coverage",
       "expected": "—",
       "actual": {
-        "totalObs": 25977,
+        "totalObs": 26125,
         "missingFleet": 0
       },
       "note": ""
@@ -1277,7 +1304,7 @@
       "id": "data/source/tenders.json",
       "field": "generatedAt",
       "expected": "<=7d old",
-      "actual": "10.9d",
+      "actual": "11.8d",
       "note": ""
     },
     {
@@ -1286,7 +1313,7 @@
       "id": "data/source/tender-programme.json",
       "field": "generatedAt",
       "expected": "<=14d old",
-      "actual": "31.8d",
+      "actual": "32.7d",
       "note": ""
     }
   ]
