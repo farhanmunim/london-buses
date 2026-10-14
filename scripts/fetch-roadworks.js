@@ -216,7 +216,16 @@ function writeStable(p, obj) {
 async function main() {
   const geoms = loadRouteGeometries();
   console.log(`  ${geoms.size} route geometries loaded for the corridor join`);
-  const raw = await fetchDisruptions();
+  let raw;
+  try {
+    raw = await fetchDisruptions();
+  } catch (err) {
+    // TIMS is one input among several in the status run. If TfL is serving
+    // junk (seen overnight), keep the last committed snapshot/history and let
+    // the rest of the run — line status, diversions, D-TRO, the commit — land.
+    console.warn(`  roadworks skipped, keeping last snapshot: ${err.message}`);
+    return;
+  }
   const nowIso = new Date().toISOString();
   const disruptions = raw.map(d => shape(d, geoms))
     .sort((a, b) => String(a.id).localeCompare(String(b.id)));
