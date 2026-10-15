@@ -1,7 +1,7 @@
-# London Buses — https://london-buses.farhan.app
+# London Buses — https://londonbuses.org
 # All crawlers welcome, including AI / LLM crawlers (GPTBot, ClaudeBot,
 # PerplexityBot, Google-Extended, CCBot, etc.). Nothing is disallowed.
 User-agent: *
 Allow: /
 
-Sitemap: https://london-buses.farhan.app/sitemap.xml
+Sitemap: https://londonbuses.org/sitemap.xml

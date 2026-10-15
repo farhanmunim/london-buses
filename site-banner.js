@@ -1,7 +1,7 @@
 /* Site-wide notice banner. One file controls every page: edit TEXT, or set ON = false to hide it.
    Loaded first thing in <body> so it renders above the header with no flash. */
 (() => {
-  const ON = true;
+  const ON = false;
   const TEXT = 'System upgrade in progress: we’re moving to new servers, so some pages may be slow or briefly unavailable.';
   if(!ON || document.getElementById('site-banner')) return;
   const style = document.createElement('style');

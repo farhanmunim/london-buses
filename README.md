@@ -2,7 +2,7 @@
 
 An interactive map and data explorer for every bus route in London. Search routes. See them on a map. Watch live arrivals and live bus positions. Browse operators, garages and stops. Dig into contracts: who runs each route, what it cost, and when it comes up for tender again.
 
-**Live site: [london-buses.farhan.app](https://london-buses.farhan.app)** · [Full documentation](https://london-buses.farhan.app/docs.html) · [Setting it up from scratch](SETUP.md)
+**Live site: [londonbuses.org](https://londonbuses.org)** · [Full documentation](https://londonbuses.org/docs) · [Setting it up from scratch](SETUP.md)
 
 ## What it does
 
@@ -22,7 +22,7 @@ The repository is the data platform. GitHub Actions is the scheduler and the com
 
 Scheduled workflows fetch every dataset from its public source, validate it, and commit the results. A failed validation commits nothing — the last good data keeps serving. `scripts/build-api.js` turns the committed datasets into a set of static JSON files under `data/api/` (the "faux-API") that the app reads like an API.
 
-The full story — the app, the pipeline, storage, hosting, deployment — is in the [docs](https://london-buses.farhan.app/docs.html). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
+The full story — the app, the pipeline, storage, hosting, deployment — is in the [docs](https://londonbuses.org/docs). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
 
 ### Refresh schedule
 
