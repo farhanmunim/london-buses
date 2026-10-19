@@ -146,6 +146,7 @@ F('"All London" is the first operator-menu choice', /All London/.test(await txt(
 /* ── full-page maps ─────────────────────────────────────────────────────── */
 await page.click('.acts [data-expand="net"]'); await page.waitForTimeout(600);
 F('the full-page map is not covered by the site banner (Close is clickable)', await clickable('#mfClose'));
+F('the full-page map is a rounded, inset card with floating controls (same design as the route-panel map)', await page.evaluate(() => { const b = document.getElementById('mfBody'), c = document.getElementById('mfClose'), bs = getComputedStyle(b); const br = b.getBoundingClientRect(), cr = c.getBoundingClientRect(); return parseFloat(bs.borderTopLeftRadius) >= 12 && br.left >= 6 && br.top >= 6 && /float/.test(c.className) && cr.top >= br.top && cr.bottom <= br.top + 80; }));
 F('the network map opens full page and titles itself', await page.evaluate(() => !document.getElementById('mapfs').hidden) && /All London/.test(await txt(page, '#mfTitle')));
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 F('Esc closes the full-page map', await page.evaluate(() => document.getElementById('mapfs').hidden));

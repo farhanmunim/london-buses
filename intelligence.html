@@ -361,11 +361,16 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .tag.good{background:#e6f5ec;color:#15693a;gap:4px}.tag.good svg{width:11px;height:11px}
 .fchip .cn{margin-left:5px;font-variant-numeric:tabular-nums;color:var(--ink-3);font-weight:500}.fchip.on .cn{color:var(--accent-ink)}
 /* full-page map */
-.mapfs{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;flex-direction:column}
+.mapfs{position:fixed;inset:0;z-index:150;background:var(--bg);display:flex;flex-direction:column;padding:12px}
 .mapfs[hidden]{display:none}
-.mfbar{height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 16px;background:var(--surface);border-bottom:1px solid var(--line)}
-.mft{display:flex;align-items:baseline;gap:10px;min-width:0}.mft b{font-size:15px;font-weight:650;white-space:nowrap}.mft .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mfbody{position:relative;flex:1;min-height:0}
+/* Full-page map = the route-panel map, bigger: the same rounded, shadowed card with floating controls on the map. */
+.mfbody{position:relative;flex:1;min-height:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--sunken);box-shadow:var(--shadow)}
+.mfbar{position:absolute;z-index:6;top:22px;left:22px;right:62px;display:flex;align-items:flex-start;gap:10px;pointer-events:none}
+.mfbar>*{pointer-events:auto}
+.mft{display:flex;align-items:baseline;gap:10px;min-width:0;padding:8px 12px;border-radius:11px}.mft b{font-size:14px;font-weight:650;white-space:nowrap}.mft .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mapfs[data-mode="net"] .mft{display:none}
+#mfClose.float{margin-left:auto;height:32px;padding:0 12px 0 10px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--ink)}
+#mfClose.float:hover{background:#fff}
 .lyrow.over{position:absolute;left:12px;right:60px;bottom:30px;margin:0;z-index:5}
 .lyrow.over .ly{box-shadow:0 2px 8px rgba(16,24,40,.12)}
 .legendcard{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:12px;font-size:12px;color:var(--ink-3);max-width:220px}
@@ -373,8 +378,8 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .legendcard .lg{display:flex;align-items:center;gap:8px;color:var(--ink-2)}
 .sw.gr{background:#2a78d6;box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px #2a78d6}.sw.gh{width:14px;height:3px;border-radius:2px;background:#9aa6ba}.sw.gl{width:12px;height:10px;border-radius:2px;background:none;border:0;position:relative}.sw.gl::before{content:'Aa';position:absolute;inset:-3px 0 0;font-size:11px;font-weight:700;color:var(--ink);line-height:1}.sw.gx{background:#98a2b3;box-shadow:0 0 0 1.5px #fff}
 .pbtn{margin-top:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--accent-ink);cursor:pointer}.pbtn:hover{background:var(--accent-soft)}
-.mapfs .mapui.tl{top:12px;left:12px}
-@media (max-width:860px){.lyrow.over{right:12px;bottom:34px}.legendcard .lg{display:none}}
+.mapfs .mapui.tl{top:56px;left:10px}.mapfs[data-mode="net"] .mapui.tl{top:10px}
+@media (max-width:860px){.lyrow.over{right:12px;bottom:34px}.legendcard .lg{display:none}.mapfs{padding:8px}.mfbar{top:18px;left:18px;right:56px}.mft .sub{display:none}}
 /* scope menus, replacement runway, expand buttons */
 .menu.gm{min-width:400px;max-height:min(480px,70vh);overflow:auto}
 .menu .msep{height:1px;background:var(--line);margin:4px 6px}
@@ -1476,7 +1481,7 @@ let mapMode = null;
 async function mapOpen(kind){
   const fs = $('#mapfs'), body = $('#mfBody'); if(!fs) return;
   const sc = SC(), r = kind === 'route' ? D.byId.get(S.route) : null; if(kind === 'route' && !r) return;
-  mapMode = kind; body.replaceChildren(); fs.hidden = false; document.body.style.overflow = 'hidden';
+  mapMode = kind; fs.dataset.mode = kind; body.replaceChildren(); fs.hidden = false; document.body.style.overflow = 'hidden';
   $('#mfTitle').textContent = kind === 'route' ? `Route ${r.id}` : sc.name;
   $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${sc.st.n} routes · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
   $('#mfClose').focus();
@@ -1816,7 +1821,7 @@ $('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
 })();
 </script>
 <div class="mapfs" id="mapfs" hidden role="dialog" aria-modal="true" aria-label="Map">
-  <div class="mfbar"><div class="mft"><b id="mfTitle"></b><span class="sub" id="mfSub"></span></div><button class="btn" id="mfClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Close</button></div>
+  <div class="mfbar"><div class="mft float"><b id="mfTitle"></b><span class="sub" id="mfSub"></span></div><button class="btn float" id="mfClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Close</button></div>
   <div class="mfbody" id="mfBody"></div>
 </div>
 </body>
