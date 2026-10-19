@@ -1,26 +1,42 @@
-/* Site-wide black banner above the header. One file controls every page: edit TAG / LABEL / HREF,
+/* Site-wide banner above the header. One file controls every page: edit TAG / NOTE / LABEL / HREF,
    or set ON = false to hide it. Skipped on its own target page. Loaded first thing in <body>
    so it renders above the header with no flash. */
 (() => {
   const ON = true;
   const TAG = 'Experimental';
-  const LABEL = 'Intelligence';
+  const NOTE = 'Operator intelligence: fleet, contracts and tenders';
+  const LABEL = 'Try Intelligence';
   const HREF = '/intelligence';
   if(!ON || document.getElementById('site-banner') || location.pathname.startsWith(HREF)) return;
   const style = document.createElement('style');
   style.textContent = `
-    #site-banner{position:relative;z-index:500;background:#0b0b0c;color:#fff;font:500 12.5px/1.35 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
-      letter-spacing:.005em;text-align:center;padding:7px 14px;display:flex;align-items:center;justify-content:center;gap:9px;min-height:30px}
-    #site-banner b{flex:none;font-size:10px;font-weight:700;line-height:1;letter-spacing:.08em;text-transform:uppercase;color:#fab219;border:1px solid #fab219;border-radius:999px;padding:3px 7px}
-    #site-banner a{color:#fff;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,.45)}
-    #site-banner a:hover,#site-banner a:focus-visible{text-decoration-color:#fff}
-    @media (max-width:600px){#site-banner{font-size:11.5px;padding:6px 12px;text-align:left}}`;
+    #site-banner{position:relative;z-index:500;display:flex;align-items:center;justify-content:center;gap:12px;min-height:38px;padding:6px 16px;
+      font:500 12.5px/1.3 Geist,Inter,system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.005em;color:rgba(255,255,255,.78);
+      background:radial-gradient(70% 220% at 50% -60%,rgba(245,158,11,.22),transparent 70%),#0c0a09;
+      border-bottom:1px solid rgba(255,255,255,.08);-webkit-font-smoothing:antialiased}
+    #site-banner b{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 9px 4px 8px;border-radius:999px;
+      font-size:10.5px;font-weight:600;line-height:1;letter-spacing:.06em;text-transform:uppercase;
+      color:#fbbf24;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.32)}
+    #site-banner b::before{content:"";width:5px;height:5px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 0 rgba(251,191,36,.55);animation:sb-pulse 2.4s ease-out infinite}
+    @keyframes sb-pulse{70%{box-shadow:0 0 0 6px rgba(251,191,36,0)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+    #site-banner span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #site-banner a{flex:none;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
+      color:#fff;font-weight:600;text-decoration:none;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+      transition:background .15s,border-color .15s}
+    #site-banner a::before{content:"";position:absolute;inset:0}
+    #site-banner a::after{content:"→";transition:transform .15s}
+    #site-banner:hover a{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3)}
+    #site-banner:hover a::after{transform:translateX(3px)}
+    #site-banner a:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
+    @media (prefers-reduced-motion:reduce){#site-banner b::before{animation:none}#site-banner a,#site-banner a::after{transition:none}}
+    @media (max-width:640px){#site-banner{gap:8px;padding:6px 12px;font-size:12px}#site-banner span{display:none}}`;
   document.head.appendChild(style);
   const bar = document.createElement('div');
   bar.id = 'site-banner'; bar.setAttribute('role', 'status');
   const tag = document.createElement('b'); tag.textContent = TAG;
-  const link = document.createElement('a'); link.href = HREF; link.textContent = `${LABEL} →`;
-  bar.append(tag, link);
+  const note = document.createElement('span'); note.textContent = NOTE;
+  const link = document.createElement('a'); link.href = HREF; link.textContent = LABEL;
+  bar.append(tag, note, link);
   const cs = getComputedStyle(document.body);   // pages with a default body margin still get a full-bleed bar
   bar.style.margin = `-${cs.marginTop} -${cs.marginRight} 0 -${cs.marginLeft}`;
   if(/flex|grid/.test(cs.display)) bar.style.cssText += ';position:fixed;top:0;left:0;right:0;margin:0';   // centred single-screen pages (404)

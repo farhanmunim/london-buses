@@ -41,7 +41,7 @@ for(const [url, scheme, wantArchiveNote, isTarget] of [
     F(`${url} (${scheme}): no banner on the Intelligence page itself`, mb === null);
   } else {
     F(`${url} (${scheme}): black banner at the very top, full width, Experimental tag + Intelligence link`,
-      !!mb && mb.top === 0 && mb.w >= 1270 && mb.bg === 'rgb(11, 11, 12)' && /Experimental/.test(mb.text) && mb.href === '/intelligence' && /^Intelligence/.test(mb.link));
+      !!mb && mb.top === 0 && mb.w >= 1270 && mb.bg === 'rgb(12, 10, 9)' && /Experimental/.test(mb.text) && mb.href === '/intelligence' && /Intelligence/.test(mb.link));
   }
   if(wantArchiveNote){
     F(`${url}: archive notice present ("${(b.bannerText ?? '').slice(0,40)}…")`,
