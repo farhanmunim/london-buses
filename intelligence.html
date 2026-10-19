@@ -1809,7 +1809,7 @@ $('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
     if(orig) openRoute(orig, false); else syncHash();
   }catch(e){
     console.error(e);
-    $('#app').innerHTML = `<div class="err"><b>Couldn't load the operator data.</b><br>${esc(e.message)}<br><a href="/v3">Reload</a></div>`;
+    $('#app').innerHTML = `<div class="err"><b>Couldn't load the operator data.</b><br>${esc(e.message)}<br><a href="/intelligence">Reload</a></div>`;
   }
 })();
 </script>

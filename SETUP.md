@@ -52,12 +52,12 @@ The site is static files from `main`, plus two endpoints. Either host below work
 
 **What any host must do**
 
-- Serve the repository root as the site (`index.html`, `v3.html`, `docs.html`, `404.html`, `data/`, `archive/`), following `main`.
+- Serve the repository root as the site (`index.html`, `intelligence.html`, `docs.html`, `404.html`, `data/`, `archive/`), following `main`.
 - Apply the headers in `_headers`: HSTS, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Cache-Control: public, max-age=0, must-revalidate` on HTML, JSON, JS and CSS. Revalidation is not optional: there are no fingerprinted filenames, so it is what keeps returning visitors on the current code.
 - Send `Access-Control-Allow-Origin: *` on `/data/api/*` (the faux-API is public by design).
 - Apply the 301s in `_redirects` (`/v2*` → `/`, `/changelog.html` → `/archive/v1/changelog.html`).
 - Serve `/404.html` for unknown paths.
-- Serve clean URLs the way Cloudflare Pages does: `/docs` ⇒ `docs.html` (and redirect `/docs.html` → `/docs`), likewise `/v3`. Do **not** add an `/docs → /docs.html` rule on a host that already does this — it loops.
+- Serve clean URLs the way Cloudflare Pages does: `/docs` ⇒ `docs.html` (and redirect `/docs.html` → `/docs`), likewise `/intelligence`. Do **not** add an `/docs → /docs.html` rule on a host that already does this — it loops.
 - Run `/api/live/vehicles` and `/api/streetworks` from `functions/api/` with the variables in §2. Both are written for the Cloudflare Pages Functions runtime (`onRequestGet` / `onRequestPost` taking `{ request, env }`, plus `caches.default` and `env.ASSETS` in the live proxy). On any other host they need a thin adapter — the logic itself is plain `fetch` and Web Crypto.
 
 **Option A — Cloudflare Pages (how it runs today)**
@@ -95,7 +95,7 @@ cp .env.example .env          # fill in the keys you have; the frontend needs no
 npx serve .                   # or any static server; the app is one index.html
 npm run refresh               # the full pipeline — optional, committed data already works
 npm run test:fixtures         # once: downloads the pinned Leaflet/MapLibre builds the suites serve offline
-node tests/verify-v3.mjs      # any suite; they expect Chromium at /opt/pw-browsers/chromium or $CHROMIUM
+node tests/verify-intelligence.mjs      # any suite; they expect Chromium at /opt/pw-browsers/chromium or $CHROMIUM
 ```
 
 The tender fetcher falls back to a real browser when TfL's forms sit behind a Cloudflare challenge (`TENDERS_BROWSER` to point at a Chromium binary; CI runs it under `xvfb-run`). From a datacentre IP the challenge is interactive and cannot be passed, so when the award cache goes stale, run `npm run tenders-local` from a home connection and commit the result.

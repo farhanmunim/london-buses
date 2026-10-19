@@ -1,7 +1,7 @@
 /* Downloads the pinned browser libraries the test suites serve from
    tests/fixtures/ in place of the CDN, so every suite runs offline and
    never depends on unpkg being up. The versions and integrity hashes are
-   the same ones index.html / v3.html load, so a test exercises exactly the
+   the same ones index.html / intelligence.html load, so a test exercises exactly the
    code that ships. The fixtures are gitignored (tests/.gitignore): run this
    once after cloning —  node tests/fetch-fixtures.mjs  (or npm run test:fixtures). */
 import { createHash } from 'crypto';

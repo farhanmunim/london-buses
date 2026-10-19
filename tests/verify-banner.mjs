@@ -1,5 +1,5 @@
 /* Banner suite — the sunset banner was removed 2026-09-08. (The site-wide
-   migration notice in site-banner.js is separate: switched off after the move to londonbuses.org, checked below.) The main app and
+   black banner in site-banner.js is separate: an Experimental tag plus an Intelligence link, checked below.) The main app and
    404 must carry NO sunset banner at all; the archived v1 pages keep only their
    "Archived v1" notice (no sunset wording anywhere).
    Run: node tests/verify-banner.mjs */
@@ -19,9 +19,10 @@ const srv = createServer((req, res) => {
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL')+'  '+k); ok?pass++:fail++; };
-for(const [url, scheme, wantArchiveNote] of [
+for(const [url, scheme, wantArchiveNote, isTarget] of [
   ['/', 'light', false], ['/', 'dark', false], ['/404.html', 'light', false],
   ['/archive/v1/', 'light', true], ['/archive/v1/changelog.html', 'light', true],
+  ['/intelligence.html', 'light', false, true],
 ]){
   const ctx = await browser.newContext({ viewport:{width:1280,height:900}, colorScheme: scheme });
   const page = await ctx.newPage();
@@ -35,8 +36,13 @@ for(const [url, scheme, wantArchiveNote] of [
     };
   });
   F(`${url} (${scheme}): no "sunset soon" text anywhere`, !b.bodyHasSunset);
-  const mb = await page.evaluate(() => { const e = document.getElementById('site-banner'); if(!e) return null; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { top:Math.round(r.top), w:Math.round(r.width), bg:c.backgroundColor, fg:c.color, text:e.textContent }; });
-  F(`${url} (${scheme}): migration banner is off (move to londonbuses.org complete)`, mb === null);
+  const mb = await page.evaluate(() => { const e = document.getElementById('site-banner'); if(!e) return null; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { top:Math.round(r.top), w:Math.round(r.width), bg:c.backgroundColor, fg:c.color, text:e.textContent, href:e.querySelector('a')?.getAttribute('href'), link:e.querySelector('a')?.textContent ?? '' }; });
+  if(isTarget){
+    F(`${url} (${scheme}): no banner on the Intelligence page itself`, mb === null);
+  } else {
+    F(`${url} (${scheme}): black banner at the very top, full width, Experimental tag + Intelligence link`,
+      !!mb && mb.top === 0 && mb.w >= 1270 && mb.bg === 'rgb(11, 11, 12)' && /Experimental/.test(mb.text) && mb.href === '/intelligence' && /^Intelligence/.test(mb.link));
+  }
   if(wantArchiveNote){
     F(`${url}: archive notice present ("${(b.bannerText ?? '').slice(0,40)}…")`,
       !!b.bannerText && /Archived v1/.test(b.bannerText));

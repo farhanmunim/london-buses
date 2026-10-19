@@ -157,7 +157,7 @@ b{font-weight:700}
   <tr><td><code>tests/</code></td><td>Browser test suites. They mock every external feed, so they pass offline.</td></tr>
   <tr><td><code>_headers</code>, <code>_redirects</code></td><td>Response headers and old-URL redirects, in Cloudflare Pages format (the host's equivalent must apply the same rules — see <a href="#cloudflare">section 11</a>).</td></tr>
   <tr><td><code>docs.html</code></td><td>This page.</td></tr>
-  <tr><td><code>v3.html</code></td><td>A concept page at <code>/v3</code> (not linked from the app, <code>noindex</code>): an operator-intelligence dashboard prototype built on the same faux-API files, used to plan the app's next evolution. It opens on the whole network, scopes to an operator or a garage, adds fleet-age-limit (14-year) tracking, and its maps open full page.</td></tr>
+  <tr><td><code>intelligence.html</code></td><td>An experimental page at <code>/intelligence</code> (linked from the site banner, <code>noindex</code>; the old <code>/v3</code> URL redirects to it): an operator-intelligence dashboard prototype built on the same faux-API files, used to plan the app's next evolution. It opens on the whole network, scopes to an operator or a garage, adds fleet-age-limit (14-year) tracking, and its maps open full page.</td></tr>
   <tr><td><code>archive/v1/</code></td><td>The original map-first app. Kept working, read-only.</td></tr>
   <tr><td><code>README.md</code>, <code>data.md</code>, <code>SETUP.md</code></td><td>Project intro, the deep data reference, and the from-scratch deployment checklist.</td></tr>
 </table></div>
@@ -283,7 +283,7 @@ b{font-weight:700}
   <tr><td><code>bridges.json</code> (225 KB) / <code>accidents.json</code> (2.3 MB)</td><td>Low bridges with clearance / bus- and coach-involved collisions, for the route-map layers.</td><td>seeded; copied through by <code>build-api.js</code></td><td>TfL/London Datastore height restrictions (+OSM cross-check) / DfT STATS19 2021–2025</td><td>static</td><td><code>{generatedAt, count, bbox, bridges:[…]}</code> / <code>{…, period, accidents:[…]}</code></td></tr>
   <tr><td><code>manifest.json</code> (5 KB)</td><td>Per dataset: source, fetch time, row count, cadence, files. Powers the About page and is the index automated readers should start from.</td><td><code>build-api.js</code></td><td>the files above</td><td>every run</td><td><code>{generatedAt, datasets:{name→{source, fetchedAt, status, rows, files, cadence}}}</code></td></tr>
 </table></div>
-<p>Besides <code>data/api/</code>, two things are fetched by URL: <code>data/routes/{id}.geojson</code> (full-fidelity geometry per route, written by <code>fetch-data.js</code>) and <code>data/route_destinations.json</code> (used by the <code>/v3</code> concept page).</p>
+<p>Besides <code>data/api/</code>, two things are fetched by URL: <code>data/routes/{id}.geojson</code> (full-fidelity geometry per route, written by <code>fetch-data.js</code>) and <code>data/route_destinations.json</code> (used by the <code>/intelligence</code> page).</p>
 
 <h2 id="conventions">8b. Data conventions</h2>
 <ul>

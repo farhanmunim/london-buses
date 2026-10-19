@@ -1,6 +1,6 @@
-/* /v3 — the operator-intelligence concept page, driven in a real browser
+/* /intelligence — the operator-intelligence concept page, driven in a real browser
    against the committed data (no mocks needed: it only reads data/api/*.json).
-   Run: node tests/verify-v3.mjs */
+   Run: node tests/verify-intelligence.mjs */
 import { chromium } from 'playwright-core';
 import { readFileSync } from 'fs';
 import { createServer } from 'http';
@@ -8,7 +8,7 @@ import { extname, join } from 'path';
 const ROOT = new URL('..', import.meta.url).pathname;
 const srv = createServer((req, res) => {
   try{
-    let u = decodeURIComponent(new URL(req.url, 'http://x').pathname); if(u === '/v3') u = '/v3.html';
+    let u = decodeURIComponent(new URL(req.url, 'http://x').pathname); if(u === '/intelligence') u = '/intelligence.html';
     res.writeHead(200, { 'content-type': { '.html':'text/html', '.js':'text/javascript', '.json':'application/json', '.geojson':'application/json', '.svg':'image/svg+xml' }[extname(u)] ?? 'application/octet-stream' });
     res.end(readFileSync(join(ROOT, u)));
   }catch(e){ res.writeHead(404); res.end('nf'); }
@@ -27,7 +27,7 @@ async function open(w = 1440, h = 900, hash = ''){
   page.on('pageerror', e => errors.push(String(e.message)));
   page.on('request', r => { const u = new URL(r.url()); if(!/^(127\.0\.0\.1|localhost)$/.test(u.hostname)) hosts.add(u.hostname); });
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
-  await page.goto('http://127.0.0.1:8961/v3' + hash, { waitUntil:'load' });
+  await page.goto('http://127.0.0.1:8961/intelligence' + hash, { waitUntil:'load' });
   await page.waitForSelector('#routes tbody tr', { timeout:30000 });
   await page.waitForTimeout(400);
   return { ctx, page, errors, hosts };
@@ -183,6 +183,6 @@ F(`mobile: the route brief fills the screen (${dw}px)`, dw >= 388);
 F('zero page errors (mobile)', errors.length === 0);
 await ctx.close();
 
-console.log(`\n${pass}/${pass + fail} v3 checks passed`);
+console.log(`\n${pass}/${pass + fail} intelligence checks passed`);
 await browser.close(); srv.close();
 process.exit(fail ? 1 : 0);
