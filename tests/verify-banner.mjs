@@ -38,7 +38,8 @@ for(const [url, scheme, wantArchiveNote, isTarget] of [
   F(`${url} (${scheme}): no "sunset soon" text anywhere`, !b.bodyHasSunset);
   const mb = await page.evaluate(() => { const e = document.getElementById('site-banner'); if(!e) return null; const r = e.getBoundingClientRect(), c = getComputedStyle(e); return { top:Math.round(r.top), w:Math.round(r.width), bg:c.backgroundColor, fg:c.color, text:e.textContent, href:e.querySelector('a')?.getAttribute('href'), link:e.querySelector('a')?.textContent ?? '' }; });
   if(isTarget){
-    F(`${url} (${scheme}): no banner on the Intelligence page itself`, mb === null);
+    F(`${url} (${scheme}): Intelligence page has the banner with an Experimental tag and a Back to London Buses link home`,
+      !!mb && mb.top === 0 && mb.w >= 1270 && /Experimental/.test(mb.text) && mb.href === '/' && /^Back to London Buses/.test(mb.link));
   } else {
     F(`${url} (${scheme}): black banner at the very top, full width, Experimental tag + Intelligence link`,
       !!mb && mb.top === 0 && mb.w >= 1270 && mb.bg === 'rgb(12, 10, 9)' && /Experimental/.test(mb.text) && mb.href === '/intelligence' && /Intelligence/.test(mb.link));

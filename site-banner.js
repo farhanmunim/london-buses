@@ -1,12 +1,16 @@
-/* Site-wide banner above the header. One file controls every page: edit TAG / LABEL / HREF,
-   or set ON = false to hide it. Skipped on its own target page. Loaded first thing in <body>
-   so it renders above the header with no flash. */
+/* Site-wide banner above the header. One file controls every page: edit TAG / LABEL / HREF
+   (the link out to the experimental page) and BACK_LABEL / BACK_HREF (the link home, shown on
+   that page itself), or set ON = false to hide it. Loaded first thing in <body> so it renders
+   above the header with no flash. */
 (() => {
   const ON = true;
   const TAG = 'Experimental';
   const LABEL = 'Try Intelligence';
   const HREF = '/intelligence';
-  if(!ON || document.getElementById('site-banner') || location.pathname.startsWith(HREF)) return;
+  const BACK_LABEL = 'Back to London Buses';
+  const BACK_HREF = '/';
+  if(!ON || document.getElementById('site-banner')) return;
+  const onTarget = location.pathname.startsWith(HREF);
   const style = document.createElement('style');
   style.textContent = `
     #site-banner{position:relative;z-index:500;display:flex;align-items:center;justify-content:center;gap:12px;min-height:38px;padding:6px 16px;
@@ -25,14 +29,18 @@
     #site-banner a::after{content:"→";transition:transform .15s}
     #site-banner:hover a{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.3)}
     #site-banner:hover a::after{transform:translateX(3px)}
+    #site-banner.is-back a{flex-direction:row-reverse}
+    #site-banner.is-back a::after{content:"←"}
+    #site-banner.is-back:hover a::after{transform:translateX(-3px)}
     #site-banner a:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
     @media (prefers-reduced-motion:reduce){#site-banner b::before{animation:none}#site-banner a,#site-banner a::after{transition:none}}
     @media (max-width:640px){#site-banner{gap:8px;padding:6px 12px;font-size:12px}}`;
   document.head.appendChild(style);
   const bar = document.createElement('div');
   bar.id = 'site-banner'; bar.setAttribute('role', 'status');
+  bar.classList.toggle('is-back', onTarget);
   const tag = document.createElement('b'); tag.textContent = TAG;
-  const link = document.createElement('a'); link.href = HREF; link.textContent = LABEL;
+  const link = document.createElement('a'); link.href = onTarget ? BACK_HREF : HREF; link.textContent = onTarget ? BACK_LABEL : LABEL;
   bar.append(tag, link);
   const cs = getComputedStyle(document.body);   // pages with a default body margin still get a full-bleed bar
   bar.style.margin = `-${cs.marginTop} -${cs.marginRight} 0 -${cs.marginLeft}`;
