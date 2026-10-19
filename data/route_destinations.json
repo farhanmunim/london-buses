@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-18T08:09:25Z",
+  "generated_at_utc": "2026-10-19T09:02:15Z",
   "route_count": 675,
   "routes": {
     "1": {
@@ -121,16 +121,18 @@
       }
     },
     "9": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Aldwych",
-        "qualifier": "",
-        "full": "Aldwych"
+        "destination": "Hammersmith",
+        "qualifier": "Hammersmith Bus Station",
+        "full": "Hammersmith"
       },
       "inbound": {
-        "destination": "Hammersmith",
-        "qualifier": "",
-        "full": "Hammersmith"
+        "destination": "Aldwych",
+        "qualifier": "Aldwych / Drury Lane",
+        "full": "Aldwych"
       }
     },
     "11": {
@@ -550,16 +552,18 @@
       }
     },
     "39": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Clapham Junction",
-        "qualifier": "",
+        "qualifier": "Clapham Junction Stn / the Falcon",
         "full": "Clapham Junction"
       },
       "inbound": {
-        "destination": "Putney",
-        "qualifier": "",
-        "full": "Putney"
+        "destination": "Putney Bridge",
+        "qualifier": "Putney Bridge Station",
+        "full": "Putney Bridge"
       }
     },
     "40": {
@@ -1251,16 +1255,18 @@
       }
     },
     "89": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Lewisham",
-        "qualifier": "",
-        "full": "Lewisham"
+        "destination": "Slade Green",
+        "qualifier": "Forest Road / Slade Green Station",
+        "full": "Slade Green"
       },
       "inbound": {
-        "destination": "Slade Green",
+        "destination": "Lewisham Station",
         "qualifier": "",
-        "full": "Slade Green"
+        "full": "Lewisham Station"
       }
     },
     "90": {
@@ -3083,9 +3089,9 @@
         "full": "Moorgate, Finsbury Square"
       },
       "inbound": {
-        "destination": "Highgate Village",
-        "qualifier": "Highgate School",
-        "full": "Highgate Village, Highgate School"
+        "destination": "Highgate School",
+        "qualifier": "",
+        "full": "Highgate School"
       }
     },
     "215": {
@@ -3336,33 +3342,29 @@
       }
     },
     "234": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Archway Station",
+        "destination": "Archway",
         "qualifier": "",
-        "full": "Archway Station"
+        "full": "Archway"
       },
       "inbound": {
-        "destination": "Barnet, The Spires",
-        "qualifier": "The Spires",
-        "full": "Barnet, The Spires"
+        "destination": "Barnet",
+        "qualifier": "",
+        "full": "Barnet"
       }
     },
     "235": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "North Brentford Quarter",
-        "qualifier": "Great West Quarter",
-        "full": "North Brentford Quarter, Great West Quarter"
+        "destination": "Great West Quarter",
+        "qualifier": "",
+        "full": "Great West Quarter"
       },
       "inbound": {
-        "destination": "Sunbury Village",
-        "qualifier": "Three Fishes",
-        "full": "Sunbury Village, Three Fishes"
+        "destination": "Lower Sunbury",
+        "qualifier": "",
+        "full": "Lower Sunbury"
       }
     },
     "236": {
@@ -5391,29 +5393,33 @@
       }
     },
     "389": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Barnet",
-        "qualifier": "",
-        "full": "Barnet"
+        "destination": "Barnet, Western Way",
+        "qualifier": "Western Way",
+        "full": "Barnet, Western Way"
       },
       "inbound": {
-        "destination": "Western Way",
-        "qualifier": "",
-        "full": "Western Way"
+        "destination": "Barnet, The Spires",
+        "qualifier": "The Spires",
+        "full": "Barnet, The Spires"
       }
     },
     "390": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Victoria",
+        "destination": "Victoria Bus Station",
         "qualifier": "",
-        "full": "Victoria"
+        "full": "Victoria Bus Station"
       },
       "inbound": {
-        "destination": "Archway",
+        "destination": "Archway Station",
         "qualifier": "",
-        "full": "Archway"
+        "full": "Archway Station"
       }
     },
     "393": {
@@ -5547,48 +5553,42 @@
       }
     },
     "405": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Croydon",
-        "qualifier": "Park Street",
-        "full": "West Croydon, Park Street"
+        "destination": "Croydon Katharine Street",
+        "qualifier": "",
+        "full": "Croydon Katharine Street"
       },
       "inbound": {
         "destination": "Redhill",
-        "qualifier": "Redhill Bus Station",
+        "qualifier": "",
         "full": "Redhill"
       }
     },
     "406": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Epsom",
-        "qualifier": "Epsom Hospital",
-        "full": "Epsom"
+        "destination": "Kingston",
+        "qualifier": "",
+        "full": "Kingston"
       },
       "inbound": {
-        "destination": "Kingston",
-        "qualifier": "Cromwell Road Bus Station",
-        "full": "Kingston, Cromwell Road Bus Station"
+        "destination": "Epsom",
+        "qualifier": "",
+        "full": "Epsom"
       }
     },
     "407": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Caterham",
-        "qualifier": "Caterham Valley",
-        "full": "Caterham"
+        "destination": "Sutton",
+        "qualifier": "",
+        "full": "Sutton"
       },
       "inbound": {
-        "destination": "Sutton, Town Centre",
-        "qualifier": "Sutton / Marshall's Road",
-        "full": "Sutton, Town Centre, Sutton / Marshall's Road"
+        "destination": "Caterham",
+        "qualifier": "",
+        "full": "Caterham"
       }
     },
     "410": {
@@ -5607,18 +5607,16 @@
       }
     },
     "411": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Molesey",
-        "qualifier": "Central Square",
-        "full": "West Molesey, Central Square"
+        "destination": "Kingston",
+        "qualifier": "",
+        "full": "Kingston"
       },
       "inbound": {
-        "destination": "Kingston",
-        "qualifier": "Cromwell Road Bus Station",
-        "full": "Kingston, Cromwell Road Bus Station"
+        "destination": "West Molesey",
+        "qualifier": "",
+        "full": "West Molesey"
       }
     },
     "412": {
@@ -7438,18 +7436,16 @@
       }
     },
     "B12": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Joyden's Wood",
-        "qualifier": "St Mary's Road",
-        "full": "Joyden's Wood, St Mary's Road"
+        "destination": "Erith",
+        "qualifier": "",
+        "full": "Erith"
       },
       "inbound": {
-        "destination": "Erith",
-        "qualifier": "Erith Town Centre / Riverside",
-        "full": "Erith"
+        "destination": "Joydens Wood",
+        "qualifier": "",
+        "full": "Joydens Wood"
       }
     },
     "B13": {
