@@ -91,11 +91,13 @@ await page.click('th[data-sort="pvr"]');
 await page.click('#moreBtn'); await page.waitForTimeout(150);
 F('"Show more" reveals another page of rows', await page.locator('#routes tbody tr').count() === 60);
 
+const clickable = (sel) => page.evaluate((q) => { const e = document.querySelector(q); if(!e) return false; const r = e.getBoundingClientRect(); const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!t && e.contains(t); }, sel);
 // drawer
 const firstId = await page.locator('#routes tbody tr.row').first().getAttribute('data-r');
 await page.locator('#routes tbody tr.row').first().click(); await page.waitForTimeout(350);
 F(`row click opens the route brief (${firstId})`, await page.locator('#drawer.open').count() === 1 && (await txt(page, '#drawer .badge')) === firstId && /route=/.test(await page.evaluate(() => location.hash)));
 const dr = await page.evaluate(() => ({ cells: document.querySelectorAll('#drawer .mini > div').length, charts: document.querySelectorAll('#drawer svg[role=img]').length, hasShape: !!document.querySelector('#drawer .shape path') }));
+F('the open route brief is not covered by the site banner (its controls are clickable)', await clickable('#drawer .x button'));
 F(`brief carries the KPI and signal cells, a shape and trend charts (${dr.charts} charts)`, dr.cells >= 9 && dr.hasShape && dr.charts >= 3);
 await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
 F('→ steps to the next route in the table', (await txt(page, '#drawer .badge')) !== firstId);
@@ -143,6 +145,7 @@ F('"All London" is the first operator-menu choice', /All London/.test(await txt(
 
 /* ── full-page maps ─────────────────────────────────────────────────────── */
 await page.click('.acts [data-expand="net"]'); await page.waitForTimeout(600);
+F('the full-page map is not covered by the site banner (Close is clickable)', await clickable('#mfClose'));
 F('the network map opens full page and titles itself', await page.evaluate(() => !document.getElementById('mapfs').hidden) && /All London/.test(await txt(page, '#mfTitle')));
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 F('Esc closes the full-page map', await page.evaluate(() => document.getElementById('mapfs').hidden));
