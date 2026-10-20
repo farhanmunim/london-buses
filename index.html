@@ -598,10 +598,54 @@ function garagePinIcon(g, size = 38, tint = null){
   const bg = Array.isArray(tint) && tint.length > 1
     ? `linear-gradient(135deg, ${tint[0]} 50%, ${tint[1]} 50%)`
     : (Array.isArray(tint) ? tint[0] : tint) ?? opColor(g.operator);
-  return L.divIcon({ className:'', iconSize:[size,size], iconAnchor:[size/2,size/2],
+  return L.divIcon({ className:'lb-gpin', iconSize:[size,size], iconAnchor:[size/2,size/2],
     html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
       <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
+}
+/* Garage pin spreading, for every map. Pins are a fixed pixel size, so garages that are close
+   together collide as soon as a map is zoomed out. Pins that would overlap at the current zoom are
+   laid out side by side, centred on their group, and are recomputed on every zoom — so they settle
+   onto their true positions as you zoom in, and a pin with room to spare never moves.
+   Blocks are rigid grids (rows of up to four); any blocks that touch are merged until none do. */
+const PIN_GAP = 4, PIN_ROW_MAX = 4;
+function spreadGaragePins(map){
+  const zoom = map.getZoom();
+  const items = [];
+  map.eachLayer(l => {
+    if(!l.getLatLng || l.options?.icon?.options?.className !== 'lb-gpin') return;
+    l.options.homeLatLng ??= l.getLatLng();   // true position, captured once
+    items.push({ marker:l, p:map.project(l.options.homeLatLng, zoom), size:l.options.icon.options.iconSize[0] + PIN_GAP });
+  });
+  const block = members => {
+    const pitch = Math.max(...members.map(m => m.size));
+    const cols = Math.min(members.length, PIN_ROW_MAX), rows = Math.ceil(members.length / cols);
+    return { members, pitch, cols, rows, w:cols * pitch, h:rows * pitch,
+      cx:members.reduce((a, m) => a + m.p.x, 0) / members.length, cy:members.reduce((a, m) => a + m.p.y, 0) / members.length };
+  };
+  const touch = (a, b) => Math.abs(a.cx - b.cx) < (a.w + b.w) / 2 && Math.abs(a.cy - b.cy) < (a.h + b.h) / 2;
+  const blocks = items.map(it => block([it]));
+  for(let merged = true; merged;){
+    merged = false;
+    for(let i = 0; i < blocks.length && !merged; i++) for(let j = i + 1; j < blocks.length; j++){
+      if(!touch(blocks[i], blocks[j])) continue;
+      blocks[i] = block([...blocks[i].members, ...blocks[j].members]); blocks.splice(j, 1); merged = true; break;
+    }
+  }
+  const place = (m, ll) => { const c = m.getLatLng(); if(c.lat !== ll.lat || c.lng !== ll.lng) m.setLatLng(ll); };
+  for(const b of blocks){
+    if(b.members.length === 1){ place(b.members[0].marker, b.members[0].marker.options.homeLatLng); continue; }
+    const sorted = [...b.members].sort((m, n) => m.p.y - n.p.y || m.p.x - n.p.x);   // north to south into rows…
+    for(let r = 0; r < b.rows; r++){
+      const row = sorted.slice(r * b.cols, (r + 1) * b.cols).sort((m, n) => m.p.x - n.p.x);   // …west to east within a row
+      row.forEach((it, i) => place(it.marker, map.unproject(L.point(b.cx + (i - (row.length - 1) / 2) * b.pitch, b.cy + (r - (b.rows - 1) / 2) * b.pitch), zoom)));
+    }
+  }
+}
+function attachPinSpread(map){
+  let raf = 0;
+  const run = () => { raf = 0; spreadGaragePins(map); };
+  map.on('zoomend layeradd layerremove', () => { if(!raf) raf = requestAnimationFrame(run); });
 }
 /* Garage popup used by every map pin: headline numbers, every route as a
    tappable chip, and the detail link. */
@@ -772,6 +816,7 @@ function makeMap(el){
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false, maxZoom:19 });
   // Credit for whichever basemap is active (a condition of both free tiers), one click away.
   map._attrib = new AttribControl().addTo(map);
+  attachPinSpread(map);
   baseTiles(map);
   return map;
 }
