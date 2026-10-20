@@ -7,7 +7,7 @@
   const TAG = 'Experimental';
   const LABEL = 'Try Intelligence';
   const HREF = '/intelligence';
-  const BACK_LABEL = 'Back to London Buses';
+  const BACK_LABEL = 'Back to londonbuses.org';
   const BACK_HREF = '/';
   if(!ON || document.getElementById('site-banner')) return;
   const onTarget = location.pathname.startsWith(HREF);

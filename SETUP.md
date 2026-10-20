@@ -1,4 +1,4 @@
-# Setting up London Buses from scratch
+# Setting up londonbuses.org from scratch
 
 The checklist for standing the project up in a new repository, on a new host, under a new domain. Everything below is in the order it needs doing. Nothing here is magic: a public GitHub repository runs the data pipeline on a schedule, Git is the database, and a host serves the files plus two small `/api` endpoints.
 
@@ -11,7 +11,7 @@ How the pieces fit together is explained in `archive/docs/index.html` (sections 
 1. **Create a new, empty, public repository** on GitHub. Public matters: scheduled workflows get unlimited Actions minutes on public repositories, and the nightly pipeline alone uses 15–20 hours a month.
 2. **Push a clean snapshot, not the old history.** The old history carries years of automated data commits (the pack is ~80 MB) and author details that need not travel. From a checkout of the old `main`:
    ```bash
-   git checkout --orphan fresh && git add -A && git commit -m "London Buses"
+   git checkout --orphan fresh && git add -A && git commit -m "londonbuses.org"
    git remote set-url origin git@github.com:<owner>/<repo>.git
    git push -u origin fresh:main
    ```

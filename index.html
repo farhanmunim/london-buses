@@ -3,23 +3,23 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>London Buses</title>
+<title>londonbuses.org</title>
 <meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed regularly from open public sources." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="canonical" href="https://londonbuses.org/" />
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#100f0e" media="(prefers-color-scheme: dark)" />
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="London Buses" />
-<meta property="og:title" content="London Buses — every route, operator and garage" />
+<meta property="og:site_name" content="londonbuses.org" />
+<meta property="og:title" content="londonbuses.org — every route, operator and garage" />
 <meta property="og:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open data." />
 <meta property="og:url" content="https://londonbuses.org/" />
 <meta property="og:image" content="https://londonbuses.org/og.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="London’s bus network drawn as coloured route lines, with the London Buses name" />
+<meta property="og:image:alt" content="London’s bus network drawn as coloured route lines, with the londonbuses.org name" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="London Buses — every route, operator and garage" />
+<meta name="twitter:title" content="londonbuses.org — every route, operator and garage" />
 <meta name="twitter:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open data." />
 <meta name="twitter:image" content="https://londonbuses.org/og.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -295,7 +295,7 @@ table.fresh td.desc{text-align:left;font-family:var(--sans);color:var(--tx2);fon
 .footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
 
 /* UK-plate styling for vehicle registrations */
-.plate{display:inline-block;font-family:var(--mono);font-weight:600;font-size:11.5px;letter-spacing:.06em;color:#111;background:#fc0;border:1.5px solid #1c1917;border-radius:5px;padding:1px 7px;line-height:1.5;white-space:nowrap}
+.plate{display:inline-block;font-family:var(--mono);font-weight:600;font-size:11.5px;letter-spacing:.06em;color:#111;background:#fc0;border:1.5px solid #1c1917;border-radius:5px;padding:1.5px 7px .5px;line-height:1.5;white-space:nowrap}
 a.plate:hover{background:#ffd83d}
 /* long values (vehicle makes, company names) must not balloon a card —
    cap the cell and let it scroll inside */
@@ -404,7 +404,7 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
       <span class="brand-icon" aria-hidden="true">
         <svg viewBox="0 0 32 32" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="17" height="15" rx="2.2"/><line x1="7.5" y1="14.5" x2="24.5" y2="14.5"/><circle cx="11" cy="19" r="1.2" fill="#fff"/><circle cx="21" cy="19" r="1.2" fill="#fff"/></svg>
       </span>
-      London Buses
+      londonbuses.org
     </a>
     <nav class="nav-desktop" id="navDesktop">
       <a href="#/map" data-nav="map">Map</a>
@@ -452,7 +452,7 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 
 <script type="module">
 /* ════════════════════════════════════════════════════════════════════════
-   London Buses — single-file app, all data from this site’s own pipeline (data/api/*.json) plus TfL’s live endpoints.
+   londonbuses.org — single-file app, all data from this site’s own pipeline (data/api/*.json) plus TfL’s live endpoints.
    One file on purpose: the Cloudflare zone can edge-cache js/css for 4 h,
    which has repeatedly served mixed old/new module graphs mid-deploy.
    HTML is served max-age=0, so a single file can never version-skew.
@@ -843,6 +843,30 @@ const LAYER_UI = [
   { k:'sw', label:'Street works', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4h-3L6 20h12z"/><path d="M9.2 10h5.6M7.9 15h8.2"/><path d="M4 20h16"/></svg>` },
   { k:'tro', label:'Traffic orders', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>` },
 ];
+/* Stop pin popup: name, the next three buses (fetched when the popup opens), then a link to the full board. */
+function bindStopPopup(marker, id, name, extra = ''){
+  const dueText = ms => ms <= 30000 ? 'Due' : `${Math.round(ms/60000)} min`;
+  const box = document.createElement('div');
+  box.style.minWidth = '190px';
+  box.innerHTML = `<b>${esc(name)}</b>${extra}<div class="sp-arr" style="margin:6px 0 4px;font-size:12.5px;color:var(--tx2)">Loading arrivals…</div><a href="#/stop/${encodeURIComponent(id)}" style="color:var(--acc);font-weight:600">See all live arrivals ›</a>`;
+  const list = box.querySelector('.sp-arr');
+  let tok = 0;
+  marker.bindPopup(box);
+  marker.on('popupopen', async e => {
+    const my = ++tok;
+    const raw = await D.arrivals(id);
+    if(my !== tok) return;
+    const t0 = Date.now();
+    const rows = (raw?.data ?? []).filter(a => Number.isFinite(a.timeToStation))
+      .map(a => ({ ...a, dueAt: Number.isFinite(Date.parse(a.expectedArrival)) ? Date.parse(a.expectedArrival) : t0 + a.timeToStation * 1000 }))
+      .sort((a, b) => a.dueAt - b.dueAt).slice(0, 3);
+    list.innerHTML = rows.length
+      ? rows.map(a => `<div style="display:flex;align-items:center;gap:8px;padding:2px 0"><span class="rchip" style="min-height:0;padding:1px 7px;font-size:11.5px">${esc(a.lineName ?? '')}</span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.destinationName ? title(a.destinationName) : '')}</span><b style="font-family:var(--mono);color:var(--tx)">${dueText(a.dueAt - Date.now())}</b></div>`).join('')
+      : (raw ? 'No buses predicted right now.' : 'Arrivals unavailable right now.');
+    e.popup.update();
+  });
+  return marker;
+}
 /* Garage popup used by every map pin: headline numbers, every route as a
    tappable chip, and the detail link. */
 function garagePopupHtml(g, meta, extraRows = ''){
@@ -1072,7 +1096,11 @@ document.addEventListener('click', e => {
 window.addEventListener('scroll', hideTip, { passive:true });
 /* ── Router ───────────────────────────────────────────────────────────── */
 const main = document.getElementById('main');
-new MutationObserver(()=>{ main.querySelectorAll('div[style*="overflow-x:auto"]:not([tabindex])').forEach(e=>{ e.tabIndex=0; e.setAttribute('role','region'); e.setAttribute('aria-label','Scrollable table'); }); }).observe(main,{childList:true,subtree:true});
+new MutationObserver(()=>{
+  main.querySelectorAll('div[style*="overflow-x:auto"]:not([tabindex])').forEach(e=>{ e.tabIndex=0; e.setAttribute('role','region'); e.setAttribute('aria-label','Scrollable table'); });
+  // Long values that scroll inside their tile (fleet model names) need a keyboard stop too.
+  main.querySelectorAll('.fact .v:not([tabindex])').forEach(e=>{ if(e.scrollWidth > e.clientWidth + 1){ e.tabIndex=0; e.setAttribute('role','region'); e.setAttribute('aria-label', (e.closest('.fact')?.querySelector('.l')?.textContent ?? 'Value') + ' (scrollable)'); } });
+}).observe(main,{childList:true,subtree:true});
 /* The header wraps to a second line at some widths, so the full-screen map view subtracts its measured height, not a constant. */
 {
   const topbar = document.querySelector('.topbar');
@@ -1118,7 +1146,7 @@ function navigate(){
     garages:'Garages', tender:'Tender', diversions:'Diversions', streetworks:'Street works', tro:'Traffic orders', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
     route:`Route ${arg ?? ''}`, stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
-  document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'London Buses';
+  document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'londonbuses.org';
   // One page_view per hash navigation (initial load included — send_page_view
   // is disabled in the config above so this is the single source of truth).
   if(typeof gtag === 'function') gtag('event', 'page_view', { page_location: location.href, page_title: document.title });
@@ -1805,9 +1833,9 @@ async function initRouteMap(route, m = {}, tok = navToken){
     }
     stopsLayer = L.layerGroup();
     for(const s of (stopRec[dir] ?? [])){
-      L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 })
-        .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(s.id)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
+      const mk = L.circleMarker([s.lat, s.lng], { radius:4.5, color:'#dc2626', weight:2, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 })
         .addTo(stopsLayer);
+      bindStopPopup(mk, s.id, s.name);
     }
     if(stopsOn) stopsLayer.addTo(_map);
   }
@@ -2237,9 +2265,7 @@ async function renderNetworkMap(){
         for(const sp of [...(rec.outbound ?? []), ...(rec.inbound ?? [])]){
           if(!Number.isFinite(sp.lat) || !Number.isFinite(sp.lng) || seen.has(sp.id)) continue;
           seen.add(sp.id); count++;
-          L.circleMarker([sp.lat, sp.lng], { radius:4.5, color:colour, weight:2, fillColor:isDark() ? '#1b1917' : '#fff', fillOpacity:1 })
-            .bindPopup(`<b>${esc(sp.name)}</b><br><span style="color:var(--tx2)">Route ${esc(name)}</span><br><a href="#/stop/${encodeURIComponent(sp.id)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
-            .addTo(group);
+          bindStopPopup(L.circleMarker([sp.lat, sp.lng], { radius:4.5, color:colour, weight:2, fillColor:isDark() ? '#1b1917' : '#fff', fillOpacity:1 }), sp.id, sp.name, `<br><span style="color:var(--tx2)">Route ${esc(name)}</span>`).addTo(group);
         }
       }
       group.addTo(_map);
@@ -3056,8 +3082,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = navToken){
     const s = reg?.get(ctxStop);
     if(s && _map){
       stopLL = [s.lat, s.lng];
-      L.circleMarker(stopLL, { radius:7, color:isDark()?'#f0eeec':'#1c1917', weight:2.5, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 })
-        .bindPopup(`<b>${esc(s.name)}</b><br><a href="#/stop/${encodeURIComponent(ctxStop)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
+      bindStopPopup(L.circleMarker(stopLL, { radius:7, color:isDark()?'#f0eeec':'#1c1917', weight:2.5, fillColor:isDark()?'#1b1917':'#fff', fillOpacity:1 }), ctxStop, s.name)
         .addTo(_map);
     }
   }
@@ -4103,7 +4128,7 @@ async function renderAbout(){
     <h1>About</h1>
     <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
 
-    <p>London Buses is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
+    <p>londonbuses.org is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
 
     <h2>Attribution</h2>
     <p class="note" style="margin-top:0">Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors; basemap by OpenFreeMap, OpenMapTiles and CARTO.</p>

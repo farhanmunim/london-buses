@@ -1,4 +1,4 @@
-# London Buses — https://londonbuses.org
+# londonbuses.org — https://londonbuses.org
 # All crawlers welcome, including AI / LLM crawlers (GPTBot, ClaudeBot,
 # PerplexityBot, Google-Extended, CCBot, etc.). Nothing is disallowed.
 User-agent: *

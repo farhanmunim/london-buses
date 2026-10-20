@@ -46,6 +46,7 @@ async function openMap(vp, { clock = false } = {}){
     return r.abort();
   });
   await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk|atlas\.farhan\.app|mochi|openfreemap/, r => r.abort());
+  await page.route(/api\.tfl\.gov\.uk\/StopPoint\/[^/]+\/Arrivals/, r => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify([5, 2, 9, 1].map((m, i) => ({ lineName: '25', destinationName: 'Test Dest ' + i, timeToStation: m * 60, expectedArrival: new Date(Date.now() + m * 60000).toISOString() }))) }));
   /* a stand-in for the live-bus endpoint, so polling can be counted without a network */
   await page.route('**/api/live/vehicles?line=*', r => {
     const line = new URL(r.request().url()).searchParams.get('line');
@@ -150,6 +151,11 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await click(page, 'stops');
   F('Stops shows that route\'s stops', /^\d+ stops?$/.test(await note(page, 'stops')));
 
+  await page.evaluate(() => { const m = window.__maps[0]; let done = false; m.eachLayer(l => { if(!done && l.options?.radius === 4.5 && l.fire){ l.fire('click'); l.openPopup(); done = true; } }); });
+  await page.waitForTimeout(600);
+  const sp = await page.locator('.leaflet-popup-content').innerText();
+  F('a stop pin opens a popup with its next three buses and a link to the full board', (await page.locator('.leaflet-popup-content .rchip').count()) === 3 && /1 min/.test(sp) && /See all live arrivals/.test(sp) && !/Loading/.test(sp));
+  await page.evaluate(() => { window.__maps[0].closePopup(); });
   await click(page, 'live'); await page.waitForTimeout(800);
   const polls1 = requests.filter(r => r.line === '25').length;
   F(`switching Live buses on polls once for the route (${polls1}) and draws the buses`, polls1 === 1 && (await page.locator('.lb-bus').count()) === 2 && /live bus/.test(await note(page, 'live')));
