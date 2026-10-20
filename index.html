@@ -111,7 +111,7 @@ main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 1
 @media(max-width:759px){.app-footer{margin-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .legendrow a,.card p a,.note a{text-decoration:underline}
-.rchip,.plate{min-height:24px}
+.rchip{min-height:24px}
 .rchip{display:inline-flex;align-items:center}
 .net-chip{display:none!important}@media(min-width:1000px){.net-chip:not([hidden]){display:inline-flex!important}}
 
@@ -337,6 +337,8 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
 .nm-lbl{font-size:11px;color:var(--mu);font-weight:600}
 .nm-colour{display:flex;align-items:center;justify-content:space-between;flex:1 0 100%}
+.nm-gscope{display:flex;align-items:center;gap:10px;padding:0 11px 9px}
+.nm-gscope .seg{flex:1}.nm-gscope .seg button{flex:1;padding:5px 8px;font-size:12px}
 .nm-layers{display:flex;align-items:center;gap:10px;padding:8px 11px;border-top:1px solid var(--bd)}
 .nm-lbtns{display:flex;gap:6px;flex-wrap:wrap}
 .nm-lbtns .livebtn{margin:0}
@@ -1656,7 +1658,6 @@ async function initRouteMap(route, m = {}, tok = navToken){
     closestBtn.classList.toggle('on', closestOn);
     if(!closestOn){
       if(closestLayer){ _map.removeLayer(closestLayer); closestLayer = null; }
-      for(const mk of opMarkers.values()) mk.setTooltipContent('Operating from here');
       layerNote('garNote');
       return;
     }
@@ -1674,30 +1675,18 @@ async function initRouteMap(route, m = {}, tok = navToken){
       all.push(rec);
       if(!rec.operating) rows.push(rec);   // operating garage already pinned + ringed
     }
-    const nearestAll = all.reduce((a, x) => (x.at && x.d < (a?.d ?? Infinity) ? x : a), null);
-    // The genuinely nearest garage gets the permanent pill. When that IS the
-    // operating garage, its own tag says so and no competitor is mistagged.
-    const nearest = nearestAll?.operating ? null : nearestAll;
-    if(nearestAll?.operating){
-      opMarkers.get(String(nearestAll.g.code).toUpperCase())
-        ?.setTooltipContent(`Operating from here · nearest garage (${(nearestAll.d/1609.344).toFixed(2)} mi)`);
-    }
     const kv = (l, v) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12.5px">${v}</b></div>`;
     for(const { g, d, at } of rows){
       const mi = Number.isFinite(d) && at ? (d/1609.344).toFixed(2) : null;
-      const isNearest = nearest && g.code === nearest.g.code;
-      const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, isNearest ? 30 : 26), zIndexOffset: isNearest ? 400 : 0 });
-      if(isNearest) mk.bindTooltip(`Nearest garage · ${mi} mi`, { permanent:true, direction:'top', offset:[0,-16], className:'gtag' });
-      else mk.bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}${mi ? ` · ${mi} mi` : ''}`, { direction:'top' });
+      const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 26) });
+      mk.bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}${mi ? ` · ${mi} mi` : ''}`, { direction:'top' });
       mk.bindPopup(() => garagePopupHtml(g, metaAll, mi
           ? kv(`Distance to route ${esc(route.name)}`, `${mi} mi`) + kv('Measured at', esc(at.name))
           : ''))
         .addTo(closestLayer);
     }
     closestLayer.addTo(_map);
-    layerNote('garNote', nearestAll?.operating
-      ? `<span>${rows.length} garages in operator colours — the operating garage ${esc(nearestAll.g.name)} (${esc(nearestAll.g.code)}) is also the nearest to route ${esc(route.name)} (${(nearestAll.d/1609.344).toFixed(2)} mi at ${esc(nearestAll.at.name)}) — its tag says both. Tap any pin for its distance and details.</span>`
-      : `<span>${rows.length} garages in operator colours — the tagged pin is the nearest to route ${esc(route.name)}${nearest?.at ? ` (${(nearest.d/1609.344).toFixed(2)} mi at ${esc(nearest.at.name)})` : ''}; the operating garage carries its own tag. Tap any pin for its distance and details.</span>`);
+    layerNote('garNote', `<span>${rows.length} garages in operator colours. Hover or tap a pin for its distance to route ${esc(route.name)} and its details.</span>`);
   });
   /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
      the route's corridor. Route points are collected once, lazily; distance
@@ -1925,6 +1914,7 @@ async function renderNetworkMap(){
           <span class="nm-lbl">Layers</span>
           <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}</div>
         </div>
+        <div class="nm-gscope" id="nmGarScope" hidden><span class="nm-lbl">Garages</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes</button><button type="button" data-gs="all">All garages</button></div></div>
         <div class="nm-lnotes" id="nmLNotes" aria-live="polite" hidden></div>
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
@@ -2194,6 +2184,7 @@ async function renderNetworkMap(){
   const plural = (n, one, many = one + 's') => `${fmtN(n)} ${n === 1 ? one : many}`;
   const dot = c => `<span class="nm-dot" style="background:${c}"></span>`;
   const chip = (swatch, text) => `<span class="nm-chip">${swatch}${text}</span>`;
+  st.gScope = 'route';
   st.ly = { garages:true, stops:false, live:false, bridges:false, inc:false, sw:false, tro:false };
 
   const filteredNow = () => !!(st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size);
@@ -2258,15 +2249,30 @@ async function renderNetworkMap(){
 
     /* Every garage in its operator's colour; the popup carries the numbers, so no distance or "operating from here" tags. */
     async garages(){
-      const group = L.layerGroup();
+      const group = L.layerGroup(); let n = 0;
+      const names = st.pills.length ? st.pills : (filteredNow() ? [...visibleNames()].map(x => x.toUpperCase()) : null);
+      const mine = g => {
+        if(!names) return true;
+        if(!st.pills.length) return (g.routes ?? []).some(r => names.includes(String(r).toUpperCase()));
+        // Focused routes: trust route-meta's garage (matches the card); fall back to the garage's own list only when meta has none.
+        return names.some(p => {
+          const codes = String(meta?.[p]?.garage ?? meta?.[Object.keys(meta ?? {}).find(k => k.toUpperCase() === p)]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
+          return codes.length ? codes.includes(String(g.code).toUpperCase()) : (g.routes ?? []).some(r => String(r).toUpperCase() === p);
+        });
+      };
+      const showAll = !names || st.gScope === 'all';
       for(const g of garages ?? []){
         if(!garageLocOk(g)) continue;
-        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 30) })
+        const hit = mine(g);
+        if(!hit && !showAll) continue;
+        n++;
+        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, names && hit ? 34 : (names ? 26 : 30)), zIndexOffset: hit && names ? 300 : 0 })
           .bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}`, { direction:'top', offset:[0,-14] })
           .bindPopup(() => garagePopupHtml(g, meta))
           .addTo(group);
       }
       group.addTo(_map);
+      setLyNote('garages', n ? `<b>${plural(n, 'garage')}</b>${names && !showAll ? ' for the selected routes' : ''}` : 'No garages found for the selected routes.');
       return { remove: () => _map.removeLayer(group) };
     },
 
@@ -2376,7 +2382,14 @@ async function renderNetworkMap(){
     if(!alive()){ handle.remove(); return; }
     lyRT[k] = handle;
   }
+  const narrowingNow = () => st.pills.length > 0 || filteredNow();
+  function syncGarScope(){
+    const box = document.getElementById('nmGarScope'); if(!box) return;
+    box.hidden = !(st.ly.garages && narrowingNow());
+    box.querySelectorAll('[data-gs]').forEach(b => { const on = b.dataset.gs === st.gScope; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  }
   function syncLyButtons(){
+    syncGarScope();
     const focused = layerScope().length > 0;
     document.querySelectorAll('#nmLayers [data-lyr]').forEach(b => {
       const k = b.dataset.lyr, gated = needsFocus(k) && !focused;
@@ -2386,15 +2399,21 @@ async function renderNetworkMap(){
     });
   }
   /* Called from repaint(): rebuild the active layers when the scope changes. */
-  let lastScope = '', rebuildTimer = 0;
+  let lastScope = '', lastGKey = '', rebuildTimer = 0;
   function syncLayers(){
     const scope = layerScope(), key = scope.join('|'), changed = key !== lastScope;
     lastScope = key;
     if(!scope.length) for(const k of ['live', 'stops']) if(st.ly[k]){ st.ly[k] = false; syncLayer(k); }   // no longer eligible
     syncLyButtons();
+    const gKey = st.pills.join('|') + '#' + (filteredNow() ? [...visibleNames()].sort().join(',') : '');
+    if(gKey !== lastGKey){ lastGKey = gKey; if(st.ly.garages) syncLayer('garages'); }
     // Adding several routes in a burst ("25, 88, N38") rebuilds once, so live buses poll once, not once per route added.
     if(changed){ clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => { for(const k of Object.keys(st.ly)) if(st.ly[k] && k !== 'garages') syncLayer(k); }, LY_REBUILD_MS); }
   }
+  document.getElementById('nmGarScope').addEventListener('click', e => {
+    const b = e.target.closest('[data-gs]'); if(!b || b.dataset.gs === st.gScope) return;
+    st.gScope = b.dataset.gs; syncGarScope(); syncLayer('garages');
+  });
   let hintTimer = 0;
   document.getElementById('nmLayers').addEventListener('click', e => {
     const b = e.target.closest('[data-lyr]'); if(!b) return;

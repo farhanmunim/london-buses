@@ -136,6 +136,17 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await addRoutes(page, '25');
   F('one route focused: Live buses and Stops become available', !(await btn(page, 'live')).gated && !(await btn(page, 'stops')).gated);
 
+  /* garages: start on, narrowed to the focused route, with a simple switch to all */
+  await page.waitForTimeout(500);
+  const gCount = () => page.locator('.leaflet-marker-icon:has(span:text-matches("^\\([A-Z]+\\)$"))').count();
+  const gNarrow = await gCount();
+  F(`focused route: Garages shows only its own garage(s) (${gNarrow}) and the switch appears`, gNarrow >= 1 && gNarrow <= 2 && await page.locator('#nmGarScope').isVisible());
+  await page.locator('#nmGarScope [data-gs="all"]').click(); await page.waitForTimeout(400);
+  const gAll = await gCount();
+  F(`"All garages" shows every garage (${gAll})`, gAll > 20 && /garages/.test(await note(page, 'garages')));
+  await page.locator('#nmGarScope [data-gs="route"]').click(); await page.waitForTimeout(400);
+  F('"Selected routes" narrows again', (await gCount()) === gNarrow);
+
   await click(page, 'stops');
   F('Stops shows that route\'s stops', /^\d+ stops?$/.test(await note(page, 'stops')));
 

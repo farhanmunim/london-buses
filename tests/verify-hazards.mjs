@@ -77,8 +77,8 @@ const gar = await page.evaluate(() => ({
 }));
 F('garage toggle shows all garages (' + gar.pins + ' pins, "' + gar.note.slice(0,40) + '")', gar.pins > 60 && /garages in operator colours/.test(gar.note));
 const tags = await page.evaluate(() => [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()));
-F('permanent tags: operating + nearest ("' + tags.join(' | ') + '")',
-  tags.some(t => /Operating from here/.test(t)) && tags.some(t => /Nearest garage · [\d.]+ mi/.test(t)));
+F('permanent tag: only "Operating from here", no nearest-garage marker ("' + tags.join(' | ') + '")',
+  tags.length === 1 && /^Operating from here$/.test(tags[0]));
 const garPop = await page.evaluate(() => {
   const pins = [...document.querySelectorAll('#map .leaflet-marker-icon')];
   const pin = pins.find(x => /\(BN\)|\(NX\)|\(AR\)|\(HT\)/.test(x.textContent)) ?? pins[pins.length-1];
@@ -96,17 +96,6 @@ const off = await page.evaluate(() => ({
   bon: document.getElementById('bridgeBtn')?.classList.contains('on'),
 }));
 F('toggles clear layers + notes', !off.b && !off.i && !off.bon);
-/* route 2: operating garage IS the nearest — no competitor may carry the tag */
-await page.goto('http://127.0.0.1:8905/#/route/2', { waitUntil:'load' }); await page.waitForTimeout(3000);
-await page.evaluate(() => document.getElementById('closestBtn')?.click()); await page.waitForTimeout(1500);
-const own = await page.evaluate(() => ({
-  tags: [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()),
-  note: document.getElementById('garNote')?.textContent ?? '',
-}));
-F('operating==nearest: single combined tag ("' + own.tags.join(' | ') + '")',
-  own.tags.length === 1 && /Operating from here · nearest garage \([\d.]+ mi\)/.test(own.tags[0]));
-F('operating==nearest: note says so ("' + own.note.slice(0,70) + '")', /is also the nearest/.test(own.note));
-
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));
 console.log(`\n${pass}/${pass+fail} hazard checks passed`);
