@@ -2,7 +2,7 @@
 
 The checklist for standing the project up in a new repository, on a new host, under a new domain. Everything below is in the order it needs doing. Nothing here is magic: a public GitHub repository runs the data pipeline on a schedule, Git is the database, and a host serves the files plus two small `/api` endpoints.
 
-How the pieces fit together is explained in `docs.html` (sections 9–12); per-field data notes are in `data.md`.
+How the pieces fit together is explained in `archive/docs/index.html` (sections 9–12); per-field data notes are in `data.md`.
 
 ---
 
@@ -52,12 +52,12 @@ The site is static files from `main`, plus two endpoints. Either host below work
 
 **What any host must do**
 
-- Serve the repository root as the site (`index.html`, `intelligence.html`, `docs.html`, `404.html`, `data/`, `archive/`), following `main`.
+- Serve the repository root as the site (`index.html`, `intelligence.html`, `404.html`, `data/`, `archive/`), following `main`.
 - Apply the headers in `_headers`: HSTS, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Cache-Control: public, max-age=0, must-revalidate` on HTML, JSON, JS and CSS. Revalidation is not optional: there are no fingerprinted filenames, so it is what keeps returning visitors on the current code.
 - Send `Access-Control-Allow-Origin: *` on `/data/api/*` (the faux-API is public by design).
 - Apply the 301s in `_redirects` (`/v2*` → `/`, `/changelog.html` → `/archive/v1/changelog.html`).
 - Serve `/404.html` for unknown paths.
-- Serve clean URLs the way Cloudflare Pages does: `/docs` ⇒ `docs.html` (and redirect `/docs.html` → `/docs`), likewise `/intelligence`. Do **not** add an `/docs → /docs.html` rule on a host that already does this — it loops.
+- Serve clean URLs the way Cloudflare Pages does: `/intelligence` ⇒ `intelligence.html`. Do **not** add an `/docs → /docs.html` rule on a host that already does this — it loops.
 - Run `/api/live/vehicles` and `/api/streetworks` from `functions/api/` with the variables in §2. Both are written for the Cloudflare Pages Functions runtime (`onRequestGet` / `onRequestPost` taking `{ request, env }`, plus `caches.default` and `env.ASSETS` in the live proxy). On any other host they need a thin adapter — the logic itself is plain `fetch` and Web Crypto.
 
 **Option A — Cloudflare Pages (how it runs today)**
@@ -81,11 +81,11 @@ Do these only once the site answers on its final domain.
 
 - **Street Manager open data (optional).** `GET https://<domain>/api/streetworks` until the JSON says `"ready": true` (it checks the token, the repository and does a write self-test). Then register that URL at manage-roadworks.service.gov.uk/open-data-onboarding. DfT's AWS SNS sends a subscription confirmation, which the receiver confirms itself; after that every London permit and activity event is committed to `streetworks-inbox` and folded into `data/api/streetworks-history.json` by the next status run. Without this registration the Street works page simply shows the archive as it was.
 - **CARTO basemap key.** `index.html` (`CARTO_KEY`) and `archive/v1/js/map.js` carry a CARTO client key for the dark-theme and fallback raster tiles. It is public by design but tied to an account and its allowed domains: create your own at carto.com (free tier, 5M tiles/month), allow the new domain, and replace the value in both files. The light theme uses OpenFreeMap, which needs no key.
-- **Analytics.** The pages load two trackers: Google Analytics (`G-…` in `index.html`, `docs.html`, `404.html`, `archive/v1/*`) and a self-hosted Umami script with a per-site `data-website-id`. Add the new domain to the GA property, create a new Umami site for the domain and swap the id — or remove the tags.
+- **Analytics.** The pages load two trackers: Google Analytics (`G-…` in `index.html`, `404.html`, `archive/v1/*`) and a self-hosted Umami script with a per-site `data-website-id`. Add the new domain to the GA property, create a new Umami site for the domain and swap the id — or remove the tags.
 
 ## 5. Domain references to update
 
-Search for the old hostname and replace it in: `README.md` (live-site and docs links), `robots.txt` (comment and `Sitemap:` line), `sitemap.xml` (three `<loc>` entries), and the `archive/v1/` titles if you want the classic app's title to match. `functions/api/live/vehicles.js` derives its upstream User-Agent from the request host, so it needs no edit. `site-banner.js` carries the migration notice: set `ON = false` once the move is done.
+Search for the old hostname and replace it in: `README.md` (live-site and docs links), `robots.txt` (comment and `Sitemap:` line), `sitemap.xml` (`<loc>` entries), and the `archive/v1/` titles if you want the classic app's title to match. `functions/api/live/vehicles.js` derives its upstream User-Agent from the request host, so it needs no edit. `site-banner.js` carries the migration notice: set `ON = false` once the move is done.
 
 ## 6. Local development and tests
 

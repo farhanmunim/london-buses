@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>London Buses</title>
-<meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed straight from TfL and other public sources." />
+<meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed regularly from open public sources." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="canonical" href="https://londonbuses.org/" />
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
@@ -12,7 +12,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="London Buses" />
 <meta property="og:title" content="London Buses — every route, operator and garage" />
-<meta property="og:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open TfL data." />
+<meta property="og:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open data." />
 <meta property="og:url" content="https://londonbuses.org/" />
 <meta property="og:image" content="https://londonbuses.org/og.jpg" />
 <meta property="og:image:width" content="1200" />
@@ -20,7 +20,7 @@
 <meta property="og:image:alt" content="London’s bus network drawn as coloured route lines, with the London Buses name" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="London Buses — every route, operator and garage" />
-<meta name="twitter:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open TfL data." />
+<meta name="twitter:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open data." />
 <meta name="twitter:image" content="https://londonbuses.org/og.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -107,20 +107,13 @@ svg{display:block}
 main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 16px 28px}
 @media(min-width:760px){main{padding-bottom:56px}}
 
-/* Footer — one quiet line (About · Source · disclaimer · credit); wraps on narrow screens and clears the mobile tab bar. */
-.app-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-height:34px;padding:7px 16px;border-top:1px solid var(--bd);background:var(--surf);color:var(--mu);font-size:11px;line-height:1.5}
-.app-footer a{color:inherit;border-radius:3px}
-.app-footer a:hover{color:var(--tx)}
-.app-footer a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.af-sep{flex:none;width:1px;height:12px;background:var(--bd2)}
-.af-spacer{flex:1 1 0;min-width:0}
-.af-credit a{color:var(--tx);font-weight:600}
+.app-footer{display:flex;align-items:center;justify-content:center;min-height:34px;padding:7px 16px;border-top:1px solid var(--bd);background:var(--surf);color:var(--mu);font-size:11px;line-height:1.5;text-align:center}
+@media(max-width:759px){.app-footer{margin-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .legendrow a,.card p a,.note a{text-decoration:underline}
-.app-footer a,.rchip,.plate{min-height:24px}
+.rchip,.plate{min-height:24px}
 .rchip{display:inline-flex;align-items:center}
 .net-chip{display:none!important}@media(min-width:1000px){.net-chip:not([hidden]){display:inline-flex!important}}
-@media(max-width:759px){.app-footer{margin-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}.af-spacer,.af-sep--credit,.af-opt{display:none}.af-credit{order:1;margin-left:auto}.af-meta{order:2;flex:1 0 100%}}
 
 /* mobile bottom tabs */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb, var(--surf) 94%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
@@ -370,6 +363,12 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 /* leaflet touches */
 .leaflet-container{font-family:var(--sans)}
 .lb-bus{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.lb-dot{position:relative;width:28px;height:28px;display:grid;place-items:center}
+.lb-dot::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#2a78d6;opacity:.3;animation:lbHalo 1.8s ease-out infinite}
+.lb-dot i{position:relative;width:17px;height:17px;border-radius:50%;background:#101828;border:2px solid #fff;display:grid;place-items:center}
+.lb-dot svg{width:11px;height:11px;display:block}
+@keyframes lbHalo{from{transform:scale(.7);opacity:.35}to{transform:scale(1.7);opacity:0}}
+@media(prefers-reduced-motion:reduce){.lb-dot::before{animation:none;opacity:.25}}
 .leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 4px 18px rgba(28,25,23,.18)}
 .leaflet-popup-content{font-family:var(--sans);font-size:12.5px;margin:10px 13px}
 .leaflet-popup-content b{font-size:13px}
@@ -426,16 +425,9 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 <div class="shell">
 <main id="main"></main>
 
-<footer class="app-footer" id="appFooter">
-  <a href="#/about">About</a>
-  <span class="af-sep" aria-hidden="true"></span>
-  <a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">Source<span class="sr-only"> (opens in a new tab)</span></a>
-  <span class="af-spacer"></span>
-  <span class="af-meta">Not affiliated with Transport for London<span class="af-opt"> or any bus operator</span> · Powered by TfL Open Data</span>
-  <span class="af-sep af-sep--credit" aria-hidden="true"></span>
-  <span class="af-credit">Built by <a href="https://farhan.app" target="_blank" rel="noopener">Farhan<span class="sr-only"> (opens in a new tab)</span></a></span>
-</footer>
+<footer class="app-footer" id="appFooter">Not affiliated with Transport for London or any bus operator</footer>
 </div>
+
 
 <nav class="tabbar" aria-label="Primary">
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
@@ -746,7 +738,7 @@ function incidentGrave(near){
       .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px;color:${sv.c === '#111827' ? 'var(--tx)' : sv.c}">${sv.label} collision</b>
         <div style="color:var(--tx2);margin:1px 0 7px">${esc(fmtDate(a.date) ?? a.date ?? '')}${a.day ? ` (${esc(a.day)})` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}</div>
         ${arow('Casualties', a.casualties)}${arow('Vehicles', a.vehicles)}${arow('Road type', a.roadType ? esc(a.roadType) : null)}${arow('Speed limit', a.speedLimit ? esc(a.speedLimit) : null)}${arow('Junction', a.junction ? esc(a.junction) : null)}${arow('Light', a.light ? esc(a.light) : null)}${arow('Weather', a.weather ? esc(a.weather) : null)}${arow('Surface', a.roadSurface ? esc(a.roadSurface) : null)}
-        <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT STATS19 · bus/coach-involved</div></div>`)
+        <div style="font-size:10px;color:var(--mu);margin-top:7px">Bus/coach-involved</div></div>`)
       .addTo(group);
   }
   return group;
@@ -781,7 +773,7 @@ function streetworksLayer(near){
       .bindPopup(() => `<div style="min-width:200px"><b style="font-size:13px">${esc(title(l.street_name ?? '') || 'Street work')}</b>
         <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${l.activity_name ? ' · ' + esc(l.activity_name) : ''}</div>
         ${srow('Promoter', l.promoter_organisation ? esc(title(l.promoter_organisation)) : null)}${srow('Authority', esc(e.ha ?? ''))}${srow('Traffic', l.traffic_management_type ? esc(l.traffic_management_type) : null)}${srow('Status', l.work_status ? esc(l.work_status) : null)}${srow('Window', `${fmtDate(start) ?? '—'} → ${fmtDate(end) ?? '—'}`)}
-        <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT Street Manager · ${esc(e.ref)}</div></div>`)
+        <div style="font-size:10px;color:var(--mu);margin-top:7px">${esc(e.ref)}</div></div>`)
       .addTo(layer);
   }
   return layer;
@@ -801,7 +793,7 @@ function trafficOrdersLayer(items){
     const popup = () => `<div style="min-width:210px"><b style="font-size:13px">${esc(o.troName ?? 'Traffic regulation order')}</b>
       <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${p.description ? ' · ' + esc(p.description) : ''}</div>
       ${trow('Regulations', esc((p.regulationTypes ?? []).map(troPretty).join(', ') || '—'))}${trow('Authority', esc(title(o.traName ?? '') || o.tra || '—'))}${trow('Window', `${fmtDate(p.start) ?? '—'} → ${fmtDate(p.end) ?? '—'}`)}${trow('Action', p.actionType ? esc(p.actionType) : null)}
-      <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT D-TRO · statutory order</div></div>`;
+      <div style="font-size:10px;color:var(--mu);margin-top:7px">Statutory order</div></div>`;
     if(pl.type === 'diversionRoute'){
       if(pl.coords.length > 1)
         L.polyline(pl.coords, { color:'#16a34a', weight: 4, opacity: .8, dashArray: '7 6' })
@@ -819,16 +811,17 @@ function trafficOrdersLayer(items){
 }
 const troItems = orders => orders.flatMap(o => (o.provisions ?? []).flatMap(p => (p.places ?? []).map(pl => ({ o, p, pl }))));
 
-/* Live bus arrows (or dots when there is no bearing); colour by direction unless the caller supplies its own. */
-const directionColour = v => String(v.direction) === '2' ? '#06b6d4' : '#f97316';
-function busesLayer(rows, reg, colorOf = directionColour){
+/* Live bus marker, as on the Intelligence map: dark dot with a white ring, a white chevron pointing along the
+   bearing and a soft pulsing halo. The dark fill keeps it distinct from every route-line colour. */
+function busIcon(bearing){
+  const arrow = Number.isFinite(bearing)
+    ? `<svg viewBox="0 0 24 24" style="transform:rotate(${bearing - 90}deg)"><path d="M9 6l7 6-7 6" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+  return L.divIcon({ className:'lb-bus', iconSize:[28,28], iconAnchor:[14,14], html:`<div class="lb-dot"><i>${arrow}</i></div>` });
+}
+function busesLayer(rows, reg){
   const layer = L.layerGroup();
   for(const v of rows){
-    const col = colorOf(v);
-    const icon = L.divIcon({ className:'lb-bus', iconSize:[20,20], iconAnchor:[10,10],
-      html: Number.isFinite(v.bearing)
-        ? `<div style="transform:rotate(${v.bearing}deg)"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
-        : `<div style="width:12px;height:12px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
+    const icon = busIcon(v.bearing);
     const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
     const bits = [rec?.make ? title(rec.make) : null, rec?.body ?? null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
     L.marker([v.lat, v.lng], { icon })
@@ -840,6 +833,7 @@ function busesLayer(rows, reg, colorOf = directionColour){
 
 /* Layer buttons for the network map — the same icons as the route view's. */
 const LAYER_UI = [
+  { k:'garages', label:'Garages', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>` },
   { k:'stops', label:'Stops', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>` },
   { k:'live', label:'Live buses', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>` },
   { k:'bridges', label:'Low bridges', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg>` },
@@ -1047,100 +1041,7 @@ function pickStatus(name, statuses){
   return { status:pick.statusSeverityDescription ?? null, reason:pick.reason ?? null, severity:pick.statusSeverity ?? null };
 }
 
-/* ── Tooltips — source + refresh cadence on every label ───────────────────
-   One dictionary keyed by visible label text, applied automatically to any
-   rendered view by a MutationObserver, shown on hover (desktop) or tap
-   (touch). */
-const S = {
-  LBR:     'londonbusroutes.net, via this site’s data pipeline|Refreshed nightly',
-  TFL:     'TfL Unified API, via this site’s data pipeline|Refreshed nightly',
-  BUSTO:   'TfL BUSTO demand data (archived snapshot)|TfL publishes annually',
-  FLEET:   'TfL arrivals sweeps + DVLA, via this site’s data pipeline|Sampled ~every 8h plus overnight',
-  DIVN:    'TfL service status, diversion notices|Refreshed ~every 2h through the day',
-  TENDER:  'TfL tender award results, via this site’s data pipeline|Checked hourly through the day',
-  ONS:     'ONS CPI All Items Index (D7BT, 2015=100)|Checked nightly — ONS publishes monthly',
-  CURATED: 'Curated data — published for a few flagship routes only|Refreshed nightly',
-  LIVE:    'TfL live status, straight from TfL|~30 s fresh',
-  ARRIVE:  'TfL Countdown predictions, straight from TfL|~30 s fresh',
-  STOPS:   'TfL served-stop sequence (canonical)|Refreshed nightly',
-  TVR:     'Derived: PVR × 1.13, rounded down|Follows PVR (nightly)',
-  CAPACITY:'Community reference, curated|Updated as allocations change',
-  DERIVED: 'Derived from route data|Refreshed nightly',
-  GPS:     'Live bus GPS (BODS SIRI-VM), via this site’s live proxy|~10 s fresh',
-};
-const LABEL_TIPS = {
-  'PVR': ['Peak Vehicle Requirement — buses needed at peak', S.LBR],
-  'TVR': ['Total Vehicle Requirement — PVR plus spares allowance', S.TVR],
-  'Length': ['One-way route length', S.LBR],
-  'Type': ['Day / night / 24-hour / school', S.TFL],
-  'Power': ['Propulsion, reconciled against the DVLA-enriched live fleet', S.LBR],
-  'Vehicle': ['Rostered vehicle spec', S.LBR],
-  'Rostered vehicle': ['', S.LBR],
-  'Peak load': ['Peak passengers ÷ capacity at the max-demand hour', S.BUSTO],
-  'Busiest at': ['Stop, day and time of the peak load', S.BUSTO],
-  'Weekday': ['Peak load ÷ capacity on weekdays', S.BUSTO],
-  'Saturday': ['Peak load ÷ capacity on Saturdays', S.BUSTO],
-  'Sunday': ['Peak load ÷ capacity on Sundays', S.BUSTO],
-  'Observed in last sample': ['Distinct vehicles seen on the route in the last build — a point-in-time sample, not the full roster', S.FLEET],
-  'Average age': ['Mean vehicle age across the observed sample', S.FLEET],
-  'Makes': ['Chassis makers across the observed sample', S.FLEET],
-  'Operator': ['Operating brand', S.LBR],
-  'Company': ['Legal operating company', S.LBR],
-  'Contract start': ['', S.CURATED],
-  'Contract end': ['', S.CURATED],
-  'Awarded on': ['Award date of this tender', S.TENDER],
-  'Awarded to': ['Winning operator', S.TENDER],
-  'Cost per mile': ['£ per live mile of the award', S.TENDER],
-  'Accepted bid': ['Winning bid, £ per year', S.TENDER],
-  'Bids received': ['How many operators bid', S.TENDER],
-  'Joint bid': ['Whether tendered as part of a joint bid across routes', S.TENDER],
-  'Awarded vehicle': ['Vehicle spec required by the award', S.TENDER],
-  'Contracted miles': ['Annual live miles — accepted bid ÷ cost per mile', S.TENDER],
-  'Tranche': ['LBSL tendering programme batch', S.TENDER],
-  'Registrations': ['Vehicles observed on the route in the last sample — tap a plate for its record', S.FLEET],
-  'Make': ['Chassis maker (DVLA)', S.FLEET],
-  'Body': ['Full vehicle type — chassis + bodywork (bustimes.org)', S.FLEET],
-  'Year': ['Year of manufacture (DVLA)', S.FLEET],
-  'Deck': ['Single or double deck (bustimes.org)', S.FLEET],
-  'Fleet code': ['Operator fleet number (bustimes.org)', S.FLEET],
-  'Observed on': ['Routes this vehicle has been seen working', S.FLEET],
-  'Live location': ['Where this bus is right now, drawn against its route', S.GPS],
-  'Capacity': ['Approximate bus capacity of the garage', S.CAPACITY],
-  'Utilisation': ['PVR ÷ capacity', S.DERIVED],
-  'Routes': ['Routes allocated', S.LBR],
-  'Garages': ['Operating garages', S.LBR],
-  'Zero-emission': ['Share of routes running electric or hydrogen', S.DERIVED],
-  'Night routes': ['N-prefixed routes', S.TFL],
-  'Postcode': ['Garage postcode', S.LBR],
-  'Code': ['LBR garage code', S.LBR],
-  'Next buses': ['Live arrival predictions at this stop', S.ARRIVE],
-  'Routes serving this stop': ['', S.STOPS],
-  'Live buses': ['Real-time bus positions', S.GPS],
-  'Stops': ['Served stops in sequence', S.STOPS],
-  'Good Service': ['Live service status', S.LIVE],
-  'Crowding': ['How full the route gets, from TfL’s BUSTO demand model', S.BUSTO],
-  'Fleet': ['The vehicles observed running the route', S.FLEET],
-  'Current contract': ['The route’s operating contract and most recent tender award', S.TENDER],
-  'Previous award': ['The tender award before the current one', S.TENDER],
-  'Lowest bid': ['The lowest annual bid received in this tender round', S.TENDER],
-  'Highest bid': ['The highest annual bid received in this tender round', S.TENDER],
-};
-function applyTips(root){
-  root.querySelectorAll('.fact .l, .kv .k, .opstat .l, .section-h, .statusline b').forEach(el => {
-    if(el.dataset.tip !== undefined) return;
-    const text = (el.textContent ?? '').trim();
-    let hit = LABEL_TIPS[text];
-    if(!hit){  // section headers carry a suffix, e.g. "Reliability · TfL QSI Q4 25/26"
-      const pk = Object.keys(LABEL_TIPS).find(k => text.startsWith(k + ' ·'));
-      if(pk) hit = LABEL_TIPS[pk];
-    }
-    if(!hit && el.matches('.statusline b')) hit = LABEL_TIPS['Good Service'];
-    if(!hit) return;
-    const [desc, sf] = hit;
-    const [src, fresh] = sf.split('|');
-    el.dataset.tip = `${desc ? desc + '\n' : ''}Source: ${src}\n${fresh}`;
-  });
-}
+/* ── Tooltip box — shown on hover (desktop) or tap (touch) for elements carrying data-tip ── */
 const tipbox = document.createElement('div');
 tipbox.className = 'tipbox';
 document.body.appendChild(tipbox);
@@ -1167,9 +1068,6 @@ document.addEventListener('click', e => {
   else hideTip();
 }, true);
 window.addEventListener('scroll', hideTip, { passive:true });
-new MutationObserver(() => applyTips(document.getElementById('main'))).observe(
-  document.getElementById('main'), { childList:true, subtree:true });
-
 /* ── Router ───────────────────────────────────────────────────────────── */
 const main = document.getElementById('main');
 new MutationObserver(()=>{ main.querySelectorAll('div[style*="overflow-x:auto"]:not([tabindex])').forEach(e=>{ e.tabIndex=0; e.setAttribute('role','region'); e.setAttribute('aria-label','Scrollable table'); }); }).observe(main,{childList:true,subtree:true});
@@ -1560,7 +1458,7 @@ async function buildRouteSections(route, m, tok){
       const v = crRec.byDay?.[d]?.vc;
       return num(v) ? `<div><span class="k">${d}</span><span class="v mono">${Math.round(v*100)}% of capacity</span></div>` : '';
     }).join('');
-    frag.push(`<div class="section"><div class="section-h">Crowding · TfL BUSTO ${esc(cr.year ?? '')}</div>
+    frag.push(`<div class="section"><div class="section-h">Crowding · ${esc(cr.year ?? '')}</div>
       <div class="card"><div class="kv">
         <div><span class="k">Peak load</span><span class="v"><b>${esc(bandLabel)}</b> · <span class="mono">${Math.round(crRec.peakVC*100)}%</span> of capacity</span></div>
         ${crRec.stopname ? `<div><span class="k">Busiest at</span><span class="v">${esc(title(crRec.stopname))}${crRec.time?` · ${esc(String(crRec.time).slice(0,5))}`:''}</span></div>` : ''}
@@ -1825,7 +1723,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
     bridgeLayer.addTo(_map);
     const chip = (c, bc, t) => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px"><span style="display:inline-block">${diamond(c, bc, 8)}</span>${t}</span>`;
     layerNote('bridgeNote', near.length
-      ? `<span>${near.length} height restriction${near.length===1?'':'s'} within 300 m — ${chip('#dc2626','#7f1d1d','&lt; 4.2 m')}${chip('#f59e0b','#92400e','4.2–4.9 m')}${chip('#64748b','#334155','≥ 4.9 m')} · TfL height-restrictions register.</span>`
+      ? `<span>${near.length} height restriction${near.length===1?'':'s'} within 300 m — ${chip('#dc2626','#7f1d1d','&lt; 4.2 m')}${chip('#f59e0b','#92400e','4.2–4.9 m')}${chip('#64748b','#334155','≥ 4.9 m')}</span>`
       : `<span>No recorded height restrictions within 300 m of this route.</span>`);
   });
 
@@ -1843,7 +1741,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
     incLayer.addTo(_map);
     const nf = near.filter(a => a.severity==='fatal').length, ns = near.filter(a => a.severity==='serious').length;
     layerNote('incNote', near.length
-      ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m, ${esc(snap.period ?? '2021–2025')} — shown as a density heatmap; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;border:1px solid #fff;vertical-align:baseline"></span> serious (${ns}) and <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#111827;border:1px solid #fff;vertical-align:baseline"></span> fatal (${nf}) are individual dots — click one for the record. DfT STATS19.</span>`
+      ? `<span>${near.length} bus/coach-involved collision${near.length===1?'':'s'} within 150 m, ${esc(snap.period ?? '2021–2025')} — shown as a density heatmap; <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ea580c;border:1px solid #fff;vertical-align:baseline"></span> serious (${ns}) and <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#111827;border:1px solid #fff;vertical-align:baseline"></span> fatal (${nf}) are individual dots — click one for the record.</span>`
       : `<span>No recorded bus/coach-involved collisions within 150 m of this route, ${esc(snap?.period ?? '2021–2025')}.</span>`);
   });
 
@@ -1865,7 +1763,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
     swLayer.addTo(_map);
     const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
     layerNote('swNote', near.length
-      ? `<span>${near.length} current or upcoming street work${near.length===1?'':'s'} within 150 m — ${dot('#dc2626')} immediate, ${dot('#ea580c')} major, ${dot('#f59e0b')} standard/minor, ${dot('#64748b')} activity. DfT Street Manager (statutory record, live since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`
+      ? `<span>${near.length} current or upcoming street work${near.length===1?'':'s'} within 150 m — ${dot('#dc2626')} immediate, ${dot('#ea580c')} major, ${dot('#f59e0b')} standard/minor, ${dot('#64748b')} activity. <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`
       : `<span>No current street works within 150 m of this route in the archive (accumulating since 18 Sep 2026) — <a href="#/streetworks" style="color:var(--acc)">all street works ›</a></span>`);
   });
 
@@ -1890,8 +1788,8 @@ async function initRouteMap(route, m = {}, tok = navToken){
     const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
     const dash = `<span style="display:inline-block;width:14px;height:0;border-top:2.5px dashed #16a34a;vertical-align:middle"></span>`;
     layerNote('troNote', near.length
-      ? `<span>${near.length} statutory traffic order${near.length===1?'':'s'} near this route — ${dot('#dc2626')} closure, ${dot('#2563eb')} bus lane/stop, ${dot('#ea580c')} turn/one-way, ${dot('#64748b')} other, ${dash} official diversion route. DfT D-TRO (coverage grows as authorities onboard) — <a href="#/tro" style="color:var(--acc)">all traffic orders ›</a></span>`
-      : `<span>No published traffic regulation orders near this route yet — the D-TRO service is onboarding authorities (mandatory for new orders from autumn 2026). <a href="#/tro" style="color:var(--acc)">All traffic orders ›</a></span>`);
+      ? `<span>${near.length} statutory traffic order${near.length===1?'':'s'} near this route — ${dot('#dc2626')} closure, ${dot('#2563eb')} bus lane/stop, ${dot('#ea580c')} turn/one-way, ${dot('#64748b')} other, ${dash} official diversion route. <a href="#/tro" style="color:var(--acc)">all traffic orders ›</a></span>`
+      : `<span>No published traffic regulation orders near this route yet — coverage grows as authorities publish their orders. <a href="#/tro" style="color:var(--acc)">All traffic orders ›</a></span>`);
   });
 
   // Say why there is no garage pin instead of leaving a silent gap.
@@ -2015,8 +1913,6 @@ async function renderNetworkMap(){
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
             Filters<span id="nmFBadge" class="nm-badge" hidden></span>
           </button>
-          <button class="livebtn ${netmapState.garages?'on':''}" id="nmGarages" style="margin:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10 12 4l9 6"/><path d="M5 9v11h14V9"/></svg>Garages</button>
-          <button class="livebtn" id="nmGaragesAll" style="margin:0" hidden>All</button>
           <div class="nm-colour">
             <span class="nm-lbl">Colour by</span>
             <div class="seg">
@@ -2157,71 +2053,6 @@ async function renderNetworkMap(){
     terminiLayer.addTo(_map);
   }
 
-  let garageLayer = null;
-  /* Garage pins track the same state as the lines: with routes focused you
-     see those routes' garages; with filters on, only garages that operate a
-     route still on the map; with nothing active, every garage. */
-  function syncGarages(){
-    if(garageLayer){ _map.removeLayer(garageLayer); garageLayer = null; }
-    if(!st.garages) return;
-    const narrowing = st.pills.length || st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size;
-    const vis = new Set();
-    if(narrowing) for(const n of allNames){
-      const up = n.toUpperCase();
-      if(st.pills.length ? st.pills.includes(up) : passes(n)) vis.add(up);
-    }
-    // "All" escape hatch whenever ANYTHING is narrowing the pins — focused
-    // routes or panel filters alike. On, the non-matching garages come back
-    // as smaller context pins so the matching ones keep the stage.
-    const allBtn = document.getElementById('nmGaragesAll');
-    if(allBtn){
-      allBtn.hidden = !(st.garages && narrowing);
-      allBtn.classList.toggle('on', st.garagesAll);
-    }
-    garageLayer = L.layerGroup();
-    for(const g of garages ?? []){
-      if(!garageLocOk(g)) continue;
-      // Focused routes: trust route-meta's garage (authoritative, matches the
-      // card) and only fall back to the garage's own route list when meta has
-      // no garage — the garage lists can carry stale claims (e.g. LI × 86).
-      const belongs = p => {
-        const codes = String(meta?.[p]?.garage ?? '').split(/[^A-Za-z]+/).filter(Boolean).map(c => c.toUpperCase());
-        return codes.length ? codes.includes(String(g.code).toUpperCase())
-                            : (g.routes ?? []).some(r => String(r).toUpperCase() === p);
-      };
-      if(st.pills.length){
-        const tints = [...new Set(st.pills.filter(belongs).map(garBase))];
-        if(!tints.length && st.garagesAll){
-          // Context pin: every other garage, operator-coloured but smaller,
-          // so the focused routes' tinted home garages keep the stage.
-          L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 27) })
-            .bindPopup(() => garagePopupHtml(g, meta))
-            .addTo(garageLayer);
-          continue;
-        }
-        if(!tints.length) continue;
-        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints) })
-          .bindPopup(() => garagePopupHtml(g, meta))
-          .addTo(garageLayer);
-        continue;
-      }
-      if(narrowing && !(g.routes ?? []).some(r => vis.has(String(r).toUpperCase()))){
-        if(!st.garagesAll) continue;
-        // Context pin: garage outside the current filter, smaller so the
-        // matching garages keep the stage.
-        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 27) })
-          .bindPopup(() => garagePopupHtml(g, meta))
-          .addTo(garageLayer);
-        continue;
-      }
-      const tints = null;
-      L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34, tints?.length ? tints : null) })
-        .bindPopup(() => garagePopupHtml(g, meta))
-        .addTo(garageLayer);
-    }
-    garageLayer.addTo(_map);
-  }
-  syncGarages();
 
   /* ── repaint: per-layer visibility, style, tooltip + hover rules ──
      Filtered-out routes are REMOVED from the map (no ghost hovers or
@@ -2258,7 +2089,6 @@ async function renderNetworkMap(){
       : (filtered ? `${vis.size} of ${allNames.size} routes` : `${allNames.size} routes`);
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
-    syncGarages();
     syncTermini();
     syncLegend();
     syncLayers();
@@ -2357,14 +2187,14 @@ async function renderNetworkMap(){
        so the map stays readable. */
   const LY_MAX = 3, LY_REBUILD_MS = 250;
   const LY_LABEL = Object.fromEntries(LAYER_UI.map(l => [l.k, l.label]));
-  const LY_NAME = { stops:'stops', live:'live buses', bridges:'low bridges', inc:'collisions', sw:'street works', tro:'traffic orders' };
+  const LY_NAME = { garages:'garages', stops:'stops', live:'live buses', bridges:'low bridges', inc:'collisions', sw:'street works', tro:'traffic orders' };
   const LY_MIN_ZOOM = { bridges:12, inc:13, sw:14, tro:14 };
   const needsFocus = k => k === 'live' || k === 'stops';
   const fmtN = n => n.toLocaleString('en-GB');
   const plural = (n, one, many = one + 's') => `${fmtN(n)} ${n === 1 ? one : many}`;
   const dot = c => `<span class="nm-dot" style="background:${c}"></span>`;
   const chip = (swatch, text) => `<span class="nm-chip">${swatch}${text}</span>`;
-  st.ly = { stops:false, live:false, bridges:false, inc:false, sw:false, tro:false };
+  st.ly = { garages:true, stops:false, live:false, bridges:false, inc:false, sw:false, tro:false };
 
   const filteredNow = () => !!(st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size);
   const visibleNames = () => { const v = new Set(); for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) v.add(n); return v; };
@@ -2426,6 +2256,20 @@ async function renderNetworkMap(){
       return { remove: () => _map.removeLayer(group) };
     },
 
+    /* Every garage in its operator's colour; the popup carries the numbers, so no distance or "operating from here" tags. */
+    async garages(){
+      const group = L.layerGroup();
+      for(const g of garages ?? []){
+        if(!garageLocOk(g)) continue;
+        L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 30) })
+          .bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}`, { direction:'top', offset:[0,-14] })
+          .bindPopup(() => garagePopupHtml(g, meta))
+          .addTo(group);
+      }
+      group.addTo(_map);
+      return { remove: () => _map.removeLayer(group) };
+    },
+
     async live(scope, alive){
       let layer = null, count = 0, nextIn = 15;
       const text = () => `<b>${count ? plural(count, 'live bus', 'live buses') : 'No buses tracked right now'}</b>${scope.length > 1 ? ' on ' + scope.join(', ') : ''} · ${nextIn > 0 ? `next update in ${nextIn} s` : 'updating…'}`;
@@ -2437,7 +2281,7 @@ async function renderNetworkMap(){
         if(raws.every(r => !r) && layer){ show('<b>Live buses</b> — reconnecting…'); return; }   // keep the last positions
         const rows = raws.flatMap((raw, i) => (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng)).map(v => ({ ...v, _route:scope[i] })));
         if(layer) _map.removeLayer(layer);
-        layer = busesLayer(rows, reg, v => focusColor(v._route)).addTo(_map);
+        layer = busesLayer(rows, reg).addTo(_map);
         count = rows.length; show(text());
       };
       await poll();
@@ -2549,7 +2393,7 @@ async function renderNetworkMap(){
     if(!scope.length) for(const k of ['live', 'stops']) if(st.ly[k]){ st.ly[k] = false; syncLayer(k); }   // no longer eligible
     syncLyButtons();
     // Adding several routes in a burst ("25, 88, N38") rebuilds once, so live buses poll once, not once per route added.
-    if(changed){ clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => { for(const k of Object.keys(st.ly)) if(st.ly[k]) syncLayer(k); }, LY_REBUILD_MS); }
+    if(changed){ clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => { for(const k of Object.keys(st.ly)) if(st.ly[k] && k !== 'garages') syncLayer(k); }, LY_REBUILD_MS); }
   }
   let hintTimer = 0;
   document.getElementById('nmLayers').addEventListener('click', e => {
@@ -2565,6 +2409,7 @@ async function renderNetworkMap(){
 
   syncPop();
   syncFocus(st.pills.length > 0);
+  syncLayer('garages');
 
   /* ── search: typeahead — nothing is added until the user picks ── */
   const nmq = document.getElementById('nmq');
@@ -2652,15 +2497,6 @@ async function renderNetworkMap(){
     document.querySelectorAll('.nm-tools .seg button').forEach(x => x.classList.toggle('on', x === b));
     repaint();
   });
-  document.getElementById('nmGarages').addEventListener('click', e => {
-    st.garages = !st.garages;
-    e.currentTarget.classList.toggle('on', st.garages);
-    syncGarages();
-  });
-  document.getElementById('nmGaragesAll').addEventListener('click', () => {
-    st.garagesAll = !st.garagesAll;
-    syncGarages();
-  });
   // Export EVERY route's full record — deliberately ignores the active
   // search pills and filters (the CSV is the whole network, always).
   document.getElementById('nmExport').addEventListener('click', () => {
@@ -2676,7 +2512,6 @@ async function renderNetworkMap(){
   });
   document.getElementById('nmReset').addEventListener('click', () => {
     st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();
-    st.garagesAll = false;
     nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);
     _map.setView([51.505,-0.118], 11);
@@ -2906,7 +2741,7 @@ const fmtDist = m => m < 950 ? `${Math.round(m/10)*10} m` : `${(m/1000).toFixed(
 async function renderStops(){
   const tok = navToken;
   main.innerHTML = `
-    <h1 class="h1">Bus stops</h1><div class="sub">Find any stop and see live arrival times, straight from TfL Countdown.</div>
+    <h1 class="h1">Bus stops</h1><div class="sub">Find any stop and see live arrival times.</div>
     <div class="searchwrap">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
@@ -3019,7 +2854,7 @@ async function renderStopDetail(id){
       <div class="card"><div class="chiprow">${[...s.lines].sort(cmpRoute).map(l => `<a class="rchip" href="#/route/${encodeURIComponent(l)}">${esc(l)}</a>`).join('')}</div></div></div>` : ''}
     <div class="section"><div class="section-h">Next buses</div>
       <div class="card"><div class="kv" id="arrBoard"><div class="kv-empty">Loading arrivals…</div></div></div>
-      <div class="legendrow" style="margin-top:7px"><span>Predictions by TfL Countdown, straight from TfL. Times count down live and re-sync every 30 s.</span></div>
+      <div class="legendrow" style="margin-top:7px"><span>Predictions count down live and re-sync every 30 s.</span></div>
     </div>`;
 
   /* Live board: predictions carry an absolute due time, so the display
@@ -3210,11 +3045,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = navToken){
 
   let busMarker = null;
   function drawBus(b){
-    const col = String(b.direction) === '2' ? '#06b6d4' : '#f97316';
-    const icon = L.divIcon({ className:'lb-bus', iconSize:[22,22], iconAnchor:[11,11],
-      html: Number.isFinite(b.bearing)
-        ? `<div style="transform:rotate(${b.bearing}deg)"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
-        : `<div style="width:13px;height:13px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
+    const icon = busIcon(b.bearing);
     if(busMarker){ busMarker.setLatLng([b.lat, b.lng]); busMarker.setIcon(icon); }
     else busMarker = L.marker([b.lat, b.lng], { icon })
       .bindPopup(`${plate(R, false)}<br>${esc(b.destination ? 'to ' + title(b.destination) : '')}`)
@@ -3366,7 +3197,7 @@ async function renderTenders(tab){
 
   main.innerHTML = `<div class="wrap">
     <div id="dhead"><h1 style="margin:2px 0 4px">Tender</h1>
-      <div style="color:var(--tx2);font-size:13.5px">Both halves of TfL's tendering: published <b>awards</b> (${all.length.toLocaleString('en-GB')} results, ${esc(years[years.length-1])}–${esc(years[0])}) and the forward <b>programme</b> of routes coming up for tender. Filter, sort, and export either.</div></div>
+      <div style="color:var(--tx2);font-size:13.5px">Both halves of London bus tendering: published <b>awards</b> (${all.length.toLocaleString('en-GB')} results, ${esc(years[years.length-1])}–${esc(years[0])}) and the forward <b>programme</b> of routes coming up for tender. Filter, sort, and export either.</div></div>
     <div style="display:flex;gap:6px;margin-top:14px" role="tablist" aria-label="Tender tables">
       <button class="livebtn tabpill" id="tabA" role="tab" aria-selected="true">Awards · ${all.length.toLocaleString('en-GB')}</button>
       <button class="livebtn tabpill" id="tabP" role="tab" aria-selected="false">Programme</button>
@@ -3389,7 +3220,7 @@ async function renderTenders(tab){
           <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="prevop" style="cursor:pointer" title="The operator of the route's previous award — blank for a route's first award">Previous operator</th><th data-sort="op" style="cursor:pointer" title="The operator this award went to. Highlighted when it differs from the previous operator">New operator</th>
           <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
           <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th>
-          <th class="num" data-sort="miles" style="cursor:pointer" title="Contracted annual mileage — from the TfL result page, or accepted bid ÷ £/mile when it omits one">Miles/yr</th>
+          <th class="num" data-sort="miles" style="cursor:pointer" title="Contracted annual mileage — from the result page, or accepted bid ÷ £/mile when it omits one">Miles/yr</th>
           <th data-sort="start" style="cursor:pointer">Start</th><th>End</th><th class="num" data-sort="term" style="cursor:pointer">Term</th>
           <th class="num" data-sort="tranche" style="cursor:pointer">Tranche</th>
           <th>Vehicle</th><th>Joint with</th><th>Source</th>
@@ -3401,7 +3232,7 @@ async function renderTenders(tab){
         <span id="tPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="tNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Sources: TfL tender results (bids, operators, vehicle notes — checked hourly through the day, append-only) joined with the LBSL tendering programmes (contract start dates, tranches, extension options; 2017/18 onward) and londonbusroutes.net (current contract ends). Contract end = the next contract’s observed start; term = end − start; miles/yr = TfL’s contracted annual mileage, or accepted bid ÷ £/mile when the result page omits it. Nominal £ as awarded. The TfL link on each row opens that award’s original result page.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>Bids, operators and vehicle notes are checked hourly through the day (append-only) and joined with the tendering programmes (contract start dates, tranches, extension options; 2017/18 onward). Contract end = the next contract’s observed start; term = end − start; miles/yr = the contracted annual mileage, or accepted bid ÷ £/mile when the result page omits it. Nominal £ as awarded. The link on each row opens that award’s original result page.</span></div>
     </div>
     </div>
     <div id="tabProg" hidden>
@@ -3425,7 +3256,7 @@ async function renderTenders(tab){
         <span id="pPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="pNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: LBSL tendering programme PDFs (one per financial year, republished ~monthly) — the forward half of <a href="https://tfl.gov.uk/forms/13923.aspx" rel="noopener" style="color:var(--acc)" target="_blank">TfL’s tender page</a>. The PDF link on each row opens that programme year’s original document. Routes with a contract start in the future are highlighted; the same flag appears on their route pages.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>The programme is republished roughly monthly, one document per financial year. The PDF link on each row opens that programme year’s original document. Routes with a contract start in the future are highlighted; the same flag appears on their route pages.</span></div>
     </div>
     </div>
   </div>`;
@@ -3525,8 +3356,8 @@ async function renderTenders(tab){
     document.getElementById('tBody').innerHTML = shown.map(a => `<tr>
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
-      <td style="min-width:140px"${a.fromOperatorRaw ? ` title="TfL lists ${esc(a.fromOperatorRaw)}, whose London bus business Stagecoach bought in August 2022"` : ''}>${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
-      <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; TfL result page not yet published.')}">PROV</span>` : ''}</td>
+      <td style="min-width:140px"${a.fromOperatorRaw ? ` title="Listed as ${esc(a.fromOperatorRaw)}, whose London bus business Stagecoach bought in August 2022"` : ''}>${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
+      <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; the official result is not yet published.')}">PROV</span>` : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
@@ -3539,7 +3370,7 @@ async function renderTenders(tab){
       <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
       <td${(a.jb?.partners?.length ?? 0) > 1 ? ' style="min-width:200px"' : ''}>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
-      <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — source page on london-bus-routes.fandom.com" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page on tfl.gov.uk" style="color:var(--acc);white-space:nowrap">TfL ↗</a>` : '—'}</td></tr>`).join('');
+      <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — original page" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page" style="color:var(--acc);white-space:nowrap">Result ↗</a>` : '—'}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tPage').textContent = `Page ${st.page + 1} of ${pages}`;
     document.getElementById('tPrev').disabled = st.page === 0;
@@ -3632,7 +3463,7 @@ async function renderTenders(tab){
         <td class="num" style="text-align:left">${upcoming ? '<b>' : ''}${esc(fmtDate(e.contractStart) ?? '—')}${upcoming ? '</b>' : ''}</td>
         <td>${esc(e.vehicleType ?? '—')}</td>
         <td>${e.twoYearExtension == null ? '—' : (e.twoYearExtension ? 'Yes' : 'No')}</td>
-        <td>${e.sourceUrl && /^https:\/\//.test(e.sourceUrl) ? `<a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener" title="The ${esc(e.programmeYear ?? '')} programme PDF on content.tfl.gov.uk" style="color:var(--acc);white-space:nowrap">PDF ↗</a>` : '—'}</td></tr>`;
+        <td>${e.sourceUrl && /^https:\/\//.test(e.sourceUrl) ? `<a href="${esc(e.sourceUrl)}" target="_blank" rel="noopener" title="The ${esc(e.programmeYear ?? '')} programme PDF" style="color:var(--acc);white-space:nowrap">PDF ↗</a>` : '—'}</td></tr>`;
     }).join('');
     const up = list.filter(e => e.contractStart && e.contractStart >= today).length;
     document.getElementById('pCount').textContent = ` · ${list.length.toLocaleString('en-GB')} entries${up ? ` · ${up} upcoming` : ''}`;
@@ -3696,7 +3527,7 @@ async function renderDiversions(){
   main.innerHTML = `<div class="wrap">
     <div id="dhead"><h1 style="margin:2px 0 4px">Diversions</h1>
       <div style="color:var(--tx2);font-size:13.5px">The full <b>diversion history</b> day by day (${all.length.toLocaleString('en-GB')} entries). Filter, and export as CSV.</div>
-      <div style="color:var(--mu);font-size:12px;margin-top:6px">History accumulated from TfL status snapshots since ${esc(ddMMM(hist.firstObservedAt))} ${esc(String(new Date(hist.firstObservedAt ?? 0).getFullYear() || ''))} (~5-8 snapshots/day). TfL publishes no historical diversion feed. <a href="#/mileage" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">Mileage by period →</a> · <a href="#/streetworks" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">Street works →</a></div></div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">History accumulated from status snapshots since ${esc(ddMMM(hist.firstObservedAt))} ${esc(String(new Date(hist.firstObservedAt ?? 0).getFullYear() || ''))} (~5-8 snapshots/day). No historical diversion feed exists, so it is built up over time. <a href="#/mileage" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">Mileage by period →</a> · <a href="#/streetworks" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">Street works →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="dq" type="search" aria-label="Search diversions by route" placeholder="Search route (e.g. 24)" style="flex:1;min-width:140px;max-width:240px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="dty" aria-label="Filter by diversion type" style="${inputCss}">
@@ -3720,7 +3551,7 @@ async function renderDiversions(){
         <span id="dPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="dNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: TfL Unified API line-status disruptions, accumulated per status refresh (${(hist.snapshotCount ?? 0).toLocaleString('en-GB')} snapshots so far). Stated window = the dates TfL's notice gives; first/last seen = when this site's snapshots actually observed it; days observed = distinct days it appeared (hover for the list). Pick a date to see everything observed that day.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>Accumulated per status refresh (${(hist.snapshotCount ?? 0).toLocaleString('en-GB')} snapshots so far). Stated window = the dates in the notice; first/last seen = when this site's snapshots actually observed it; days observed = distinct days it appeared (hover for the list). Pick a date to see everything observed that day.</span></div>
     </div>
   </div>`;
 
@@ -3777,7 +3608,7 @@ async function renderDiversions(){
 }
 
 /* ════════════════════ STREET WORKS ════════════════════
-   The DfT Street Manager archive: every permitted street work in the 33
+   The Street Manager archive: every permitted street work in the 33
    London highway authorities + TfL, pushed live over SNS to this site's
    receiver and folded into streetworks-history.json every drain. Works
    aren't joined to bus routes yet (coordinates arrive as OSGB grid WKT —
@@ -3789,7 +3620,7 @@ async function renderStreetworks(){
   const sw = await D.streetworks();
   if(gone(tok)) return;
   if(!sw?.entries?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">No street works archived yet — the feed went live on 18 Sep 2026 and fills as DfT events arrive. Try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">No street works archived yet — the feed went live on 18 Sep 2026 and fills as events arrive. Try again shortly.</div></div>`;
     return;
   }
   const PAGE = DIVN_PAGE, inputCss = divnInputCss;
@@ -3832,8 +3663,8 @@ async function renderStreetworks(){
 
   main.innerHTML = `<div class="wrap">
     <div><h1 style="margin:2px 0 4px">Street works</h1>
-      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory street-works record</b> for London — every permit and work event DfT's Street Manager publishes for the 33 London highway authorities + TfL (${rows.length.toLocaleString('en-GB')} works so far). Filter, and export as CSV.</div>
-      <div style="color:var(--mu);font-size:12px;margin-top:6px">Pushed live from DfT Street Manager open data since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet — for roadworks already joined to routes see each route's page, for the legal orders behind closures the <a href="#/tro" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">traffic orders →</a>, and for TfL-notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
+      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory street-works record</b> for London — every permit and work event for the 33 London highway authorities + TfL (${rows.length.toLocaleString('en-GB')} works so far). Filter, and export as CSV.</div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">Updated live since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet — for roadworks already joined to routes see each route's page, for the legal orders behind closures the <a href="#/tro" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">traffic orders →</a>, and for notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="swq" type="search" aria-label="Search street works" placeholder="Search street, ref or promoter" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="swha" aria-label="Filter by highway authority" style="${inputCss}"><option value="">All boroughs</option>${boroughs.map(b => `<option>${esc(b)}</option>`).join('')}</select>
@@ -3855,7 +3686,7 @@ async function renderStreetworks(){
         <span id="swPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="swNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: ${esc(sw.source ?? 'DfT Street Manager open data')} — the same statutory register utilities and boroughs work from, filtered to London's highway authorities. Window = actual dates where reported, otherwise the permit's proposed dates. ⚠ marks streets the authority flags traffic-sensitive. Archive starts 18 Sep 2026 (Street Manager publishes no history to backfill from).</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>The statutory register utilities and boroughs work from, filtered to London's highway authorities. Window = actual dates where reported, otherwise the permit's proposed dates. ⚠ marks streets the authority flags traffic-sensitive. Archive starts 18 Sep 2026 (there is no earlier history to backfill from).</span></div>
     </div>
   </div>`;
 
@@ -3918,7 +3749,7 @@ async function renderTro(){
   const snap = await D.dtro();
   if(gone(tok)) return;
   if(!snap?.orders?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">No traffic regulation orders fetched yet — the D-TRO feed refreshes with the status pipeline. Try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">No traffic regulation orders fetched yet — the feed refreshes regularly. Try again shortly.</div></div>`;
     return;
   }
   const PAGE = DIVN_PAGE, inputCss = divnInputCss, routeChip = divnRouteChip;
@@ -3948,7 +3779,7 @@ async function renderTro(){
 
   main.innerHTML = `<div class="wrap">
     <div><h1 style="margin:2px 0 4px">Traffic orders</h1>
-      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory traffic regulation orders</b> shaping how buses move — road closures, bus lanes and gates, banned turns and one-ways from DfT's D-TRO service, filtered to the ${rows.length.toLocaleString('en-GB')} bus-relevant orders in Greater London (of ${(snap.totalOrders ?? rows.length).toLocaleString('en-GB')} fetched). Filter, and export as CSV.</div>
+      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory traffic regulation orders</b> shaping how buses move — road closures, bus lanes and gates, banned turns and one-ways, filtered to the ${rows.length.toLocaleString('en-GB')} bus-relevant orders in Greater London (of ${(snap.totalOrders ?? rows.length).toLocaleString('en-GB')} fetched). Filter, and export as CSV.</div>
       <div style="color:var(--mu);font-size:12px;margin-top:6px">Publication is mandatory for new orders from autumn 2026, so coverage grows as each authority onboards. Orders within 35 m of a route's corridor carry route chips; closures often include the <b style="color:var(--tx2)">official diversion route</b>, drawn on each route's map. See also <a href="#/streetworks" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">street works →</a> and <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversions →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="troq" type="search" aria-label="Search traffic orders" placeholder="Search order, street or authority" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
@@ -3970,7 +3801,7 @@ async function renderTro(){
         <span id="troPage" style="font-size:12.5px;color:var(--tx2)"></span>
         <button class="livebtn" id="troNext">Next ›</button>
       </div>
-      <div class="legendrow" style="margin-top:8px"><span>Source: ${esc(snap.source ?? "DfT D-TRO service")} — the legal orders themselves, not works or observations. Publishing so far: ${esc(authNote) || '—'}. Neighbouring counties appear because the search polygon covers the whole network's extent. ⤳ marks orders that publish an official diversion route.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>The legal orders themselves, not works or observations. Publishing so far: ${esc(authNote) || '—'}. Neighbouring counties appear because the search polygon covers the whole network's extent. ⤳ marks orders that publish an official diversion route.</span></div>
     </div>
   </div>`;
 
@@ -4039,7 +3870,7 @@ async function renderMileage(){
   const all = hist?.entries?.length ? divnSorted(hist) : [];
   main.innerHTML = `<div class="wrap">
     <div id="dhead"><h1 style="margin:2px 0 4px">Mileage</h1>
-      <div style="color:var(--tx2);font-size:13.5px">Explain a route's lost mileage: scheduled-vs-operated <b>mileage per TfL reporting period</b>, joined with the <a href="#/diversions" style="color:var(--acc);font-weight:500">diversion history</a>. Filter, and export as CSV.</div></div>
+      <div style="color:var(--tx2);font-size:13.5px">Explain a route's lost mileage: scheduled-vs-operated <b>mileage per reporting period</b>, joined with the <a href="#/diversions" style="color:var(--acc);font-weight:500">diversion history</a>. Filter, and export as CSV.</div></div>
     <div class="section" style="margin-top:14px"><div class="section-h" style="display:flex;align-items:center;gap:10px">Scheduled vs operated mileage<span id="mCount" style="text-transform:none;letter-spacing:0;color:var(--mu);font-weight:500"></span>
       <button class="livebtn" id="mExport" style="margin-left:auto" title="Downloads every row matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
       <div id="mWrap"><div class="skel" style="height:46px;width:60%"></div></div>
@@ -4097,7 +3928,7 @@ async function renderMileage(){
         <th class="num" title="Route reliability for the period, in the route's own metric">Reliability</th>
         <th class="num" title="Estimate: dailyKm × (20 weekday + 4 Saturday + 4 Sunday) per 28-day period, from the current timetable${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. scheduled km</th>
         <th class="num" title="Est. scheduled km × (100 − operated %) ÷ 100${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. lost km</th>
-        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — TfL doesn't publish period calendar dates"><a href="#/diversions" style="color:inherit;text-decoration:underline dotted" title="Open the full diversion history">Diversions</a></th>
+        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — period calendar dates aren't published"><a href="#/diversions" style="color:inherit;text-decoration:underline dotted" title="Open the full diversion history">Diversions</a></th>
       </tr></thead>
       <tbody id="mBody"></tbody>
     </table></div>
@@ -4106,7 +3937,7 @@ async function renderMileage(){
       <span id="mPage" style="font-size:12.5px;color:var(--tx2)"></span>
       <button class="livebtn" id="mNext">Next ›</button>
     </div>
-    <div class="legendrow" style="margin-top:8px"><span>Sources: ${esc(perf.source ?? 'TfL QSI & mileage per-route reports')}${schedRoutes ? ', joined with timetable-derived scheduled km (est. — 20 weekdays + 4 Saturdays + 4 Sundays per 28-day period)' : ''}. Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days) — TfL publishes no period calendar.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
+    <div class="legendrow" style="margin-top:8px"><span>${schedRoutes ? 'Scheduled km are timetable-derived estimates (20 weekdays + 4 Saturdays + 4 Sundays per 28-day period). ' : ''}Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days) — period calendar dates aren't published.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
   const mst = { q:'', per:newest, op:'', below:false, page:0 };
   const rowFor = (id, per) => {
     const p = perfRoutes[id] ?? {};
@@ -4146,7 +3977,7 @@ async function renderMileage(){
       <td class="num" style="white-space:nowrap">${r.rel != null ? esc(String(r.rel)) + ' <span style="color:var(--mu);font-size:11px">' + esc(r.metric) + '</span>' : '—'}</td>
       <td class="num" title="Estimated from the current timetable — 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>
       <td class="num">${r.lost != null ? r.lost.toLocaleString('en-GB') : '—'}</td>
-      <td class="num">${r.div != null ? `<a href="#/diversions" style="color:inherit" title="Open the full diversion history">${r.div}</a>` : '<span title="period dates not published in source" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
+      <td class="num">${r.div != null ? `<a href="#/diversions" style="color:inherit" title="Open the full diversion history">${r.div}</a>` : '<span title="period dates not published" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
       : `<tr><td colspan="8" style="color:var(--mu);padding:18px 14px">No rows match — route search is exact (e.g. 24), and only routes in TfL's per-route reports appear.</td></tr>`;
     document.getElementById('mCount').textContent = ` · ${list.length.toLocaleString('en-GB')} row${list.length === 1 ? '' : 's'}${mst.q.trim() ? '' : ` · ${mst.per}`}`;
     document.getElementById('mPage').textContent = `Page ${mst.page + 1} of ${pages}`;
@@ -4226,18 +4057,17 @@ async function renderCpi(){
     <td class="num" title="${esc(r.ra ?? '')}">${pct2(r.ra)}</td></tr>`;
   main.innerHTML = `<div class="wrap">
     <div id="dhead"><h1 style="margin:2px 0 4px">CPI-CPA</h1>
-      <div style="color:var(--tx2);font-size:13.5px">ONS CPI All Items Index (D7BT, 2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div>
-      ${fwdP2pTo ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;margin-right:8px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600" title="P2P looks back four months and RA closes at the prior month, so these rates are already fixed by published CPI">✓ Confirmed ahead: P2P to ${esc(monthLabel(fwdP2pTo))}${fwdRaTo ? ` · RA to ${esc(monthLabel(fwdRaTo))}` : ''}</div>` : ''}${d.nextRelease ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Next ONS release: ${esc(d.nextRelease)}</div>` : ''}</div>
+      <div style="color:var(--tx2);font-size:13.5px">CPI All Items Index (2015 = 100) with the contract price adjustment rates derived from it. Rates apply <b>85% of CPI</b>: point-to-point (P2P) takes the year-on-year change from four months earlier; the rolling average (RA) averages the twelve monthly year-on-year changes ending at the previous month.</div>
+      ${fwdP2pTo ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;margin-right:8px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600" title="P2P looks back four months and RA closes at the prior month, so these rates are already fixed by published CPI">✓ Confirmed ahead: P2P to ${esc(monthLabel(fwdP2pTo))}${fwdRaTo ? ` · RA to ${esc(monthLabel(fwdRaTo))}` : ''}</div>` : ''}${d.nextRelease ? `<div style="display:inline-flex;align-items:center;gap:7px;margin-top:10px;background:var(--acc-soft);color:var(--acc);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Next CPI release: ${esc(d.nextRelease)}</div>` : ''}</div>
     <div class="facts facts--wrap" style="margin-top:14px">${facts.map(([l,v,sub]) =>
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(sub)}">${esc(String(v))}</div><div style="font-size:10px;color:var(--mu);margin-top:2px">${esc(sub)}</div></div>`).join('')}</div>
     <div class="section"><div class="section-h" style="display:flex;align-items:center;gap:10px">Monthly series · since ${esc(monthLabel(d.months[0].month))}
-      <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--acc);text-transform:none;letter-spacing:0">ONS series ↗</a>
       <button class="livebtn" id="cpiExport" style="margin-left:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table">
         <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
         <tbody>${fwd.map(trFwd).join('')}${rows.map(tr).join('')}</tbody>
       </table></div>
-      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). YoY here is derived from the published 1-dp index — as the CPA calculation requires — so it can differ from ONS's headline 12-month rate (computed from unrounded indices) by up to 0.1 pp. Source: <a href="https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23" rel="noopener" target="_blank" style="color:var(--acc)">${esc(d.source ?? 'ONS')}</a>${d.releaseDate ? ` · released ${esc(fmtDate(d.releaseDate) ?? '')}` : ''}${d.nextRelease ? ` · next release ${esc(d.nextRelease)}` : ''}.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). YoY here is derived from the published 1-dp index — as the CPA calculation requires — so it can differ from the headline 12-month rate (computed from unrounded indices) by up to 0.1 pp.${d.releaseDate ? ` Released ${esc(fmtDate(d.releaseDate) ?? '')}.` : ''}${d.nextRelease ? ` Next release ${esc(d.nextRelease)}.` : ''}</span></div>
     </div>
   </div>`;
   document.getElementById('cpiExport')?.addEventListener('click', () => {
@@ -4251,34 +4081,20 @@ async function renderCpi(){
 
 async function renderAbout(){
   const tok = navToken;
-  const src = (name, what) => `<tr><td>${name}</td><td class="desc">${what}</td></tr>`;
   main.innerHTML = `<div class="about">
     <h1>About</h1>
     <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
 
     <p>London Buses is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
-    <p>Scheduled pipelines fetch each dataset from its public source, validate it, and publish it as static files — every number on the site can be traced to where it came from. <a href="/docs.html"><b>How it all works — full documentation ›</b></a></p>
 
-    <h2>Where the data comes from</h2>
-    <div class="card"><table class="fresh">
-      ${src('Transport for London', 'Routes, stops, geometry, timetables, service status, diversions, crowding, live arrivals — Powered by TfL Open Data')}
-      ${src('DfT Bus Open Data', 'Live bus positions (GPS)')}
-      ${src('DfT Street Manager', 'Street works — the statutory permit record, pushed live for London’s highway authorities')}
-      ${src('DfT D-TRO service', 'Traffic orders — the statutory regulation orders behind closures, bus lanes, banned turns and official diversion routes')}
-      ${src('DfT STATS19', 'Bus-involved collision records, 2021–2025')}
-      ${src('DVLA', 'Vehicle make, fuel type and age')}
-      ${src('Office for National Statistics', 'The CPI index behind the contract price adjustment rates')}
-      ${src('londonbusroutes.net', 'Operators, garages and PVR (community reference)')}
-      ${src('OpenFreeMap', 'The vector basemap (light theme) — OpenMapTiles styling of OpenStreetMap data; CARTO raster tiles are the dark theme and the fallback')}
-      ${src('london-bus-routes.fandom.com', 'Provisional tender awards, flagged until TfL publishes the official result')}
-    </table></div>
-    <p class="note">Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Public sector information is licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Basemap © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors (ODbL), light map by <a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> / <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a>, dark map and fallback tiles © <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>. The data stays under its sources' own licences.</p>
+    <h2>Attribution</h2>
+    <p class="note" style="margin-top:0">Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors; basemap by OpenFreeMap, OpenMapTiles and CARTO.</p>
 
     <h2>Live right now</h2>
     <div class="card"><table class="fresh">
-      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Straight from TfL Countdown — re-syncs every ~30 s while a stop board is open.</td></tr>
-      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">DfT Bus Open Data GPS — every ~15–20 s while the live layer is on.</td></tr>
-      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Straight from TfL — checked on view, re-polled every 60 s.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Re-syncs every ~30 s while a stop board is open.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">GPS positions — every ~15–20 s while the live layer is on.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Checked on view, re-polled every 60 s.</td></tr>
     </table></div>
     <p class="note">Live feeds are never stored — the browser reads them directly, with the last published snapshot as fallback.</p>
 
@@ -4336,10 +4152,10 @@ async function renderAbout(){
     { name:'Routes, stops & geometry',   keys:['routes','routes-overview','route-stops'], sc:SCHED.nightly },
     { name:'Operators, garages & PVR',   keys:['route-meta','garages'],                   sc:SCHED.nightly },
     { name:'Service status & diversions',keys:['line-status','route-diversions'],         sc:SCHED.status },
-    { name:'Fleet observations (DVLA)',  keys:['fleet','vehicles'],                       sc:SCHED.fleet },
+    { name:'Fleet observations',  keys:['fleet','vehicles'],                       sc:SCHED.fleet },
     { name:'Tender awards',              keys:['tenders'],                                sc:SCHED.tenders },
     { name:'Tendering programme',        keys:['tender-programme'],                       sc:SCHED.tenders },
-    { name:'CPI-CPA (ONS)',              keys:['cpi-cpa'],                                sc:SCHED.nightly },
+    { name:'Contract price adjustment (CPI)',              keys:['cpi-cpa'],                                sc:SCHED.nightly },
   ];
   document.getElementById('freshTable').innerHTML =
     `<tr><th style="text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Dataset</th>

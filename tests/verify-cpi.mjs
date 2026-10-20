@@ -60,7 +60,7 @@ F('confirmed-ahead chip states P2P/RA horizons', await page.evaluate(() =>
 const firstActual = await page.evaluate(n => document.querySelectorAll('#main .cpi-table tbody tr')[n]?.textContent ?? '', fwd.length);
 F('first table row is the latest month with P2P ' + p2pPct + ' / RA ' + raPct,
   firstActual.includes(latest.cpi) && firstActual.includes(p2pPct) && firstActual.includes(raPct));
-F('formulas + ONS source stated', /0\.85/.test(r.legend) && /ONS/.test(r.legend));
+F('formulas stated', /0\.85/.test(r.legend) && /P2P/.test(r.legend));
 const nextRel = data.nextRelease ?? '';
 F('next ONS release: chip + source line, no KPI tile (' + JSON.stringify(nextRel) + ')',
   !nextRel || ((await page.evaluate(nr => document.getElementById('main').textContent.split(nr).length - 1, nextRel)) === 2
@@ -74,7 +74,7 @@ const cpiCsv = readFileSync(await dl.path(), 'utf8');
 F('CPI export downloads CSV (' + dl.suggestedFilename() + ', ' + cpiCsv.split('\r\n').length + ' rows)',
   dl.suggestedFilename() === 'cpi-cpa.csv' && cpiCsv.includes('month') && cpiCsv.includes('status') && cpiCsv.includes('confirmed_forward')
   && cpiCsv.includes(latest.cpi) && cpiCsv.split('\r\n').length === data.months.length + fwd.length + 1);
-F('ONS link present', await page.evaluate(() => !!document.querySelector('#main a[href*="ons.gov.uk"]')));
+F('no data-source link on the page', await page.evaluate(() => !document.querySelector('#main a[href*="ons.gov.uk"]')));
 
 await page.goto('http://127.0.0.1:8906/#/map', { waitUntil:'load' }); await page.waitForTimeout(5000);
 const [dl2] = await Promise.all([

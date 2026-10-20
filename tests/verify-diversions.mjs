@@ -78,8 +78,8 @@ const h = await page.evaluate(() => ({
 F('history table renders rows and count ("' + h.count + '", ' + h.rows + ' rows, ' + h.page + ')',
   h.count.includes(total.toLocaleString('en-GB')) && h.rows === Math.min(20, total)
   && new RegExp('Page 1 of ' + Math.ceil(total / 20)).test(h.page));
-F('snapshot-provenance note shown', /History accumulated from TfL status snapshots since/.test(h.note)
-  && /TfL publishes no historical diversion feed/.test(h.note));
+F('snapshot-provenance note shown', /History accumulated from status snapshots since/.test(h.note)
+  && /No historical diversion feed exists/.test(h.note));
 
 /* type filter narrows to only that badge */
 await page.selectOption('#dty', 'PlannedWork'); await page.waitForTimeout(400);

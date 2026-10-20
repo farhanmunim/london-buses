@@ -79,7 +79,7 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
 {
   const { ctx, page } = await openMap({ width: 1280, height: 800 });
   const labels = await page.$$eval('#nmLayers [data-lyr]', bs => bs.map(b => b.getAttribute('aria-label')));
-  F(`the Layers row has all six layers (${labels.join(', ')})`, labels.length === 6 && ['Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
+  F(`the Layers row has all seven layers (${labels.join(', ')})`, labels.length === 7 && ['Garages', 'Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
   F('with no routes narrowed, Live buses and Stops are gated', (await btn(page, 'live')).gated && (await btn(page, 'stops')).gated);
   F('with no routes narrowed, the other layers are available', !(await btn(page, 'bridges')).gated && !(await btn(page, 'inc')).gated && !(await btn(page, 'sw')).gated && !(await btn(page, 'tro')).gated);
   const fetchedBefore = requests.filter(r => /bridges|accidents|streetworks|dtro|route-stops/.test(r.data ?? '')).length;
@@ -186,7 +186,7 @@ for(const [name, vp] of [['phone', { width: 390, height: 844 }], ['small phone',
     const bs = [...document.querySelectorAll('#nmLayers [data-lyr]')].map(b => { const r = b.getBoundingClientRect(); return { w: r.width, h: r.height, inPanel: r.left >= panel.left - 1 && r.right <= panel.right + 1 }; });
     return { panelInside: panel.left >= -1 && panel.right <= innerWidth + 1 && panel.bottom <= wrap.bottom + 1, scrollsX: document.documentElement.scrollWidth > innerWidth + 1, buttons: bs };
   });
-  F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 6 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
+  F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 7 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
   F(`${name}: the panel fits the screen and nothing scrolls sideways`, m.panelInside && !m.scrollsX);
   await ctx.close();
 }

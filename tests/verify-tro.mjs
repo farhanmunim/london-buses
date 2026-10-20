@@ -88,7 +88,7 @@ F(`route ${joined} map has traffic-orders toggle (enabled)`, await btn.count() =
 await btn.click();
 await page.waitForTimeout(1200);
 const note = (await page.locator('#troNote').textContent().catch(() => '')) ?? '';
-F(`traffic-orders layer reports (${note.trim().slice(0, 60)}…)`, /traffic (regulation )?order/.test(note) && /D-TRO/.test(note));
+F(`traffic-orders layer reports (${note.trim().slice(0, 60)}…)`, /traffic (regulation )?order/.test(note) && /all traffic orders/.test(note) && !/D-TRO/.test(note));
 await btn.click();
 await page.waitForTimeout(400);
 F('traffic-orders layer toggles off (note removed)', await page.locator('#troNote').count() === 0);

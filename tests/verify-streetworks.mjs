@@ -95,7 +95,7 @@ F('route map has street-works toggle (enabled)', await btn.count() === 1 && awai
 await btn.click();
 await page.waitForTimeout(1200);
 const note = (await page.locator('#swNote').textContent().catch(() => '')) ?? '';
-F(`street-works layer reports (${note.trim().slice(0, 60)}…)`, /street work/.test(note) && /Street Manager|archive/.test(note));
+F(`street-works layer reports (${note.trim().slice(0, 60)}…)`, /street work/.test(note) && /all street works/.test(note) && !/Street Manager/.test(note));
 await btn.click();
 await page.waitForTimeout(400);
 F('street-works layer toggles off (note removed)', await page.locator('#swNote').count() === 0);

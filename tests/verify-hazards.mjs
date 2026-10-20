@@ -62,7 +62,7 @@ const inc = await page.evaluate(() => ({
   note: document.getElementById('incNote')?.textContent ?? '',
   heat: !!document.querySelector('#map .leaflet-heatmap-layer'),
 }));
-F('incidents toggle on + note ("' + inc.note.slice(0,80) + '")', inc.on && /collision/.test(inc.note) && /STATS19|No recorded/.test(inc.note));
+F('incidents toggle on + note ("' + inc.note.slice(0,80) + '")', inc.on && /collision/.test(inc.note) && /density heatmap|No recorded/.test(inc.note) && !/STATS19/.test(inc.note));
 F('incident density renders as heatmap canvas', inc.heat);
 F('note explains heat + clickable serious/fatal dots', /heatmap/.test(inc.note) && /serious/.test(inc.note) && /fatal/.test(inc.note));
 
