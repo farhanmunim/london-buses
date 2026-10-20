@@ -9,7 +9,7 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   color-scheme:light;
@@ -21,10 +21,12 @@
   --good:#0ca30c; --good-ink:#006300; --warn:#fab219; --warn-ink:#8a5a00; --crit:#d03b3b;
   --gray-bar:#d0d5dd;
   --zero:#104281; --hybrid:#2a78d6; --diesel:#86b6ef;
-  --radius:16px; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 1px rgba(16,24,40,.03);
+  --radius:12px; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 1px rgba(16,24,40,.03);
   --pop:0 16px 40px rgba(16,24,40,.16),0 2px 8px rgba(16,24,40,.06);
   --rail:72px; --top:64px;
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r-ctl:8px; --r-card:12px; --r-badge:6px; --ease:cubic-bezier(.16,1,.3,1);
+  font-family:Geist,Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:84px}
@@ -108,7 +110,7 @@ main{max-width:1520px;margin:0 auto;padding:28px 32px 80px}
 .kpi .l{font-size:12.5px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .kpi .v{font-size:30px;line-height:1.1;font-weight:650;letter-spacing:-.03em;margin-top:8px}
 .kpi .v small{font-size:14px;font-weight:550;color:var(--ink-3);letter-spacing:0;margin-left:3px}
-.kpi .d{font-size:12.5px;color:var(--ink-2);margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.kpi .d{font-size:12.5px;color:var(--ink-2);margin-top:auto;padding-top:10px;display:flex;flex-wrap:wrap;gap:2px 12px;align-items:center}
 .kpi.hero-k{background:linear-gradient(180deg,#f4f8fe 0,#fff 85%);border-color:var(--accent-line)}
 .kpi.hero-k .v{font-size:52px;letter-spacing:-.04em;margin-top:6px}
 .kpi svg.spark{width:100%;max-width:150px;height:30px;margin-top:6px}
@@ -425,7 +427,46 @@ table.rt td .sub:not(:only-child){margin-left:2px}
   .mini{grid-template-columns:repeat(2,1fr)}
   .kpi.hero-k .v{font-size:44px}
 }
+@media (max-width:520px){.kpi:not(.hero-k) .l{white-space:normal;overflow:visible;text-overflow:clip;align-items:flex-start;line-height:1.3;min-height:2.6em}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* polish — benchmarked on ui-library.farhan.app: Geist for narrative and JetBrains Mono for data labels, a
+   4px rhythm, one radius per role (control 8 · card 12 · badge 6), borders that respond on hover, and a
+   single spring easing on every transition. Kept at the end so it is easy to review or revert as a block. */
+body{letter-spacing:-.011em;font-feature-settings:"ss01","cv11"}
+h1,h2,h3{text-wrap:balance}
+.ch h2{font-size:15px;letter-spacing:-.015em}
+.ch p{letter-spacing:-.005em}
+.hero h1{letter-spacing:-.035em;font-weight:650}
+.kpi .v,.big{letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.kpi.hero-k .v{letter-spacing:-.05em}
+.card{transition:border-color .3s var(--ease),box-shadow .3s var(--ease)}
+.card:hover{border-color:var(--line-2)}
+.btn,.chip,.tag,.seg button,.mrow,.colw,table.rt tr.row td,.menu button,.rail a.nav{transition:background-color .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease),box-shadow .2s var(--ease),transform .2s var(--ease)}
+.btn:active{transform:scale(.97)}
+.btn{border-radius:var(--r-ctl);height:34px}
+.seg{border-radius:var(--r-ctl);padding:3px}.seg button{border-radius:6px}
+.menu{border-radius:var(--r-card)}.menu button{border-radius:var(--r-ctl)}
+.chip{border-radius:var(--r-ctl);height:26px}
+.tag{border-radius:var(--r-badge)}
+.mono{border-radius:12px}
+.mrow{border-radius:var(--r-ctl)}
+.kpi .l,.bk,.db h4,.about h5,.pal .grp,table.dt th,table.rt th,.cb>.sub:first-child{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.kpi .l{gap:7px;min-width:0;padding-right:22px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.05em}
+.bk{color:var(--accent-ink);font-weight:600;padding-top:3px}
+table.rt th,table.dt th{padding-top:10px;padding-bottom:10px}
+table.rt th:hover{color:var(--ink)}
+.kpi .d,.kpi .d *{letter-spacing:-.005em}
+.info{transition:color .2s var(--ease),border-color .2s var(--ease)}
+.info:hover{color:var(--ink);border-color:var(--ink-3)}
+.fresh,.foot .cap,kbd{font-family:var(--mono);letter-spacing:0}
+.fresh{font-size:11.5px}
+h4.mh,.mh{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.fchip,.ly{border-radius:var(--r-ctl);transition:background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
+.fchip{height:30px}
+.sig{border-radius:var(--r-badge)}
+::selection{background:var(--accent-soft)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -457,7 +498,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
     <button class="btn searchbtn" id="searchBtn" aria-label="Search routes and operators"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="stxt">Search routes, garages, operators</span><kbd>⌘K</kbd></button>
     <div class="grow"></div>
     <span class="fresh" id="fresh"></span>
-    <button class="btn abtn" id="aboutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg><span>Concept notes</span></button>
+    <button class="btn abtn" id="aboutBtn" aria-label="Concept notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg><span>Concept notes</span></button>
   </header>
 
   <main id="main">
@@ -472,7 +513,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
     <div class="hint"><span>↑↓ navigate</span><span>↵ open</span><span>esc close</span></div></div>
 </div>
 <div class="modal" id="aboutM" hidden role="dialog" aria-modal="true" aria-label="Concept notes"><div class="about" id="aboutBody"></div></div>
-<div id="tip" role="tooltip"></div>
+<div id="tip" role="tooltip" aria-label="Details"></div>
 
 <script type="module">
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -904,10 +945,10 @@ function renderHero(){
   $('#kpis').innerHTML = `
     <div class="card kpi hero-k s4"><div class="l">Est. annual contract value</div>
       <div class="v">${fGbp(s.value)}</div>
-      <div class="d">${sc.kind === 'all' ? `<span>${s.n} routes</span><span>·</span><span>${OPS.length} operators</span>` : `<span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>·</span><span>${rk(x => x.value)}</span>`}</div></div>
-    ${sc.kind === 'all' ? kind('Peak vehicles', fInt(s.pvr), `<span>${fInt(FN.n)} registered</span><span>·</span><span>${fNum(NET_SPARE(), 2)}× spare</span>`) : kind('Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>·</span><span>${rk(x => x.pvr)}</span>`)}
+      <div class="d">${sc.kind === 'all' ? `<span>${s.n} routes</span><span>${OPS.length} operators</span>` : `<span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>${rk(x => x.value)}</span>`}</div></div>
+    ${sc.kind === 'all' ? kind('Peak vehicles', fInt(s.pvr), `<span>${fInt(FN.n)} registered</span><span>${fNum(NET_SPARE(), 2)}× spare</span>`) : kind('Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>${rk(x => x.pvr)}</span>`)}
     ${kind('Median price', `${Number.isFinite(s.cpm) ? '£' + s.cpm.toFixed(2) : '—'}<small>/mile</small>`, sc.kind === 'all' ? '<span>network median</span>' : `${delta(s.cpm, D.netMedianCpm)}<span>vs network £${fNum(D.netMedianCpm, 2)}</span>`)}
-    ${kind('Fleet age', `${fNum(F.avg, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span>${sc.kind === 'all' ? '' : `<span>·</span><span>network ${fNum(FN.avg, 1)} y</span>`}`, `<div class="agel" data-tip="Registered ${AGE_LIMIT - 2} or more years ago: these reach TfL's ${AGE_LIMIT}-year maximum vehicle age by ${D.YEAR + 2}, or already have.">${warnIcon}${fInt(nearly)} reach the ${AGE_LIMIT}-year limit by ${D.YEAR + 2}</div>`, 'Age is from the fleet register: every registered vehicle, by year of first registration. Zero-emission is the share of peak vehicles.')}
+    ${kind('Fleet age', `${fNum(F.avg, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span>${sc.kind === 'all' ? '' : `<span>network ${fNum(FN.avg, 1)} y</span>`}`, `<div class="agel" data-tip="Registered ${AGE_LIMIT - 2} or more years ago: these reach TfL's ${AGE_LIMIT}-year maximum vehicle age by ${D.YEAR + 2}, or already have.">${warnIcon}${fInt(nearly)} reach the ${AGE_LIMIT}-year limit by ${D.YEAR + 2}</div>`, 'Age is from the fleet register: every registered vehicle, by year of first registration. Zero-emission is the share of peak vehicles.')}
     ${kind('Operated mileage', `${fPct(s.opPct)}`, `${opDelta != null ? `<span class="delta ${opDelta >= 0 ? 'up' : 'dn'}">${opDelta >= 0 ? '▲' : '▼'} ${Math.abs(opDelta).toFixed(2)} pts</span><span>vs prior period</span>` : ''}`, spark(s.opSeries))}`;
   const waD = sc.kind !== 'all' && Number.isFinite(s.waut) && Number.isFinite(N.waut) ? s.waut - N.waut : null;
   $('#kpis2').innerHTML = `
@@ -915,8 +956,8 @@ function renderHero(){
     ${sm('Remaining term', `${fNum(s.waut, 1)}<small>yrs</small>`, `${waD != null ? `<span class="delta ${waD >= 0 ? 'up' : 'nu'}">${waD >= 0 ? '▲' : '▼'} ${Math.abs(waD).toFixed(1)} yrs</span><span>vs network</span>` : ''}`, 'Contract-value-weighted average time left on current contracts. Longer means more secure revenue.')}
     ${sm('Value / vehicle', `${Number.isFinite(s.valuePerPvr) ? '£' + Math.round(s.valuePerPvr / 1000) + 'k' : '—'}<small>/yr</small>`, `${sc.kind === 'all' ? '' : dTxt(pctd(s.valuePerPvr, N.valuePerPvr))}`, 'Annual contract value divided by peak vehicle requirement: what each bus the contract needs is paid per year.')}
     ${sm('Km / vehicle', `${fInt(s.kmPerPvr)}<small>km/day</small>`, `${sc.kind === 'all' ? '' : dTxt(pctd(s.kmPerPvr, N.kmPerPvr))}`, 'Scheduled weekday kilometres per peak vehicle: how hard each bus the contract needs is worked. Higher means better vehicle utilisation.')}
-    ${sm('Single-bid', `${fPct(s.singleBid, 0)}`, `<span>of ${s.bidN} current contracts</span>${sc.kind === 'all' ? '' : `<span>·</span><span>network ${fPct(N.singleBid, 0)}</span>`}`, 'Share of current contracts that attracted only one bid when tendered: low competition.')}
-    ${sm('Ageing out', fInt(nearly), `<span>${fPct(L.known ? nearly / L.known * 100 : null, 0)} of fleet</span><span>·</span><span>${fInt(L.over)} past ${AGE_LIMIT}</span>`, `Vehicles registered ${AGE_LIMIT - 2} or more years ago: they reach TfL's ${AGE_LIMIT}-year maximum vehicle age by ${D.YEAR + 2} (or already have) and need replacing. From the fleet register, by year of first registration.`)}`;
+    ${sm('Single-bid', `${fPct(s.singleBid, 0)}`, `<span>of ${s.bidN} current contracts</span>${sc.kind === 'all' ? '' : `<span>network ${fPct(N.singleBid, 0)}</span>`}`, 'Share of current contracts that attracted only one bid when tendered: low competition.')}
+    ${sm('Ageing out', fInt(nearly), `<span>${fPct(L.known ? nearly / L.known * 100 : null, 0)} of fleet</span><span>${fInt(L.over)} past ${AGE_LIMIT}</span>`, `Vehicles registered ${AGE_LIMIT - 2} or more years ago: they reach TfL's ${AGE_LIMIT}-year maximum vehicle age by ${D.YEAR + 2} (or already have) and need replacing. From the fleet register, by year of first registration.`)}`;
 }
 const NET_SPARE = () => D.NET.spare;
 
@@ -934,7 +975,7 @@ function renderMarket(){
   const max = Math.max(...rows.map(r => r.v)) || 1;
   const body = S.mView === 'table'
     ? `<table class="dt"><thead><tr><th>Operator</th><th class="r">${esc(m.label)}</th><th class="r">Routes</th><th class="r">PVR</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.o)}</td><td class="r">${esc(m.show(r.s))}</td><td class="r">${r.s.n}</td><td class="r">${fInt(r.s.pvr)}</td></tr>`).join('')}</tbody></table>`
-    : `<div class="mrows" role="list">${rows.map(r => `<button class="mrow ${r.o === S.op ? 'sel' : ''}" data-op="${esc(r.o)}" role="listitem" data-tip="${esc(r.o)}\n${esc(m.label)}: ${esc(m.show(r.s))}\nClick to open">
+    : `<div class="mrows">${rows.map(r => `<button class="mrow ${r.o === S.op ? 'sel' : ''}" data-op="${esc(r.o)}" data-tip="${esc(r.o)}\n${esc(m.label)}: ${esc(m.show(r.s))}\nClick to open">
         <span class="nm"><i class="dot" style="background:${opColour(r.o)}"></i><span>${esc(r.o)}</span></span><span class="tr"><i style="width:${(r.v / max * 100).toFixed(1)}%"></i></span><span class="vv">${esc(m.show(r.s))}</span></button>`).join('')}</div>`;
   $('#market').innerHTML = `<div class="ch"><div><h2>Market position</h2><p>${S.op === ALL ? 'The contracted operators compared' : esc(S.op) + ' against the other contracted operators'}${m.desc ? '' : ' (youngest first)'}</p></div>
       <div class="ctl"><div class="seg" role="group" aria-label="View"><button class="${S.mView === 'chart' ? 'on' : ''}" data-mview="chart">Chart</button><button class="${S.mView === 'table' ? 'on' : ''}" data-mview="table">Table</button></div></div>

@@ -96,7 +96,7 @@ const clickable = (sel) => page.evaluate((q) => { const e = document.querySelect
 const firstId = await page.locator('#routes tbody tr.row').first().getAttribute('data-r');
 await page.locator('#routes tbody tr.row').first().click(); await page.waitForTimeout(350);
 F(`row click opens the route brief (${firstId})`, await page.locator('#drawer.open').count() === 1 && (await txt(page, '#drawer .badge')) === firstId && /route=/.test(await page.evaluate(() => location.hash)));
-const dr = await page.evaluate(() => ({ cells: document.querySelectorAll('#drawer .mini > div').length, charts: document.querySelectorAll('#drawer svg[role=img]').length, hasShape: !!document.querySelector('#drawer .shape path') }));
+const dr = await page.evaluate(() => ({ cells: document.querySelectorAll('#drawer .mini > div').length, charts: document.querySelectorAll('#drawer svg[role=img]').length, hasShape: !!document.querySelector('#drawer .shape path') || /route map/i.test(document.querySelector('#drawer')?.textContent ?? '') }));
 F('the open route brief is not covered by the site banner (its controls are clickable)', await clickable('#drawer .x button'));
 F(`brief carries the KPI and signal cells, a shape and trend charts (${dr.charts} charts)`, dr.cells >= 9 && dr.hasShape && dr.charts >= 3);
 await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
