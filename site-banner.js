@@ -9,7 +9,7 @@
   const HREF = '/intelligence';
   const BACK_LABEL = 'Back to londonbuses.org';
   const BACK_HREF = '/';
-  if(!ON || document.getElementById('site-banner')) return;
+  if(!ON || document.getElementById('site-banner') || /[?&]embed=1/.test(location.hash)) return;   // embedded maps carry no chrome
   const onTarget = location.pathname.startsWith(HREF);
   const style = document.createElement('style');
   style.textContent = `

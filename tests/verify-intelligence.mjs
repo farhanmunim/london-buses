@@ -8,7 +8,7 @@ import { extname, join } from 'path';
 const ROOT = new URL('..', import.meta.url).pathname;
 const srv = createServer((req, res) => {
   try{
-    let u = decodeURIComponent(new URL(req.url, 'http://x').pathname); if(u === '/intelligence') u = '/intelligence.html';
+    let u = decodeURIComponent(new URL(req.url, 'http://x').pathname); if(u === '/intelligence') u = '/intelligence.html'; if(u.endsWith('/')) u += 'index.html';
     res.writeHead(200, { 'content-type': { '.html':'text/html', '.js':'text/javascript', '.json':'application/json', '.geojson':'application/json', '.svg':'image/svg+xml' }[extname(u)] ?? 'application/octet-stream' });
     res.end(readFileSync(join(ROOT, u)));
   }catch(e){ res.writeHead(404); res.end('nf'); }
@@ -27,6 +27,14 @@ async function open(w = 1440, h = 900, hash = ''){
   page.on('pageerror', e => errors.push(String(e.message)));
   page.on('request', r => { const u = new URL(r.url()); if(!/^(127\.0\.0\.1|localhost)$/.test(u.hostname)) hosts.add(u.hostname); });
   await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+  await page.route('**://unpkg.com/**', r => {
+    const u = r.request().url(), fx = f => readFileSync(join(ROOT, 'tests/fixtures', f), 'utf8');
+    if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body:fx('leaflet-heat.js') });
+    if(u.endsWith('leaflet.js')) return r.fulfill({ contentType:'text/javascript', body:fx('leaflet.js') });
+    if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body:fx('leaflet.css') });
+    return r.abort();
+  });
+  await page.route(/cartocdn|openstreetmap\.org|googletagmanager|api\.tfl\.gov\.uk|atlas\.farhan\.app|mochi|openfreemap/, r => r.abort());
   await page.goto('http://127.0.0.1:8961/intelligence' + hash, { waitUntil:'load' });
   await page.waitForSelector('#routes tbody tr', { timeout:30000 });
   await page.waitForTimeout(400);
@@ -146,8 +154,17 @@ F('"All London" is the first operator-menu choice', /All London/.test(await txt(
 /* ── full-page maps ─────────────────────────────────────────────────────── */
 await page.click('.acts [data-expand="net"]'); await page.waitForTimeout(600);
 F('the full-page map is not covered by the site banner (Close is clickable)', await clickable('#mfClose'));
-F('the full-page map is a rounded, inset card with floating controls (same design as the route-panel map)', await page.evaluate(() => { const b = document.getElementById('mfBody'), c = document.getElementById('mfClose'), bs = getComputedStyle(b); const br = b.getBoundingClientRect(), cr = c.getBoundingClientRect(); return parseFloat(bs.borderTopLeftRadius) >= 12 && br.left >= 6 && br.top >= 6 && /float/.test(c.className) && cr.top >= br.top && cr.bottom <= br.top + 80; }));
+const fr = page.frameLocator('#mfBody iframe');
+await fr.locator('#nmCount').waitFor({ timeout: 30000 });
+await page.waitForTimeout(800);
+F('the expanded map is the main /map in an embedded frame (all London, no header, banner or tab bar)', await page.evaluate(() => { const f = document.querySelector('#mfBody iframe'); const d = f?.contentDocument; return !!d && /#\/map\?/.test(f.src) && /embed=1/.test(f.src) && d.documentElement.classList.contains('embed') && getComputedStyle(d.querySelector('.topbar')).display === 'none' && !d.getElementById('site-banner'); }));
+F('the embedded map has the main map layers row incl. garages', await fr.locator('#nmLayers [data-lyr]').count() === 7 && /routes/.test(await fr.locator('#nmCount').textContent()));
 F('the network map opens full page and titles itself', await page.evaluate(() => !document.getElementById('mapfs').hidden) && /All London/.test(await txt(page, '#mfTitle')));
+await page.keyboard.press('Escape'); await page.waitForTimeout(200);
+await page.click('#opBtn'); await page.click('#opMenu [data-op="Go-Ahead London"]'); await page.waitForTimeout(300);
+await page.click('.acts [data-expand="net"]'); await fr.locator('#nmCount').waitFor({ timeout: 30000 }); await page.waitForTimeout(800);
+F('an operator\'s expanded map is the main map filtered to its routes', /ids=/.test(await page.locator('#mfBody iframe').getAttribute('src')) && new RegExp(`${exp('Go-Ahead London').n} of 675 routes`).test(await fr.locator('#nmCount').textContent()));
+F('its garages layer shows that operator\'s garages', await fr.locator('[data-lyr="garages"].on').count() === 1);
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 F('Esc closes the full-page map', await page.evaluate(() => document.getElementById('mapfs').hidden));
 await page.evaluate(() => { location.hash = '#op=Stagecoach%20London&route=25'; }); await page.waitForTimeout(700);

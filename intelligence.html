@@ -389,7 +389,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .gq input{flex:1;border:0;outline:0;font:inherit;font-size:13px;background:none;color:var(--ink);min-width:0}
 .expand{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;border:1px solid rgba(16,24,40,.08);background:rgba(255,255,255,.92);box-shadow:0 2px 8px rgba(16,24,40,.12);color:var(--ink)}
 .expand:hover{background:#fff}.expand svg,.foot .expand svg{position:static;inset:auto;width:16px;height:16px;display:block}
-.foot .expand{opacity:0;transition:opacity .15s}.foot:hover .expand,.foot .expand:focus-visible{opacity:1}
+.foot .expand{opacity:1}
 .agel{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:550;color:var(--warn-ink);margin:3px 0 5px}
 .agel svg{width:13px;height:13px;flex:none}
 .ao{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);gap:28px}.ao>div{min-width:0}
@@ -451,7 +451,7 @@ h1,h2,h3{text-wrap:balance}
 .tag{border-radius:var(--r-badge)}
 .mono{border-radius:12px}
 .mrow{border-radius:var(--r-ctl)}
-.kpi .l,.bk,.db h4,.about h5,.pal .grp,table.dt th,table.rt th,.cb>.sub:first-child{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.kpi .l,.bk,.db h4,.about h5,.pal .grp,table.dt th,table.rt th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
 .kpi .l{gap:7px;min-width:0;padding-right:22px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.05em}
 .bk{color:var(--accent-ink);font-weight:600;padding-top:3px}
 table.rt th,table.dt th{padding-top:10px;padding-bottom:10px}
@@ -461,12 +461,53 @@ table.rt th:hover{color:var(--ink)}
 .info:hover{color:var(--ink);border-color:var(--ink-3)}
 .fresh,.foot .cap,kbd{font-family:var(--mono);letter-spacing:0}
 .fresh{font-size:11.5px}
-h4.mh,.mh{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+h4.mh,.mh,.cb>.sub:first-child{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink-3);line-height:1.45}
 .fchip,.ly{border-radius:var(--r-ctl);transition:background-color .2s var(--ease),border-color .2s var(--ease),color .2s var(--ease)}
 .fchip{height:30px}
 .sig{border-radius:var(--r-badge)}
 ::selection{background:var(--accent-soft)}
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important}}
+
+/* polish, round 2 — rhythm and component detail */
+.sec{margin-top:24px}
+.grid{gap:16px}
+.ch{padding:20px 22px 0}.cb{padding:16px 22px 22px}
+.kpi{padding:20px 22px}
+.kpi.sm{padding:16px 18px}
+.kpi.hero-k{background:linear-gradient(180deg,#f3f8ff 0,#fff 80%);}
+.hero .who{padding:26px}
+.hero .acts{margin-top:18px}
+.badge{font-family:var(--mono);font-weight:600;font-size:12px;letter-spacing:-.02em;border-radius:var(--r-ctl);font-variant-numeric:tabular-nums}
+.dh .badge{border-radius:var(--r-ctl)}
+.sig{height:22px;padding:0 8px;background:#fffaf0;border:1px solid #f6e3b8;font-weight:550}
+.tag{border:1px solid transparent}
+.tag.blue{border-color:var(--accent-line)}
+.mini>div{border-radius:10px;padding:12px 14px;transition:border-color .2s var(--ease)}
+.mini>div:hover{border-color:var(--line-2)}
+.mini .l{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase}
+.status-line{border-radius:var(--r-ctl)}
+.dh{padding:20px 24px 16px}
+.kv{padding:10px 0}
+table.rt td{padding:13px 11px}
+table.rt th{background:rgba(252,252,253,.92);backdrop-filter:blur(6px)}
+table.rt tr.row.sel td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+table.rt tr.row:hover td{background:var(--hover)}
+.searchbtn{border-radius:var(--r-ctl);height:34px}
+.searchbtn:hover{background:#eceef2}
+kbd{border-radius:var(--r-badge)}
+.rail a.nav{font-weight:550;letter-spacing:0}
+.rail a.nav.on{box-shadow:inset 0 0 0 1px var(--accent-line)}
+.logo{border-radius:var(--r-card)}
+@media (min-width:861px){.top{padding:0 32px}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;box-shadow:0 0 0 4px rgba(42,120,214,.18)}
+@media (max-width:760px){.ch{padding:18px 18px 0}.cb{padding:14px 18px 20px}.kpi{padding:18px}.kpi.sm{padding:14px 16px}.sec{margin-top:20px}.hero .who{padding:22px}}
+.mapframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--sunken)}
+/* title + Close sit in their own row above the map, so the map's panel is never covered */
+.mapfs .mfbar{position:static;padding:2px 4px 10px;align-items:center;pointer-events:auto}
+.mapfs .mft{display:flex!important;padding:0;background:none;box-shadow:none;border:0;backdrop-filter:none;flex:1;min-width:0}
+.mapfs .mft b{font-size:15px;letter-spacing:-.015em}
+.mapfs .mft .sub{display:block}
+.mapfs #mfClose.float{margin-left:auto;flex:none}
 </style>
 </head>
 <body>
@@ -1519,31 +1560,26 @@ async function netShow(){
 }
 const nlBtn = (k, label, sw, on) => `<button class="ly ${on ? 'on' : ''}" data-nl="${k}" aria-pressed="${on}"><i class="sw ${sw}"></i>${label}</button>`;
 let mapMode = null;
-async function mapOpen(kind){
+/* Expanded maps are the main site's /map, scoped to this operator, garage or route, in an iframe with no
+   header or tab bar — so the layers, garages, live buses and styling are the same everywhere. */
+function mapOpen(kind){
   const fs = $('#mapfs'), body = $('#mfBody'); if(!fs) return;
   const sc = SC(), r = kind === 'route' ? D.byId.get(S.route) : null; if(kind === 'route' && !r) return;
   mapMode = kind; fs.dataset.mode = kind; body.replaceChildren(); fs.hidden = false; document.body.style.overflow = 'hidden';
   $('#mfTitle').textContent = kind === 'route' ? `Route ${r.id}` : sc.name;
   $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${sc.st.n} routes · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
+  const q = new URLSearchParams();
+  if(kind === 'route') q.set('routes', r.id);
+  else if(sc.kind !== 'all'){ q.set('ids', sc.list.map(x => x.id).join(',')); q.set('title', sc.name); }
+  q.set('embed', '1');
+  const f = Object.assign(document.createElement('iframe'), { className:'mapframe', title:kind === 'route' ? `Map of route ${r.id}` : `Map of ${sc.name}`, src:'/#/map?' + q });
+  body.append(f);
   $('#mfClose').focus();
-  if(kind === 'route'){
-    body.append(MH); body.insertAdjacentHTML('beforeend', `${garLegend()}<div class="mapui tl">${dirSeg(r)}</div><div class="lyrow over">${routeChips()}</div>`);
-    MP.map?.cooperativeGestures?.disable?.(); MP.map?.resize(); if(MP.map && MP.fit) MP.map.fitBounds(MP.fit, { padding:{ top:70, bottom:80, left:60, right:60 }, duration:0, maxZoom:15 });
-    for(const k of Object.keys(S.ml)) chipRefresh(k);
-  } else {
-    body.append(NH); NH.dataset.state = 'loading';
-    body.insertAdjacentHTML('beforeend', `<div class="lyrow over">${nlBtn('ghost', sc.kind === 'all' ? 'Other routes' : 'Other operators’ routes', 'gh', S.nl.ghost)}${nlBtn('gars', 'Garages', 'gr', S.nl.gars)}${nlBtn('names', 'Garage names', 'gl', S.nl.names)}${sc.kind === 'all' ? '' : nlBtn('other', 'Other garages', 'gx', S.nl.other)}</div>
-      <div class="mapui tl"><div class="legendcard float"><b><i class="dot" style="background:${sc.colour}"></i>${esc(sc.name)}</b><span>${sc.st.n} routes · ${fInt(sc.st.pvr)} PVR</span>${sc.kind === 'all' ? OPS.map(o => `<span class="lg"><i class="dot" style="background:${opColour(o)}"></i>${esc(shortOp(o))}</span>`).join('') : ''}</div></div>`);
-    try{ NP.map = await netEnsure(); if(mapMode !== 'net') return; NH.dataset.state = 'ready'; NP.map.cooperativeGestures?.disable?.(); await netShow(); }
-    catch(e){ console.warn('Network map unavailable:', e.message); body.replaceChildren(Object.assign(document.createElement('div'), { className:'empty', textContent:'The interactive map needs WebGL and could not start in this browser.' })); }
-  }
 }
 function chipRefresh(k){ $$(`[data-ml="${k}"]`).forEach(c => { c.classList.toggle('on', !!S.ml[k]); c.setAttribute('aria-pressed', String(!!S.ml[k])); }); }
 function mapClose(){
   const fs = $('#mapfs'); if(!fs || fs.hidden) return;
   fs.hidden = true; document.body.style.overflow = '';
-  if(mapMode === 'route'){ MP.map?.cooperativeGestures?.enable?.(); const slot = $('#mapbox'); if(slot){ slot.prepend(MH); setTimeout(() => { MP.map?.resize(); if(MP.fit) MP.map?.fitBounds(MP.fit, { padding:{ top:56, bottom:40, left:44, right:56 }, duration:0, maxZoom:15 }); }, 30); } }
-  else { NP.popup?.remove(); NH.remove(); NP.map?.cooperativeGestures?.enable?.(); }
   $('#mfBody').replaceChildren(); mapMode = null;
 }
 

@@ -34,7 +34,7 @@ const sw = (() => {
 })();
 
 const requests = [];
-async function openMap(vp, { clock = false } = {}){
+async function openMap(vp, { clock = false, hash = '#/map', min = 20 } = {}){
   const ctx = await browser.newContext({ viewport: vp, isMobile: vp.width < 600, hasTouch: vp.width < 600 });
   const page = await ctx.newPage();
   page.errors = []; page.on('pageerror', e => page.errors.push(e.message));
@@ -61,9 +61,9 @@ async function openMap(vp, { clock = false } = {}){
   });
   page.on('request', r => { const u = r.url(); if(/\/data\/api\//.test(u)) requests.push({ data: u.split('/data/api/')[1], t: Date.now() }); });
   if(clock) await page.clock.install();
-  await page.goto('http://127.0.0.1:8965/#/map', { waitUntil: 'load' });
+  await page.goto('http://127.0.0.1:8965/' + hash, { waitUntil: 'load' });
   await page.waitForSelector('#nmLayers [data-lyr]', { timeout: 20000 });
-  await page.waitForFunction(() => document.querySelectorAll('.leaflet-interactive, .leaflet-marker-icon').length > 20, null, { timeout: 25000 });
+  await page.waitForFunction(n => document.querySelectorAll('.leaflet-interactive, .leaflet-marker-icon').length > n, min, { timeout: 25000 });
   return { ctx, page };
 }
 const view = (page, lat, lng, z) => page.evaluate(([la, ln, zz]) => { window.__maps.filter(m => document.body.contains(m.getContainer())).pop().setView([la, ln], zz, { animate: false }); }, [lat, lng, z]);
@@ -205,6 +205,24 @@ for(const [name, vp] of [['phone', { width: 390, height: 844 }], ['small phone',
   });
   F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 7 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
   F(`${name}: the panel fits the screen and nothing scrolls sideways`, m.panelInside && !m.scrollsX);
+  await ctx.close();
+}
+
+/* ── 5 · scoped + embedded (how Intelligence opens the map) ───────────────── */
+{
+  const { ctx, page } = await openMap({ width: 1280, height: 800 }, { hash: '#/map?ids=5,36&title=Test%20scope&embed=1', min: 1 });
+  const m = await page.evaluate(() => ({ cls: document.documentElement.className, hdr: getComputedStyle(document.querySelector('.topbar')).display, tab: getComputedStyle(document.querySelector('.tabbar')).display, banner: !!document.getElementById('site-banner'), count: document.getElementById('nmCount')?.textContent ?? '', scope: document.getElementById('nmScope')?.hidden, docH: document.documentElement.scrollHeight, vh: innerHeight }));
+  F('embed=1 hides the header, tab bar and banner and fills the frame', /embed/.test(m.cls) && m.hdr === 'none' && m.tab === 'none' && !m.banner && m.docH <= m.vh + 1);
+  F('ids= scopes the map to those routes ("2 of 675 routes")', /^2 of \d+ routes$/.test(m.count.trim()));
+  const g = await page.locator('.leaflet-marker-icon').count();
+  F(`the garages layer is on and limited to the scoped routes' garages (${g})`, g >= 1 && g <= 4);
+  F('no data errors', page.errors.length === 0);
+  await ctx.close();
+}
+{
+  const { ctx, page } = await openMap({ width: 1280, height: 800 }, { hash: '#/map?routes=25&embed=1', min: 1 });
+  const f = await page.evaluate(() => document.getElementById('nmCount')?.textContent ?? '');
+  F('routes= focuses a route', /1 route focused/.test(f));
   await ctx.close();
 }
 
