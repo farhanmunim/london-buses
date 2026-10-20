@@ -3217,13 +3217,12 @@ async function renderTenders(tab){
     <div class="section"><div class="section-h" id="tCount"></div>
       <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:1380px">
         <thead><tr>
-          <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="prevop" style="cursor:pointer" title="The operator of the route's previous award — blank for a route's first award">Previous operator</th><th data-sort="op" style="cursor:pointer" title="The operator this award went to. Highlighted when it differs from the previous operator">New operator</th>
+          <th data-sort="date" style="cursor:pointer">Awarded ↓</th><th>Route</th><th data-sort="prevop" style="cursor:pointer" title="The operator of the route's previous award — blank for a route's first award">Previous operator</th><th data-sort="op" style="cursor:pointer" title="The operator this award went to. Highlighted when it differs from the previous operator">New operator</th><th class="num" data-sort="tranche" style="cursor:pointer">Tranche</th><th>Joint with</th>
           <th class="num" data-sort="cpm" style="cursor:pointer">£/mile</th><th class="num" data-sort="acc" style="cursor:pointer">Accepted £/yr</th>
           <th class="num">Lowest</th><th class="num">Highest</th><th class="num" data-sort="bids" style="cursor:pointer">Bids</th>
           <th class="num" data-sort="miles" style="cursor:pointer" title="Contracted annual mileage — from the result page, or accepted bid ÷ £/mile when it omits one">Miles/yr</th>
           <th data-sort="start" style="cursor:pointer">Start</th><th>End</th><th class="num" data-sort="term" style="cursor:pointer">Term</th>
-          <th class="num" data-sort="tranche" style="cursor:pointer">Tranche</th>
-          <th>Vehicle</th><th>Joint with</th><th>Source</th>
+          <th>Vehicle</th><th>Source</th>
         </tr></thead>
         <tbody id="tBody"></tbody>
       </table></div>
@@ -3358,6 +3357,8 @@ async function renderTenders(tab){
       <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
       <td style="min-width:140px"${a.fromOperatorRaw ? ` title="Listed as ${esc(a.fromOperatorRaw)}, whose London bus business Stagecoach bought in August 2022"` : ''}>${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
       <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; the official result is not yet published.')}">PROV</span>` : ''}</td>
+      <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
+      <td${(a.jb?.partners?.length ?? 0) > 1 ? ' style="min-width:200px"' : ''}>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
       <td class="num">${money(a.acceptedBid)}</td>
       <td class="num">${money(a.lowestBid)}</td>
@@ -3367,9 +3368,7 @@ async function renderTenders(tab){
       <td class="num" style="text-align:left">${esc(fmtDate(a.contractStart) ?? '—')}</td>
       <td class="num" style="text-align:left">${esc(fmtDate(a.contractEnd) ?? '—')}</td>
       <td class="num">${Number.isFinite(a.termYears) ? a.termYears + ' yr' + (a.twoYearExtension ? ' <span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2</span>' : '') : (a.twoYearExtension ? '<span title="two-year extension option in the tendering programme" style="color:var(--mu)">+2 opt</span>' : '—')}</td>
-      <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td>${vehCell(a)}</td>
-      <td${(a.jb?.partners?.length ?? 0) > 1 ? ' style="min-width:200px"' : ''}>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
       <td>${a.provisional ? `<a href="https://london-bus-routes.fandom.com/wiki/Tender_Results_${encodeURIComponent((a.awardDate ?? '').slice(0,4))}" target="_blank" rel="noopener" title="Community-reported award — original page" style="color:var(--mu);white-space:nowrap">wiki ↗</a>` : a.btID ? `<a href="https://tfl.gov.uk/forms/13796.aspx?btID=${encodeURIComponent(a.btID)}" target="_blank" rel="noopener" title="This award's original result page" style="color:var(--acc);white-space:nowrap">Result ↗</a>` : '—'}</td></tr>`).join('');
     document.getElementById('tCount').textContent = `${list.length.toLocaleString('en-GB')} award${list.length===1?'':'s'}${list.length !== all.length ? ` (of ${all.length.toLocaleString('en-GB')})` : ''}`;
     document.getElementById('tPage').textContent = `Page ${st.page + 1} of ${pages}`;

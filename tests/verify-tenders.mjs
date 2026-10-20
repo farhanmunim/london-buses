@@ -76,7 +76,7 @@ F('operator filter (' + op.length + ' sampled)', op.length > 0 && op.every(o => 
 
 await page.selectOption('#top', ''); await page.waitForTimeout(300);
 await page.click('th[data-sort="cpm"]'); await page.waitForTimeout(400);
-const cpms = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(5)')].slice(0,5).map(td => td.textContent));
+const cpms = await page.evaluate(() => [...document.querySelectorAll('#tBody tr td:nth-child(7)')].slice(0,5).map(td => td.textContent));
 F('sort by £/mile desc (top: ' + cpms[0] + ')', cpms.every(c => c.startsWith('£')) && parseFloat(cpms[0].slice(1)) >= parseFloat(cpms[1].slice(1)));
 
 const [dl] = await Promise.all([ page.waitForEvent('download', { timeout: 8000 }), page.click('#tExport') ]);
