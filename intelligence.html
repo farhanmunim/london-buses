@@ -508,6 +508,74 @@ kbd{border-radius:var(--r-badge)}
 .mapfs .mft b{font-size:15px;letter-spacing:-.015em}
 .mapfs .mft .sub{display:block}
 .mapfs #mfClose.float{margin-left:auto;flex:none}
+
+/* compare operators · renewal calendar */
+.vh{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}
+.cmpchips{display:flex;flex-wrap:wrap;gap:8px}
+.cmpchips .fchip{display:inline-flex;align-items:center;gap:8px}
+.cmpchips .fchip[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.cmpwrap{position:relative;overflow-x:auto;margin-top:16px;border-top:1px solid var(--line);border-radius:0 0 var(--radius) var(--radius)}
+.cmpwrap:focus-visible{outline-offset:-2px}
+table.cmp{--fc:230px;--cw:150px;width:100%;min-width:calc(var(--fc) + var(--cw) * var(--n));table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px}
+table.cmp thead th:first-child{width:var(--fc)}
+table.cmp th,table.cmp td{padding:11px 18px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;vertical-align:middle}
+table.cmp thead th{background:#fcfcfd;vertical-align:bottom;padding-top:14px;padding-bottom:12px;font-weight:400}
+table.cmp thead th:first-child{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:500;vertical-align:bottom}
+table.cmp th[scope="row"]{text-align:left;font-weight:450;color:var(--ink-2);position:sticky;left:0;z-index:1;background:var(--surface);min-width:210px;border-right:1px solid var(--line)}
+table.cmp thead th:first-child{position:sticky;left:0;z-index:3;border-right:1px solid var(--line);text-align:left}
+table.cmp .oh .ohn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+table.cmp .oh .sub{display:block;margin-top:2px;font-weight:450}
+table.cmp .oh.net .ohn{color:var(--ink-3)}
+table.cmp tr.grp th{background:var(--sunken);text-align:left;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:8px 18px;position:sticky;left:0}
+table.cmp td .cv{display:inline-flex;align-items:center;gap:7px;color:var(--ink)}
+table.cmp td.best .cv{font-weight:650;color:var(--accent-ink)}
+table.cmp td.best .cv::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+table.cmp td .cbar{display:block;height:4px;border-radius:2px;background:var(--sunken);margin:6px 0 0 auto;width:100%;max-width:120px;overflow:hidden}
+table.cmp td .cbar i{display:block;height:100%;border-radius:2px;transition:width .4s var(--ease)}
+table.cmp td.net{background:#fafbfc;color:var(--ink-3)}
+table.cmp td.net .cv{color:var(--ink-3)}
+table.cmp thead th.net{background:#f6f7f9}
+table.cmp tbody tr:last-child th,table.cmp tbody tr:last-child td{border-bottom:0}
+.cmpnote{padding:12px 22px 18px;border-top:1px solid var(--line)}
+.rnstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.rnstats>div{border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.rnstats .l{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.rnstats .v{font-size:22px;font-weight:650;letter-spacing:-.035em;margin-top:4px;font-variant-numeric:tabular-nums}
+.rnstats .v small{font-size:12px;font-weight:550;color:var(--ink-3);letter-spacing:0}
+.rnstats .s{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.cols.rnc{height:150px;margin-top:18px}
+.cols.rnc .colw .n{white-space:nowrap}
+.cols.rnc .colw.empty{cursor:default;opacity:.55}
+.cols.rnc .colw .b{max-width:30px}
+.rnx{margin-top:6px}.rnx span{font-size:10.5px;white-space:nowrap;overflow:hidden;line-height:1.25}.rnx span b{display:block;font-weight:500;font-size:9.5px;color:var(--ink-3)}
+.rnf .fchip{position:relative}
+.rnf{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.rnlist{margin-top:6px}
+.rnq{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:16px 8px 6px;font-size:13px}
+.rnq b{font-weight:650;letter-spacing:-.01em}
+.rnrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:11px 8px;border-radius:0;font:inherit;color:inherit}
+.rnrow:hover{background:var(--hover)}
+.rnrow:focus-visible{outline-offset:-2px}
+.rnrow .rm{flex:1 1 280px;min-width:0;display:flex;align-items:center;gap:12px}
+.rnrow .t{min-width:0;display:flex;flex-direction:column}
+.rnrow .t b{font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rnrow .t .sub{display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rnrow .t .dot{width:8px;height:8px}
+.rnrow .rn{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin-left:auto}
+.rnrow .rn>span{display:flex;flex-direction:column;align-items:flex-end;min-width:70px;font-variant-numeric:tabular-nums}
+.rnrow .rn small{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.rnrow .rn b{font-weight:600}
+.rnrow .rn .rt{align-items:flex-start;min-width:130px}
+.pd{font-style:normal;font-size:11px;font-weight:600;color:var(--ink-3)}
+.pd.hi{color:var(--warn-ink)}.pd.lo{color:var(--accent-ink)}
+.rnrow .tag{white-space:nowrap}
+.more{margin:14px auto 0;display:flex}
+@media (max-width:1100px){.rnrow .rn .rt{min-width:0}}
+@media (max-width:860px){.rnstats{grid-template-columns:repeat(2,minmax(0,1fr))}.rnrow .rn{margin-left:44px;width:calc(100% - 44px);justify-content:flex-start}.rnrow .rn>span{align-items:flex-start;min-width:64px}table.cmp th,table.cmp td{padding:10px 14px}table.cmp{--fc:136px;--cw:116px}table.cmp th[scope="row"]{min-width:0;white-space:normal;line-height:1.3;font-size:12.5px}.cmpnote{padding:12px 18px 18px}}
+@media (max-width:520px){.rnstats .v{font-size:19px}.cols.rnc{height:120px}.cols.rnc .colw .n{display:none}}
+@media (max-width:400px){.top .mlogo{display:none!important}.top{gap:4px!important;padding:0 8px!important}.opsw>.btn{padding:0 7px;gap:5px;font-size:12.5px}.opsw>.btn>span{max-width:54px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.seg{max-width:100%;overflow-x:auto;scrollbar-width:none}.seg::-webkit-scrollbar{display:none}.seg button{white-space:nowrap;flex:none}}
+@media (max-width:340px){#opName,#gName{max-width:46px!important}.top .abtn,.searchbtn{width:36px;padding:0!important;justify-content:center}}
+@media (max-width:400px){#runway .xl span{overflow:hidden;font-size:10px;letter-spacing:-.02em}#runway .xl span:nth-child(even){visibility:hidden}}
 </style>
 </head>
 <body>
@@ -518,7 +586,9 @@ kbd{border-radius:var(--r-badge)}
   <div class="logo" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2"/><circle cx="19" cy="6" r="2"/><path d="M7 18h4a4 4 0 0 0 4-4v-1a4 4 0 0 1 4-4"/></svg></div>
   <a class="nav on" href="#overview" data-sec="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview</a>
   <a class="nav" href="#market" data-sec="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Market</a>
+  <a class="nav" href="#compare" data-sec="compare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v18M16 3v18"/><path d="M3 8h5M3 16h5M16 8h5M16 16h5"/></svg>Compare</a>
   <a class="nav" href="#contracts" data-sec="contracts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>Contracts</a>
+  <a class="nav" href="#renewals" data-sec="renewals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Renewals</a>
   <a class="nav" href="#fleet" data-sec="fleet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="13" rx="2.5"/><path d="M4 11h16M8 21v-4M16 21v-4"/></svg>Fleet</a>
   <a class="nav" href="#routes" data-sec="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="2.2"/><circle cx="18" cy="5" r="2.2"/><path d="M8 19h5a4 4 0 0 0 4-4V9a4 4 0 0 1 0-1.8"/></svg>Routes</a>
   <div class="sp"></div>
@@ -725,6 +795,14 @@ function build(raw){
     r.vSeen = a.length; r.vOld = a.filter(x => x >= AGE_LIMIT - 2).length; r.vOver = a.filter(x => x >= AGE_LIMIT).length;
   }
   const netMedianCpm = median(routes.map(r => r.cpm));
+  // re-tender benchmark: the median £/mile of awards made in the last 24 months, and each route's contracted miles re-priced at it
+  const recent = Object.values(raw.tenders.byId ?? {}).filter(a => a.awardDate >= plusMonths(-24) && a.costPerMile > 0);
+  const bench = { cpm:median(recent.map(a => a.costPerMile)), n:recent.length };
+  for(const r of routes){
+    const a = r.cur;
+    r.milesPA = Number.isFinite(a?.contractedMilesPA) ? a.contractedMilesPA : (a?.acceptedBid > 0 && a?.costPerMile > 0 ? a.acceptedBid / a.costPerMile : null);
+    r.fcValue = r.milesPA && bench.cpm ? r.milesPA * bench.cpm : null;
+  }
   const relPass = r => r.rel != null && r.relStd != null ? (/EWT/.test(r.relMetric) ? r.rel <= r.relStd : r.rel >= r.relStd) : null;
 
   // attention signals — transparent rules, each one a fact the data can state
@@ -867,7 +945,7 @@ function build(raw){
     if(op === ALL) return { kind:'all', key:ALL, name:ALL, op:ALL, st:NET, F:FNET, rec:REC[ALL], depots:DEPOTS[ALL], colour:'#2a78d6', list:NET.list };
     return { kind:'op', key:op, name:op, op, st:ST[op], F:FLEET[op], rec:REC[op], depots:DEPOTS[op], colour:opColour(op), list:ST[op].list };
   };
-  return { routes, byId, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
+  return { routes, byId, bench, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
 }
 
 /* ── geometry: tile-free cartography ─────────────────────────────────────── */
@@ -898,7 +976,7 @@ function glyph(r){
 }
 
 /* ── state ───────────────────────────────────────────────────────────────── */
-const S = { op:ALL, garage:null, real:true, metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
+const S = { cmp:[], cmpEdited:false, rnWin:24, rnFilter:'open', rnQ:null, rnShown:25, op:ALL, garage:null, real:true, metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
             sort:{ k:'pvr', dir:-1 }, shown:30, route:null, dir:'outbound', mapBig:false, ml:{ stops:true, works:true, coll:false, bridges:false, live:false, gar:false }, nl:{ ghost:true, gars:true, names:true, other:false } };
 
 const SC = () => D.scope(S.op, S.garage);
@@ -1049,6 +1127,168 @@ function renderRunway(){
       <div class="ctl"><div class="seg" role="group" aria-label="Measure"><button class="${S.rwMetric === 'routes' ? 'on' : ''}" data-rw="routes">Routes</button><button class="${S.rwMetric === 'pvr' ? 'on' : ''}" data-rw="pvr">PVR</button></div>
       <div class="seg" role="group" aria-label="View"><button class="${S.rwView === 'chart' ? 'on' : ''}" data-rwview="chart">Chart</button><button class="${S.rwView === 'table' ? 'on' : ''}" data-rwview="table">Table</button></div></div></div>
     <div class="cb">${body}</div>`;
+}
+
+/* ── view: compare operators ─────────────────────────────────────────────── */
+const CMP_MAX = 4, CMP_MIN = 2;
+const cmpDefault = () => {
+  const bySize = [...OPS].sort((a, b) => D.ST[b].pvr - D.ST[a].pvr);
+  const first = S.op !== ALL ? [S.op] : [];
+  return [...first, ...bySize.filter(o => !first.includes(o))].slice(0, 3);
+};
+const cmpPick = () => (S.cmpEdited ? S.cmp : cmpDefault()).filter(o => OPS.includes(o));
+const sgn = (v, d = 1) => !Number.isFinite(v) ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+const retention = c => { const d = c.net ? c.rec.retained + c.rec.changed : c.rec.retained + c.rec.lost; return d ? c.rec.retained / d * 100 : null; };
+const CMP_GROUPS = () => [
+  ['Scale', [
+    { k:'routes', l:'Routes', v:c => c.st.n, f:fInt },
+    { k:'pvr', l:'Peak vehicles', v:c => c.st.pvr, f:fInt, tip:'Buses needed at the busiest time (PVR).' },
+    { k:'share', l:'Share of London PVR', v:c => c.st.pvr / D.NET.pvr * 100, f:v => fPct(v, 1) },
+    { k:'gar', l:'Garages', v:c => c.st.garages, f:fInt },
+  ]],
+  ['Money', [
+    { k:'value', l:'Contract value a year', v:c => c.st.value, f:fGbp, tip:'Sum of each route’s current accepted annual bid.' },
+    { k:'vshare', l:'Share of contract value', v:c => c.st.value / D.NET.value * 100, f:v => fPct(v, 1) },
+    { k:'cpm', l:'Median price per mile', v:c => c.st.cpm, f:v => Number.isFinite(v) ? '£' + v.toFixed(2) : '—', best:'lo', tip:'Middle £ per live mile of current contracts. Lower is cheaper for the buyer.' },
+    { k:'vpp', l:'Value per peak vehicle', v:c => c.st.valuePerPvr, f:fGbp },
+  ]],
+  ['Fleet', [
+    { k:'veh', l:'Registered vehicles', v:c => c.F.n, f:fInt },
+    { k:'age', l:'Average age', v:c => c.F.avg, f:v => Number.isFinite(v) ? v.toFixed(1) + ' yrs' : '—', best:'lo' },
+    { k:'ze', l:'Zero-emission (by PVR)', v:c => c.st.ze, f:v => fPct(v, 1), best:'hi' },
+    { k:'old', l:'Registered 12+ years ago', v:c => c.F.old, f:v => fPct(v, 0), best:'lo' },
+    { k:'lim', l:`Reaching ${AGE_LIMIT} years within 2 years`, v:c => c.F.limit.known ? (c.F.limit.soon + c.F.limit.at) / c.F.limit.known * 100 : null, f:v => fPct(v, 0), best:'lo', tip:`Share of registered vehicles that reach TfL’s ${AGE_LIMIT}-year maximum age by ${D.YEAR + 2}.` },
+  ]],
+  ['Service', [
+    { k:'op', l:'Mileage operated', v:c => c.st.opPct, f:v => fPct(v, 1), best:'hi' },
+    { k:'yoy', l:'Change on last year', v:c => c.st.yoy, f:v => Number.isFinite(v) ? sgn(v, 2) + ' pts' : '—', best:'hi', bar:false },
+    { k:'rel', l:'Routes meeting the reliability standard', v:c => c.st.relPassPct, f:v => fPct(v, 0), best:'hi' },
+    { k:'dis', l:'Routes disrupted now', v:c => c.st.n ? c.st.disrupted / c.st.n * 100 : null, f:v => fPct(v, 0), best:'lo' },
+    { k:'att', l:'Routes needing attention', v:c => c.st.n ? c.st.attention.length / c.st.n * 100 : null, f:v => fPct(v, 0), best:'lo', tip:'Routes showing three or more attention signals.' },
+  ]],
+  ['Tendering', [
+    { k:'ret', l:'Incumbent retention', v:retention, f:v => fPct(v, 0), tip:'Re-tenders in the last five years that the incumbent kept.' },
+    { k:'net', l:'Routes won less lost', v:c => c.net ? null : c.rec.won - c.rec.lost, f:v => Number.isFinite(v) ? sgn(v, 0) : '—', best:'hi', bar:false },
+    { k:'sb', l:'Single-bid contracts', v:c => c.st.singleBid, f:v => fPct(v, 0) },
+    { k:'term', l:'Average unexpired term', v:c => c.st.waut, f:v => Number.isFinite(v) ? v.toFixed(1) + ' yrs' : '—', tip:'Value-weighted years left on current contracts.' },
+    { k:'exp', l:'Routes ending within 24 months', v:c => c.st.n ? c.st.exp24.length / c.st.n * 100 : null, f:v => fPct(v, 0) },
+  ]],
+];
+function cmpData(){
+  const sel = cmpPick();
+  const cols = sel.map(o => ({ o, st:D.ST[o], F:D.FLEET[o], rec:D.REC[o], net:false }));
+  const net = { o:ALL, st:D.NET, F:D.FNET, rec:D.REC[ALL], net:true };
+  const wins = new Map(sel.map(o => [o, 0])); let ranked = 0;
+  const groups = CMP_GROUPS().map(([g, rows]) => [g, rows.map(m => {
+    const vals = cols.map(c => m.v(c)), ok = vals.filter(Number.isFinite);
+    const best = m.best && ok.length >= 2 && Math.max(...ok) !== Math.min(...ok) ? (m.best === 'hi' ? Math.max(...ok) : Math.min(...ok)) : null;
+    if(best != null){ ranked++; vals.forEach((v, i) => { if(v === best) wins.set(cols[i].o, wins.get(cols[i].o) + 1); }); }
+    return { ...m, vals, best, nv:m.v(net), max:Math.max(0, ...ok.filter(x => x > 0)), bar:m.bar !== false && ok.every(x => x >= 0) };
+  })]);
+  return { sel, cols, net, groups, wins, ranked };
+}
+function renderCompare(){
+  const { sel, cols, net, groups, wins, ranked } = cmpData();
+  const full = sel.length >= CMP_MAX;
+  const chips = OPS.map(o => { const on = sel.includes(o), lock = (!on && full) || (on && sel.length <= CMP_MIN);
+    return `<button type="button" class="fchip ${on ? 'on' : ''}" data-cmp="${esc(o)}" aria-pressed="${on}" ${lock ? 'aria-disabled="true"' : ''} title="${on ? (lock ? 'Keep at least ' + CMP_MIN + ' operators' : 'Remove from the comparison') : (lock ? 'Compare up to ' + CMP_MAX + ' operators' : 'Add to the comparison')}"><i class="dot" style="background:${opColour(o)}"></i>${esc(shortOp(o))}</button>`; }).join('');
+  const head = cols.map(c => `<th scope="col" class="oh"><span class="ohn"><i class="dot" style="background:${opColour(c.o)}"></i>${esc(shortOp(c.o))}</span><span class="sub">${wins.get(c.o) ? `Leads on ${wins.get(c.o)} of ${ranked}` : `${fInt(c.st.n)} routes`}</span></th>`).join('');
+  const rows = groups.map(([g, ms]) => `<tr class="grp"><th colspan="${cols.length + 2}" scope="colgroup">${esc(g)}</th></tr>` + ms.map(m => `<tr><th scope="row"${m.tip ? ` data-tip="${esc(m.l)}\n${esc(m.tip)}"` : ''}>${esc(m.l)}</th>${m.vals.map(v => {
+    const isBest = m.best != null && v === m.best;
+    const w = m.bar && Number.isFinite(v) && m.max ? Math.max(2, v / m.max * 100) : 0;
+    return `<td class="${isBest ? 'best' : ''}"><span class="cv">${esc(m.f(v))}${isBest ? '<span class="vh"> (best of those shown)</span>' : ''}</span>${w ? `<span class="cbar" aria-hidden="true"><i style="width:${w.toFixed(1)}%;background:${isBest ? 'var(--accent)' : 'var(--seq-2)'}"></i></span>` : ''}</td>`;
+  }).join('')}<td class="net"><span class="cv">${esc(m.f(m.nv))}</span></td></tr>`).join('')).join('');
+  $('#compare').innerHTML = `<div class="ch"><div><h2>Compare operators</h2><p>Up to ${CMP_MAX} contracted operators side by side — scale, money, fleet, service and tendering</p></div>
+      <div class="ctl"><button class="btn" id="cmpCopy" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>Copy link</span></button>
+      <button class="btn" id="cmpCsv" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg><span>CSV</span></button></div></div>
+    <div class="cb" style="padding-bottom:0"><div class="cmpchips" role="group" aria-label="Operators to compare">${chips}</div></div>
+    <div class="cmpwrap" tabindex="0" role="region" aria-label="Operator comparison table"><table class="cmp" style="--n:${cols.length + 1}"><thead><tr><th scope="col">Measure</th>${head}<th scope="col" class="oh net"><span class="ohn">London</span><span class="sub">${fInt(net.st.n)} routes</span></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="cmpnote sub">The dot marks the best figure among the operators shown, where a higher or lower number is clearly better; unranked rows are for context. London is every contracted route. ${S.cmpEdited ? '' : 'Starting from the operator you are viewing and the largest others — pick any to change.'}</div>`;
+}
+function cmpCsv(){
+  const { cols, groups } = cmpData();
+  const q = v => { let s = String(v ?? ''); if(/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [['measure', ...cols.map(c => c.o), 'London'], ...groups.flatMap(([g, ms]) => ms.map(m => [`${g}: ${m.l}`, ...m.vals.map(v => Number.isFinite(v) ? +v.toFixed(4) : ''), Number.isFinite(m.nv) ? +m.nv.toFixed(4) : '']))];
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type:'text/csv' }));
+  a.download = 'operator-comparison.csv'; document.body.append(a); a.click(); a.remove();
+}
+function cmpToggle(o){
+  const cur = cmpPick(), has = cur.includes(o);
+  if(has ? cur.length <= CMP_MIN : cur.length >= CMP_MAX) return;
+  S.cmp = has ? cur.filter(x => x !== o) : [...cur, o]; S.cmpEdited = true;
+  renderCompare(); syncHash();
+}
+
+/* ── view: renewal calendar ──────────────────────────────────────────────── */
+const RN_WINDOWS = [12, 24, 36, 60];
+/* a route whose re-tender is already decided (the "just awarded" state used across the page) */
+const eff = r => r.award ?? null;
+/* the annual bid being replaced: the contract before the award when one is already decided */
+const oldBid = r => { const e = eff(r); return (e ? r.hist.find(x => x !== e)?.acceptedBid : r.cur?.acceptedBid) ?? null; };
+const qKey = iso => `${iso.slice(0, 4)}-Q${Math.floor((+iso.slice(5, 7) - 1) / 3) + 1}`;
+const qLabel = k => `Q${k.slice(-1)} ${k.slice(0, 4)}`;
+function rnList(){
+  const sc = SC(), lim = plusMonths(S.rnWin), bench = D.bench.cpm;
+  let list = sc.st.list.filter(r => r.cEnd && r.cEnd >= TODAY_ISO && r.cEnd <= lim);
+  const all = list;
+  const gap = r => { const c = eff(r)?.costPerMile ?? r.cpm; return c > 0 && bench ? (c / bench - 1) * 100 : null; };
+  if(S.rnFilter === 'open') list = list.filter(r => !eff(r));
+  else if(S.rnFilter === 'awarded') list = list.filter(r => eff(r));
+  else if(S.rnFilter === 'above') list = list.filter(r => gap(r) != null && gap(r) > 5);
+  else if(S.rnFilter === 'below') list = list.filter(r => gap(r) != null && gap(r) < -5);
+  else if(S.rnFilter === 'prog') list = list.filter(r => r.pipe || r.next);
+  list = [...list].sort((a, b) => a.cEnd.localeCompare(b.cEnd) || b.pvr - a.pvr || (natKey(a.id) < natKey(b.id) ? -1 : 1));
+  return { sc, all, list, gap, bench };
+}
+function renderRenewals(){
+  const { sc, all, list, gap, bench } = rnList();
+  const quarters = []; { const t = new Date(TODAY); let y = t.getUTCFullYear(), q = Math.floor(t.getUTCMonth() / 3);
+    const end = qKey(plusMonths(S.rnWin)); for(let i = 0; i < 24; i++){ const k = `${y}-Q${q + 1}`; quarters.push({ k, rs:[] }); if(k === end) break; q++; if(q > 3){ q = 0; y++; } } }
+  const qmap = new Map(quarters.map(x => [x.k, x])); for(const r of all) qmap.get(qKey(r.cEnd))?.rs.push(r);
+  const val = rs => sum(rs, oldBid), swing = rs => sum(rs.filter(r => r.fcValue != null && oldBid(r)), r => r.fcValue - oldBid(r));
+  const open = all.filter(r => !eff(r)), done = all.length - open.length;
+  const cur = val(all), sw = swing(open), nPrice = open.filter(r => r.fcValue != null && oldBid(r)).length;
+  const max = Math.max(1, ...quarters.map(x => val(x.rs)));
+  const dense = quarters.length > 10;
+  const cols = quarters.map(x => { const v = val(x.rs), h = v / max * 100, sel = S.rnQ === x.k, n = x.rs.length;
+    return `<button type="button" class="colw ${sel ? 'sel' : ''} ${n ? '' : 'empty'}" data-rnq="${x.k}" aria-pressed="${sel}" aria-label="${qLabel(x.k)}: ${n} routes, ${fGbp(v)} a year" data-tip="${qLabel(x.k)}\n${n} routes · ${fInt(sum(x.rs, r => r.pvr))} PVR\n${fGbp(v)} a year ends${n ? '\nClick to show only this quarter' : ''}"${n ? '' : ' disabled'}><span class="n">${!dense && n ? fGbp(v) : ''}</span><span class="b" style="height:${v ? Math.max(2, h) : 0}%"></span></button>`; }).join('');
+  const labels = quarters.map((x, i) => `<span>${dense && !x.k.endsWith('Q1') && i ? '' : 'Q' + x.k.slice(-1)}${x.k.endsWith('Q1') || i === 0 ? `<b>${x.k.slice(0, 4)}</b>` : ''}</span>`).join('');
+  const shown = S.rnQ ? list.filter(r => qKey(r.cEnd) === S.rnQ) : list, vis = shown.slice(0, S.rnShown);
+  let lastQ = null;
+  const items = vis.map(r => {
+    const k = qKey(r.cEnd), head = k !== lastQ ? (lastQ = k, (() => { const g = shown.filter(x => qKey(x.cEnd) === k); return `<div class="rnq"><b>${qLabel(k)}</b><span class="sub">${g.length} route${g.length === 1 ? '' : 's'} · ${fInt(sum(g, x => x.pvr))} PVR · ${fGbp(val(g))} a year</span></div>`; })()) : '';
+    const e = eff(r), gp = gap(r), cp = e?.costPerMile > 0 ? e.costPerMile : r.cpm;
+    const was = oldBid(r), a = e?.acceptedBid > 0 ? e.acceptedBid : was;
+    const d = e ? (e.acceptedBid > 0 && was ? e.acceptedBid - was : null) : (r.fcValue != null && was ? r.fcValue - was : null);
+    const price = cp > 0 ? `<span data-tip="${e ? 'New contract price' : 'Current price'}\n£${cp.toFixed(2)} per mile${e ? ' (awarded ' + esc(fDate(e.awardDate)) + ')' : ' as awarded'}${gp != null ? `\n${gp >= 0 ? '+' : '−'}${Math.abs(gp).toFixed(0)}% against £${bench.toFixed(2)}, the median of awards in the last 24 months` : ''}"><small>${e ? 'New £/mile' : '£/mile'}</small><b>£${cp.toFixed(2)}</b>${gp != null ? `<em class="pd ${gp > 5 ? 'hi' : gp < -5 ? 'lo' : ''}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(0)}%</em>` : ''}</span>` : `<span><small>£/mile</small><b>—</b></span>`;
+    return `${head}<button type="button" class="rnrow" data-r="${esc(r.id)}"><span class="rm"><span class="badge">${esc(r.id)}</span><span class="t"><b>${esc(r.from)} ⇄ ${esc(r.to)}</b><span class="sub"><i class="dot" style="background:${opColour(r.op)}"></i>${esc(shortOp(r.op))} · ${esc(r.garageName ?? '')}</span></span></span>
+      <span class="rn"><span><small>Ends</small><b>${esc(fDate(r.cEnd))}</b></span><span><small>PVR</small><b>${fInt(r.pvr)}</b></span>${price}
+      <span data-tip="${e ? 'Awarded annual value' : 'Annual value'}\n${e ? 'The new contract’s accepted bid' + (d != null ? '; ' + (d >= 0 ? '+' : '−') + fGbp(Math.abs(d)) + ' against the current contract' : '') : 'Current accepted bid' + (d != null ? `\nAt the recent median £/mile a re-tender would be about ${fGbp(r.fcValue)} (${d >= 0 ? '+' : '−'}${fGbp(Math.abs(d))}). Indicative only` : '')}"><small>${e ? 'New a year' : 'A year'}</small><b>${fGbp(a)}</b>${d != null ? `<em class="pd ${d > 0 ? 'hi' : 'lo'}">${d > 0 ? '▲' : '▼'} ${fGbp(Math.abs(d))}</em>` : ''}</span>
+      <span class="rt">${tenderCell(r)}</span></span></button>`;
+  }).join('');
+  const f = [['open', 'Still open'], ['awarded', 'Already awarded'], ['all', 'All'], ['above', 'Priced above recent awards'], ['below', 'Priced below'], ['prog', 'In the tender programme']];
+  const progN = all.filter(r => r.pipe || r.next).length;
+  $('#renewals').innerHTML = `<div class="ch"><div><h2>Renewal calendar</h2><p>Contracts ending in the next ${S.rnWin} months${sc.kind === 'all' ? ' across London' : ' · ' + esc(sc.name)}, with price context</p></div>
+      <div class="ctl"><div class="seg" role="group" aria-label="Window">${RN_WINDOWS.map(w => `<button class="${w === S.rnWin ? 'on' : ''}" data-rnwin="${w}">${w} mo</button>`).join('')}</div>
+      <button class="btn" id="rnCsv" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 21h16"/></svg><span>CSV</span></button></div></div>
+    <div class="cb"><div class="rnstats">
+      <div><div class="l">Routes ending</div><div class="v">${fInt(all.length)}</div><div class="s">${fInt(open.length)} still open · ${fInt(done)} already awarded</div></div>
+      <div><div class="l">Annual value ending</div><div class="v">${fGbp(cur)}</div><div class="s">${fPct(sc.st.value ? cur / sc.st.value * 100 : null, 0)} of current value</div></div>
+      <div><div class="l">Recent award median</div><div class="v">${bench ? '£' + bench.toFixed(2) : '—'}<small> /mile</small></div><div class="s">${fInt(D.bench.n)} awards in the last 24 months</div></div>
+      <div><div class="l">Indicative price drift</div><div class="v">${nPrice ? (sw >= 0 ? '+' : '−') + fGbp(Math.abs(sw)) : '—'}</div><div class="s">${nPrice ? `open routes re-priced at the recent median · ${nPrice} routes` : 'no open routes with price data'}</div></div></div>
+      ${all.length ? `<div class="cols rnc" role="group" aria-label="Value of contracts ending, by quarter">${cols}</div><div class="xl rnx">${labels}</div>` : ''}
+      <div class="rnf" role="group" aria-label="Filter">${f.map(([k, l]) => `<button type="button" class="fchip ${S.rnFilter === k ? 'on' : ''}" data-rnf="${k}" aria-pressed="${S.rnFilter === k}">${l}${{ open:open.length, awarded:done, all:all.length, prog:progN }[k] != null ? `<span class="cn">${{ open:open.length, awarded:done, all:all.length, prog:progN }[k]}</span>` : ''}</button>`).join('')}${S.rnQ ? `<button type="button" class="fchip on" data-rnq="${S.rnQ}">${qLabel(S.rnQ)} <span aria-hidden="true">×</span><span class="vh"> clear quarter</span></button>` : ''}</div>
+      <div class="rnlist" aria-live="polite">${items || `<div class="sub" style="padding:18px 4px">${all.length ? 'No routes match this filter.' : 'No contracts end in this window.'}</div>`}</div>
+      ${shown.length > vis.length ? `<button class="btn more" type="button" id="rnMore">Show ${Math.min(25, shown.length - vis.length)} more <span class="sub">(${fInt(shown.length - vis.length)} left)</span></button>` : ''}
+      <div class="sub" style="margin-top:12px">Indicative only: the swing re-prices each route’s contracted miles at the median £/mile of awards made in the last 24 months, so it shows direction and scale, not a forecast of what bidders will offer. Contract end dates are TfL’s; extension options are not applied.</div></div>`;
+}
+function rnCsv(){
+  const { list, gap, bench } = rnList(), lim = S.rnQ ? list.filter(r => qKey(r.cEnd) === S.rnQ) : list;
+  const q = v => { let s = String(v ?? ''); if(/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const rows = [['route','from','to','operator','garage','pvr','contract_end','gbp_per_mile','vs_recent_median_pct','annual_value_gbp','indicative_retender_value_gbp','tender_status'],
+    ...lim.map(r => [r.id, r.from, r.to, r.op, r.garageName ?? '', r.pvr, r.cEnd, (eff(r)?.costPerMile ?? r.cpm) ?? '', gap(r) != null ? gap(r).toFixed(1) : '', (eff(r)?.acceptedBid ?? r.cur?.acceptedBid) ?? '', !eff(r) && r.fcValue != null ? Math.round(r.fcValue) : '', eff(r) ? 'awarded ' + eff(r).awardDate : r.pipe ? 'programme: tender ' + r.pipe.issueDate : r.next ? 'programme' : 'open'])];
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\r\n')], { type:'text/csv' }));
+  a.download = `${SC().name.toLowerCase().replace(/\W+/g, '-')}-renewals-${S.rnWin}-months.csv`; document.body.append(a); a.click(); a.remove();
 }
 
 /* ── view: record / head-to-head / price ────────────────────────────────── */
@@ -1727,6 +1967,8 @@ const INFO = () => { const P = D.latestPeriod ? ` (${D.latestPeriod})` : '';
   'Single-bid':'Current contracts that drew one bid ÷ all current contracts.',
   'Ageing out':`Buses first registered ${AGE_LIMIT - 2}+ years ago: they reach ${AGE_LIMIT} by ${D.YEAR + 2}.`,
   'Market position':'Operators ranked on the chosen measure.',
+  'Compare operators':'Every figure is the same one used elsewhere on this page, rolled up per operator. London is all contracted routes.',
+  'Renewal calendar':'Contracts whose current end date falls in the window. Price context compares each route’s £/mile with the median of awards in the last 24 months.',
   'Contract runway':'Current contracts by end year. Click a bar to filter.',
   'Tender record':'Re-tenders in the last 5 years: kept vs changed operator.',
   'Head-to-head':'Routes won from and lost to each rival, 5 years.',
@@ -1780,19 +2022,21 @@ document.addEventListener('click', e => { const t = e.target.closest?.('.info[da
 
 /* ── wiring ──────────────────────────────────────────────────────────────── */
 function renderAll(){
-  renderHero(); renderMarket(); renderRunway(); renderCards(); renderTable(); menuRender();
+  renderHero(); renderMarket(); renderCompare(); renderRunway(); renderRenewals(); renderCards(); renderTable(); menuRender();
   $('#opBtn').setAttribute('aria-expanded', 'false'); $('#opMenu').hidden = true; $('#gMenu').hidden = true; $('#gBtn').setAttribute('aria-expanded', 'false');
 }
-function setGarage(code){ mapClose(); if(code){ const g = D.garageScope(code); if(!g) return; S.garage = code; S.op = g.op; } else S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
+function setGarage(code){ mapClose(); if(code){ const g = D.garageScope(code); if(!g) return; S.garage = code; S.op = g.op; } else S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; S.rnQ = null; S.rnShown = 25; S.rnFilter = 'open'; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
 function setOp(o){ mapClose(); S.op = o; S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
 function syncHash(){
-  const h = '#op=' + encodeURIComponent(S.op) + (S.garage ? '&garage=' + encodeURIComponent(S.garage) : '') + (S.route ? '&route=' + encodeURIComponent(S.route) : '');
+  const h = '#op=' + encodeURIComponent(S.op) + (S.garage ? '&garage=' + encodeURIComponent(S.garage) : '') + (S.cmpEdited ? '&cmp=' + S.cmp.map(encodeURIComponent).join('~') : '') + (S.route ? '&route=' + encodeURIComponent(S.route) : '');
   if(location.hash !== h) history.replaceState(null, '', h);
 }
 function fromHash(){
   const p = new URLSearchParams(location.hash.replace(/^#/, ''));
   if(OPS.includes(p.get('op')) || p.get('op') === ALL) S.op = p.get('op');
   S.garage = null; const gc = p.get('garage'); if(gc && D.garageScope(gc)){ S.garage = gc; S.op = D.garageScope(gc).op; }
+  const cm = (p.get('cmp') ?? '').split('~').map(decodeURIComponent).filter(o => OPS.includes(o)).slice(0, CMP_MAX);
+  if(cm.length >= CMP_MIN){ S.cmp = cm; S.cmpEdited = true; }
   return p.get('route');
 }
 function csv(){
@@ -1804,6 +2048,16 @@ function csv(){
 }
 document.addEventListener('click', e => {
   const t = e.target;
+  const cm = t.closest('[data-cmp]'); if(cm){ cmpToggle(cm.dataset.cmp); return; }
+  if(t.closest('#cmpCsv')){ cmpCsv(); return; }
+  if(t.closest('#cmpCopy')){ const b = t.closest('#cmpCopy'), lab = b.querySelector('span'); syncHash();
+    const done = ok => { lab.textContent = ok ? 'Copied' : 'Copy failed'; setTimeout(() => { lab.textContent = 'Copy link'; }, 1600); };
+    (navigator.clipboard?.writeText(location.href) ?? Promise.reject()).then(() => done(true), () => done(false)); return; }
+  const rw2 = t.closest('[data-rnwin]'); if(rw2){ S.rnWin = +rw2.dataset.rnwin; S.rnQ = null; S.rnShown = 25; renderRenewals(); return; }
+  const rf = t.closest('[data-rnf]'); if(rf){ S.rnFilter = rf.dataset.rnf; S.rnQ = null; S.rnShown = 25; renderRenewals(); return; }
+  const rq = t.closest('[data-rnq]'); if(rq){ S.rnQ = S.rnQ === rq.dataset.rnq ? null : rq.dataset.rnq; S.rnShown = 25; renderRenewals(); return; }
+  if(t.closest('#rnMore')){ S.rnShown += 25; renderRenewals(); return; }
+  if(t.closest('#rnCsv')){ rnCsv(); return; }
   const gr = t.closest('[data-gar]'); if(gr){ setGarage(gr.dataset.gar); return; }
   const op = t.closest('[data-op]'); if(op){ setOp(op.dataset.op); return; }
   const ml = t.closest('[data-ml]'); if(ml){ const k = ml.dataset.ml; S.ml[k] = !S.ml[k]; $$(`[data-ml="${k}"]`).forEach(c => { c.classList.toggle('on', S.ml[k]); c.setAttribute('aria-pressed', String(S.ml[k])); }); if(k === 'gar') $$('.garleg').forEach(e => e.hidden = !S.ml.gar);
@@ -1825,7 +2079,7 @@ document.addEventListener('click', e => {
   const f = t.closest('[data-flag]'); if(f){ S.flags.has(f.dataset.flag) ? S.flags.delete(f.dataset.flag) : S.flags.add(f.dataset.flag); S.shown = 30; renderTable(); return; }
   const th = t.closest('th[data-sort]'); if(th){ const k = th.dataset.sort; S.sort = S.sort.k === k ? { k, dir:-S.sort.dir } : { k, dir:k === 'id' || k === 'end' || k === 'next' ? 1 : -1 }; renderTable(); return; }
   if(t.closest('#moreBtn')){ S.shown += 30; renderTable(); return; }
-  const row = t.closest('tr.row, .nx[data-r]'); if(row){ openRoute(row.dataset.r); return; }
+  const row = t.closest('tr.row, .nx[data-r], .rnrow[data-r]'); if(row){ openRoute(row.dataset.r); return; }
   if(t.closest('#dClose') || t.id === 'scrim'){ closeRoute(); return; }
   if(t.closest('#dPrev')){ stepRoute(-1); return; } if(t.closest('#dNext')){ stepRoute(1); return; }
   if(t.closest('#opBtn')){ const o = $('#opMenu'); o.hidden = !o.hidden; $('#gMenu').hidden = true; $('#opBtn').setAttribute('aria-expanded', String(!o.hidden)); return; }
@@ -1879,7 +2133,9 @@ $('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
     $('#fresh').innerHTML = `<i></i>Data as of ${gen ? esc(fDate(gen)) : 'recently'}`;
     $('#app').innerHTML = `<section id="overview"><div id="hero"></div><section class="card sec" id="brief" aria-label="Briefing"></section><div class="grid sec" id="kpis"></div><div class="grid sec" id="kpis2" aria-label="Commercial and operational signals"></div></section>
       <div class="grid sec"><section class="card s5" id="market" aria-label="Market position"></section><section class="card s7" id="runway" aria-label="Contract runway"></section></div>
+      <section class="card sec" id="compare" aria-label="Compare operators"></section>
       <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="h2h" aria-label="Head-to-head"></section><section class="card s4" id="price" aria-label="Price per mile"></section></div>
+      <section class="card sec" id="renewals" aria-label="Renewal calendar"></section>
       <div class="grid sec"><section class="card s4" id="fleet" aria-label="Fleet register"></section><section class="card s4" id="depots" aria-label="Depots"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
       <section class="card sec" id="ageout" aria-label="Replacement runway"></section>
       <section class="card sec" id="watch" aria-label="Needs attention"></section>
@@ -1888,7 +2144,7 @@ $('#aboutClose').addEventListener('click', () => $('#aboutM').hidden = true);
     const orig = fromHash(); renderAll();
     // rail: "Contracts" jumps to the runway card, "Fleet" to the fleet card; the section in view is highlighted
     const spy = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting) $$('.rail a.nav[data-sec]').forEach(a => a.classList.toggle('on', a.dataset.sec === en.target.dataset.spy)); }), { rootMargin:'-30% 0px -60% 0px' });
-    [['overview', '#overview'], ['market', '#market'], ['contracts', '#runway'], ['fleet', '#fleet'], ['routes', '#routes']].forEach(([k, sel]) => { const el = $(sel); if(el){ el.dataset.spy = k; spy.observe(el); } });
+    [['overview', '#overview'], ['market', '#market'], ['compare', '#compare'], ['contracts', '#runway'], ['renewals', '#renewals'], ['fleet', '#fleet'], ['routes', '#routes']].forEach(([k, sel]) => { const el = $(sel); if(el){ el.dataset.spy = k; spy.observe(el); } });
     $$('.rail a.nav[data-sec]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const id = { contracts:'runway', fleet:'fleet' }[a.dataset.sec] ?? a.dataset.sec; document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); $$('.rail a.nav').forEach(x => x.classList.toggle('on', x === a)); }));
     if(orig) openRoute(orig, false); else syncHash();
   }catch(e){

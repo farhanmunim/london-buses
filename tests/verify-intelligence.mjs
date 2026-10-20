@@ -174,6 +174,63 @@ F('a route map expands to full page', !rmap.open ? true : /Route 25/.test(rmap.t
 await page.keyboard.press('Escape'); await ctx.close();
 F('zero page errors (scopes and maps)', errors.length === 0);
 
+/* ── compare operators + renewal calendar ──────────────────────────────── */
+{
+  const o = await open(1440, 900, '#op=Go-Ahead%20London'); const pg = o.page;
+  const cols = () => pg.locator('#compare thead th.oh:not(.net)').count();
+  F('the rail links to Compare and Renewals', await pg.locator('.rail a[data-sec="compare"]').count() === 1 && await pg.locator('.rail a[data-sec="renewals"]').count() === 1);
+  F('compare starts with three operators (the one viewed plus the largest others) and a London column', await cols() === 3 && /Go-Ahead/.test(await txt(pg, '#compare thead th.oh')) && await pg.locator('#compare thead th.oh.net').count() === 1);
+  F('compare has every group and marks a best figure per ranked row', (await pg.locator('#compare tr.grp').count()) === 5 && (await pg.locator('#compare td.best').count()) >= 8);
+  const goVal = await pg.locator('#compare tbody tr:has(th:text-is("Routes")) td').first().textContent();
+  F('the Routes figure matches the operator header', goVal.replace(/\D/g, '') === String(exp('Go-Ahead London').n));
+  await pg.click('#compare [data-cmp="Uno"]'); await pg.waitForTimeout(150);
+  F('adding a fourth operator adds a column and writes the choice into the link', await cols() === 4 && /cmp=/.test(await pg.evaluate(() => location.hash)));
+  await pg.click('#compare [data-cmp="First Bus London"]', { force: true }); await pg.waitForTimeout(100);
+  F('a fifth operator is refused (up to four)', await cols() === 4 && await pg.locator('#compare [data-cmp="First Bus London"][aria-pressed="false"]').count() === 1);
+  await pg.click('#compare [data-cmp="Uno"]'); await pg.click('#compare [data-cmp="Stagecoach London"]'); await pg.waitForTimeout(100);
+  await pg.click('#compare [data-cmp="Metroline"]', { force: true }); await pg.waitForTimeout(100);
+  F('at least two operators stay selected', await cols() === 2);
+  const [csvDl] = await Promise.all([pg.waitForEvent('download', { timeout: 6000 }).catch(() => null), pg.click('#cmpCsv')]);
+  F('the comparison exports to CSV', !!csvDl && /operator-comparison\.csv/.test(csvDl.suggestedFilename()));
+  // the shared link restores the selection
+  const link = await pg.evaluate(() => location.hash);
+  await o.ctx.close();
+  const o2 = await open(1440, 900, link);
+  F('a shared link restores the compared operators', await o2.page.locator('#compare thead th.oh:not(.net)').count() === 2);
+  await o2.ctx.close();
+
+  const r = await open(1440, 900, '#op=Go-Ahead%20London'); const rp = r.page;
+  const stat = async i => (await rp.locator('#renewals .rnstats > div').nth(i).locator('.v').textContent()).trim();
+  const ends24 = +(await stat(0));
+  F(`the renewal calendar counts the routes ending in 24 months (${ends24})`, ends24 > 0 && ends24 <= exp('Go-Ahead London').n);
+  F('it lists rows grouped by quarter with a chart', await rp.locator('#renewals .rnq').count() > 0 && await rp.locator('#renewals .rnc .colw').count() >= 5);
+  await rp.click('#renewals [data-rnwin="60"]'); await rp.waitForTimeout(150);
+  const ends60 = +(await stat(0));
+  F(`a longer window shows more contracts (${ends60} in 60 months)`, ends60 > ends24);
+  await rp.click('#renewals [data-rnf="awarded"]'); await rp.waitForTimeout(150);
+  F('the Already awarded filter lists only decided re-tenders', await rp.locator('#renewals .rnrow').count() > 0 && await rp.locator('#renewals .rnrow:not(:has(.tag.good))').count() === 0);
+  await rp.click('#renewals [data-rnf="open"]'); await rp.waitForTimeout(150);
+  F('the Still open filter excludes awarded routes', await rp.locator('#renewals .rnrow:has(.tag.good)').count() === 0);
+  await rp.click('#renewals [data-rnf="all"]'); await rp.waitForTimeout(150);
+  const qb = rp.locator('#renewals .rnc .colw:not(.empty)').first(); await qb.click(); await rp.waitForTimeout(150);
+  F('clicking a quarter shows only that quarter and offers a way back', await rp.locator('#renewals .rnq').count() === 1 && await rp.locator('#renewals .rnf [data-rnq]').count() === 1);
+  await rp.locator('#renewals .rnf [data-rnq]').click(); await rp.waitForTimeout(150);
+  await rp.locator('#renewals .rnrow').first().click(); await rp.waitForTimeout(350);
+  F('a renewal row opens the route brief', await rp.locator('#drawer.open').count() === 1);
+  await rp.keyboard.press('Escape'); await rp.waitForTimeout(200);
+  const [rnDl] = await Promise.all([rp.waitForEvent('download', { timeout: 6000 }).catch(() => null), rp.click('#rnCsv')]);
+  F('the renewals export to CSV', !!rnDl && /renewals-60-months\.csv/.test(rnDl.suggestedFilename()));
+  F('zero page errors (compare and renewals)', r.errors.length === 0);
+  await r.ctx.close();
+
+  for(const w of [320, 390, 820]){
+    const m = await open(w, 800, '#op=Stagecoach%20London'); const mp = m.page;
+    const st = await mp.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, cmp: !!document.querySelector('#compare .cmpwrap'), sc: (() => { const w = document.querySelector('#compare .cmpwrap'); return w ? w.scrollWidth >= w.clientWidth : false; })(), rows: document.querySelectorAll('#renewals .rnrow').length }));
+    F(`compare + renewals at ${w}px: no sideways page scroll, table scrolls inside its card, rows render`, st.over <= 1 && st.cmp && st.sc && st.rows > 0);
+    await m.ctx.close();
+  }
+}
+
 /* ── tender tags, quick filters and info buttons ───────────────────────── */
 ({ ctx, page, errors } = await open(1440, 900));
 const nInfo = await page.locator('.info.corner').count();
