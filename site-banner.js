@@ -48,5 +48,7 @@
   document.body.prepend(bar);
   // fixed elements (e.g. a side rail) read --banner-h so they start below the banner while it is on screen
   const sync = () => document.documentElement.style.setProperty('--banner-h', Math.max(0, bar.offsetHeight - scrollY) + 'px');
-  sync(); addEventListener('scroll', sync, { passive:true }); addEventListener('resize', sync);
+  // pages that fill the viewport (the map view) subtract the banner's full, scroll-independent height
+  const size = () => document.documentElement.style.setProperty('--sb-h', bar.offsetHeight + 'px');
+  sync(); size(); addEventListener('scroll', sync, { passive:true }); addEventListener('resize', () => { sync(); size(); });
 })();

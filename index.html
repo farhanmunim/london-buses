@@ -6,6 +6,22 @@
 <title>London Buses</title>
 <meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed straight from TfL and other public sources." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="canonical" href="https://londonbuses.org/" />
+<meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#100f0e" media="(prefers-color-scheme: dark)" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="London Buses" />
+<meta property="og:title" content="London Buses — every route, operator and garage" />
+<meta property="og:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open TfL data." />
+<meta property="og:url" content="https://londonbuses.org/" />
+<meta property="og:image" content="https://londonbuses.org/og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="London’s bus network drawn as coloured route lines, with the London Buses name" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="London Buses — every route, operator and garage" />
+<meta name="twitter:description" content="Explore London’s bus network on one map: routes, operators, garages, fleet, tenders, live buses, diversions and roadworks. Built on open TfL data." />
+<meta name="twitter:image" content="https://londonbuses.org/og.jpg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet" />
@@ -29,8 +45,8 @@ gtag('config', 'G-J5GKHJN7K6', { send_page_view: false });
   --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
   --bd:#e7e5e4; --bd2:#d6d3d1;
   --tx:#1c1917; --tx2:#57534e; --mu:#716b65;   /* --mu ≥4.5:1 on bg and surf (WCAG AA for the small labels that use it) */
-  --acc:#dc2626; --acc-soft:#fef2f2;
-  --good:#16a34a; --warn:#d97706; --bad:#dc2626;
+  --acc:#c81e1e; --acc-soft:#fef2f2;
+  --good:#15803d; --warn:#9a4a05; --bad:#c81e1e;
   --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
   --r:12px; --r-sm:8px;
   --sh:0 1px 2px rgba(28,25,23,.05);
@@ -44,9 +60,9 @@ gtag('config', 'G-J5GKHJN7K6', { send_page_view: false });
 :root[data-theme="dark"]{
   --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
   --bd:#2b2725; --bd2:#3d3835;
-  --tx:#f0eeec; --tx2:#b5aea8; --mu:#8a847d;
-  --acc:#ef4444; --acc-soft:#3a1515;
-  --good:#2fbf5f; --warn:#f59e0b; --bad:#ef4444;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#9a948d;
+  --acc:#f87171; --rnum-bg:#d73d3d; --acc-soft:#3a1515;
+  --good:#2fbf5f; --warn:#f59e0b; --bad:#f87171;
   --sh:0 1px 2px rgba(0,0,0,.45);
   --tipbg:#332f2c; --skel-hi:#2c2825;
   color-scheme:dark;
@@ -86,8 +102,25 @@ svg{display:block}
 .net-chip.bad .dot{background:var(--warn)}
 @media(min-width:760px){.nav-desktop{display:flex}.net-chip{display:inline-flex}}
 
-main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 28px + env(safe-area-inset-bottom))}
+/* main + footer share a flex column so the footer sits at the bottom of short pages and the map view fills what is left under the header and banner. */
+.shell{display:flex;flex-direction:column;min-height:calc(100dvh - var(--hdr-h,53px) - var(--sb-h,0px))}
+main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 16px 28px}
 @media(min-width:760px){main{padding-bottom:56px}}
+
+/* Footer — one quiet line (About · Source · disclaimer · credit); wraps on narrow screens and clears the mobile tab bar. */
+.app-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;min-height:34px;padding:7px 16px;border-top:1px solid var(--bd);background:var(--surf);color:var(--mu);font-size:11px;line-height:1.5}
+.app-footer a{color:inherit;border-radius:3px}
+.app-footer a:hover{color:var(--tx)}
+.app-footer a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.af-sep{flex:none;width:1px;height:12px;background:var(--bd2)}
+.af-spacer{flex:1 1 0;min-width:0}
+.af-credit a{color:var(--tx);font-weight:600}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.legendrow a,.card p a,.note a{text-decoration:underline}
+.app-footer a,.rchip,.plate{min-height:24px}
+.rchip{display:inline-flex;align-items:center}
+.net-chip{display:none!important}@media(min-width:1000px){.net-chip:not([hidden]){display:inline-flex!important}}
+@media(max-width:759px){.app-footer{margin-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}.af-spacer,.af-sep--credit,.af-opt{display:none}.af-credit{order:1;margin-left:auto}.af-meta{order:2;flex:1 0 100%}}
 
 /* mobile bottom tabs */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb, var(--surf) 94%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
@@ -135,7 +168,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:16px 16px calc(var(--tab-h) + 2
 .rrow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);transition:border-color .12s}
 .rrow:hover{border-color:var(--bd2)}
 .rrow:active{background:var(--surf2)}
-.rnum{flex:none;min-width:46px;height:32px;padding:0 8px;border-radius:9px;background:var(--acc);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14.5px}
+.rnum{flex:none;min-width:46px;height:32px;padding:0 8px;border-radius:9px;background:var(--rnum-bg,var(--acc));color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14.5px}
 .rnum.night{background:#6d28d9}.rnum.school{background:#15803d}.rnum.twentyfour{background:#0e7490}
 .rmeta{flex:1;min-width:0}
 .rmeta .op{font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
@@ -288,13 +321,14 @@ a.plate:hover{background:#ffd83d}
 .tipbox .src{color:#d6d3d1}
 
 /* ── Network map view ─────────────────────────────────────────────────── */
-main.fullbleed{max-width:none;padding:0}
-.netmap-wrap{position:relative;height:calc(100dvh - 53px - var(--tab-h) - env(safe-area-inset-bottom))}
-@media(min-width:760px){.netmap-wrap{height:calc(100dvh - 53px)}}
+main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
+.netmap-wrap{position:relative;flex:1 1 auto;min-height:420px}
 #netmap{position:absolute;inset:0;background:var(--surf2);z-index:0}
 [hidden]{display:none!important}
 .netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:color-mix(in srgb, var(--surf) 97%, transparent);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
 @media(min-width:760px){.netmap-panel{right:auto;width:342px}}
+/* On a phone the panel is capped so it can never cover the map it controls; its notes and route cards scroll inside it. */
+@media(max-width:759px){.netmap-panel{max-height:min(50dvh, calc(100% - 24px))}}
 .nm-search{display:flex;align-items:center;gap:9px;padding:11px 13px}
 .nm-search svg{color:var(--mu);flex:none}
 .nm-search input{flex:1;border:none;outline:none;background:none;font-size:15px;min-width:0}
@@ -310,6 +344,14 @@ main.fullbleed{max-width:none;padding:0}
 .nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
 .nm-lbl{font-size:11px;color:var(--mu);font-weight:600}
 .nm-colour{display:flex;align-items:center;justify-content:space-between;flex:1 0 100%}
+.nm-layers{display:flex;align-items:center;gap:10px;padding:8px 11px;border-top:1px solid var(--bd)}
+.nm-lbtns{display:flex;gap:6px;flex-wrap:wrap}
+.nm-lbtns .livebtn{margin:0}
+.nm-lbtns .livebtn.is-gated{opacity:.45}
+.nm-lnotes{display:flex;flex-direction:column;gap:5px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;line-height:1.45;color:var(--tx2);max-height:132px;overflow-y:auto}
+.nm-lnote b{color:var(--tx);font-weight:600}
+.nm-chip{display:inline-flex;align-items:center;gap:5px;margin-right:9px;white-space:nowrap}
+.nm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:baseline}
 .nm-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;color:var(--tx2)}
 .nm-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .nm-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
@@ -381,7 +423,19 @@ main.fullbleed{max-width:none;padding:0}
   </div>
 </header>
 
+<div class="shell">
 <main id="main"></main>
+
+<footer class="app-footer" id="appFooter">
+  <a href="#/about">About</a>
+  <span class="af-sep" aria-hidden="true"></span>
+  <a href="https://github.com/farhanmunim/london-buses" target="_blank" rel="noopener">Source<span class="sr-only"> (opens in a new tab)</span></a>
+  <span class="af-spacer"></span>
+  <span class="af-meta">Not affiliated with Transport for London<span class="af-opt"> or any bus operator</span> · Powered by TfL Open Data</span>
+  <span class="af-sep af-sep--credit" aria-hidden="true"></span>
+  <span class="af-credit">Built by <a href="https://farhan.app" target="_blank" rel="noopener">Farhan<span class="sr-only"> (opens in a new tab)</span></a></span>
+</footer>
+</div>
 
 <nav class="tabbar" aria-label="Primary">
   <a href="#/" data-nav="routes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>Routes</a>
@@ -580,7 +634,7 @@ const routeOperatorOf = (meta, route) => {
 const TYPE_LABEL = { regular:'Day', night:'Night', twentyfour:'24-hour', school:'School' };
 const PROPULSION = ['electric','hybrid','hydrogen','diesel'];
 const OP_INITIALS = { 'Arriva':'ARL','Arriva London':'ARL','First':'FRG','First Bus London':'FRG','First London':'FRG','Go-Ahead':'GAL','Go-Ahead London':'GAL','Metroline':'MLN','Stagecoach':'SCL','Stagecoach London':'SCL','Transport UK':'TUK','Transport UK London Bus':'TUK','Transport UK London Bus (RATP)':'TUK','RATP':'RTP','RATP Dev':'RTP','Uno':'UNO','Uno Buses':'UNO','Falcon':'FAL','Falcon Buses':'FAL' };
-const OP_COLORS   = { 'Arriva London':'#2563eb','Arriva':'#2563eb','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#dc2626','Go-Ahead':'#dc2626','Metroline':'#0891b2','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus':'#db2777','Transport UK London Bus (RATP)':'#db2777','Transport UK':'#db2777','Uno':'#d97706','Uno Buses':'#d97706' };
+const OP_COLORS   = { 'Arriva London':'#1d4ed8','Arriva':'#1d4ed8','First Bus London':'#7c3aed','First London':'#7c3aed','First':'#7c3aed','Go-Ahead London':'#c81e1e','Go-Ahead':'#c81e1e','Metroline':'#07809d','Stagecoach London':'#1e3a8a','Stagecoach':'#1e3a8a','Transport UK London Bus':'#be185d','Transport UK London Bus (RATP)':'#be185d','Transport UK':'#be185d','Uno':'#b26205','Uno Buses':'#b26205' };
 /* Upstream sources sometimes reword operator names ("First London" became "First Bus
    London") — fall back to the longest dictionary key the name starts with,
    so a rewording degrades to the right colour, not to fallback grey. */
@@ -598,55 +652,201 @@ function garagePinIcon(g, size = 38, tint = null){
   const bg = Array.isArray(tint) && tint.length > 1
     ? `linear-gradient(135deg, ${tint[0]} 50%, ${tint[1]} 50%)`
     : (Array.isArray(tint) ? tint[0] : tint) ?? opColor(g.operator);
-  return L.divIcon({ className:'lb-gpin', iconSize:[size,size], iconAnchor:[size/2,size/2],
+  return L.divIcon({ className:'', iconSize:[size,size], iconAnchor:[size/2,size/2],
     html:`<div style="width:${size}px;height:${size}px;border-radius:10px;background:${bg};color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.12;font-family:var(--sans);border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3)">
       <span style="font-weight:800;font-size:${size>=38?'10.5':'9'}px;letter-spacing:.02em">${opInitials(g.operator)}</span>
-      <span style="font-weight:600;font-size:8.5px;opacity:.85">(${esc(g.code)})</span></div>` });
+      <span style="font-weight:600;font-size:8.5px">(${esc(g.code)})</span></div>` });
 }
-/* Garage pin spreading, for every map. Pins are a fixed pixel size, so garages that are close
-   together collide as soon as a map is zoomed out. Pins that would overlap at the current zoom are
-   laid out side by side, centred on their group, and are recomputed on every zoom — so they settle
-   onto their true positions as you zoom in, and a pin with room to spare never moves.
-   Blocks are rigid grids (rows of up to four); any blocks that touch are merged until none do. */
-const PIN_GAP = 4, PIN_ROW_MAX = 4;
-function spreadGaragePins(map){
-  const zoom = map.getZoom();
-  const items = [];
-  map.eachLayer(l => {
-    if(!l.getLatLng || l.options?.icon?.options?.className !== 'lb-gpin') return;
-    l.options.homeLatLng ??= l.getLatLng();   // true position, captured once
-    items.push({ marker:l, p:map.project(l.options.homeLatLng, zoom), size:l.options.icon.options.iconSize[0] + PIN_GAP });
-  });
-  const block = members => {
-    const pitch = Math.max(...members.map(m => m.size));
-    const cols = Math.min(members.length, PIN_ROW_MAX), rows = Math.ceil(members.length / cols);
-    return { members, pitch, cols, rows, w:cols * pitch, h:rows * pitch,
-      cx:members.reduce((a, m) => a + m.p.x, 0) / members.length, cy:members.reduce((a, m) => a + m.p.y, 0) / members.length };
+/* ── Map layers shared by the route view and the network map ───────────────
+   Each builder takes the already-selected records and returns a Leaflet layer, so both views
+   draw identical markers and popups. Only the selection differs (a route's corridor vs the
+   viewport). */
+
+/* Corridor test for a set of route features: "is this point within maxM metres of the route line?"
+   Distance is measured to the line SEGMENTS, not just its vertices — the overview geometry is
+   simplified, with vertices hundreds of metres apart, so a vertex test missed over half of what
+   really lies on the route. A bbox prefilter keeps 7.5k collision records cheap to sieve.
+   Returns near(lat, lng, maxM). */
+function makeCorridor(feats){
+  const KLAT = 111320, KLNG = 69400;   // metres per degree at ~51.5°N
+  let segs = null, w, s, e, n;
+  const build = () => {
+    segs = []; w = Infinity; s = Infinity; e = -Infinity; n = -Infinity;
+    for(const f of feats){
+      const lines = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
+      for(const line of lines) for(let i = 1; i < line.length; i++){
+        const ax = line[i-1][0] * KLNG, ay = line[i-1][1] * KLAT, dx = line[i][0] * KLNG - ax, dy = line[i][1] * KLAT - ay;
+        segs.push({ ax, ay, dx, dy, len2: dx*dx + dy*dy });
+      }
+      for(const line of lines) for(const [lng, lat] of line){ if(lng<w)w=lng; if(lat<s)s=lat; if(lng>e)e=lng; if(lat>n)n=lat; }
+    }
   };
-  const touch = (a, b) => Math.abs(a.cx - b.cx) < (a.w + b.w) / 2 && Math.abs(a.cy - b.cy) < (a.h + b.h) / 2;
-  const blocks = items.map(it => block([it]));
-  for(let merged = true; merged;){
-    merged = false;
-    for(let i = 0; i < blocks.length && !merged; i++) for(let j = i + 1; j < blocks.length; j++){
-      if(!touch(blocks[i], blocks[j])) continue;
-      blocks[i] = block([...blocks[i].members, ...blocks[j].members]); blocks.splice(j, 1); merged = true; break;
+  return (lat, lng, maxM) => {
+    if(!segs) build();
+    const pad = maxM / 78000;   // ≈ degrees of longitude at London's latitude (the tighter axis)
+    if(lng < w - pad || lng > e + pad || lat < s - pad || lat > n + pad) return false;
+    const px = lng * KLNG, py = lat * KLAT, r2 = maxM * maxM;
+    for(const g of segs){
+      const t = g.len2 ? Math.max(0, Math.min(1, ((px - g.ax) * g.dx + (py - g.ay) * g.dy) / g.len2)) : 0;
+      const qx = px - (g.ax + t * g.dx), qy = py - (g.ay + t * g.dy);
+      if(qx*qx + qy*qy <= r2) return true;
     }
+    return false;
+  };
+}
+const bridgeDiamond = (c, bc, sz=10) => `<div style="width:${sz}px;height:${sz}px;background:${c};border:1.5px solid #fff;outline:1px solid ${bc}40;transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2.5px rgba(0,0,0,.28)"></div>`;
+function bridgesLayer(near){
+  const layer = L.layerGroup();
+  const prow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
+  // Height bands against a ~4.4 m double-decker: below DD height + margin
+  // is red, tight clearance amber, comfortable clearance calm slate.
+  const bridgeBand = h => !Number.isFinite(h)
+    ? { c:'#94a3b8', bc:'#475569', label:'Height not recorded' }
+    : h < 4.2 ? { c:'#dc2626', bc:'#7f1d1d', label:'Very low — below double-deck clearance' }
+    : h < 4.9 ? { c:'#f59e0b', bc:'#92400e', label:'Low — tight for double-deckers' }
+    :           { c:'#64748b', bc:'#334155', label:'Clears double-deckers' };
+  const diamond = bridgeDiamond;
+  for(const b of near){
+    const h = Number.isFinite(b.height_m) ? `${b.height_m} m` : null;
+    const band = bridgeBand(b.height_m);
+    L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'', html: diamond(band.c, band.bc), iconSize:[10,10], iconAnchor:[5,5] }) })
+      .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')}${h ? ' · ' + h : ''}`, { direction:'top' })
+      .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px">${esc(b.name ?? b.road ?? 'Height restriction')}</b>
+        <div style="color:var(--tx2);margin:1px 0 7px">${esc(title(b.structure_type ?? 'structure'))} · <span style="color:${band.c === '#94a3b8' ? 'var(--tx2)' : band.c};font-weight:600">${band.label}</span></div>
+        ${prow('Height', h ?? '—')}${prow('Signed', b.height_imperial ? esc(b.height_imperial) : null)}${prow('Road', b.road && b.road !== b.name ? esc(b.road) : null)}${prow('Borough', b.borough ? esc(b.borough) : null)}</div>`)
+      .addTo(layer);
   }
-  const place = (m, ll) => { const c = m.getLatLng(); if(c.lat !== ll.lat || c.lng !== ll.lng) m.setLatLng(ll); };
-  for(const b of blocks){
-    if(b.members.length === 1){ place(b.members[0].marker, b.members[0].marker.options.homeLatLng); continue; }
-    const sorted = [...b.members].sort((m, n) => m.p.y - n.p.y || m.p.x - n.p.x);   // north to south into rows…
-    for(let r = 0; r < b.rows; r++){
-      const row = sorted.slice(r * b.cols, (r + 1) * b.cols).sort((m, n) => m.p.x - n.p.x);   // …west to east within a row
-      row.forEach((it, i) => place(it.marker, map.unproject(L.point(b.cx + (i - (row.length - 1) / 2) * b.pitch, b.cy + (r - (b.rows - 1) / 2) * b.pitch), zoom)));
+  return layer;
+}
+
+const SEV = { fatal:{ c:'#111827', r:6, label:'Fatal' }, serious:{ c:'#ea580c', r:5, label:'Serious' }, slight:{ c:'#f59e0b', r:3.5, label:'Slight' } };
+/* Collisions: density as a heat layer (all severities, weighted), with clickable markers for the grave ones —
+   serious and fatal stay clickable for the full record. */
+const WEIGHT = { slight:.35, serious:.75, fatal:1 };
+function incidentHeat(near){
+  const group = L.layerGroup();
+  if(L.heatLayer){
+    L.heatLayer(near.map(a => [a.lat, a.lng, WEIGHT[a.severity] ?? .35]), {
+      radius: 16, blur: 14, maxZoom: 16, max: 2, minOpacity: .22,
+      gradient: { .25:'#fcd34d', .5:'#f59e0b', .75:'#ea580c', 1:'#b91c1c' },
+    }).addTo(group);
+  }
+  return group;
+}
+function incidentGrave(near){
+  const group = L.layerGroup();
+  const canvas = L.canvas({ padding:.5 });
+  const arow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
+  const grave = near.filter(a => a.severity === 'serious' || a.severity === 'fatal');
+  grave.sort((a,b) => (a.severity==='serious'?0:1) - (b.severity==='serious'?0:1));   // fatal drawn last, on top
+  for(const a of grave){
+    const sv = SEV[a.severity] ?? SEV.slight;
+    L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r - 1, color:'#fff', weight:1.25, fillColor: sv.c, fillOpacity:.92 })
+      .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}`, { direction:'top' })
+      .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px;color:${sv.c === '#111827' ? 'var(--tx)' : sv.c}">${sv.label} collision</b>
+        <div style="color:var(--tx2);margin:1px 0 7px">${esc(fmtDate(a.date) ?? a.date ?? '')}${a.day ? ` (${esc(a.day)})` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}</div>
+        ${arow('Casualties', a.casualties)}${arow('Vehicles', a.vehicles)}${arow('Road type', a.roadType ? esc(a.roadType) : null)}${arow('Speed limit', a.speedLimit ? esc(a.speedLimit) : null)}${arow('Junction', a.junction ? esc(a.junction) : null)}${arow('Light', a.light ? esc(a.light) : null)}${arow('Weather', a.weather ? esc(a.weather) : null)}${arow('Surface', a.roadSurface ? esc(a.roadSurface) : null)}
+        <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT STATS19 · bus/coach-involved</div></div>`)
+      .addTo(group);
+  }
+  return group;
+}
+const incidentLayers = near => ({ heat: incidentHeat(near), grave: incidentGrave(near) });
+/* Street Manager works that are current or upcoming (finished more than 3 days ago, or completed, are dropped). */
+function currentStreetworks(snap){
+  const cutoff = new Date(Date.now() - 3 * 864e5).toISOString();
+  return (snap?.entries ?? []).filter(e => {
+    if(!e.coords?.length) return false;
+    const l = e.latest ?? {};
+    const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
+    return (!end || end >= cutoff) && l.work_status !== 'Works completed';
+  });
+}
+/* Street Manager works: each draws its stated extent as a short line plus a clickable dot coloured by category. */
+function streetworksLayer(near){
+  const layer = L.layerGroup();
+  const swBand = c => c === 'Immediate' || String(c ?? '').startsWith('Immediate')
+    ? { c:'#dc2626', label:'Immediate' } : c === 'Major' ? { c:'#ea580c', label:'Major' }
+    : c ? { c:'#f59e0b', label:c } : { c:'#64748b', label:'Notified activity' };
+  const srow = (l, v) => v == null || v === '' || v === '—' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right">${v}</b></div>`;
+  for(const e of near){
+    const l = e.latest ?? {};
+    const band = swBand(l.work_category ?? (l.activity_type ? null : l.work_category));
+    const start = l.actual_start_date_time ?? l.proposed_start_date ?? l.start_date;
+    const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
+    if(e.coords.length > 1)
+      L.polyline(e.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(layer);
+    L.circleMarker(e.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
+      .bindTooltip(`${esc(title(l.street_name ?? '') || 'Street work')} · ${esc(band.label)}${l.promoter_organisation ? ' · ' + esc(title(l.promoter_organisation)) : ''}`, { direction:'top' })
+      .bindPopup(() => `<div style="min-width:200px"><b style="font-size:13px">${esc(title(l.street_name ?? '') || 'Street work')}</b>
+        <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${l.activity_name ? ' · ' + esc(l.activity_name) : ''}</div>
+        ${srow('Promoter', l.promoter_organisation ? esc(title(l.promoter_organisation)) : null)}${srow('Authority', esc(e.ha ?? ''))}${srow('Traffic', l.traffic_management_type ? esc(l.traffic_management_type) : null)}${srow('Status', l.work_status ? esc(l.work_status) : null)}${srow('Window', `${fmtDate(start) ?? '—'} → ${fmtDate(end) ?? '—'}`)}
+        <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT Street Manager · ${esc(e.ref)}</div></div>`)
+      .addTo(layer);
+  }
+  return layer;
+}
+
+/* D-TRO orders: closures, bus lanes/gates, banned turns, with each order's published diversion. Items are one order × provision × place. */
+const troKind = ts => ts.some(t => /RoadClosure|LaneClosure|PedestrianZone|ProhibitedAccess|SuspensionOf/.test(t)) ? { c:'#dc2626', label:'Closure / access' }
+  : ts.some(t => /^miscBus|Busway|BusStop/.test(t)) ? { c:'#2563eb', label:'Bus lane / stop' }
+  : ts.some(t => /^bannedMovement|^mandatoryDirection/.test(t)) ? { c:'#ea580c', label:'Turn / one-way' }
+  : { c:'#64748b', label:'Other order' };
+function trafficOrdersLayer(items){
+  const layer = L.layerGroup();
+  const trow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right;max-width:170px">${v}</b></div>`;
+  for(const { o, p, pl } of items){
+    if(!pl.coords?.length) continue;
+    const band = troKind(p.regulationTypes ?? []);
+    const popup = () => `<div style="min-width:210px"><b style="font-size:13px">${esc(o.troName ?? 'Traffic regulation order')}</b>
+      <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${p.description ? ' · ' + esc(p.description) : ''}</div>
+      ${trow('Regulations', esc((p.regulationTypes ?? []).map(troPretty).join(', ') || '—'))}${trow('Authority', esc(title(o.traName ?? '') || o.tra || '—'))}${trow('Window', `${fmtDate(p.start) ?? '—'} → ${fmtDate(p.end) ?? '—'}`)}${trow('Action', p.actionType ? esc(p.actionType) : null)}
+      <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT D-TRO · statutory order</div></div>`;
+    if(pl.type === 'diversionRoute'){
+      if(pl.coords.length > 1)
+        L.polyline(pl.coords, { color:'#16a34a', weight: 4, opacity: .8, dashArray: '7 6' })
+          .bindTooltip(`Official diversion${pl.description ? ' · ' + esc(pl.description) : ''}`, { direction:'top', sticky:true })
+          .bindPopup(popup).addTo(layer);
+      continue;
     }
+    if(pl.coords.length > 1)
+      L.polyline(pl.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(layer);
+    L.circleMarker(pl.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
+      .bindTooltip(`${esc(o.troName ?? 'Traffic order')} · ${esc(band.label)}`, { direction:'top' })
+      .bindPopup(popup).addTo(layer);
   }
+  return layer;
 }
-function attachPinSpread(map){
-  let raf = 0;
-  const run = () => { raf = 0; spreadGaragePins(map); };
-  map.on('zoomend layeradd layerremove', () => { if(!raf) raf = requestAnimationFrame(run); });
+const troItems = orders => orders.flatMap(o => (o.provisions ?? []).flatMap(p => (p.places ?? []).map(pl => ({ o, p, pl }))));
+
+/* Live bus arrows (or dots when there is no bearing); colour by direction unless the caller supplies its own. */
+const directionColour = v => String(v.direction) === '2' ? '#06b6d4' : '#f97316';
+function busesLayer(rows, reg, colorOf = directionColour){
+  const layer = L.layerGroup();
+  for(const v of rows){
+    const col = colorOf(v);
+    const icon = L.divIcon({ className:'lb-bus', iconSize:[20,20], iconAnchor:[10,10],
+      html: Number.isFinite(v.bearing)
+        ? `<div style="transform:rotate(${v.bearing}deg)"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
+        : `<div style="width:12px;height:12px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
+    const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
+    const bits = [rec?.make ? title(rec.make) : null, rec?.body ?? null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
+    L.marker([v.lat, v.lng], { icon })
+      .bindPopup(`${v._route ? `<b>Route ${esc(v._route)}</b><br>` : ''}${v.reg ? plate(v.reg) : '<b>Bus</b>'}<br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}${v.reg?`<br><a href="#/vehicle/${encodeURIComponent(String(v.reg).toUpperCase())}" style="color:var(--acc);font-weight:600">Vehicle details ›</a>`:''}`)
+      .addTo(layer);
+  }
+  return layer;
 }
+
+/* Layer buttons for the network map — the same icons as the route view's. */
+const LAYER_UI = [
+  { k:'stops', label:'Stops', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg>` },
+  { k:'live', label:'Live buses', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="4" width="14" height="13" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="14" r=".8" fill="currentColor"/><circle cx="15" cy="14" r=".8" fill="currentColor"/></svg>` },
+  { k:'bridges', label:'Low bridges', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 18v-7"/><path d="M21 18v-7"/><path d="M3 13c3-4 15-4 18 0"/><path d="M2 18h20"/></svg>` },
+  { k:'inc', label:'Incidents', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><line x1="12" y1="10" x2="12" y2="14"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>` },
+  { k:'sw', label:'Street works', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 4h-3L6 20h12z"/><path d="M9.2 10h5.6M7.9 15h8.2"/><path d="M4 20h16"/></svg>` },
+  { k:'tro', label:'Traffic orders', icon:`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M8 12h8"/></svg>` },
+];
 /* Garage popup used by every map pin: headline numbers, every route as a
    tappable chip, and the detail link. */
 function garagePopupHtml(g, meta, extraRows = ''){
@@ -816,7 +1016,6 @@ function makeMap(el){
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false, maxZoom:19 });
   // Credit for whichever basemap is active (a condition of both free tiers), one click away.
   map._attrib = new AttribControl().addTo(map);
-  attachPinSpread(map);
   baseTiles(map);
   return map;
 }
@@ -973,6 +1172,13 @@ new MutationObserver(() => applyTips(document.getElementById('main'))).observe(
 
 /* ── Router ───────────────────────────────────────────────────────────── */
 const main = document.getElementById('main');
+new MutationObserver(()=>{ main.querySelectorAll('div[style*="overflow-x:auto"]:not([tabindex])').forEach(e=>{ e.tabIndex=0; e.setAttribute('role','region'); e.setAttribute('aria-label','Scrollable table'); }); }).observe(main,{childList:true,subtree:true});
+/* The header wraps to a second line at some widths, so the full-screen map view subtracts its measured height, not a constant. */
+{
+  const topbar = document.querySelector('.topbar');
+  const setHdr = () => document.documentElement.style.setProperty('--hdr-h', topbar.offsetHeight + 'px');
+  new ResizeObserver(setHdr).observe(topbar); setHdr();
+}
 const routesViewState = { q:'', type:null, op:null, prop:null, deck:null, freq:null };  // survives back-nav
 let liveTimers = [];   // every polling surface registers here — all killed on nav
 const addLiveTimer = t => { liveTimers.push(t); return t; };
@@ -1113,6 +1319,7 @@ D.lineStatus().then(ls => {
 async function renderRoutes(){
   const tok = navToken;
   main.innerHTML = `
+    <h1 class="sr-only">London bus routes</h1>
     <div class="searchwrap">
       <div class="search">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
@@ -1598,29 +1805,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
      the route's corridor. Route points are collected once, lazily; distance
      is a bbox prefilter + equirectangular metres with early exit, so 7.5k
      collision records stay cheap to sieve. */
-  let _corridor = null;
-  function corridorPts(){
-    if(_corridor) return _corridor;
-    const pts = [];
-    for(const f of feats){
-      const segs = f.geometry.type === 'MultiLineString' ? f.geometry.coordinates : [f.geometry.coordinates];
-      for(const seg of segs) for(let i = 0; i < seg.length; i += 2) pts.push(seg[i]);   // [lng,lat], thinned
-    }
-    let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
-    for(const [lng, lat] of pts){ if(lng<w)w=lng; if(lat<s)s=lat; if(lng>e)e=lng; if(lat>n)n=lat; }
-    return _corridor = { pts, w, s, e, n };
-  }
-  function nearRoute(lat, lng, maxM){
-    const c = corridorPts();
-    const pad = maxM / 78000;   // ≈ degrees of longitude at London's latitude (the tighter axis)
-    if(lng < c.w - pad || lng > c.e + pad || lat < c.s - pad || lat > c.n + pad) return false;
-    const KLAT = 111320, KLNG = 69400;   // metres per degree at ~51.5°N
-    for(const [plng, plat] of c.pts){
-      const dx = (lng - plng) * KLNG, dy = (lat - plat) * KLAT;
-      if(dx*dx + dy*dy <= maxM*maxM) return true;
-    }
-    return false;
-  }
+  const nearRoute = makeCorridor(feats);
   const layerNote = (id, html) => {
     document.getElementById(id)?.remove();
     if(html) el.insertAdjacentHTML('afterend', `<div class="legendrow" id="${id}" style="margin-top:8px">${html}</div>`);
@@ -1635,26 +1820,8 @@ async function initRouteMap(route, m = {}, tok = navToken){
     const all = await D.bridges();
     if(gone(tok) || !bridgeOn) return;   // navigated away or toggled off while loading
     const near = (all ?? []).filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng) && nearRoute(b.lat, b.lng, 300));
-    bridgeLayer = L.layerGroup();
-    const prow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
-    // Height bands against a ~4.4 m double-decker: below DD height + margin
-    // is red, tight clearance amber, comfortable clearance calm slate.
-    const bridgeBand = h => !Number.isFinite(h)
-      ? { c:'#94a3b8', bc:'#475569', label:'Height not recorded' }
-      : h < 4.2 ? { c:'#dc2626', bc:'#7f1d1d', label:'Very low — below double-deck clearance' }
-      : h < 4.9 ? { c:'#f59e0b', bc:'#92400e', label:'Low — tight for double-deckers' }
-      :           { c:'#64748b', bc:'#334155', label:'Clears double-deckers' };
-    const diamond = (c, bc, sz=10) => `<div style="width:${sz}px;height:${sz}px;background:${c};border:1.5px solid #fff;outline:1px solid ${bc}40;transform:rotate(45deg);border-radius:2px;box-shadow:0 1px 2.5px rgba(0,0,0,.28)"></div>`;
-    for(const b of near){
-      const h = Number.isFinite(b.height_m) ? `${b.height_m} m` : null;
-      const band = bridgeBand(b.height_m);
-      L.marker([b.lat, b.lng], { icon: L.divIcon({ className:'', html: diamond(band.c, band.bc), iconSize:[10,10], iconAnchor:[5,5] }) })
-        .bindTooltip(`${esc(b.name ?? b.road ?? 'Height restriction')}${h ? ' · ' + h : ''}`, { direction:'top' })
-        .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px">${esc(b.name ?? b.road ?? 'Height restriction')}</b>
-          <div style="color:var(--tx2);margin:1px 0 7px">${esc(title(b.structure_type ?? 'structure'))} · <span style="color:${band.c === '#94a3b8' ? 'var(--tx2)' : band.c};font-weight:600">${band.label}</span></div>
-          ${prow('Height', h ?? '—')}${prow('Signed', b.height_imperial ? esc(b.height_imperial) : null)}${prow('Road', b.road && b.road !== b.name ? esc(b.road) : null)}${prow('Borough', b.borough ? esc(b.borough) : null)}</div>`)
-        .addTo(bridgeLayer);
-    }
+    bridgeLayer = bridgesLayer(near);
+    const diamond = bridgeDiamond;
     bridgeLayer.addTo(_map);
     const chip = (c, bc, t) => `<span style="display:inline-flex;align-items:center;gap:5px;margin-right:10px"><span style="display:inline-block">${diamond(c, bc, 8)}</span>${t}</span>`;
     layerNote('bridgeNote', near.length
@@ -1662,7 +1829,6 @@ async function initRouteMap(route, m = {}, tok = navToken){
       : `<span>No recorded height restrictions within 300 m of this route.</span>`);
   });
 
-  const SEV = { fatal:{ c:'#111827', r:6, label:'Fatal' }, serious:{ c:'#ea580c', r:5, label:'Serious' }, slight:{ c:'#f59e0b', r:3.5, label:'Slight' } };
   let incLayer = null, incOn = false;
   const incBtn = document.getElementById('incBtn');
   incBtn?.addEventListener('click', async () => {
@@ -1672,30 +1838,8 @@ async function initRouteMap(route, m = {}, tok = navToken){
     const snap = await D.accidents();
     if(gone(tok) || !incOn) return;
     const near = (snap?.accidents ?? []).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lng) && nearRoute(a.lat, a.lng, 150));
-    incLayer = L.layerGroup();
-    const canvas = L.canvas({ padding:.5 });
-    const arow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px">${v}</b></div>`;
-    // Density as heat (all severities, weighted), individual markers only for
-    // the grave ones — serious and fatal stay clickable for the full record.
-    const WEIGHT = { slight:.35, serious:.75, fatal:1 };
-    if(L.heatLayer){
-      L.heatLayer(near.map(a => [a.lat, a.lng, WEIGHT[a.severity] ?? .35]), {
-        radius: 16, blur: 14, maxZoom: 16, max: 2, minOpacity: .22,
-        gradient: { .25:'#fcd34d', .5:'#f59e0b', .75:'#ea580c', 1:'#b91c1c' },
-      }).addTo(incLayer);
-    }
-    const grave = near.filter(a => a.severity === 'serious' || a.severity === 'fatal');
-    grave.sort((a,b) => (a.severity==='serious'?0:1) - (b.severity==='serious'?0:1));   // fatal drawn last, on top
-    for(const a of grave){
-      const sv = SEV[a.severity] ?? SEV.slight;
-      L.circleMarker([a.lat, a.lng], { renderer: canvas, radius: sv.r - 1, color:'#fff', weight:1.25, fillColor: sv.c, fillOpacity:.92 })
-        .bindTooltip(`${sv.label} collision · ${fmtDate(a.date) ?? esc(a.date ?? '')}`, { direction:'top' })
-        .bindPopup(() => `<div style="min-width:190px"><b style="font-size:13px;color:${sv.c === '#111827' ? 'var(--tx)' : sv.c}">${sv.label} collision</b>
-          <div style="color:var(--tx2);margin:1px 0 7px">${esc(fmtDate(a.date) ?? a.date ?? '')}${a.day ? ` (${esc(a.day)})` : ''}${a.timeBand ? ` · ${esc(a.timeBand)}` : ''}</div>
-          ${arow('Casualties', a.casualties)}${arow('Vehicles', a.vehicles)}${arow('Road type', a.roadType ? esc(a.roadType) : null)}${arow('Speed limit', a.speedLimit ? esc(a.speedLimit) : null)}${arow('Junction', a.junction ? esc(a.junction) : null)}${arow('Light', a.light ? esc(a.light) : null)}${arow('Weather', a.weather ? esc(a.weather) : null)}${arow('Surface', a.roadSurface ? esc(a.roadSurface) : null)}
-          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT STATS19 · bus/coach-involved</div></div>`)
-        .addTo(incLayer);
-    }
+    const { heat, grave } = incidentLayers(near);
+    incLayer = L.layerGroup([heat, grave]);
     incLayer.addTo(_map);
     const nf = near.filter(a => a.severity==='fatal').length, ns = near.filter(a => a.severity==='serious').length;
     layerNote('incNote', near.length
@@ -1715,34 +1859,9 @@ async function initRouteMap(route, m = {}, tok = navToken){
     if(!swOn){ if(swLayer){ _map.removeLayer(swLayer); swLayer = null; } layerNote('swNote'); return; }
     const snap = await D.streetworks();
     if(gone(tok) || !swOn) return;
-    const cutoff = new Date(Date.now() - 3 * 864e5).toISOString();
-    const current = (snap?.entries ?? []).filter(e => {
-      if(!e.coords?.length) return false;
-      const l = e.latest ?? {};
-      const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
-      return (!end || end >= cutoff) && l.work_status !== 'Works completed';
-    });
+    const current = currentStreetworks(snap);
     const near = current.filter(e => e.coords.some(([la, ln]) => nearRoute(la, ln, 150)));
-    swLayer = L.layerGroup();
-    const swBand = c => c === 'Immediate' || String(c ?? '').startsWith('Immediate')
-      ? { c:'#dc2626', label:'Immediate' } : c === 'Major' ? { c:'#ea580c', label:'Major' }
-      : c ? { c:'#f59e0b', label:c } : { c:'#64748b', label:'Notified activity' };
-    const srow = (l, v) => v == null || v === '' || v === '—' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right">${v}</b></div>`;
-    for(const e of near){
-      const l = e.latest ?? {};
-      const band = swBand(l.work_category ?? (l.activity_type ? null : l.work_category));
-      const start = l.actual_start_date_time ?? l.proposed_start_date ?? l.start_date;
-      const end = l.actual_end_date_time ?? l.proposed_end_date ?? l.end_date;
-      if(e.coords.length > 1)
-        L.polyline(e.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(swLayer);
-      L.circleMarker(e.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
-        .bindTooltip(`${esc(title(l.street_name ?? '') || 'Street work')} · ${esc(band.label)}${l.promoter_organisation ? ' · ' + esc(title(l.promoter_organisation)) : ''}`, { direction:'top' })
-        .bindPopup(() => `<div style="min-width:200px"><b style="font-size:13px">${esc(title(l.street_name ?? '') || 'Street work')}</b>
-          <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${l.activity_name ? ' · ' + esc(l.activity_name) : ''}</div>
-          ${srow('Promoter', l.promoter_organisation ? esc(title(l.promoter_organisation)) : null)}${srow('Authority', esc(e.ha ?? ''))}${srow('Traffic', l.traffic_management_type ? esc(l.traffic_management_type) : null)}${srow('Status', l.work_status ? esc(l.work_status) : null)}${srow('Window', `${fmtDate(start) ?? '—'} → ${fmtDate(end) ?? '—'}`)}
-          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT Street Manager · ${esc(e.ref)}</div></div>`)
-        .addTo(swLayer);
-    }
+    swLayer = streetworksLayer(near);
     swLayer.addTo(_map);
     const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
     layerNote('swNote', near.length
@@ -1766,36 +1885,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
     if(gone(tok) || !troOn) return;
     const near = (snap?.orders ?? []).filter(o => o.routes?.includes(route.name)
       || o.provisions?.some(p => p.places?.some(pl => pl.type !== 'diversionRoute' && pl.coords?.some(([la, ln]) => nearRoute(la, ln, 150)))));
-    troLayer = L.layerGroup();
-    const troKind = ts => ts.some(t => /RoadClosure|LaneClosure|PedestrianZone|ProhibitedAccess|SuspensionOf/.test(t)) ? { c:'#dc2626', label:'Closure / access' }
-      : ts.some(t => /^miscBus|Busway|BusStop/.test(t)) ? { c:'#2563eb', label:'Bus lane / stop' }
-      : ts.some(t => /^bannedMovement|^mandatoryDirection/.test(t)) ? { c:'#ea580c', label:'Turn / one-way' }
-      : { c:'#64748b', label:'Other order' };
-    const trow = (l, v) => v == null || v === '' ? '' : `<div style="display:flex;justify-content:space-between;align-items:center;gap:18px;padding:4px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12px;text-align:right;max-width:170px">${v}</b></div>`;
-    for(const o of near){
-      for(const p of o.provisions ?? []){
-        const band = troKind(p.regulationTypes ?? []);
-        const popup = () => `<div style="min-width:210px"><b style="font-size:13px">${esc(o.troName ?? 'Traffic regulation order')}</b>
-          <div style="color:var(--tx2);margin:1px 0 7px"><span style="color:${band.c};font-weight:600">${esc(band.label)}</span>${p.description ? ' · ' + esc(p.description) : ''}</div>
-          ${trow('Regulations', esc((p.regulationTypes ?? []).map(troPretty).join(', ') || '—'))}${trow('Authority', esc(title(o.traName ?? '') || o.tra || '—'))}${trow('Window', `${fmtDate(p.start) ?? '—'} → ${fmtDate(p.end) ?? '—'}`)}${trow('Action', p.actionType ? esc(p.actionType) : null)}
-          <div style="font-size:10px;color:var(--mu);margin-top:7px">DfT D-TRO · statutory order</div></div>`;
-        for(const pl of p.places ?? []){
-          if(!pl.coords?.length) continue;
-          if(pl.type === 'diversionRoute'){
-            if(pl.coords.length > 1)
-              L.polyline(pl.coords, { color:'#16a34a', weight: 4, opacity: .8, dashArray: '7 6' })
-                .bindTooltip(`Official diversion${pl.description ? ' · ' + esc(pl.description) : ''}`, { direction:'top', sticky:true })
-                .bindPopup(popup).addTo(troLayer);
-            continue;
-          }
-          if(pl.coords.length > 1)
-            L.polyline(pl.coords, { color: band.c, weight: 5, opacity: .55 }).addTo(troLayer);
-          L.circleMarker(pl.coords[0], { radius: 5.5, color:'#fff', weight: 1.5, fillColor: band.c, fillOpacity: .95 })
-            .bindTooltip(`${esc(o.troName ?? 'Traffic order')} · ${esc(band.label)}`, { direction:'top' })
-            .bindPopup(popup).addTo(troLayer);
-        }
-      }
-    }
+    troLayer = trafficOrdersLayer(troItems(near));
     troLayer.addTo(_map);
     const dot = c => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};border:1px solid #fff;vertical-align:baseline"></span>`;
     const dash = `<span style="display:inline-block;width:14px;height:0;border-top:2.5px dashed #16a34a;vertical-align:middle"></span>`;
@@ -1864,19 +1954,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
     if(!raw && busLayer){ if(busText) busText.textContent = 'reconnecting…'; return; }   // keep last positions
     const rows = (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng));
     if(busLayer){ _map.removeLayer(busLayer); busLayer = null; }
-    busLayer = L.layerGroup();
-    for(const v of rows){
-      const col = String(v.direction) === '2' ? '#06b6d4' : '#f97316';
-      const icon = L.divIcon({ className:'lb-bus', iconSize:[20,20], iconAnchor:[10,10],
-        html: Number.isFinite(v.bearing)
-          ? `<div style="transform:rotate(${v.bearing}deg)"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 2 19 21 12 16 5 21Z" fill="${col}" stroke="#fff" stroke-width="1.6"/></svg></div>`
-          : `<div style="width:12px;height:12px;margin:4px;border-radius:50%;background:${col};border:2px solid #fff"></div>` });
-      const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
-      const bits = [rec?.make ? title(rec.make) : null, rec?.body ?? null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
-      L.marker([v.lat, v.lng], { icon })
-        .bindPopup(`${v.reg ? plate(v.reg) : '<b>Bus</b>'}<br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}${v.reg?`<br><a href="#/vehicle/${encodeURIComponent(String(v.reg).toUpperCase())}" style="color:var(--acc);font-weight:600">Vehicle details ›</a>`:''}`)
-        .addTo(busLayer);
-    }
+    busLayer = busesLayer(rows, reg);
     busLayer.addTo(_map);
     if(first && !rows.length){
       liveBtn.insertAdjacentHTML('afterend', `<span id="noBuses" style="font-size:12px;color:var(--mu);align-self:center;margin-left:8px">No buses tracked right now</span>`);
@@ -1918,10 +1996,11 @@ const netmapState = {
   f: { type:new Set(), prop:new Set(), deck:new Set(), freq:new Set(), op:new Set() },   // multi-select filters
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
 };
-const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
+const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
 async function renderNetworkMap(){
   const tok = navToken;
   main.innerHTML = `
+    <h1 class="sr-only">London bus network map</h1>
     <div class="netmap-wrap">
       <div id="netmap"></div>
       <div class="netmap-panel" id="nmPanel">
@@ -1946,6 +2025,11 @@ async function renderNetworkMap(){
             </div>
           </div>
         </div>
+        <div class="nm-layers">
+          <span class="nm-lbl">Layers</span>
+          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}</div>
+        </div>
+        <div class="nm-lnotes" id="nmLNotes" aria-live="polite" hidden></div>
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
         <div class="nm-body" id="nmInfo" hidden></div>
@@ -2166,9 +2250,8 @@ async function renderNetworkMap(){
       if(focused) ly.bringToFront();
     });
 
-    const vis = new Set();
-    for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) vis.add(n);
-    const filtered = st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size;
+    const vis = visibleNames();
+    const filtered = filteredNow();
     const cEl = document.getElementById('nmCount');
     if(cEl) cEl.textContent = st.pills.length
       ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
@@ -2178,6 +2261,7 @@ async function renderNetworkMap(){
     syncGarages();
     syncTermini();
     syncLegend();
+    syncLayers();
   }
   /* Colour key for the current mode. Hidden while routes are focused —
      there the colours belong to the route cards, not the categories. */
@@ -2251,12 +2335,233 @@ async function renderNetworkMap(){
     if(fit && st.pills.length){
       const feats = ov.features.filter(f => st.pills.includes((f.properties?.name ?? '').toUpperCase()));
       if(feats.length){
-        try{ _map.fitBounds(L.geoJSON({type:'FeatureCollection',features:feats}).getBounds(), { padding:[40,40] }); }catch(e){}
+        // Fit into the part of the map the search panel isn't covering: right of it on wide screens, below it on phones.
+        const panel = document.getElementById('nmPanel'), wide = innerWidth >= 760;
+        const pad = wide ? { paddingTopLeft:[panel.offsetWidth + 36, 40], paddingBottomRight:[40, 40] }
+                         : { paddingTopLeft:[24, panel.offsetHeight + 28], paddingBottomRight:[24, 24] };
+        try{ _map.fitBounds(L.geoJSON({type:'FeatureCollection',features:feats}).getBounds(), pad); }catch(e){}
       }
     }
   }
   function addFocus(name){ if(!st.pills.includes(name)){ st.pills.push(name); syncFocus(true); } }
   function removeFocus(name){ st.pills = st.pills.filter(p => p !== name); syncFocus(st.pills.length > 0); }
+
+  /* ── Layers ───────────────────────────────────────────────────────────────
+     The route view's layers, on the network map, drawn by the same builders. The map's scope decides
+     what each shows:
+     · 1–3 routes searched or filtered → focused: every layer shows what lies near those routes, and live
+       buses and stops become available. Live buses poll once per route every ~15 s, so they are capped at
+       three routes rather than hammering the feed.
+     · anything else → network: nothing is fetched until a layer is switched on, and the dense layers
+       (low bridges, collisions, street works, traffic orders) draw only what is on screen once you zoom in,
+       so the map stays readable. */
+  const LY_MAX = 3, LY_REBUILD_MS = 250;
+  const LY_LABEL = Object.fromEntries(LAYER_UI.map(l => [l.k, l.label]));
+  const LY_NAME = { stops:'stops', live:'live buses', bridges:'low bridges', inc:'collisions', sw:'street works', tro:'traffic orders' };
+  const LY_MIN_ZOOM = { bridges:12, inc:13, sw:14, tro:14 };
+  const needsFocus = k => k === 'live' || k === 'stops';
+  const fmtN = n => n.toLocaleString('en-GB');
+  const plural = (n, one, many = one + 's') => `${fmtN(n)} ${n === 1 ? one : many}`;
+  const dot = c => `<span class="nm-dot" style="background:${c}"></span>`;
+  const chip = (swatch, text) => `<span class="nm-chip">${swatch}${text}</span>`;
+  st.ly = { stops:false, live:false, bridges:false, inc:false, sw:false, tro:false };
+
+  const filteredNow = () => !!(st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size);
+  const visibleNames = () => { const v = new Set(); for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) v.add(n); return v; };
+  /* The routes the layers are about (upper-case): 1–3 of them, or [] for the whole network. */
+  function layerScope(){
+    const names = st.pills.length ? st.pills : (filteredNow() ? [...visibleNames()].map(n => n.toUpperCase()) : []);
+    return names.length >= 1 && names.length <= LY_MAX ? names : [];
+  }
+  const corridors = new Map();
+  const corridorFor = names => {
+    const key = names.join('|');
+    if(!corridors.has(key)) corridors.set(key, makeCorridor(ov.features.filter(f => names.includes((f.properties?.name ?? '').toUpperCase()))));
+    return corridors.get(key);
+  };
+
+  const lyNotes = {};
+  const renderLyNotes = () => {
+    const el = document.getElementById('nmLNotes'); if(!el) return;
+    const rows = Object.entries(lyNotes).filter(([, h]) => h);
+    el.hidden = !rows.length;
+    el.innerHTML = rows.map(([k, h]) => `<div class="nm-lnote" data-lyr="${k}">${h}</div>`).join('');
+  };
+  const setLyNote = (k, html) => { lyNotes[k] = html; renderLyNotes(); };
+
+  /* Draws only what is on screen, and only once zoomed in past minZoom — for layers too dense to show whole. */
+  function viewportLayer(k, { items, pos, build, cap, gated, shown }){
+    const host = L.layerGroup().addTo(_map);
+    let inner = null, timer = 0;
+    const update = () => {
+      if(inner){ host.removeLayer(inner); inner = null; }
+      if(_map.getZoom() < LY_MIN_ZOOM[k]){ setLyNote(k, gated); return; }
+      const b = _map.getBounds().pad(.2), vis = [];
+      for(const it of items){ const [la, ln] = pos(it); if(b.contains([la, ln])){ vis.push(it); if(vis.length >= cap) break; } }
+      inner = build(vis); host.addLayer(inner);
+      setLyNote(k, shown(vis.length, vis.length >= cap));
+    };
+    const onMove = () => { clearTimeout(timer); timer = setTimeout(update, 120); };
+    _map.on('moveend', onMove); update();
+    return { remove(){ clearTimeout(timer); _map.off('moveend', onMove); _map.removeLayer(host); } };
+  }
+  const unavailable = k => { setLyNote(k, `${LY_LABEL[k]} data is unavailable right now.`); return null; };
+
+  const LAYER_IMPL = {
+    async stops(scope, alive){
+      const all = await D.stops(); if(!alive()) return null; if(!all) return unavailable('stops');
+      const group = L.layerGroup(); let count = 0;
+      for(const name of scope){
+        const rec = all[name.toLowerCase()] ?? all[name] ?? {}, colour = focusColor(name), seen = new Set();
+        for(const sp of [...(rec.outbound ?? []), ...(rec.inbound ?? [])]){
+          if(!Number.isFinite(sp.lat) || !Number.isFinite(sp.lng) || seen.has(sp.id)) continue;
+          seen.add(sp.id); count++;
+          L.circleMarker([sp.lat, sp.lng], { radius:4.5, color:colour, weight:2, fillColor:isDark() ? '#1b1917' : '#fff', fillOpacity:1 })
+            .bindPopup(`<b>${esc(sp.name)}</b><br><span style="color:var(--tx2)">Route ${esc(name)}</span><br><a href="#/stop/${encodeURIComponent(sp.id)}" style="color:var(--acc);font-weight:600">Live arrivals ›</a>`)
+            .addTo(group);
+        }
+      }
+      group.addTo(_map);
+      setLyNote('stops', plural(count, 'stop'));
+      return { remove: () => _map.removeLayer(group) };
+    },
+
+    async live(scope, alive){
+      let layer = null, count = 0, nextIn = 15;
+      const text = () => `<b>${count ? plural(count, 'live bus', 'live buses') : 'No buses tracked right now'}</b>${scope.length > 1 ? ' on ' + scope.join(', ') : ''} · ${nextIn > 0 ? `next update in ${nextIn} s` : 'updating…'}`;
+      const show = html => { lyNotes.live = html; const n = document.querySelector('#nmLNotes [data-lyr="live"]'); if(n) n.innerHTML = html; else renderLyNotes(); };
+      const poll = async () => {
+        const [raws, reg] = await Promise.all([Promise.all(scope.map(n => D.liveVehicles(n))), D.vehiclesReg()]);
+        if(!alive()) return;
+        nextIn = Math.min(...raws.map(r => r ? nextPollS(r, 15) : 8));
+        if(raws.every(r => !r) && layer){ show('<b>Live buses</b> — reconnecting…'); return; }   // keep the last positions
+        const rows = raws.flatMap((raw, i) => (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng)).map(v => ({ ...v, _route:scope[i] })));
+        if(layer) _map.removeLayer(layer);
+        layer = busesLayer(rows, reg, v => focusColor(v._route)).addTo(_map);
+        count = rows.length; show(text());
+      };
+      await poll();
+      if(!alive()) return layer ? { remove: () => _map.removeLayer(layer) } : null;
+      const timer = addLiveTimer(setInterval(() => {
+        if(!alive() || document.hidden) return;   // a hidden tab makes no requests
+        nextIn -= 1; show(text());
+        if(nextIn <= 0){ nextIn = 999; poll(); }
+      }, 1000));
+      return { remove(){ clearInterval(timer); if(layer) _map.removeLayer(layer); } };
+    },
+
+    async bridges(scope, alive){
+      const all = await D.bridges(); if(!alive()) return null; if(!all) return unavailable('bridges');
+      const pts = all.filter(b => Number.isFinite(b.lat) && Number.isFinite(b.lng));
+      const legend = ` · ${chip(bridgeDiamond('#dc2626', '#7f1d1d', 8), '&lt;4.2 m')}${chip(bridgeDiamond('#f59e0b', '#92400e', 8), '4.2–4.9')}${chip(bridgeDiamond('#64748b', '#334155', 8), '≥4.9')}`;
+      if(scope.length){
+        const near = corridorFor(scope), list = pts.filter(b => near(b.lat, b.lng, 300));
+        const layer = bridgesLayer(list).addTo(_map);
+        setLyNote('bridges', `${plural(list.length, 'low bridge')} within 300 m${legend}`);
+        return { remove: () => _map.removeLayer(layer) };
+      }
+      return viewportLayer('bridges', { items:pts, pos:b => [b.lat, b.lng], build:bridgesLayer, cap:700,
+        gated:`Zoom in to see low bridges (${fmtN(pts.length)} in London)`,
+        shown:n => `${plural(n, 'low bridge')} in view${legend}` });
+    },
+
+    async inc(scope, alive){
+      const snap = await D.accidents(); if(!alive()) return null; if(!snap) return unavailable('inc');
+      const all = (snap.accidents ?? []).filter(a => Number.isFinite(a.lat) && Number.isFinite(a.lng)), period = esc(snap.period ?? '2021–2025');
+      const legend = `${chip(dot('#ea580c'), 'serious')}${chip(dot('#111827'), 'fatal')}`;
+      if(scope.length){
+        const near = corridorFor(scope), list = all.filter(a => near(a.lat, a.lng, 150));
+        const heat = incidentHeat(list).addTo(_map), grave = incidentGrave(list).addTo(_map);
+        setLyNote('inc', `${plural(list.length, 'collision')} within 150 m (${period}) · ${legend}`);
+        return { remove(){ _map.removeLayer(heat); _map.removeLayer(grave); } };
+      }
+      const heat = incidentHeat(all).addTo(_map);
+      const vp = viewportLayer('inc', { items:all.filter(a => a.severity === 'serious' || a.severity === 'fatal'), pos:a => [a.lat, a.lng], build:incidentGrave, cap:600,
+        gated:`Collision density, bus/coach (${period}) · zoom in for serious and fatal`,
+        shown:(n, capped) => `Collision density · ${fmtN(n)}${capped ? '+' : ''} serious or fatal in view · ${legend}` });
+      return { remove(){ vp.remove(); _map.removeLayer(heat); } };
+    },
+
+    async sw(scope, alive){
+      const snap = await D.streetworks(); if(!alive()) return null; if(!snap) return unavailable('sw');
+      const current = currentStreetworks(snap);
+      const legend = `${chip(dot('#dc2626'), 'immediate')}${chip(dot('#ea580c'), 'major')}${chip(dot('#f59e0b'), 'other')}`;
+      if(scope.length){
+        const near = corridorFor(scope), list = current.filter(e => e.coords.some(([la, ln]) => near(la, ln, 150)));
+        const layer = streetworksLayer(list).addTo(_map);
+        setLyNote('sw', `${plural(list.length, 'street work')} within 150 m · ${legend}`);
+        return { remove: () => _map.removeLayer(layer) };
+      }
+      return viewportLayer('sw', { items:current, pos:e => e.coords[0], build:streetworksLayer, cap:400,
+        gated:`Zoom in to see street works (${fmtN(current.length)} across London)`,
+        shown:(n, capped) => `${fmtN(n)}${capped ? '+' : ''} street work${n === 1 ? '' : 's'} in view · ${legend}` });
+    },
+
+    async tro(scope, alive){
+      const snap = await D.dtro(); if(!alive()) return null; if(!snap) return unavailable('tro');
+      const orders = snap.orders ?? [];
+      const legend = `${chip(dot('#dc2626'), 'closure')}${chip(dot('#2563eb'), 'bus lane')}${chip(dot('#ea580c'), 'turn')}${chip(dot('#64748b'), 'other')}`;
+      if(scope.length){
+        const near = corridorFor(scope);
+        const list = orders.filter(o => o.routes?.some(r => scope.includes(String(r).toUpperCase()))
+          || o.provisions?.some(p => p.places?.some(pl => pl.type !== 'diversionRoute' && pl.coords?.some(([la, ln]) => near(la, ln, 150)))));
+        const layer = trafficOrdersLayer(troItems(list)).addTo(_map);
+        setLyNote('tro', `${plural(list.length, 'traffic order')} nearby · ${legend}`);
+        return { remove: () => _map.removeLayer(layer) };
+      }
+      const items = troItems(orders).filter(it => it.pl.coords?.length);
+      return viewportLayer('tro', { items, pos:it => it.pl.coords[0], build:trafficOrdersLayer, cap:400,
+        gated:`Zoom in to see traffic orders (${fmtN(orders.length)} in London)`,
+        shown:(n, capped) => `${fmtN(n)}${capped ? '+' : ''} order location${n === 1 ? '' : 's'} in view · ${legend}` });
+    },
+  };
+
+  const lyRT = {}, lyTok = {};
+  async function syncLayer(k){
+    const tok = lyTok[k] = (lyTok[k] ?? 0) + 1;
+    lyRT[k]?.remove(); lyRT[k] = null;
+    if(!st.ly[k]){ setLyNote(k, ''); return; }
+    const scope = layerScope();
+    if(needsFocus(k) && !scope.length){ st.ly[k] = false; setLyNote(k, ''); syncLyButtons(); return; }
+    setLyNote(k, `Loading ${LY_NAME[k]}…`);
+    const alive = () => lyTok[k] === tok && st.ly[k] && !!document.getElementById('netmap');
+    let handle = null;
+    try{ handle = await LAYER_IMPL[k](scope, alive); }
+    catch(err){ console.warn('map layer', k, err.message); if(alive()) unavailable(k); return; }
+    if(!handle) return;   // superseded while loading, or unavailable
+    if(!alive()){ handle.remove(); return; }
+    lyRT[k] = handle;
+  }
+  function syncLyButtons(){
+    const focused = layerScope().length > 0;
+    document.querySelectorAll('#nmLayers [data-lyr]').forEach(b => {
+      const k = b.dataset.lyr, gated = needsFocus(k) && !focused;
+      b.classList.toggle('on', !!st.ly[k]); b.setAttribute('aria-pressed', String(!!st.ly[k]));
+      b.classList.toggle('is-gated', gated); b.setAttribute('aria-disabled', String(gated));
+      b.title = gated ? `${LY_LABEL[k]} — search or filter to 1–3 routes to enable` : LY_LABEL[k];
+    });
+  }
+  /* Called from repaint(): rebuild the active layers when the scope changes. */
+  let lastScope = '', rebuildTimer = 0;
+  function syncLayers(){
+    const scope = layerScope(), key = scope.join('|'), changed = key !== lastScope;
+    lastScope = key;
+    if(!scope.length) for(const k of ['live', 'stops']) if(st.ly[k]){ st.ly[k] = false; syncLayer(k); }   // no longer eligible
+    syncLyButtons();
+    // Adding several routes in a burst ("25, 88, N38") rebuilds once, so live buses poll once, not once per route added.
+    if(changed){ clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => { for(const k of Object.keys(st.ly)) if(st.ly[k]) syncLayer(k); }, LY_REBUILD_MS); }
+  }
+  let hintTimer = 0;
+  document.getElementById('nmLayers').addEventListener('click', e => {
+    const b = e.target.closest('[data-lyr]'); if(!b) return;
+    const k = b.dataset.lyr;
+    if(needsFocus(k) && !layerScope().length){
+      setLyNote('hint', `${LY_LABEL[k]} appear when 1–3 routes are searched or filtered — the live feed isn’t polled for the whole network.`);
+      clearTimeout(hintTimer); hintTimer = setTimeout(() => setLyNote('hint', ''), 6000);
+      return;
+    }
+    st.ly[k] = !st.ly[k]; syncLyButtons(); syncLayer(k);
+  });
 
   syncPop();
   syncFocus(st.pills.length > 0);
@@ -2551,7 +2856,7 @@ async function renderGarageDetail(code){
 /* Garage map — the garage pin plus every route based there, each line in its
    own colour (the validated comparison palette), tappable through to the
    route page. */
-const GARAGE_MAP_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#db2777','#15803d','#86198f'];
+const GARAGE_MAP_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
 async function initGarageMap(g, tok = navToken){
   const el = document.getElementById('map');
   if(!el) return;
@@ -3070,10 +3375,10 @@ async function renderTenders(tab){
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="tq" type="search" aria-label="Search tender awards" placeholder="Search route (e.g. 24), operator or tranche" style="flex:1;min-width:180px;max-width:320px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <span style="display:inline-flex;align-items:center;gap:4px">
-        <select id="top" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
+        <select id="top" aria-label="Filter by operator" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All operators</option>${ops.map(o => `<option>${esc(o)}</option>`).join('')}</select>
         <button id="topClear" hidden aria-label="Clear operator filter" title="Clear operator filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       <span style="display:inline-flex;align-items:center;gap:4px">
-        <select id="tyr" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
+        <select id="tyr" aria-label="Filter by year" style="border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 12px;font-size:13px;color:var(--tx)"><option value="">All years</option>${years.map(y => `<option>${esc(y)}</option>`).join('')}</select>
         <button id="tyrClear" hidden aria-label="Clear year filter" title="Clear year filter" style="width:24px;height:24px;border-radius:50%;background:var(--surf2);color:var(--tx2);font-size:13px;line-height:1">✕</button></span>
       <button class="livebtn" id="tExport" title="Downloads every award matching the current filters"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>Export CSV</button>
     </div>
