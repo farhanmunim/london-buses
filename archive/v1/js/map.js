@@ -953,69 +953,6 @@ function operatorMeta(name) {
   return { short, color: '#475569' };
 }
 
-// ── Garage pin spreading ─────────────────────────────────────────────────────
-// Pins are a fixed size, so garages that are close together collide as soon as
-// you zoom out. Pins that would overlap at the current zoom are laid out side by
-// side, centred on their group, so each stays legible; the layout is recomputed
-// on every zoom, so the pins settle back onto their true positions as you zoom in.
-const GARAGE_PIN_PX  = 32;
-const GARAGE_PIN_GAP = 4;
-const GARAGE_ROW_MAX = 4;   // wrap wide groups into rows of this many
-
-function spreadGarages() {
-  if (!_map || !_garagesLayer || !_map.hasLayer(_garagesLayer)) return;
-  const zoom  = _map.getZoom();
-  const pitch = GARAGE_PIN_PX + GARAGE_PIN_GAP;
-  const items = _allGarages
-    .filter(e => _garagesLayer.hasLayer(e.marker))
-    .map(e => ({ marker: e.marker, p: _map.project(e.marker.options.homeLatLng, zoom) }));
-
-  // A block is a group of pins laid out as a grid centred on the group. Start with one block per pin,
-  // then keep merging blocks whose grids touch until none do — a fanned-out grid can reach its neighbours.
-  const block = members => {
-    const cols = Math.min(members.length, GARAGE_ROW_MAX);
-    const rows = Math.ceil(members.length / cols);
-    return {
-      members, cols, rows, w: cols * pitch, h: rows * pitch,
-      cx: members.reduce((s, it) => s + it.p.x, 0) / members.length,
-      cy: members.reduce((s, it) => s + it.p.y, 0) / members.length,
-    };
-  };
-  const touch = (a, b) => Math.abs(a.cx - b.cx) < (a.w + b.w) / 2 && Math.abs(a.cy - b.cy) < (a.h + b.h) / 2;
-  const blocks = items.map(it => block([it]));
-  for (let merged = true; merged;) {
-    merged = false;
-    for (let i = 0; i < blocks.length && !merged; i++) {
-      for (let j = i + 1; j < blocks.length; j++) {
-        if (!touch(blocks[i], blocks[j])) continue;
-        blocks[i] = block([...blocks[i].members, ...blocks[j].members]);
-        blocks.splice(j, 1);
-        merged = true;
-        break;
-      }
-    }
-  }
-
-  for (const b of blocks) {
-    if (b.members.length === 1) { placeGarage(b.members[0].marker, b.members[0].marker.options.homeLatLng); continue; }
-    // North to south into rows, west to east within a row — keeps the order faithful to the map.
-    const sorted = [...b.members].sort((m, n) => m.p.y - n.p.y || m.p.x - n.p.x);
-    for (let r = 0; r < b.rows; r++) {
-      const row = sorted.slice(r * b.cols, (r + 1) * b.cols).sort((m, n) => m.p.x - n.p.x);
-      row.forEach((it, i) => {
-        const x = b.cx + (i - (row.length - 1) / 2) * pitch;
-        const y = b.cy + (r - (b.rows - 1) / 2) * pitch;
-        placeGarage(it.marker, _map.unproject(L.point(x, y), zoom));
-      });
-    }
-  }
-}
-
-function placeGarage(marker, latlng) {
-  const cur = marker.getLatLng();
-  if (cur.lat !== latlng.lat || cur.lng !== latlng.lng) marker.setLatLng(latlng);
-}
-
 // All garage markers tagged with their full record, so we can filter them
 // from ui.js and also re-emit the filtered list for CSV/XLSX export.
 let _allGarages = []; // [{ marker, garage, routeCount }]
@@ -1024,8 +961,6 @@ export function renderGarages(garages, garageRoutes = {}) {
   if (_garagesLayer) return; // idempotent: call once at boot
   _garagesLayer = L.layerGroup();
   _allGarages = [];
-  _garagesLayer.on('add',    () => { _map.on('zoomend', spreadGarages); spreadGarages(); });
-  _garagesLayer.on('remove', () => { _map.off('zoomend', spreadGarages); });
 
   // Group garages that share (near-)identical coords so we can fan overlapping
   // markers out in a tiny circle. Two garages at the same building (e.g. Ash
@@ -1089,7 +1024,6 @@ export function renderGarages(garages, garageRoutes = {}) {
       }),
       keyboard: false,
     });
-    marker.options.homeLatLng = L.latLng(lat, lon);   // true position; spreadGarages() lays pins out around it
 
     const chipsHtml = routes.length
       ? `<span class="map-popup__routes-hd">Routes operated</span>
@@ -1226,7 +1160,6 @@ export function filterGarages(operatorSet) {
       if (_garagesLayer.hasLayer(entry.marker)) _garagesLayer.removeLayer(entry.marker);
     }
   }
-  spreadGarages();
   return visible;
 }
 
