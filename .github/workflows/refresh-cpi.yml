@@ -83,24 +83,32 @@ jobs:
         if: steps.due.outputs.due == 'yes'
         run: node scripts/fetch-cpi.js
 
-      - name: Rebuild manifest
+      - name: Update the manifest row
         if: steps.due.outputs.due == 'yes'
-        run: node scripts/build-api.js
+        run: node scripts/touch-manifest.js cpi-cpa
 
       - name: Commit and push
         if: steps.due.outputs.due == 'yes'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/api/cpi-cpa.json data/api/manifest.json || true
+          git add data/api/cpi-cpa.json data/api/manifest.json
           if git diff --cached --quiet; then
             echo "CPI unchanged — ONS has not published yet"
           else
             git commit -m "data: CPI refresh $(date -u +%Y-%m-%dT%H:%M)"
-            for attempt in 1 2 3; do
+            for attempt in 1 2 3 4; do
               if git push; then break; fi
-              if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
-              echo "Push rejected (attempt $attempt) — rebasing on the new head"
-              git pull --rebase origin main || { git rebase --abort 2>/dev/null; git fetch origin main; git reset --hard origin/main; node scripts/fetch-cpi.js; node scripts/build-api.js; git add data/api/cpi-cpa.json data/api/manifest.json; git diff --cached --quiet && break; git commit -m "data: CPI refresh $(date -u +%Y-%m-%dT%H:%M)"; }
+              if [ "$attempt" = "4" ]; then echo "Push still rejected after 4 attempts"; exit 1; fi
+              # Another workflow pushed first (they rewrite manifest.json too, so a rebase would conflict).
+              # Move to the new head and redo this run's two small steps on top of it — both are idempotent.
+              echo "Push rejected (attempt $attempt) — redoing on the new head"
+              git fetch -q origin main
+              git reset -q --hard origin/main
+              node scripts/fetch-cpi.js
+              node scripts/touch-manifest.js cpi-cpa
+              git add data/api/cpi-cpa.json data/api/manifest.json
+              if git diff --cached --quiet; then echo "New head already carries this data"; break; fi
+              git commit -m "data: CPI refresh $(date -u +%Y-%m-%dT%H:%M)"
             done
           fi

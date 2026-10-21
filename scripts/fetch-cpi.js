@@ -241,6 +241,14 @@ async function main() {
     confirmedForward,
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
+  // Content-stable: when nothing but the timestamp would change, leave the file alone — otherwise every hourly
+  // release-day poll would commit (and redeploy the site) for no new data.
+  const onDisk = (() => { try { return JSON.parse(fs.readFileSync(OUT_PATH, 'utf8')); } catch { return null; } })();
+  const stable = o => JSON.stringify({ ...o, generatedAt: null });
+  if (onDisk && stable(onDisk) === stable(out)) {
+    console.log(`No change — ONS series still ends ${latest}; ${path.basename(OUT_PATH)} left as is.`);
+    return;
+  }
   fs.writeFileSync(OUT_PATH, JSON.stringify(out) + '\n', 'utf8');
   console.log(`Wrote ${months.length} months (${months[0].month} → ${latest}) → ${OUT_PATH}`);
   console.log(`  latest: CPI ${months[months.length-1].cpi} · yoy ${months[months.length-1].yoy} · p2p ${months[months.length-1].p2p} · ra ${months[months.length-1].ra}`);
