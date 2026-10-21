@@ -77,8 +77,7 @@ const gar = await page.evaluate(() => ({
 }));
 F('garage toggle shows all garages (' + gar.pins + ' pins, "' + gar.note.slice(0,40) + '")', gar.pins > 60 && /garages in operator colours/.test(gar.note));
 const tags = await page.evaluate(() => [...document.querySelectorAll('#map .gtag')].map(t => t.textContent.trim()));
-F('permanent tag: only "Operating from here", no nearest-garage marker ("' + tags.join(' | ') + '")',
-  tags.length === 1 && /^Operating from here$/.test(tags[0]));
+F('no permanent text tags on the garage pins ("' + tags.join(' | ') + '")', tags.length === 0);
 const garPop = await page.evaluate(() => {
   const pins = [...document.querySelectorAll('#map .leaflet-marker-icon')];
   const pin = pins.find(x => /\(BN\)|\(NX\)|\(AR\)|\(HT\)/.test(x.textContent)) ?? pins[pins.length-1];
