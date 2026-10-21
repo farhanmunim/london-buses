@@ -1,0 +1,99 @@
+name: CPI Release Watch
+
+# ONS publishes the CPI index once a month at 07:00 UK time (06:00 UTC in
+# winter, 06:00 UTC = 07:00 BST in summer; the nightly 03:17 UTC refresh runs
+# hours before it, so without this the site would show last month's CPI and
+# CPA rates for a whole extra day). This workflow polls from just after the
+# release through the working day, but only on release day: the first step
+# reads `nextRelease` from the served file and exits quietly when no release
+# is due, and fetch-cpi.js moves `nextRelease` to the following month the
+# moment the new figure lands — so every later run is a one-second no-op.
+#
+# GitHub cron slips and drops on this repo (see refresh-tenders.yml), so the
+# hourly schedule is backed by workflow_run: it also fires after every
+# completed status / fleet refresh, which are event-driven and reliable. The
+# commit is gated on the served files actually changing, so a quiet run
+# triggers no Cloudflare Pages build.
+on:
+  schedule:
+    - cron: "7 6-17 * * *"
+  workflow_run:
+    workflows: ["Intraday Status Refresh", "Intraday Fleet Sweep"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Fetch even if no release is due"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  cpi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Is a CPI release due?
+        id: due
+        run: |
+          DUE=$(node -e '
+            const fs = require("fs");
+            let due = true;
+            try {
+              const c = JSON.parse(fs.readFileSync("data/api/cpi-cpa.json", "utf8"));
+              const t = Date.parse(String(c.nextRelease) + " UTC");   // e.g. "21 October 2026"
+              if (Number.isFinite(t)) due = Date.now() >= t;
+            } catch {}
+            process.stdout.write(due ? "yes" : "no");
+          ')
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then DUE=yes; fi
+          echo "due=$DUE" >> "$GITHUB_OUTPUT"
+          echo "CPI release due: $DUE"
+
+      - name: Set up Node.js
+        if: steps.due.outputs.due == 'yes'
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        if: steps.due.outputs.due == 'yes'
+        run: npm install --no-audit --no-fund
+
+      - name: Fetch CPI + CPA rates
+        if: steps.due.outputs.due == 'yes'
+        run: node scripts/fetch-cpi.js
+
+      - name: Rebuild manifest
+        if: steps.due.outputs.due == 'yes'
+        run: node scripts/build-api.js
+
+      - name: Commit and push
+        if: steps.due.outputs.due == 'yes'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/api/cpi-cpa.json data/api/manifest.json || true
+          if git diff --cached --quiet; then
+            echo "CPI unchanged — ONS has not published yet"
+          else
+            git commit -m "data: CPI refresh $(date -u +%Y-%m-%dT%H:%M)"
+            for attempt in 1 2 3; do
+              if git push; then break; fi
+              if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
+              echo "Push rejected (attempt $attempt) — rebasing on the new head"
+              git pull --rebase origin main || { git rebase --abort 2>/dev/null; git fetch origin main; git reset --hard origin/main; node scripts/fetch-cpi.js; node scripts/build-api.js; git add data/api/cpi-cpa.json data/api/manifest.json; git diff --cached --quiet && break; git commit -m "data: CPI refresh $(date -u +%Y-%m-%dT%H:%M)"; }
+            done
+          fi
