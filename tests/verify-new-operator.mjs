@@ -45,7 +45,7 @@ const text = (page, sel = '#main') => page.locator(sel).first().innerText().then
 {
   let { ctx, page } = await open('#/operators');
   const t = await text(page);
-  F('Operators page lists Go Bus under New and incoming, with its awarded routes', /new and incoming/i.test(t) && /Go Bus/.test(t) && /incoming/i.test(t) && GO.every(r => t.includes(r)));
+  F('Operators page lists Go Bus as an Incoming card (no separate heading), with its awarded routes', !/new and incoming/i.test(t) && /Go Bus/.test(t) && /incoming/i.test(t) && GO.every(r => t.includes(r)));
   F('Go Bus is not mixed into the running operators', await page.locator('#oplist .opcard:not(.incoming)').evaluateAll(els => els.every(e => !/Go Bus/.test(e.textContent))));
   await page.click('.opcard.incoming'); await page.waitForTimeout(900);
   const d = await text(page);

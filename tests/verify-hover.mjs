@@ -57,7 +57,15 @@ async function hovers(page, sel, label){
   F(`every More menu link lights up under the pointer (${lit}/${n})`, lit === n);
   await links.nth(2).hover(); await page.waitForTimeout(260);
   F('only the hovered More link is lit (others are at rest)', await page.evaluate(() => { const ls = [...document.querySelectorAll('#moreSheet a')]; const lit = ls.filter(a => a.matches(':hover')); return lit.length === 1; }));
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(150);
+  F('Escape closes the More menu and returns focus to its button', await page.locator('#moreSheet[hidden]').count() === 1 && await page.evaluate(() => document.activeElement?.id === 'moreBtn'));
+  await page.focus('#moreBtn'); await page.keyboard.press('Enter'); await page.waitForTimeout(250);
+  F('opening it from the keyboard lands on the first link', await page.evaluate(() => document.activeElement?.closest('#moreSheet') !== null && document.activeElement === document.querySelector('#moreSheet a')));
+  await page.keyboard.press('ArrowDown'); await page.keyboard.press('ArrowDown');
+  F('arrow keys move through the links', await page.evaluate(() => document.activeElement === document.querySelectorAll('#moreSheet a')[2]));
+  await page.keyboard.press('End');
+  F('End jumps to the last link', await page.evaluate(() => { const l = document.querySelectorAll('#moreSheet a'); return document.activeElement === l[l.length - 1]; }));
+  await page.keyboard.press('Escape');
   F('zero page errors (More menu)', page.errors.length === 0);
   await ctx.close();
 }

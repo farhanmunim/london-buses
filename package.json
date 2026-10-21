@@ -1,9 +1,10 @@
 {
-  "name": "tfl-bus-map",
+  "name": "londonbuses-org",
   "version": "2.19.3",
-  "description": "Interactive London bus route map and data explorer",
+  "description": "londonbuses.org — the London bus network: routes, operators, garages, tenders and live data",
   "type": "module",
   "scripts": {
+    "test": "node tests/run-all.mjs",
     "refresh": "node scripts/refresh.js",
     "fetch-data": "node scripts/fetch-data.js",
     "fetch-route-destinations": "node scripts/fetch-route-destinations.js",

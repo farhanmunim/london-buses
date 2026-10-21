@@ -1,0 +1,55 @@
+name: Tests
+
+# Runs the browser test suites (tests/verify-*.mjs) against the site files whenever code changes.
+# Data-only pushes (the bots' "data: …" commits) are filtered out by the path list, so this never
+# competes with the refresh workflows.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "intelligence.html"
+      - "404.html"
+      - "site-banner.js"
+      - "functions/**"
+      - "scripts/**"
+      - "tests/**"
+      - "package*.json"
+      - ".github/workflows/ci.yml"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Chromium
+        run: |
+          npx playwright-core install --with-deps chromium
+          # the suites launch the browser from /opt/pw-browsers/chromium
+          sudo mkdir -p /opt/pw-browsers
+          sudo ln -sf "$(node -e "console.log(require('playwright-core').chromium.executablePath())")" /opt/pw-browsers/chromium
+
+      - name: Fetch pinned browser libraries (SRI-checked)
+        run: node tests/fetch-fixtures.mjs
+
+      - name: Run the suites
+        run: npm test
