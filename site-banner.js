@@ -34,7 +34,8 @@
     #site-banner.is-back:hover a::after{transform:translateX(-3px)}
     #site-banner a:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
     @media (prefers-reduced-motion:reduce){#site-banner b::before{animation:none}#site-banner a,#site-banner a::after{transition:none}}
-    @media (max-width:640px){#site-banner{gap:8px;padding:6px 12px;font-size:12px}}`;
+    @media (max-width:640px){#site-banner{gap:8px;padding:6px 12px;font-size:12px}}
+    @media (max-width:400px){#site-banner{flex-wrap:wrap;gap:6px 8px}}`;
   document.head.appendChild(style);
   const bar = document.createElement('div');
   bar.id = 'site-banner'; bar.setAttribute('role', 'status');
