@@ -13,7 +13,7 @@
  *   9. fetch-tenders.js             — TfL tender award form → data/source/tenders.json (sticky cache)
  *  10. fetch-tender-programme.js    — TfL annual programme PDFs → data/source/tender-programme.json
  *  11. fetch-line-status.js         — TfL status → data/api/line-status.json + route-diversions.json
- *  12. fetch-cpi.js                 — ONS CPI D7BT → data/api/cpi-cpa.json (index + P2P/RA rates)
+ *  (CPI is not part of this run: refresh-cpi.yml fetches it from 09:00 London time on ONS release day)
  *  12. build-classifications.js     — data/route_classifications.json (master per-route record)
  *  13. build-overview.js            — simplified network overview layer
  *  14. build-garage-locations.js    — geocode garages → data/garage-locations.json (frontend)
@@ -45,7 +45,7 @@ const STEPS = [
   { label: 'Step 9b/17 — Provisional awards (fandom wiki)',         script: 'fetch-fandom-tenders.js' },
   { label: 'Step 10/17 — Tender programme PDFs (TfL)',              script: 'fetch-tender-programme.js' },
   { label: 'Step 11/17 — Line status + diversions (TfL)',           script: 'fetch-line-status.js' },
-  { label: 'Step 12/17 — CPI index + CPA rates (ONS)',              script: 'fetch-cpi.js' },
+  // CPI + CPA rates moved to refresh-cpi.yml: ONS publishes at 07:00 UK, long after this 03:17 UTC run, so it is checked from 09:00 London time on release day.
   // 12b/12c were built after the numbering settled; both are cached
   // (per-PDF Last-Modified / cheap timetable reads) so nightly is fine.
   { label: 'Step 12b/17 — Scheduled mileage (TfL timetables)',      script: 'fetch-scheduled-mileage.js' },
@@ -75,7 +75,6 @@ const SOFT_FAIL = new Set([
   'fetch-line-status.js',
   'fetch-scheduled-mileage.js',
   'fetch-route-performance.js',
-  'fetch-cpi.js',
   'fetch-tender-programme.js',
   'build-garage-locations.js',
 ]);

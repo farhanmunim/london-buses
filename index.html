@@ -4334,7 +4334,7 @@ async function renderAbout(){
     nightly: { label:`nightly · ${lonAt(3,17)} London time`,                        hours:[3],                          minute:17 },
     status:  { label:`every 2 h · ${lonAt(7,41)}–${lonAt(21,41)} London time`,      hours:[7,9,11,13,15,17,19,21],      minute:41 },
     fleet:   { label:`every 8 h · ${lonAt(7,20)}/${lonAt(15,20)}/${lonAt(23,20)} London time`, hours:[7,15,23],         minute:20 },
-    cpi:     { label:`ONS release day · hourly from ${lonAt(6,7)} London time`, hours:[6,7,8,9,10,11,12,13,14,15,16,17], minute:7, release:true },
+    cpi:     { label:'ONS release day · from 09:00 London time', hours:[8,9,10,11,12,13,14,15,16,17], minute:3, release:true },
     tenders: { label:`hourly · ${lonAt(7,20)}–${lonAt(20,20)} London time`,         hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
   };
   const nextRun = sc => {

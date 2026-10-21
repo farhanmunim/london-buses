@@ -1,13 +1,15 @@
 name: CPI Release Watch
 
-# ONS publishes the CPI index once a month at 07:00 UK time (06:00 UTC in
-# winter, 06:00 UTC = 07:00 BST in summer; the nightly 03:17 UTC refresh runs
-# hours before it, so without this the site would show last month's CPI and
-# CPA rates for a whole extra day). This workflow polls from just after the
-# release through the working day, but only on release day: the first step
-# reads `nextRelease` from the served file and exits quietly when no release
-# is due, and fetch-cpi.js moves `nextRelease` to the following month the
-# moment the new figure lands — so every later run is a one-second no-op.
+# ONS publishes the CPI index once a month at 07:00 UK time. CPI is refreshed
+# here and only here (it was removed from the 03:17 UTC nightly run, which
+# fires hours before any release): the first check is at 09:00 London time,
+# two hours after publication, then hourly through the working day until the
+# figure is in. The gate is two-fold: London time must be 09:00 or later, and
+# `nextRelease` in the served file must be today or earlier — fetch-cpi.js
+# moves `nextRelease` to the following month the moment the new figure lands,
+# so every later run is a one-second no-op. If a release day is missed
+# entirely, `nextRelease` stays in the past and the next morning's 09:00
+# check picks it up, so it self-heals.
 #
 # GitHub cron slips and drops on this repo (see refresh-tenders.yml), so the
 # hourly schedule is backed by workflow_run: it also fires after every
@@ -16,7 +18,9 @@ name: CPI Release Watch
 # triggers no Cloudflare Pages build.
 on:
   schedule:
-    - cron: "7 6-17 * * *"
+    # 08:03 UTC is 09:03 in British Summer Time, 09:03 UTC is 09:03 in winter;
+    # the London-time gate below keeps whichever of the two is too early quiet.
+    - cron: "3 8-17 * * *"
   workflow_run:
     workflows: ["Intraday Status Refresh", "Intraday Fleet Sweep"]
     types: [completed]
@@ -47,6 +51,7 @@ jobs:
       - name: Is a CPI release due?
         id: due
         run: |
+          LONDON_HOUR=$(TZ=Europe/London date +%H)
           DUE=$(node -e '
             const fs = require("fs");
             let due = true;
@@ -57,9 +62,11 @@ jobs:
             } catch {}
             process.stdout.write(due ? "yes" : "no");
           ')
+          # Never before 09:00 London time (manual runs may override with force)
+          if [ "$((10#$LONDON_HOUR))" -lt 9 ]; then DUE=no; fi
           if [ "${{ github.event.inputs.force }}" = "true" ]; then DUE=yes; fi
           echo "due=$DUE" >> "$GITHUB_OUTPUT"
-          echo "CPI release due: $DUE"
+          echo "London hour: $LONDON_HOUR — CPI release due: $DUE"
 
       - name: Set up Node.js
         if: steps.due.outputs.due == 'yes'

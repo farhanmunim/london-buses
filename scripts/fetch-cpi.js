@@ -21,8 +21,8 @@
  *                yoy: "0.03110465", p2p: "0.02702241", ra: "0.02883061" }] }
  *
  * Sticky: on any fetch/validation failure the existing file stands untouched.
- * ONS publishes monthly at 07:00 UK time. refresh-cpi.yml polls hourly from 07:07 on release day (it reads
- * `nextRelease` from the served file, so it is a no-op on every other day); the nightly pipeline is the backstop.
+ * ONS publishes monthly at 07:00 UK time. refresh-cpi.yml runs this from 09:00 London time on release day, hourly
+ * until the figure is in (it reads `nextRelease` from the served file, so it is a no-op on every other day).
  *
  * Run: node scripts/fetch-cpi.js
  */

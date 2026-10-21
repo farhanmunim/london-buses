@@ -641,7 +641,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     'crowding-profile': { source: 'seeded snapshot (TfL BUSTO)', cadence: 'static' },
     'bridges':          { source: 'seeded snapshot (TfL/London Datastore EPOWR height restrictions + OSM cross-check)', cadence: 'static' },
     'accidents':        { source: 'seeded snapshot (DfT STATS19, bus/coach-involved, 2021–2025)', cadence: 'static' },
-    'cpi-cpa':          { source: 'ONS · CPI All Items Index (D7BT, 2015=100) + derived CPA rates', cadence: 'on ONS release day (hourly from 07:07 UK time), then nightly' },
+    'cpi-cpa':          { source: 'ONS · CPI All Items Index (D7BT, 2015=100) + derived CPA rates', cadence: 'on ONS release day, from 09:00 UK time' },
   };
   const rowsOf = j => {
     for (const k of ['routes', 'byRoute', 'byReg', 'garages', 'features', 'rows', 'stops']) {
