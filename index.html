@@ -246,6 +246,10 @@ main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 1
 @media(min-width:900px){.oplist{grid-template-columns:repeat(3,1fr)}}
 .opcard{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px;transition:border-color .12s}
 .opcard:hover{border-color:var(--bd2)}
+.opcard.incoming{border-style:dashed}
+.newpill{display:inline-block;vertical-align:1px;margin-left:6px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:2px 7px}
+.changenote{margin:10px 0 0;padding:11px 14px;border:1px solid var(--bd);border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--surf);font-size:13px;line-height:1.5;color:var(--tx2)}
+.changenote b{color:var(--tx)}
 .ophead{display:flex;align-items:center;gap:11px}
 .avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;flex:none}
 .ophead .nm{font-weight:700;font-size:14.5px}
@@ -392,6 +396,58 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .lb-attr-txt[hidden]{display:none}
 .lb-attr-txt a{color:var(--acc);text-decoration:none}
 .lb-attr-txt a:hover{text-decoration:underline}
+
+/* ── interaction polish ─────────────────────────────────────────────────────
+   One system for hover, press and focus on every control: hover only on devices that can hover
+   (so a tap never leaves a control stuck lit), a tactile press, a single spring easing, and one
+   keyboard focus ring. Kept at the end so it layers over the component rules above. */
+:root{--ease:cubic-bezier(.16,1,.3,1);--hov:color-mix(in srgb, var(--tx) 5.5%, transparent);--hov-2:color-mix(in srgb, var(--tx) 9%, transparent)}
+.nav-desktop a,.nav-desktop button,.tabbar a,.tabbar button,.more-sheet a,.chip,.livebtn,.seg button,.reset,.rchip,.backrow,.rrow,.opcard,.grow,.nm-sug,.search,.search .clear,.netmap-card .close,.brand-icon,.brand,#themeBtn,a[data-nav="about"],select,input[type=search],input[type=text]{transition:background-color .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease),transform .18s var(--ease),opacity .18s var(--ease),filter .18s var(--ease)}
+:where(a,button,select,summary,[role=button],[tabindex]):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+:where(input,textarea):focus-visible{outline:none}
+select{cursor:pointer}
+input[type=search],input[type=text],select{border-radius:inherit}
+.more-sheet:not([hidden]){animation:sheetIn .2s var(--ease)}
+@keyframes sheetIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+.more-sheet a{position:relative}
+.more-sheet a:active,.tabbar a:active,.tabbar button:active{transform:scale(.97)}
+.nav-desktop a:active,.nav-desktop button:active,.chip:active,.livebtn:active,.reset:active,#themeBtn:active,a[data-nav="about"]:active{transform:scale(.96)}
+.rrow:active,.opcard:active,.grow:active{transform:scale(.995)}
+.livebtn.is-gated,.livebtn[aria-disabled="true"]{cursor:not-allowed}
+.livebtn:disabled,.seg button:disabled{cursor:default}
+@media (hover:hover){
+  .brand:hover .brand-icon{transform:scale(1.06) rotate(-3deg);filter:brightness(1.08)}
+  .nav-desktop a.on:hover,.nav-desktop button.on:hover{filter:brightness(1.18)}
+  .nav-desktop button[aria-expanded="true"]{background:var(--surf2);color:var(--tx)}
+  #themeBtn:hover,a[data-nav="about"]:hover{background:var(--surf2)!important;color:var(--tx)!important}
+  #themeBtn:hover svg{transform:rotate(18deg)}
+  #themeBtn svg{transition:transform .3s var(--ease)}
+  .more-sheet a:hover{background:var(--surf2)}
+  .more-sheet a.on:hover{background:color-mix(in srgb, var(--acc) 14%, var(--surf))}
+  .more-sheet a:hover svg{color:var(--acc)}
+  .chip:hover{background:var(--surf2);border-color:var(--bd2);color:var(--tx)}
+  .chip.on:hover{filter:brightness(1.2)}
+  .livebtn:hover{background:var(--surf2);border-color:var(--bd2);color:var(--tx)}
+  .livebtn.on:hover{background:color-mix(in srgb, var(--acc) 14%, var(--surf));border-color:var(--acc);color:var(--acc)}
+  .livebtn.is-gated:hover,.livebtn[aria-disabled="true"]:hover{background:var(--surf);border-color:var(--bd);color:var(--tx2)}
+  .livebtn.iconb:hover{color:var(--acc)}
+  .seg button:hover:not(.on):not(:disabled){color:var(--tx);background:var(--hov)}
+  .seg button.on:hover{filter:brightness(1.02)}
+  .reset:hover,.backrow:hover{color:var(--tx);text-decoration:underline;text-underline-offset:3px}
+  .rrow:hover,.opcard:hover,.grow:hover{border-color:var(--bd2);background:color-mix(in srgb, var(--tx) 2.5%, var(--surf));box-shadow:0 2px 10px rgba(28,25,23,.07)}
+  .rchip:hover{background:var(--acc-soft)}
+  .nm-sug:hover{background:var(--surf2)}
+  select:hover,input[type=search]:hover:not(:focus),input[type=text]:hover:not(:focus){border-color:var(--bd2)!important}
+  .search:hover:not(:focus-within){border-color:var(--bd2)}
+  a:not([class]):not([data-nav]):hover,.legendrow a:hover,.note a:hover,.about a:hover,.section a:not([class]):hover,a[style*="color:var(--acc)"]:hover{text-decoration:underline;text-underline-offset:3px}
+  table.cpi-table tbody tr:hover td{background:var(--hov)}
+  .leaflet-marker-icon.leaflet-interactive:hover{filter:drop-shadow(0 3px 6px rgba(0,0,0,.35));z-index:1000!important}
+  .leaflet-marker-icon.leaflet-interactive>div{transition:transform .18s var(--ease)}
+  .leaflet-marker-icon.leaflet-interactive:hover>div{transform:scale(1.08)}
+  path.leaflet-interactive:hover{filter:brightness(.88)}
+  .leaflet-bar a:hover{background:var(--surf2);color:var(--tx)}
+}
+@media (prefers-reduced-motion:reduce){.more-sheet:not([hidden]){animation:none}.brand:hover .brand-icon,#themeBtn:hover svg,.leaflet-marker-icon.leaflet-interactive:hover>div{transform:none!important}}
 </style>
 <script>
 /* Stamp the theme before first paint — stored choice wins, else system. */
@@ -598,6 +654,7 @@ const stripTags = s => String(s ?? '').replace(/<[^>]*>/g, ' ')
   .replace(/\s+/g,' ').trim();
 const num = v => Number.isFinite(v) ? v : null;
 const tvrOf = pvr => Number.isFinite(pvr) ? Math.floor(pvr * 1.13) : null;
+const plural = (n, one, many = one + 's') => `${Number(n).toLocaleString('en-GB')} ${n === 1 ? one : many}`;
 const fmtDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
   ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : null; };
 const monthYear = ym => { const m = /^(\d{4})-(\d{2})/.exec(ym ?? ''); return m ? `${m[2]}/${m[1]}` : null; };
@@ -641,8 +698,39 @@ const OP_COLORS   = { 'Arriva London':'#1d4ed8','Arriva':'#1d4ed8','First Bus Lo
    so a rewording degrades to the right colour, not to fallback grey. */
 const opKey = (dict, n) => dict[n] != null ? n
   : Object.keys(dict).sort((a,b) => b.length - a.length).find(k => String(n ?? '').startsWith(k));
-const opInitials = n => { const k = opKey(OP_INITIALS, n); return k ? OP_INITIALS[k] : String(n ?? '?').replace(/[^A-Za-z]/g,'').slice(0,3).toUpperCase(); };
-const opColor    = n => { const k = opKey(OP_COLORS, n); return k ? OP_COLORS[k] : '#57534e'; };
+/* Operators the tables above do not list (a new entrant, a small contractor) still get their own stable identity:
+   initials from the name, and a colour picked from a spare palette by hashing it — so a name always wears one colour. */
+const EXTRA_COLORS = ['#0f766e','#a21caf','#4d7c0f','#b45309','#0369a1','#9f1239','#4338ca','#15803d','#c2410c','#6d28d9'];
+const hashStr = s => { let h = 5381; for(const c of String(s ?? '')) h = ((h << 5) + h + c.charCodeAt(0)) >>> 0; return h; };
+const opInitials = n => { const k = opKey(OP_INITIALS, n); if(k) return OP_INITIALS[k];
+  const w = String(n ?? '?').split(/[\s\-]+/).map(x => x.replace(/[^A-Za-z]/g,'')).filter(Boolean);
+  return (w.length > 1 ? w.slice(0,3).map(x => x[0]).join('') : (w[0] ?? '?').slice(0,3)).toUpperCase(); };
+const opColor    = n => { const k = opKey(OP_COLORS, n); return k ? OP_COLORS[k] : EXTRA_COLORS[hashStr(n) % EXTRA_COLORS.length]; };
+
+/* ── Incoming operators ───────────────────────────────────────────────────────
+   Derived, never listed: a route whose newest award went to a different operator than the one running it has a
+   changeover coming. An operator that runs nothing yet but holds such awards is new to the network (Go Bus, say) —
+   it appears on the Operators page, its own page and every affected route the moment the award is published,
+   and moves into the normal operator lists by itself when the route data shows it running a route. */
+const brandRoot = n => String(n ?? '').toLowerCase().trim().split(/\s+/)[0] ?? '';
+let _incoming = null;
+D.incoming = () => _incoming ??= Promise.all([D.tenders(), D.meta()]).then(([tn, meta]) => {
+  const byRoute = new Map(), byOp = new Map();
+  const today = new Date().toISOString().slice(0, 10), cutoff = new Date(Date.now() - 548 * 864e5).toISOString().slice(0, 10);
+  const running = new Set(Object.values(meta ?? {}).map(m => brandRoot(m?.operator)));
+  for(const [route, m] of Object.entries(meta ?? {})){
+    const a = [...(tn?.[route] ?? [])].sort((x, y) => String(y.awardDate).localeCompare(String(x.awardDate)))[0];
+    if(!a?.operator || a.operatorChange !== true || brandRoot(a.operator) === brandRoot(m.operator)) continue;
+    if(!a.provisional && a.awardDate < cutoff) continue;           // an old award the route data has simply not caught up with
+    if(a.contractStart && a.contractStart <= today) continue;      // already running: the route data will show it
+    const inc = { route, op:a.operator, from:m.operator, awardDate:a.awardDate, provisional:!!a.provisional, start:a.contractStart ?? m.contractEnd ?? null,
+                  tranche:a.tranche ?? null, vehicle:a.vehicle?.raw ?? null, pvr:m.pvr ?? a.pvr ?? null };
+    byRoute.set(route, inc);
+    (byOp.get(a.operator) ?? byOp.set(a.operator, []).get(a.operator)).push(inc);
+  }
+  return { byRoute, byOp, fresh:[...byOp.keys()].filter(o => !running.has(brandRoot(o))) };
+}).catch(() => ({ byRoute:new Map(), byOp:new Map(), fresh:[] }));
+const incWhen = i => i.start ? `starting ${fmtDate(i.start)}` : 'start date to be confirmed';
 
 /* One garage pin for every map: operator initials over the garage code —
    "GAL / (Q)" — so both identities read at a glance. */
@@ -968,7 +1056,7 @@ const webglOk = () => _webgl ??= (() => {
    instead of a permanent line across the map. The text stays one click away on
    every map, and the About page lists every source in full. Closes on a map
    click, a drag/zoom, or Escape. */
-const AttribControl = L.Control.extend({
+const AttribControl = window.L ? L.Control.extend({
   options: { position:'bottomright' },
   onAdd(map){
     const box = L.DomUtil.create('div', 'lb-attr leaflet-control');
@@ -983,7 +1071,7 @@ const AttribControl = L.Control.extend({
     return box;
   },
   setHtml(html){ if(this._txt) this._txt.innerHTML = html; },
-});
+}) : null;
 const ATTRIB = {
   carto: '&copy; <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" rel="noopener" target="_blank">CARTO</a>',
   ofm:   '<a href="https://openfreemap.org" rel="noopener" target="_blank">OpenFreeMap</a> &copy; <a href="https://openmaptiles.org/" rel="noopener" target="_blank">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a>',
@@ -1039,6 +1127,11 @@ function baseTiles(map){
    credit control, same basemap logic — so the mini maps stay
    consistent by construction rather than by review. */
 function makeMap(el){
+  // The map library comes from a CDN; if it is blocked or slow, every page that does not draw a map still works.
+  if(!window.L){
+    el.innerHTML = '<div class="empty" style="margin:16px;max-width:420px">The map could not load — the map library was blocked or is offline. Check your connection or any content blocker, then reload.</div>';
+    throw new Error('map library unavailable');
+  }
   // maxZoom is explicit: a vector basemap has no tile layer to imply one.
   const map = L.map(el, { zoomControl:false, preferCanvas:true, attributionControl:false, maxZoom:19 });
   // Credit for whichever basemap is active (a condition of both free tiers), one click away.
@@ -1406,6 +1499,13 @@ async function renderRouteDetail(name){
         ].filter(Boolean).join(' · ')}</div>
       </div>
     </div>`;
+
+  /* a changeover already awarded: who takes the route over and when (provisional awards say so) */
+  D.incoming().then(inc => {
+    const i = inc.byRoute.get(route.name); if(!i || gone(tok)) return;
+    const el = document.getElementById('dstatus'); if(!el) return;
+    el.insertAdjacentHTML('beforebegin', `<div class="changenote" role="note"><b>Changing operator:</b> <a href="#/operator/${encodeURIComponent(i.op)}" style="color:var(--acc);font-weight:600">${esc(i.op)}</a> has been awarded this route${i.from ? ` (now run by ${esc(i.from)})` : ''}, ${esc(incWhen(i))}.${i.provisional ? ' Provisional — community-reported, not yet in TfL’s published results.' : ''}</div>`);
+  });
 
   /* live status — seconds-fresh feed, snapshot fallback, silently
      re-polled every 60 s so the banner tracks reality while the page
@@ -2631,7 +2731,19 @@ async function renderOperators(){
       ${evPct != null ? `<div><div class="minibar"><i style="width:${evPct}%;background:var(--good)"></i></div>
         <div class="legendrow"><span>${evPct}% zero-emission routes</span></div></div>` : ''}
     </a>`;
-  }).join('');
+  }).join('') + await (async () => {
+    const inc = await D.incoming(); if(!inc.fresh.length) return '';
+    return `<div class="section-h" style="margin:18px 2px 8px">New and incoming</div>` + inc.fresh.map(op => {
+      const rs = inc.byOp.get(op).sort((a, b) => cmpRoute(a.route, b.route)), starts = [...new Set(rs.map(r => r.start).filter(Boolean))].sort();
+      return `<a class="opcard incoming" href="#/operator/${encodeURIComponent(op)}">
+        <div class="ophead">
+          <span class="avatar" style="background:${opColor(op)}">${esc(opInitials(op))}</span>
+          <div><div class="nm">${esc(op)} <span class="newpill">Incoming</span></div><div class="co">Awarded ${plural(rs.length, 'route')} · ${starts.length ? 'from ' + esc(fmtDate(starts[0])) : 'start to be confirmed'}${rs.some(r => r.provisional) ? ' · provisional' : ''}</div></div>
+        </div>
+        <div class="chiprow">${rs.map(r => `<span class="rchip">${esc(r.route)}</span>`).join('')}</div>
+      </a>`;
+    }).join('');
+  })();
 }
 
 /* ── Operator detail — drill: operator → garages → routes → map ─────────── */
@@ -2641,7 +2753,31 @@ async function renderOperatorDetail(op){
   const [meta, garages, routes] = await Promise.all([D.meta(), D.garages(), D.routes()]);
   if(gone(tok)) return;
   const myRoutes = (routes ?? []).filter(r => meta?.[r.name]?.operator === op).sort((a,b)=>cmpRoute(a.name,b.name));
-  if(!myRoutes.length){ main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="empty">No routes found for “${esc(op)}”.</div>`; return; }
+  if(!myRoutes.length){
+    const inc = (await D.incoming()).byOp.get(op);
+    if(gone(tok)) return;
+    if(!inc?.length){ main.innerHTML = `<a class="backrow" href="#/operators">‹ All operators</a><div class="empty">No routes found for “${esc(op)}”.</div>`; return; }
+    const rs = [...inc].sort((a, b) => cmpRoute(a.route, b.route)), pvr = rs.reduce((t, r) => t + (num(r.pvr) ?? 0), 0);
+    main.innerHTML = `
+      <a class="backrow" href="#/operators">‹ All operators</a>
+      <div class="dhead">
+        <span class="avatar" style="width:46px;height:46px;border-radius:12px;font-size:14px;background:${opColor(op)}">${esc(opInitials(op))}</span>
+        <div class="dtitle"><h1>${esc(op)} <span class="newpill">Incoming</span></h1><div class="sub2">New to the TfL bus network</div></div>
+      </div>
+      <div class="changenote"><b>${esc(op)} has been awarded ${plural(rs.length, 'route')}.</b> ${rs.some(r => r.provisional) ? 'These awards are community-reported and provisional until TfL publishes the official results. ' : ''}Garages, fleet and performance appear here once the routes are running.</div>
+      <div class="facts" style="margin-top:14px">
+        <div class="fact"><div class="l">Routes awarded</div><div class="v">${rs.length}</div></div>
+        <div class="fact"><div class="l">PVR</div><div class="v">${pvr || '—'}</div></div>
+        <div class="fact"><div class="l">First start</div><div class="v">${esc(fmtDate([...rs.map(r => r.start).filter(Boolean)].sort()[0]) || 'TBC')}</div></div>
+      </div>
+      <div class="section"><div class="section-h">Awarded routes</div>
+        <div class="glist">${rs.map(r => `<a class="grow" href="#/route/${encodeURIComponent(r.route)}">
+          <span class="avatar" style="background:var(--tx2)">${esc(r.route)}</span>
+          <span class="g-nm"><b>Route ${esc(r.route)}</b><span>from ${esc(r.from ?? '—')} · ${esc(incWhen(r))}${r.provisional ? ' · provisional' : ''}</span></span>
+          <span class="g-pvr"><b>${r.pvr ?? '—'}</b>PVR</span></a>`).join('')}</div>
+      </div>`;
+    return;
+  }
   const myGarages = (garages ?? []).filter(g => g.operator === op).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
   let pvr = 0, ev = 0, known = 0;
   for(const r of myRoutes){
@@ -3250,6 +3386,10 @@ async function renderTenders(tab){
   const tok = navToken;
   main.innerHTML = `<div class="wrap"><div class="skel" style="height:46px;width:50%"></div></div>`;
   const all = (await D.tendersAll() ?? []).filter(a => a.awardDate);
+  /* operators whose very first award on file is recent — new to the network, flagged in the table (derived, not listed) */
+  const firstAward = new Map(); for(const x of all){ const k = brandRoot(x.operator); if(k && (!firstAward.has(k) || x.awardDate < firstAward.get(k))) firstAward.set(k, x.awardDate); }
+  const newCut = new Date(Date.now() - 548 * 864e5).toISOString().slice(0, 10);
+  const isNewOp = o => { const f = firstAward.get(brandRoot(o)); return !!f && f >= newCut; };
   if(gone(tok)) return;
   if(!all.length){
     main.innerHTML = `<div class="wrap"><div class="empty">The tender register is unreachable right now — try again shortly.</div></div>`;
@@ -3428,7 +3568,7 @@ async function renderTenders(tab){
       <td class="num" style="text-align:left">${esc(fmtDate(a.awardDate) ?? a.awardDate)}</td>
       <td style="min-width:${String(a.route ?? '').includes('/') ? 200 : 60}px"><span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px">${routeChips(a.route)}</span></td>
       <td style="min-width:140px"${a.fromOperatorRaw ? ` title="Listed as ${esc(a.fromOperatorRaw)}, whose London bus business Stagecoach bought in August 2022"` : ''}>${a.fromOperator ? esc(a.fromOperator) : '<span style="color:var(--mu)">—</span>'}</td>
-      <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; the official result is not yet published.')}">PROV</span>` : ''}</td>
+      <td style="min-width:140px${a.operatorChange ? ';color:var(--acc);font-weight:600' : ''}"${a.operatorChange ? ` title="Operator change — previously ${esc(a.fromOperator ?? '')}"` : ''}>${esc(a.operator ?? '—')}${isNewOp(a.operator) ? '<span class="newpill" title="New to the TfL bus network — its first award on file">New</span>' : ''}${a.provisional ? `<span style="margin-left:4px;font-size:9.5px;font-weight:700;color:var(--mu);border:1px solid var(--mu);border-radius:4px;padding:0 4px;vertical-align:1px" title="${esc(a.notes ?? 'Provisional — community-reported award; the official result is not yet published.')}">PROV</span>` : ''}</td>
       <td class="num">${Number.isFinite(a.tranche) ? a.tranche : '—'}</td>
       <td${(a.jb?.partners?.length ?? 0) > 1 ? ' style="min-width:200px"' : ''}>${a.jb?.isJoint ? (a.jb.partners?.length ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap;max-width:240px" title="${esc(a.jb.raw ?? '')}">${routeChips(a.jb.partners.join('/'))}</span>` : 'Yes') : ''}</td>
       <td class="num">${Number.isFinite(a.costPerMile) ? '£' + a.costPerMile.toFixed(2) : '—'}</td>
@@ -4194,6 +4334,7 @@ async function renderAbout(){
     nightly: { label:`nightly · ${lonAt(3,17)} London time`,                        hours:[3],                          minute:17 },
     status:  { label:`every 2 h · ${lonAt(7,41)}–${lonAt(21,41)} London time`,      hours:[7,9,11,13,15,17,19,21],      minute:41 },
     fleet:   { label:`every 8 h · ${lonAt(7,20)}/${lonAt(15,20)}/${lonAt(23,20)} London time`, hours:[7,15,23],         minute:20 },
+    cpi:     { label:`ONS release day · hourly from ${lonAt(6,7)} London time`, hours:[6,7,8,9,10,11,12,13,14,15,16,17], minute:7, release:true },
     tenders: { label:`hourly · ${lonAt(7,20)}–${lonAt(20,20)} London time`,         hours:[7,8,9,10,11,12,13,14,15,16,17,18,19,20], minute:20 },
   };
   const nextRun = sc => {
@@ -4212,7 +4353,13 @@ async function renderAbout(){
     const m = Math.round(Math.abs(Date.now() - t) / 60000);
     return m < 60 ? `${m} min` : m < 2880 ? `${Math.round(m/60)} h` : `${Math.round(m/1440)} d`;
   };
+  // CPI is polled only on ONS release day: show the release date itself unless that day is today
+  const cpiRelease = await D.cpi().then(c => Date.parse(String(c?.nextRelease) + ' UTC'), () => NaN);
   const nextTxt = sc => {
+    if(sc.release && Number.isFinite(cpiRelease) && Date.now() < cpiRelease){
+      const d = new Date(cpiRelease);
+      return `on ONS release day, ${d.getUTCDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getUTCMonth()]}`;
+    }
     const t = nextRun(sc); if(!t) return '—';
     return `in ~${rel(t.toISOString())} (${lon(t)} London)`;
   };
@@ -4226,7 +4373,7 @@ async function renderAbout(){
     { name:'Fleet observations',  keys:['fleet','vehicles'],                       sc:SCHED.fleet },
     { name:'Tender awards',              keys:['tenders'],                                sc:SCHED.tenders },
     { name:'Tendering programme',        keys:['tender-programme'],                       sc:SCHED.tenders },
-    { name:'Contract price adjustment (CPI)',              keys:['cpi-cpa'],                                sc:SCHED.nightly },
+    { name:'Contract price adjustment (CPI)',              keys:['cpi-cpa'],                                sc:SCHED.cpi },
   ];
   document.getElementById('freshTable').innerHTML =
     `<tr><th style="text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);padding:9px 14px 5px">Dataset</th>

@@ -37,6 +37,8 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 
 Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `/api/live/vehicles` (`functions/api/live/vehicles.js`), a small server endpoint that proxies the DfT BODS GPS feed with a 10-second cache. Street works arrive by push: `/api/streetworks` (`functions/api/streetworks.js`) receives DfT Street Manager SNS notifications (signature-verified, London-filtered by SWA org code) and commits each event to the `streetworks-inbox` branch, which the status workflow folds into the archive.
 
+**New operators are automatic.** Operator names are read from the data, not listed in the code: an operator that is awarded routes but runs none yet (Go Bus, for instance) appears under *New and incoming* on the Operators page and on each affected route, and becomes a normal operator — with its own colour, garages, filters and an Intelligence entry — the moment the route data shows it running a route. `data/operator-aliases.json` is only needed to fold a renamed subsidiary into its parent brand.
+
 ## Local development
 
 ```bash
