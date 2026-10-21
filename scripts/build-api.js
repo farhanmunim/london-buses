@@ -159,7 +159,9 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       pvr,
       capacity: Number.isFinite(g.capacity) && g.capacity > 0 ? g.capacity : (p.capacity ?? null),
       utilisation: null,
-      routes: (routesByGarage[code] ?? p.routes ?? []).sort(),
+      // current allocation only: falling back to the previous build's list kept stale routes on garages
+      // that had lost them (and on superseded duplicates such as HF beside UB)
+      routes: (routesByGarage[code] ?? []).sort(),
       licence: p.licence ?? null,                          // sticky: DVSA VOL enrichment
     };
   });
@@ -186,7 +188,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     // Match on company AND depot name — the carried entry's company can be
     // null (sticky field), leaving "Therapia Lane" as the only tram marker.
     if (/\btram|\bferr(y|ies)|cable\s*car|river\s*bus|therapia\s*lane/i.test(`${p.company ?? ''} ${p.name ?? ''}`)) continue;
-    garages.push({ ...p, routes: (routesByGarage[code] ?? p.routes ?? []).sort() });
+    garages.push({ ...p, routes: (routesByGarage[code] ?? []).sort() });
   }
   garages.sort((a, b) => a.code.localeCompare(b.code));
   write(API('garages.json'), { generatedAt: now, source: 'londonbusroutes.net + postcodes.io + DVSA VOL (OGL)', count: garages.length, garages });
@@ -333,6 +335,10 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   for (const [btId, t] of Object.entries(src)) {
     t.bt_id = t.bt_id ?? btId;
     if (String(t.route_id ?? '').trim().toLowerCase() === 'test') continue;
+    // TfL's form carries the odd stray artefact in the route field ("test", "console.log(1)"). Real entries
+    // include names as well as ids ("ELS", "Hammersmith - Heathrow Airport (T2/3)"), so only drop what is
+    // plainly code: an empty field, or code-like punctuation.
+    if (!String(t.route_id ?? '').trim() || /[;{}<>]|\w\.\w+\(/.test(String(t.route_id))) continue;
     const dupKey = JSON.stringify([t.route_id, t.award_announced_date, t.awarded_operator, t.accepted_bid,
                                    t.lowest_bid, t.highest_bid, t.cost_per_mile, t.number_of_tenderers, t.notes]);
     if (seenAward.has(dupKey)) continue;
