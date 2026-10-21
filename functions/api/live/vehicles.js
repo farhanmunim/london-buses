@@ -38,6 +38,8 @@ export async function onRequestGet(context) {
   const url = new URL(request.url);
   const line = String(url.searchParams.get('line') ?? '').trim().toUpperCase();
   if (!line) return json({ error: 'line parameter required' }, 400);
+  // Route ids are short alphanumerics (88, N38, X68, SL1): anything else is not a route, so it never reaches the cache or BODS.
+  if (!/^[A-Z0-9]{1,6}$/.test(line)) return json({ error: 'invalid line' }, 400);
   if (!env.BODS_API_KEY) return json({ error: 'BODS_API_KEY not configured' }, 503);
 
   // One cache entry per line; the reg/bbox parts of the upstream call are
@@ -58,7 +60,9 @@ export async function onRequestGet(context) {
   upstream.searchParams.set('operatorRef', 'TFLO');
   upstream.searchParams.set('api_key', env.BODS_API_KEY);
 
-  const res = await fetch(upstream, { headers: { 'User-Agent': `${url.hostname} live proxy` } });
+  let res;
+  try { res = await fetch(upstream, { headers: { 'User-Agent': `${url.hostname} live proxy` } }); }
+  catch { return json({ error: 'BODS unreachable' }, 503); }
   // 503, not 502 — Cloudflare swallows a Worker's 502/504 body and serves
   // its own branded error page, which hides this diagnostic JSON.
   if (!res.ok) {

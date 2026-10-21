@@ -39,7 +39,9 @@
  *   - GITHUB_REPO env var (owner/repo of the repository the data lives in).
  *   - GET this endpoint until it reports ready:true, THEN register.
  *
- * GET  → health JSON (token ok? inbox branch? queued file count?)
+ * GET  → health JSON. Anonymous: `configured` (are the variables set) and nothing more. With the HEALTH_KEY
+ *        (X-Health-Key header, or ?key=): `ready` — token ok? inbox branch? queued file count? — and
+ *        ?selftest=write to prove the write path.
  * POST → SNS envelope handling as above.
  */
 
@@ -265,7 +267,26 @@ async function storeEvent(env, msg, ha) {
 }
 
 /* ── Handlers ───────────────────────────────────────────────────────────── */
+// Constant-time comparison: always walks the longer of the two, so neither content nor length is timed.
+function safeEqual(a, b) {
+  let d = a.length ^ b.length;
+  for (let i = 0; i < Math.max(a.length, b.length); i++) d |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  return d === 0;
+}
+
 export async function onRequestGet({ request, env }) {
+  // Diagnostics make authenticated GitHub calls (and ?selftest=write commits to the inbox branch), so they are
+  // not for anonymous callers: set HEALTH_KEY in the Pages environment and pass ?key=<it> to run them. Without
+  // the key this answers from configuration alone — no upstream calls, no repo details, nothing written.
+  // The key may travel in the X-Health-Key header (preferred: URLs end up in access logs) or ?key=.
+  const supplied = request.headers.get('x-health-key') ?? new URL(request.url).searchParams.get('key') ?? '';
+  const trusted = !!env.HEALTH_KEY && safeEqual(supplied, env.HEALTH_KEY);
+  if (!trusted) {
+    const configured = !!(env.GITHUB_TOKEN && env.GITHUB_REPO);
+    // `configured` only says the variables are set. Whether the token can reach the repo and write is `ready`, shown with the key.
+    return json({ service: 'street-manager open-data receiver', configured,
+                  note: 'Full diagnostics need the HEALTH_KEY (X-Health-Key header or ?key=).' }, configured ? 200 : 503);
+  }
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
     return json({ service: 'street-manager open-data receiver', ready: false,
                   hint: 'Set the GITHUB_REPO (owner/repo) and GITHUB_TOKEN (fine-grained PAT, that repo only, Contents read/write) environment variables.' }, 503);
