@@ -6,6 +6,7 @@
 <title>londonbuses.org</title>
 <meta name="description" content="Search and explore every London bus route, operator and garage — data refreshed regularly from open public sources." />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="canonical" href="https://londonbuses.org/" />
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#100f0e" media="(prefers-color-scheme: dark)" />
@@ -173,7 +174,7 @@ main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 1
 :root[data-theme="dark"] .rtag.hybrid{background:#232a52;color:#a5b4fc}
 .rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu);position:relative}
 .rrow .pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
-.warn-dot{position:absolute;top:1px;right:-4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.warn-dot{position:absolute;top:6px;left:-12px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
 @media(min-width:760px){.rlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
 
 /* detail pages */
@@ -397,6 +398,10 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .lb-attr-txt a{color:var(--acc);text-decoration:none}
 .lb-attr-txt a:hover{text-decoration:underline}
 
+/* layout fixes from the production audit */
+.opcard .chiprow{padding:0}
+.livebtn,.reset,.nm-lbtns button{white-space:nowrap}
+@media(max-width:640px){.fact .v{white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.3}}
 /* ── interaction polish ─────────────────────────────────────────────────────
    One system for hover, press and focus on every control: hover only on devices that can hover
    (so a tap never leaves a control stuck lit), a tactile press, a single spring easing, and one
@@ -570,7 +575,8 @@ const tflLive = (url) => liveGet(url).then(j => {
 const D = {
   routes:      () => get('/routes'),
   meta:        () => get('/route-meta').then(d => { const r = d?.routes ?? {}; for(const m of Object.values(r)) if(m?.operator) m.operator = fixOperator(m.operator); return r; }),
-  garages:     () => get('/garages').then(d => { const g = d?.garages ?? []; for(const x of g) if(x?.operator) x.operator = fixOperator(x.operator); return g; }),
+  garagesAll:  () => get('/garages').then(d => { const g = d?.garages ?? []; for(const x of g) if(x?.operator) x.operator = fixOperator(x.operator); return g; }),   // every garage on file, for direct links by code
+  garages:     () => get('/garages').then(d => { const g = (d?.garages ?? []).filter(x => x?.routes?.length); for(const x of g) if(x?.operator) x.operator = fixOperator(x.operator); return g; }),   // a garage with no current routes is not on the network
   fleet:       () => get('/fleet').then(d => d?.byRoute ?? {}),
   crowding:    () => get('/crowding'),
   crowdProf:   () => get('/crowding-profile').then(d => d?.routes ?? {}),
@@ -654,6 +660,7 @@ const stripTags = s => String(s ?? '').replace(/<[^>]*>/g, ' ')
   .replace(/\s+/g,' ').trim();
 const num = v => Number.isFinite(v) ? v : null;
 const tvrOf = pvr => Number.isFinite(pvr) ? Math.floor(pvr * 1.13) : null;
+const nOf = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 const plural = (n, one, many = one + 's') => `${Number(n).toLocaleString('en-GB')} ${n === 1 ? one : many}`;
 const fmtDate = iso => { const d = iso ? new Date(iso) : null; return d && !isNaN(d)
   ? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : null; };
@@ -1227,7 +1234,12 @@ function navigate(){
   let h = location.hash.replace(/^#\/?/, '');
   // /map takes an optional query — routes=, ids=, title=, embed=1 — so other pages can open it scoped (see mapParams).
   if(/^map\?/.test(h)){ pendingMapQ = new URLSearchParams(h.slice(4)); h = 'map'; }
-  const [seg, arg] = h.split('/').map(decodeURIComponent);
+  // A malformed escape in the hash (#/route/%E0%A4%A) must not blank the page: fall back to the raw text.
+  const safeDecode = x => { try{ return decodeURIComponent(x); }catch{ return x; } };
+  // A query on any page (#/tender?x=1, #/route/88?x=1) is ignored, never mistaken for part of the route; the vehicle
+  // page keeps its own (it reads its query from the hash itself).
+  const pathOnly = h.split('?')[0];
+  let [seg, arg] = (pathOnly.split('/')[0] === 'vehicle' ? h : pathOnly).split('/').map(safeDecode);
   const view = seg === '' ? 'routes' : seg;
   const navKey = view === 'route' ? 'routes' : view === 'garage' ? 'garages'
     : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view === 'vehicle' ? 'routes' : view;
@@ -1296,12 +1308,31 @@ window.addEventListener('hashchange', navigate);
       sheet.style.left = Math.max(8, Math.min(r.left, window.innerWidth - sheet.offsetWidth - 8)) + 'px';
     }
   };
-  for(const b of btns) b.addEventListener('click', () => setOpen(sheet.hidden, b.id));
+  for(const b of btns) b.addEventListener('click', e => {
+    setOpen(sheet.hidden, b.id);
+    if(!sheet.hidden && e.detail === 0) sheet.querySelector('a')?.focus();     // opened from the keyboard: land on the first link
+  });
   document.addEventListener('click', e => {
     if(!sheet.hidden && !sheet.contains(e.target) && !btns.some(b => b.contains(e.target))) setOpen(false);
   });
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape' && !sheet.hidden) setOpen(false);
+    if(sheet.hidden) return;
+    if(e.key === 'Escape'){
+      const had = sheet.contains(document.activeElement); setOpen(false);
+      if(had) btns.find(b => b.offsetParent !== null)?.focus();                // give focus back to the button that opened it
+      return;
+    }
+    // arrow keys move through the menu like any menu; Tab leaving it closes it
+    if(sheet.contains(document.activeElement) || btns.includes(document.activeElement)){
+      const links = [...sheet.querySelectorAll('a')], i = links.indexOf(document.activeElement);
+      if(e.key === 'ArrowDown'){ e.preventDefault(); links[(i + 1) % links.length]?.focus(); }
+      else if(e.key === 'ArrowUp'){ e.preventDefault(); links[(i <= 0 ? links.length : i) - 1]?.focus(); }
+      else if(e.key === 'Home' && i >= 0){ e.preventDefault(); links[0].focus(); }
+      else if(e.key === 'End' && i >= 0){ e.preventDefault(); links.at(-1).focus(); }
+    }
+  });
+  sheet.addEventListener('focusout', e => {
+    if(!sheet.hidden && e.relatedTarget && !sheet.contains(e.relatedTarget) && !btns.includes(e.relatedTarget)) setOpen(false);
   });
 }
 
@@ -1341,7 +1372,7 @@ D.lineStatus().then(ls => {
   const s = ls?.summary; if(!s) return;
   const chip = document.getElementById('netChip');
   document.getElementById('netChipText').textContent =
-    s.disrupted ? `${s.good}/${s.total} on good service` : `All ${s.total} routes on good service`;
+    s.disrupted ? `${s.good}/${s.total} on good service` : `All ${nOf(s.total, 'route')} on good service`;
   chip.classList.toggle('bad', s.disrupted > 0);
   chip.hidden = false;
 });
@@ -1541,7 +1572,7 @@ async function renderRouteDetail(name){
   if(m.propulsion) facts.push(['Power', title(m.propulsion)]);
   if(m.fleet) facts.push(['Vehicle', stripTags(m.fleet)]);
   document.getElementById('dfacts').innerHTML =
-    facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v)}</div></div>`).join('')
+    facts.slice(0,6).map(([l,v]) => `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(v)}">${esc(v).replace(/\//g, '/<wbr>')}</div></div>`).join('')
     + `<div class="fact"><div class="l">Deck</div><div class="v" id="deckVal">${
       /* Seed from the rostered-vehicle fleet code (DD/SD markers) so routes with
          no recent DVLA observations (school runs, PVR 1) still get a verdict;
@@ -1612,7 +1643,7 @@ async function buildRouteSections(route, m, tok){
   if(fl && (fl.count > 0 || m.fleet)){
     const rows = [];
     if(m.fleet) rows.push(`<div><span class="k">Rostered vehicle</span><span class="v">${esc(stripTags(m.fleet))}</span></div>`);
-    if(fl.count > 0) rows.push(`<div><span class="k">Observed in last sample</span><span class="v mono">${fl.count} vehicles</span></div>`);
+    if(fl.count > 0) rows.push(`<div><span class="k">Observed in last sample</span><span class="v mono">${nOf(fl.count, 'vehicle')}</span></div>`);
     if(num(fl.avgAgeYears)) rows.push(`<div><span class="k">Average age</span><span class="v mono">${fl.avgAgeYears.toFixed(1)} years</span></div>`);
     if(fl.makes?.length) rows.push(`<div><span class="k">Makes</span><span class="v">${fl.makes.map(x=>`${esc(title(x.make))} (${x.n})`).join(', ')}</span></div>`);
     if(fl.regs?.length) rows.push(`<div id="deckRow"><span class="k">Deck</span><span class="v">—</span></div>`);
@@ -1824,7 +1855,7 @@ async function initRouteMap(route, m = {}, tok = navToken){
         .addTo(closestLayer);
     }
     closestLayer.addTo(_map);
-    layerNote('garNote', `<span>${rows.length} garages in operator colours. Hover or tap a pin for its distance to route ${esc(route.name)} and its details.</span>`);
+    layerNote('garNote', `<span>${nOf(rows.length, 'garage')} in operator colours. Hover or tap a pin for its distance to route ${esc(route.name)} and its details.</span>`);
   });
   /* "Low bridges" + "Incidents" layers — whole-London snapshots filtered to
      the route's corridor. Route points are collected once, lazily; distance
@@ -2228,7 +2259,7 @@ async function renderNetworkMap(){
     const cEl = document.getElementById('nmCount');
     if(cEl) cEl.textContent = st.pills.length
       ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
-      : (filtered ? `${vis.size} of ${allNames.size} routes` : `${allNames.size} routes`);
+      : (filtered ? `${vis.size} of ${nOf(allNames.size, 'route')}` : `${nOf(allNames.size, 'route')}`);
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
     syncTermini();
@@ -2733,7 +2764,7 @@ async function renderOperators(){
     </a>`;
   }).join('') + await (async () => {
     const inc = await D.incoming(); if(!inc.fresh.length) return '';
-    return `<div class="section-h" style="margin:18px 2px 8px">New and incoming</div>` + inc.fresh.map(op => {
+    return inc.fresh.map(op => {
       const rs = inc.byOp.get(op).sort((a, b) => cmpRoute(a.route, b.route)), starts = [...new Set(rs.map(r => r.start).filter(Boolean))].sort();
       return `<a class="opcard incoming" href="#/operator/${encodeURIComponent(op)}">
         <div class="ophead">
@@ -2804,7 +2835,7 @@ async function renderOperatorDetail(op){
       <div class="glist">${myGarages.map(g => `
         <a class="grow" href="#/garage/${encodeURIComponent(g.code)}">
           <span class="avatar" style="background:${opColor(op)}">${esc(g.code)}</span>
-          <span class="g-nm"><b>${esc(g.name)}</b><span>${g.routes?.length ?? 0} routes${num(g.capacity)?` · capacity ${g.capacity}`:''}</span></span>
+          <span class="g-nm"><b>${esc(g.name)}</b><span>${nOf(g.routes?.length ?? 0, 'route')}${num(g.capacity)?` · capacity ${g.capacity}`:''}</span></span>
           <span class="g-pvr"><b>${g.pvr ?? '—'}</b>PVR</span>
         </a>`).join('') || '<div class="empty">No garages listed.</div>'}
       </div>
@@ -2843,7 +2874,7 @@ async function renderGarages(){
       <a class="grow" href="#/garage/${encodeURIComponent(g.code)}">
         <span class="avatar" style="background:${opColor(g.operator)}">${opInitials(g.operator)}</span>
         <span class="g-nm"><b>${esc(g.name)} <span style="color:var(--mu);font-weight:500">(${esc(g.code)})</span></b>
-        <span>${esc(g.operator ?? '—')} · ${g.routes?.length ?? 0} routes</span></span>
+        <span>${esc(g.operator ?? '—')} · ${nOf(g.routes?.length ?? 0, 'route')}</span></span>
         <span class="g-pvr"><b>${g.pvr ?? '—'}</b>PVR</span>
       </a>`).join('') || '<div class="empty">No garages match.</div>';
   };
@@ -2857,7 +2888,7 @@ async function renderGarages(){
 async function renderGarageDetail(code){
   const tok = navToken;
   main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="skel" style="height:120px"></div>`;
-  const [garages, meta] = await Promise.all([D.garages(), D.meta()]);
+  const [garages, meta] = await Promise.all([D.garagesAll(), D.meta()]);   // every garage, so a saved link to a quiet depot still opens
   if(gone(tok)) return;
   const g = garages?.find(x => x.code?.toUpperCase() === String(code ?? '').toUpperCase());
   if(!g){ main.innerHTML = `<a class="backrow" href="#/garages">‹ All garages</a><div class="empty">Garage “${esc(code)}” not found.</div>`; return; }
@@ -3096,7 +3127,7 @@ async function renderStopDetail(id){
       if(!s){
         // Not in the stop directory AND nothing predicted: this id is not a
         // stop we can show — say so instead of rendering a ghost live board.
-        main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="empty">${raw
+        main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="empty">${raw || reg
           ? `Stop “${esc(id)}” isn’t in the stop directory.`
           : 'The stop directory is unreachable right now — try again shortly.'}</div>`;
         return;

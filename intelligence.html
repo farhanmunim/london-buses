@@ -7,6 +7,7 @@
 <title>Operator Intelligence · londonbuses.org</title>
 <meta name="description" content="Concept: a London bus operator intelligence dashboard built on the project's open data.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -309,7 +310,7 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 /* route map: floating glass UI in the same language as the dashboard ---------- */
 .mapbox{position:relative;height:360px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--sunken);box-shadow:var(--shadow);transition:height .25s ease}
 .mapbox.big{height:560px}
-#dmapHost.dmaphost,#netHost.dmaphost{position:absolute;inset:0;width:100%;height:100%}
+#dmapHost.dmaphost{position:absolute;inset:0;width:100%;height:100%}
 .dmaphost:not([data-state="ready"]){background:linear-gradient(100deg,#f2f4f7 30%,#fafbfc 50%,#f2f4f7 70%) 0 0/200% 100%;animation:shimmer 1.4s linear infinite}
 @keyframes shimmer{to{background-position:-200% 0}}
 .mapui{position:absolute;z-index:5;display:flex;gap:8px;align-items:flex-start}
@@ -348,7 +349,6 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 
 .garleg{position:absolute;left:10px;bottom:10px;z-index:5;display:flex;flex-wrap:wrap;gap:4px 12px;max-width:calc(100% - 130px);padding:7px 10px;border-radius:10px;font-size:11.5px;color:var(--ink-2)}
 .garleg[hidden]{display:none}.garleg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.garleg .dot{width:9px;height:9px}
-.mapfs .garleg{bottom:72px;left:12px}
 .hoverpop{pointer-events:none}
 .gpl{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;white-space:nowrap;font-size:11.5px;font-weight:600;color:var(--ink);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff;pointer-events:none}
 /* info buttons, tender tags */
@@ -370,18 +370,11 @@ table.rt td .sub:not(:only-child){margin-left:2px}
 .mfbar{position:absolute;z-index:6;top:22px;left:22px;right:62px;display:flex;align-items:flex-start;gap:10px;pointer-events:none}
 .mfbar>*{pointer-events:auto}
 .mft{display:flex;align-items:baseline;gap:10px;min-width:0;padding:8px 12px;border-radius:11px}.mft b{font-size:14px;font-weight:650;white-space:nowrap}.mft .sub{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mapfs[data-mode="net"] .mft{display:none}
 #mfClose.float{margin-left:auto;height:32px;padding:0 12px 0 10px;border-radius:10px;font-size:12.5px;font-weight:600;color:var(--ink)}
 #mfClose.float:hover{background:#fff}
-.lyrow.over{position:absolute;left:12px;right:60px;bottom:30px;margin:0;z-index:5}
-.lyrow.over .ly{box-shadow:0 2px 8px rgba(16,24,40,.12)}
-.legendcard{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:12px;font-size:12px;color:var(--ink-3);max-width:220px}
-.legendcard b{display:flex;align-items:center;gap:8px;color:var(--ink);font-size:13px;font-weight:650}
-.legendcard .lg{display:flex;align-items:center;gap:8px;color:var(--ink-2)}
 .sw.gr{background:#2a78d6;box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px #2a78d6}.sw.gh{width:14px;height:3px;border-radius:2px;background:#9aa6ba}.sw.gl{width:12px;height:10px;border-radius:2px;background:none;border:0;position:relative}.sw.gl::before{content:'Aa';position:absolute;inset:-3px 0 0;font-size:11px;font-weight:700;color:var(--ink);line-height:1}.sw.gx{background:#98a2b3;box-shadow:0 0 0 1.5px #fff}
 .pbtn{margin-top:8px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 10px;font:inherit;font-size:12px;font-weight:600;color:var(--accent-ink);cursor:pointer}.pbtn:hover{background:var(--accent-soft)}
-.mapfs .mapui.tl{top:56px;left:10px}.mapfs[data-mode="net"] .mapui.tl{top:10px}
-@media (max-width:860px){.lyrow.over{right:12px;bottom:34px}.legendcard .lg{display:none}.mapfs{padding:8px}.mfbar{top:18px;left:18px;right:56px}.mft .sub{display:none}}
+@media (max-width:860px){.mapfs{padding:8px}.mfbar{top:18px;left:18px;right:56px}.mft .sub{display:none}}
 /* scope menus, replacement runway, expand buttons */
 .menu.gm{min-width:400px;max-height:min(480px,70vh);overflow:auto}
 .menu .msep{height:1px;background:var(--line);margin:4px 6px}
@@ -452,7 +445,7 @@ h1,h2,h3{text-wrap:balance}
 .mono{border-radius:12px}
 .mrow{border-radius:var(--r-ctl)}
 .kpi .l,.bk,.db h4,.about h5,.pal .grp,table.dt th,table.rt th{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
-.kpi .l{gap:7px;min-width:0;padding-right:22px;overflow:hidden;text-overflow:ellipsis;letter-spacing:.05em}
+.kpi .l{gap:7px;min-width:0;padding-right:0;overflow:hidden;text-overflow:ellipsis;letter-spacing:.04em}
 .bk{color:var(--accent-ink);font-weight:600;padding-top:3px}
 table.rt th,table.dt th{padding-top:10px;padding-bottom:10px}
 table.rt th:hover{color:var(--ink)}
@@ -651,6 +644,7 @@ const PROP_LABEL = { diesel:'Diesel', hybrid:'Hybrid', electric:'Electric', hydr
 
 /* ── formatting ──────────────────────────────────────────────────────────── */
 const nf = new Intl.NumberFormat('en-GB');
+const nOf = (n, one, many = one + 's') => `${n} ${n === 1 ? one : many}`;
 const fInt = n => Number.isFinite(n) ? nf.format(Math.round(n)) : '—';
 const fNum = (n, d = 1) => Number.isFinite(n) ? n.toFixed(d) : '—';
 const fPct = (n, d = 1) => Number.isFinite(n) ? n.toFixed(d) + '%' : '—';
@@ -714,7 +708,7 @@ async function load(){
     opt('/data/api/manifest.json'), opt('/data/api/vehicles.json'), opt('/data/api/cpi-cpa.json'),
     opt('/data/api/diversion-history.json'), opt('/data/api/roadworks.json'),
   ]);
-  return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:garages?.garages ?? [], prog:prog?.entries ?? [],
+  return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:(garages?.garages ?? []).filter(g => g.routes?.length), prog:prog?.entries ?? [],
            perf, sched:sched?.routes ?? {}, crowd:crowd?.routes ?? {}, status:status?.rows ?? [], dest:dest?.routes ?? dest ?? {},
            overview, manifest, veh:vehicles?.byReg ?? {}, cpi:cpi?.months ?? [], divhist:divhist?.entries ?? [], works:works?.disruptions ?? [] };
 }
@@ -993,7 +987,7 @@ function glyph(r){
 
 /* ── state ───────────────────────────────────────────────────────────────── */
 const S = { rnWin:24, rnFilter:'open', rnQ:null, rnShown:25, op:ALL, garage:null, real:true, metric:'pvr', rwMetric:'routes', mView:'chart', rwView:'chart', q:'', prop:'all', flags:new Set(), year:null,
-            sort:{ k:'pvr', dir:-1 }, shown:30, route:null, dir:'outbound', mapBig:false, ml:{ stops:true, works:true, coll:false, bridges:false, live:false, gar:false }, nl:{ ghost:true, gars:true, names:true, other:false } };
+            sort:{ k:'pvr', dir:-1 }, shown:30, route:null, dir:'outbound', mapBig:false, ml:{ stops:true, works:true, coll:false, bridges:false, live:false, gar:false } };
 
 const SC = () => D.scope(S.op, S.garage);
 
@@ -1021,7 +1015,7 @@ function footprint(sc){
   for(const [id, cs] of D.lines){ const d = pathD(cs, P); if(mine.has(id)) own += `<path data-r="${esc(id)}" d="${d}" fill="none" stroke="${sc.kind === 'all' ? opColour(D.byId.get(id)?.op) : c}" stroke-width="1" stroke-opacity=".65" stroke-linecap="round" stroke-linejoin="round"/>`; else ghost += `<path d="${d}" fill="none" stroke="#dfe2e8" stroke-width=".7"/>`; }
   const gs = [...new Set(sc.list.map(r => r.garage))].map(code => D.garages.find(g => g.code === code)).filter(g => g && Number.isFinite(g.lat));
   const dots = gs.map(g => { const [x, y] = P(g.lng, g.lat); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.5 + Math.sqrt(g.pvr || 10) * .32).toFixed(1)}" fill="${sc.kind === 'all' ? opColour(g.operator) : c}" stroke="#fff" stroke-width="2" data-tip="${esc(g.name)} garage\n${esc(g.pvr)} PVR"/>`; }).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(sc.name)} route footprint across London">${ghost}${own}${dots}</svg><span class="cap">${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'} · ${sc.st.n} routes</span>
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(sc.name)} route footprint across London">${ghost}${own}${dots}</svg><span class="cap">${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'} · ${nOf(sc.st.n, 'route')}</span>
     <button class="expand" data-expand="net" aria-label="Open the map full page" data-tip="Open the map full page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>`;
 }
 const pctd = (v, base) => Number.isFinite(v) && Number.isFinite(base) && base ? (v / base - 1) * 100 : null;
@@ -1034,11 +1028,11 @@ function briefing(sc){
   let pos, comp;
   if(sc.kind === 'all'){
     const mom = OPS.map(x => [x, D.REC[x].won - D.REC[x].lost]).sort((a, b) => b[1] - a[1]), t = r.retained + r.changed;
-    pos = `London's bus network is <b>${s.n} routes</b> run by <b>${OPS.length} operators</b> from <b>${s.garages}</b> garages, needing <b>${fInt(s.pvr)}</b> peak vehicles. Contracts are worth about <b>${fGbp(s.value)}</b> a year, at a median <b>£${fNum(s.cpm, 2)}/mile</b>.`;
+    pos = `London's bus network is <b>${nOf(s.n, 'route')}</b> run by <b>${nOf(OPS.length, 'operator')}</b> from <b>${s.garages}</b> garages, needing <b>${fInt(s.pvr)}</b> peak vehicles. Contracts are worth about <b>${fGbp(s.value)}</b> a year, at a median <b>£${fNum(s.cpm, 2)}/mile</b>.`;
     comp = `Over five years <b>${r.changed}</b> of <b>${t}</b> re-tenders (${fPct(t ? r.changed / t * 100 : null, 0)}) changed operator. Biggest net gainer: <b>${esc(shortOp(mom[0][0]))}</b> (+${mom[0][1]}); biggest net loser: <b>${esc(shortOp(mom[mom.length - 1][0]))}</b> (${mom[mom.length - 1][1] < 0 ? '−' : '+'}${Math.abs(mom[mom.length - 1][1])}).`;
   } else if(sc.kind === 'garage'){
     const opS = D.ST[sc.op], t = r.retained + r.won, g = sc.g;
-    pos = `<b>${esc(o)}</b> (${esc(shortOp(sc.op))}) runs <b>${s.n} routes</b> with <b>${fInt(s.pvr)}</b> peak vehicles: ${fPct(opS.pvr ? s.pvr / opS.pvr * 100 : null, 1)} of ${esc(shortOp(sc.op))}'s requirement and ${fPct(share, 1)} of London's. Contracts are worth <b>${fGbp(s.value)}</b> a year${Number.isFinite(s.cpm) ? `, median <b>£${fNum(s.cpm, 2)}/mile</b>${vs}` : ''}${g.capacity ? `; licensed for <b>${g.capacity}</b> vehicles (${fPct(g.capacity ? s.pvr / g.capacity * 100 : null, 0)} of that is peak requirement)` : ''}.`;
+    pos = `<b>${esc(o)}</b> (${esc(shortOp(sc.op))}) runs <b>${nOf(s.n, 'route')}</b> with <b>${fInt(s.pvr)}</b> peak vehicles: ${fPct(opS.pvr ? s.pvr / opS.pvr * 100 : null, 1)} of ${esc(shortOp(sc.op))}'s requirement and ${fPct(share, 1)} of London's. Contracts are worth <b>${fGbp(s.value)}</b> a year${Number.isFinite(s.cpm) ? `, median <b>£${fNum(s.cpm, 2)}/mile</b>${vs}` : ''}${g.capacity ? `; licensed for <b>${g.capacity}</b> vehicles (${fPct(g.capacity ? s.pvr / g.capacity * 100 : null, 0)} of that is peak requirement)` : ''}.`;
     const tw = Object.entries(r.wonFrom).sort((a, b) => b[1] - a[1])[0];
     comp = t ? `Of <b>${t}</b> re-tenders on its current routes in five years, <b>${r.retained}</b> were retained by ${esc(shortOp(sc.op))} and <b>${r.won}</b> won from rivals${tw ? ` (mostly from ${esc(tw[0])})` : ''}. Routes lost to rivals are no longer at this garage, so they are not counted.` : 'No re-tenders on its current routes in the last five years.';
   } else {
@@ -1050,7 +1044,7 @@ function briefing(sc){
   const L = F.limit, nearly = L.soon + L.at;
   return [
     { k:'Position', t:pos },
-    { k:'Renewals', t:s.exp24.length ? `<b>${s.exp24.length} routes</b> worth <b>${fGbp(s.renewalValue)}</b> a year (${fPct(s.value ? s.renewalValue / s.value * 100 : null, 0)} of the portfolio) reach contract end within 24 months; <b>${s.exp24InProg}</b> already appear in TfL's tender programme.` : 'No contracts end within the next 24 months.' },
+    { k:'Renewals', t:s.exp24.length ? `<b>${nOf(s.exp24.length, 'route')}</b> worth <b>${fGbp(s.renewalValue)}</b> a year (${fPct(s.value ? s.renewalValue / s.value * 100 : null, 0)} of the portfolio) reach contract end within 24 months; <b>${s.exp24InProg}</b> already appear in TfL's tender programme.` : 'No contracts end within the next 24 months.' },
     { k:'Competition', t:comp },
     { k:'Delivery', t:`Operated <b>${fPct(s.opPct, 1)}</b> of scheduled mileage${gap != null ? ` (${gap >= 0 ? '+' : '−'}${Math.abs(gap).toFixed(2)} pts vs network)` : ''}; <b>${fPct(100 - (s.relPassPct ?? 0), 0)}</b> of routes miss their reliability standard and <b>${s.attention.length}</b> show three or more attention signals.` },
     { k:'Fleet', t:`<b>${fInt(F.n)}</b> vehicles${sc.kind === 'garage' ? ' seen on its routes' : ''}, average age <b>${fNum(F.avg, 1)} yrs</b>. <b>${fInt(nearly)}</b> (${fPct(L.known ? nearly / L.known * 100 : null, 0)}) reach TfL's ${AGE_LIMIT}-year limit by ${D.YEAR + 2}${L.at ? `, ${fInt(L.over)} already past it` : ''}; <b>${fPct(F.young, 0)}</b> were registered in the last three years and <b>${fPct(s.ze, 0)}</b> of peak vehicles are zero-emission.` },
@@ -1064,7 +1058,7 @@ function renderHero(){
   const kind = (label, v, d, extra = '', tipText = '') => `<div class="card kpi s2" ${tipText ? `data-info="${esc(tipText)}"` : ''}><div class="l">${label}</div><div class="v">${v}</div>${extra}<div class="d">${d}</div></div>`;
   const sm = (label, v, d, tipText) => `<div class="card kpi sm s2" data-info="${esc(tipText)}"><div class="l">${label}</div><div class="v">${v}</div><div class="d">${d}</div></div>`;
   const sh = N.pvr ? s.pvr / N.pvr * 100 : null, L = F.limit, nearly = L.soon + L.at;
-  const rk = fn => sc.kind === 'op' ? `#${rank(fn, o)} of ${OPS.length}` : sc.kind === 'all' ? `${OPS.length} operators` : `${fPct(D.ST[sc.op].pvr ? s.pvr / D.ST[sc.op].pvr * 100 : null, 0)} of ${esc(shortOp(sc.op))}`;
+  const rk = fn => sc.kind === 'op' ? `#${rank(fn, o)} of ${OPS.length}` : sc.kind === 'all' ? `${nOf(OPS.length, 'operator')}` : `${fPct(D.ST[sc.op].pvr ? s.pvr / D.ST[sc.op].pvr * 100 : null, 0)} of ${esc(shortOp(sc.op))}`;
   const opLast = s.opSeries.filter(Number.isFinite), opDelta = opLast.length > 1 ? opLast[opLast.length - 1] - opLast[opLast.length - 2] : null;
   const chips = sc.kind === 'all' ? [[s.n, 'routes'], [s.garages, 'garages'], [OPS.length, 'operators'], [fInt(FN.n), 'vehicles']]
     : sc.kind === 'garage' ? [[s.n, 'routes'], [fInt(s.pvr), 'peak vehicles'], [sc.g.capacity ?? '—', 'licensed capacity']] : [[s.n, 'routes'], [s.garages, 'garages'], [s.companies, 'operating companies'], [fInt(F.n), 'vehicles']];
@@ -1072,7 +1066,7 @@ function renderHero(){
     <div class="card hero"><div class="who">
       <div class="mono" style="background:${c}1f;color:${c === '#eda100' ? '#8a5a00' : c}">${esc(mono)}</div>
       <div style="min-width:0"><h1>${esc(o)}</h1>
-        <div class="chips">${sc.kind === 'garage' ? `<span class="chip"><i class="dot" style="background:${c}"></i>${esc(sc.op)}</span>` : ''}${chips.map(([n, l]) => `<span class="chip"><b>${n}</b> ${l}</span>`).join('')}</div>
+        <div class="chips">${sc.kind === 'garage' ? `<span class="chip"><i class="dot" style="background:${c}"></i>${esc(sc.op)}</span>` : ''}${chips.map(([n, l]) => `<span class="chip"><b>${n}</b> ${String(n).replace(/,/g, '') === '1' ? l.replace(/ies$/, 'y').replace(/s$/, '') : l}</span>`).join('')}</div>
         <div class="acts"><button class="btn primary" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Export routes</button><button class="btn" id="linkBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span id="linkTxt">Copy link</span></button><button class="btn" data-expand="net"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Open map</button></div></div>
     </div><div class="foot" id="foot">${footprint(sc)}</div></div>`;
   $('#brief').innerHTML = `<div class="ch"><div><h2><svg class="spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>Briefing</h2><p>What the data says about ${esc(o)} right now — generated from the figures below</p></div></div>
@@ -1080,14 +1074,14 @@ function renderHero(){
   $('#kpis').innerHTML = `
     <div class="card kpi hero-k s4"><div class="l">Est. annual contract value</div>
       <div class="v">${fGbp(s.value)}</div>
-      <div class="d">${sc.kind === 'all' ? `<span>${s.n} routes</span><span>${OPS.length} operators</span>` : `<span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>${rk(x => x.value)}</span>`}</div></div>
-    ${sc.kind === 'all' ? kind('Peak vehicles', fInt(s.pvr), `<span>${fInt(FN.n)} registered</span><span>${fNum(NET_SPARE(), 2)}× spare</span>`) : kind('Share of peak vehicles', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>${rk(x => x.pvr)}</span>`)}
+      <div class="d">${sc.kind === 'all' ? `<span>${nOf(s.n, 'route')}</span><span>${nOf(OPS.length, 'operator')}</span>` : `<span>${fPct(N.value ? s.value / N.value * 100 : null)} of network contract value</span><span>${rk(x => x.value)}</span>`}</div></div>
+    ${sc.kind === 'all' ? kind('Peak vehicles', fInt(s.pvr), `<span>${fInt(FN.n)} registered</span><span>${fNum(NET_SPARE(), 2)}× spare</span>`) : kind('Share of peak buses', `${fPct(sh)}`, `<span>${fInt(s.pvr)} of ${fInt(N.pvr)} PVR</span><span>${rk(x => x.pvr)}</span>`)}
     ${kind('Median price', `${Number.isFinite(s.cpm) ? '£' + s.cpm.toFixed(2) : '—'}<small>/mile</small>`, sc.kind === 'all' ? '<span>network median</span>' : `${delta(s.cpm, D.netMedianCpm)}<span>vs network £${fNum(D.netMedianCpm, 2)}</span>`)}
     ${kind('Fleet age', `${fNum(F.avg, 1)}<small>years</small>`, `<span>${fPct(s.ze, 0)} zero-emission</span>${sc.kind === 'all' ? '' : `<span>network ${fNum(FN.avg, 1)} y</span>`}`, `<div class="agel" data-tip="Registered ${AGE_LIMIT - 2} or more years ago: these reach TfL's ${AGE_LIMIT}-year maximum vehicle age by ${D.YEAR + 2}, or already have.">${warnIcon}${fInt(nearly)} reach the ${AGE_LIMIT}-year limit by ${D.YEAR + 2}</div>`, 'Age is from the fleet register: every registered vehicle, by year of first registration. Zero-emission is the share of peak vehicles.')}
     ${kind('Operated mileage', `${fPct(s.opPct)}`, `${opDelta != null ? `<span class="delta ${opDelta >= 0 ? 'up' : 'dn'}">${opDelta >= 0 ? '▲' : '▼'} ${Math.abs(opDelta).toFixed(2)} pts</span><span>vs prior period</span>` : ''}`, spark(s.opSeries))}`;
   const waD = sc.kind !== 'all' && Number.isFinite(s.waut) && Number.isFinite(N.waut) ? s.waut - N.waut : null;
   $('#kpis2').innerHTML = `
-    ${sm('Up for renewal', fGbp(s.renewalValue), `<span>${s.exp24.length} routes · next 24 mo</span>`, 'Annual value of contracts whose end date falls within 24 months. Routes already in the tender programme: ' + s.exp24InProg)}
+    ${sm('Up for renewal', fGbp(s.renewalValue), `<span>${nOf(s.exp24.length, 'route')} · next 24 mo</span>`, 'Annual value of contracts whose end date falls within 24 months. Routes already in the tender programme: ' + s.exp24InProg)}
     ${sm('Remaining term', `${fNum(s.waut, 1)}<small>yrs</small>`, `${waD != null ? `<span class="delta ${waD >= 0 ? 'up' : 'nu'}">${waD >= 0 ? '▲' : '▼'} ${Math.abs(waD).toFixed(1)} yrs</span><span>vs network</span>` : ''}`, 'Contract-value-weighted average time left on current contracts. Longer means more secure revenue.')}
     ${sm('Value / vehicle', `${Number.isFinite(s.valuePerPvr) ? '£' + Math.round(s.valuePerPvr / 1000) + 'k' : '—'}<small>/yr</small>`, `${sc.kind === 'all' ? '' : dTxt(pctd(s.valuePerPvr, N.valuePerPvr))}`, 'Annual contract value divided by peak vehicle requirement: what each bus the contract needs is paid per year.')}
     ${sm('Km / vehicle', `${fInt(s.kmPerPvr)}<small>km/day</small>`, `${sc.kind === 'all' ? '' : dTxt(pctd(s.kmPerPvr, N.kmPerPvr))}`, 'Scheduled weekday kilometres per peak vehicle: how hard each bus the contract needs is worked. Higher means better vehicle utilisation.')}
@@ -1135,7 +1129,7 @@ function renderRunway(){
   const next4 = [...s.list].filter(r => r.cEnd && r.cEnd >= TODAY_ISO).sort((a, b) => a.cEnd.localeCompare(b.cEnd) || b.pvr - a.pvr).slice(0, 4);
   const body = S.rwView === 'table'
     ? `<table class="dt"><thead><tr><th>Contracts ending</th><th class="r">Routes</th><th class="r">PVR</th></tr></thead><tbody>${b.map(x => `<tr><td>${x.label}</td><td class="r">${x.rs.length}</td><td class="r">${fInt(sum(x.rs, r => r.pvr))}</td></tr>`).join('')}</tbody></table>`
-    : `<div class="cols" role="group" aria-label="Contracts ending by year">${b.map(x => `<button class="colw ${x.near ? 'near' : ''} ${S.year === x.year ? 'sel' : ''}" data-year="${x.year}" aria-label="${esc(x.label)}: ${x.rs.length} routes" data-tip="${esc(x.label)}\n${x.rs.length} routes · ${fInt(sum(x.rs, r => r.pvr))} PVR${x.rs.length ? '\nLargest: ' + esc([...x.rs].sort((p, q) => q.pvr - p.pvr).slice(0, 5).map(r => r.id).join(', ')) + '\nClick to filter the table' : ''}"><span class="n">${val(x) || ''}</span><span class="b" style="height:${(val(x) / max * 100).toFixed(1)}%"></span></button>`).join('')}</div>
+    : `<div class="cols" role="group" aria-label="Contracts ending by year">${b.map(x => `<button class="colw ${x.near ? 'near' : ''} ${S.year === x.year ? 'sel' : ''}" data-year="${x.year}" aria-label="${esc(x.label)}: ${nOf(x.rs.length, 'route')}" data-tip="${esc(x.label)}\n${nOf(x.rs.length, 'route')} · ${fInt(sum(x.rs, r => r.pvr))} PVR${x.rs.length ? '\nLargest: ' + esc([...x.rs].sort((p, q) => q.pvr - p.pvr).slice(0, 5).map(r => r.id).join(', ')) + '\nClick to filter the table' : ''}"><span class="n">${val(x) || ''}</span><span class="b" style="height:${(val(x) / max * 100).toFixed(1)}%"></span></button>`).join('')}</div>
        <div class="xl">${b.map(x => `<span>${x.label}</span>`).join('')}</div>
        <div class="legend"><span><i style="background:var(--seq-5)"></i>Ends within 24 months</span><span><i style="background:var(--seq-2)"></i>Later</span></div>
        ${next4.length ? `<h4 style="margin:18px 0 6px;font-size:12px;color:var(--ink-3);font-weight:600">Next to expire</h4>${next4.map(r => `<button class="nx" data-r="${esc(r.id)}"><span class="badge" style="height:22px;min-width:38px;font-size:11.5px">${esc(r.id)}</span><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><span class="sub" style="margin-left:auto;white-space:nowrap">${fInt(r.pvr)} PVR</span><b style="min-width:76px;text-align:right;font-weight:600">${fMon(r.cEnd)}</b></button>`).join('')}` : ''}`;
@@ -1177,7 +1171,7 @@ function renderRenewals(){
   const max = Math.max(1, ...quarters.map(x => val(x.rs)));
   const dense = quarters.length > 10;
   const cols = quarters.map(x => { const v = val(x.rs), h = v / max * 100, sel = S.rnQ === x.k, n = x.rs.length;
-    return `<button type="button" class="colw ${sel ? 'sel' : ''} ${n ? '' : 'empty'}" data-rnq="${x.k}" aria-pressed="${sel}" aria-label="${qLabel(x.k)}: ${n} routes, ${fGbp(v)} a year" data-tip="${qLabel(x.k)}\n${n} routes · ${fInt(sum(x.rs, r => r.pvr))} PVR\n${fGbp(v)} a year ends${n ? '\nClick to show only this quarter' : ''}"${n ? '' : ' disabled'}><span class="n">${!dense && n ? fGbp(v) : ''}</span><span class="b" style="height:${v ? Math.max(2, h) : 0}%"></span></button>`; }).join('');
+    return `<button type="button" class="colw ${sel ? 'sel' : ''} ${n ? '' : 'empty'}" data-rnq="${x.k}" aria-pressed="${sel}" aria-label="${qLabel(x.k)}: ${nOf(n, 'route')}, ${fGbp(v)} a year" data-tip="${qLabel(x.k)}\n${nOf(n, 'route')} · ${fInt(sum(x.rs, r => r.pvr))} PVR\n${fGbp(v)} a year ends${n ? '\nClick to show only this quarter' : ''}"${n ? '' : ' disabled'}><span class="n">${!dense && n ? fGbp(v) : ''}</span><span class="b" style="height:${v ? Math.max(2, h) : 0}%"></span></button>`; }).join('');
   const labels = quarters.map((x, i) => `<span>${dense && !x.k.endsWith('Q1') && i ? '' : 'Q' + x.k.slice(-1)}${x.k.endsWith('Q1') || i === 0 ? `<b>${x.k.slice(0, 4)}</b>` : ''}</span>`).join('');
   const shown = S.rnQ ? list.filter(r => qKey(r.cEnd) === S.rnQ) : list, vis = shown.slice(0, S.rnShown);
   let lastQ = null;
@@ -1201,7 +1195,7 @@ function renderRenewals(){
       <div><div class="l">Routes ending</div><div class="v">${fInt(all.length)}</div><div class="s">${fInt(open.length)} still open · ${fInt(done)} already awarded</div></div>
       <div><div class="l">Annual value ending</div><div class="v">${fGbp(cur)}</div><div class="s">${fPct(sc.st.value ? cur / sc.st.value * 100 : null, 0)} of current value</div></div>
       <div><div class="l">Recent award median</div><div class="v">${bench ? '£' + bench.toFixed(2) : '—'}<small> /mile</small></div><div class="s">${fInt(D.bench.n)} awards in the last 24 months</div></div>
-      <div><div class="l">Indicative price drift</div><div class="v">${nPrice ? (sw >= 0 ? '+' : '−') + fGbp(Math.abs(sw)) : '—'}</div><div class="s">${nPrice ? `open routes re-priced at the recent median · ${nPrice} routes` : 'no open routes with price data'}</div></div></div>
+      <div><div class="l">Indicative price drift</div><div class="v">${nPrice ? (sw >= 0 ? '+' : '−') + fGbp(Math.abs(sw)) : '—'}</div><div class="s">${nPrice ? `open routes re-priced at the recent median · ${nOf(nPrice, 'route')}` : 'no open routes with price data'}</div></div></div>
       ${all.length ? `<div class="cols rnc" role="group" aria-label="Value of contracts ending, by quarter">${cols}</div><div class="xl rnx">${labels}</div>` : ''}
       <div class="rnf" role="group" aria-label="Filter">${f.map(([k, l]) => `<button type="button" class="fchip ${S.rnFilter === k ? 'on' : ''}" data-rnf="${k}" aria-pressed="${S.rnFilter === k}">${l}${{ open:open.length, awarded:done, all:all.length, prog:progN }[k] != null ? `<span class="cn">${{ open:open.length, awarded:done, all:all.length, prog:progN }[k]}</span>` : ''}</button>`).join('')}${S.rnQ ? `<button type="button" class="fchip on" data-rnq="${S.rnQ}">${qLabel(S.rnQ)} <span aria-hidden="true">×</span><span class="vh"> clear quarter</span></button>` : ''}</div>
       <div class="rnlist" aria-live="polite">${items || `<div class="sub" style="padding:18px 4px">${all.length ? 'No routes match this filter.' : 'No contracts end in this window.'}</div>`}</div>
@@ -1220,7 +1214,7 @@ function rnCsv(){
 /* ── view: record / head-to-head / price ────────────────────────────────── */
 function renderRecord(){
   const sc = SC(), s = sc.st, rec = sc.rec, inProg = s.list.filter(r => r.next);
-  const prog = `<div class="kv"><span>In the tender programme</span><b>${inProg.length} routes · ${fGbp(sum(inProg, r => r.cur?.acceptedBid))}</b></div>`;
+  const prog = `<div class="kv"><span>In the tender programme</span><b>${nOf(inProg.length, 'route')} · ${fGbp(sum(inProg, r => r.cur?.acceptedBid))}</b></div>`;
   let body;
   if(sc.kind === 'all'){
     const t = rec.retained + rec.changed, ret = t ? rec.retained / t * 100 : null;
@@ -1311,7 +1305,7 @@ function renderDepots(){
   $('#depots').innerHTML = `<div class="ch"><div><h2>Depots</h2><p>Peak vehicles against licensed capacity</p></div></div>
     <div class="cb">${top ? `<div class="big">${fPct(total ? top.pvr / total * 100 : null, 0)}</div><div class="sub" style="margin:2px 0 12px">of peak vehicles run from ${sc.kind === 'all' ? 'the largest depot' : 'its largest depot'}, ${esc(top.name)}</div>` : ''}
       ${shown.map(d => { const u = d.util, sev = u == null ? '' : u > 1 ? 'crit' : u >= .9 ? 'warn' : '';
-        return `<div class="dp" data-tip="${esc(d.name)} (${esc(d.code)})\n${d.pvr} peak vehicles · ${d.routes} routes${d.capacity ? '\nLicensed capacity ' + d.capacity : '\nCapacity not published'}"><span class="nm">${esc(d.name)}<span class="sub"> ${esc(d.code)}</span></span>
+        return `<div class="dp" data-tip="${esc(d.name)} (${esc(d.code)})\n${d.pvr} peak vehicles · ${nOf(d.routes, 'route')}${d.capacity ? '\nLicensed capacity ' + d.capacity : '\nCapacity not published'}"><span class="nm">${esc(d.name)}<span class="sub"> ${esc(d.code)}</span></span>
           <span class="meter ${sev}"><i style="width:${u == null ? 0 : Math.min(100, u * 100)}%"></i></span><span class="u">${u == null ? '—' : Math.round(u * 100) + '%'}</span><span class="fl">${sev === 'crit' ? `<span class="flag">${warnIcon}Over</span>` : sev === 'warn' ? `<span class="flag">${warnIcon}Tight</span>` : ''}</span></div>`; }).join('')}
       ${rows.length > 6 ? `<div class="sub" style="margin-top:6px">+ ${rows.length - 6} more depots</div>` : ''}
       <div class="sub" style="margin-top:10px">${withCap.length} of ${rows.length} depots have a published licence capacity. Peak vehicles exclude spares, so utilisation is a floor.</div></div>`;
@@ -1344,7 +1338,7 @@ function renderWatch(){
   const s = SC().st, list = [...s.attention].sort((a, b) => b.flags.length - a.flags.length || b.pvr - a.pvr);
   const chips = r => r.flags.map(k => `<span class="sig" data-tip="${esc(FLAG[k].long)}">${warnIcon}${esc(FLAG[k].label)}</span>`).join('');
   $('#watch').innerHTML = `<div class="ch"><div><h2><svg class="spk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>Needs attention</h2>
-      <p>${list.length} of ${s.n} routes show three or more signals from: materially poor reliability or mileage, contract ending within a year, crowding, disruption, an ageing fleet</p></div>
+      <p>${list.length} of ${nOf(s.n, 'route')} show three or more signals from: materially poor reliability or mileage, contract ending within a year, crowding, disruption, an ageing fleet</p></div>
       <div class="ctl"><button class="btn" id="watchAll">View all in table</button></div></div>
     <div class="cb"><div class="wl">${list.slice(0, 8).map(r => `<button class="nx wr" data-r="${esc(r.id)}"><span class="badge" style="height:24px;min-width:40px;font-size:12px">${esc(r.id)}</span>
       <span class="wm"><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><span class="sigs">${chips(r)}</span></span><span class="sub" style="white-space:nowrap">${fInt(r.pvr)} PVR</span></button>`).join('') || '<div class="empty">No routes with three or more signals.</div>'}</div></div>`;
@@ -1426,7 +1420,7 @@ function rowHtml(r){
 function renderTable(){
   const list = filtered(), s = SC().st;
   const chip = (k, label, on, attr) => `<button class="fchip ${on ? 'on' : ''}" ${attr}>${label}</button>`;
-  $('#routes').innerHTML = `<div class="ch"><div><h2>Routes</h2><p>${list.length} of ${s.n} routes · every row is a route brief — click for the full picture</p></div></div>
+  $('#routes').innerHTML = `<div class="ch"><div><h2>Routes</h2><p>${list.length} of ${nOf(s.n, 'route')} · every row is a route brief — click for the full picture</p></div></div>
     <div class="tools"><label class="sfield"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rq" placeholder="Filter by route, place or garage" value="${esc(S.q)}" aria-label="Filter routes"></label>
       ${[['all', 'All'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['zero', 'Zero-emission']].map(([k, l]) => chip(k, l, S.prop === k, `data-prop="${k}"`)).join('')}
       <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>
@@ -1668,7 +1662,7 @@ async function mapShow(r){
     const list = sd?.routes?.[r.id]?.[S.dir] ?? [];
     map.getSource('stops').setData(fc(list, (st, i) => ({ term:i === 0 || i === list.length - 1, name:st.name, letter:st.letter ?? '', lines:(st.lines ?? []).filter(l => l !== r.id).slice(0, 8).join(', ') })));
     chipCount('stops', list.length);
-    const km = lenKm(runs); const nm = $('#mapNote'); if(nm) nm.textContent = `${fNum(km, 1)} km · ${list.length} stops${list.length > 1 && km ? ` · one every ${Math.round(km * 1000 / (list.length - 1))} m` : ''} · ${S.dir === 'outbound' ? 'towards ' + r.from : 'towards ' + r.to}`;
+    const km = lenKm(runs); const nm = $('#mapNote'); if(nm) nm.textContent = `${fNum(km, 1)} km · ${nOf(list.length, 'stop')}${list.length > 1 && km ? ` · one every ${Math.round(km * 1000 / (list.length - 1))} m` : ''} · ${S.dir === 'outbound' ? 'towards ' + r.from : 'towards ' + r.to}`;
   }).catch(() => chipCount('stops', null));
   corridor(r).then(c => {
     if(tok !== MP.tok) return;
@@ -1680,51 +1674,6 @@ async function mapShow(r){
 }
 function mapFallback(r){ const slot = $('#drawer .mapbox'); if(slot) slot.innerHTML = `<div class="shape" style="border:0;border-radius:0">${shapeSvg(r)}</div>`; $('#drawer .mapbar')?.setAttribute('hidden', ''); }
 
-/* ── network map and the full-page map ───────────────────────────────────── */
-const NH = Object.assign(document.createElement('div'), { id:'netHost', className:'dmaphost' });
-const NP = { map:null, ready:null, popup:null, fit:null };
-function netEnsure(){
-  return NP.ready ??= (async () => {
-    const map = await mapBase(NH);
-    map.addSource('net', { type:'geojson', data:EMPTY }); map.addSource('gars', { type:'geojson', data:EMPTY });
-    const wide = ['interpolate', ['linear'], ['zoom'], 8, 1.2, 12, 3, 16, 6];
-    map.addLayer({ id:'ghost', type:'line', source:'net', filter:['==', ['get', 'in'], 0], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#9aa6ba', 'line-opacity':.55, 'line-width':['interpolate', ['linear'], ['zoom'], 8, .8, 14, 2.2] } });
-    map.addLayer({ id:'net-case', type:'line', source:'net', filter:['==', ['get', 'in'], 1], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#fff', 'line-opacity':.85, 'line-width':['interpolate', ['linear'], ['zoom'], 8, 2.4, 12, 5, 16, 9] } });
-    map.addLayer({ id:'net', type:'line', source:'net', filter:['==', ['get', 'in'], 1], layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get', 'c'], 'line-opacity':.9, 'line-width':wide } });
-    map.addLayer({ id:'gars-other', type:'circle', source:'gars', filter:['==', ['get', 'in'], 0], paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, 5, 14, 9], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2.4 } });
-    map.addLayer({ id:'gars-other-lbl', type:'symbol', source:'gars', minzoom:9.5, filter:['==', ['get', 'in'], 0], layout:{ 'text-field':GAR_LABEL, 'text-font':['Noto Sans Regular'], 'text-size':11, 'text-offset':[0, 1.2], 'text-anchor':'top' }, paint:{ 'text-color':'#475467', 'text-halo-color':'#fff', 'text-halo-width':1.8 } });
-    map.addLayer({ id:'gars', type:'circle', source:'gars', filter:['==', ['get', 'in'], 1], paint:{ 'circle-radius':['interpolate', ['linear'], ['zoom'], 9, ['+', 3.5, ['*', ['sqrt', ['get', 'pvr']], .22]], 14, ['+', 6, ['*', ['sqrt', ['get', 'pvr']], .5]]], 'circle-color':['get', 'c'], 'circle-stroke-color':'#fff', 'circle-stroke-width':2.2 } });
-    map.addLayer({ id:'gars-lbl', type:'symbol', source:'gars', minzoom:10.5, layout:{ 'text-field':GAR_LABEL, 'text-font':['Noto Sans Regular'], 'text-size':11.5, 'text-offset':[0, 1.25], 'text-anchor':'top', 'text-optional':true }, paint:{ 'text-color':'#101828', 'text-halo-color':'#fff', 'text-halo-width':1.6 } });
-    NP.popup = new maplibregl.Popup({ closeButton:false, closeOnClick:true, offset:12, maxWidth:'260px' });
-    const on = (layer, fn) => { map.on('mouseenter', layer, () => map.getCanvas().style.cursor = 'pointer'); map.on('mouseleave', layer, () => map.getCanvas().style.cursor = ''); map.on('click', layer, e => { e.originalEvent.__hit = true; fn(e, e.features[0].properties); }); };
-    const garPop = (e, p) => popupSay(map, NP.popup, e, p.name + ' garage', [p.code + ' · ' + p.op, p.pvr + ' peak vehicles' + (+p.cap ? ' · capacity ' + p.cap + ' (' + Math.round(p.pvr / p.cap * 100) + '%)' : '')], S.garage === p.code ? null : { label:'Open garage view', fn:() => { mapClose(); setGarage(p.code); } });
-    on('gars', garPop); on('gars-other', garPop); garHover(map, ['gars', 'gars-other']);
-    const routePop = (e, p) => { const r = D.byId.get(p.id); popupSay(map, NP.popup, e, 'Route ' + p.id, [r ? `${r.from} ⇄ ${r.to}` : '', p.op + (r ? ' · ' + r.pvr + ' PVR' : '')], { label:'Open route brief', fn:() => { mapClose(); openRoute(p.id); } }); };
-    on('net', routePop); on('ghost', routePop);
-    return map;
-  })().catch(e => { NP.ready = null; throw e; });
-}
-function netBounds(sc){
-  const pts = []; for(const r of sc.list){ const cs = D.lines.get(r.id); if(cs) pts.push(cs); }
-  for(const code of new Set(sc.list.map(r => r.garage))){ const g = D.garages.find(x => x.code === code); if(g && Number.isFinite(g.lat)) pts.push([[g.lng, g.lat]]); }
-  if(!pts.length) return D.bb;
-  return sc.kind === 'all' ? robustBounds(pts, .004, .996) : robustBounds(pts, .01, .99);
-}
-function applyNetLayers(){
-  const map = NP.map; if(!map) return; const sc = SC();
-  setVis(map, ['ghost'], S.nl.ghost); setVis(map, ['gars'], S.nl.gars); setVis(map, ['gars-lbl'], S.nl.gars && S.nl.names);
-  setVis(map, ['gars-other', 'gars-other-lbl'], sc.kind === 'all' ? false : S.nl.other);
-}
-async function netShow(){
-  const sc = SC(), map = NP.map; if(!map) return;
-  const mine = new Set(sc.list.map(r => r.id)), gset = new Set(sc.list.map(r => r.garage));
-  map.getSource('net').setData({ type:'FeatureCollection', features:[...D.lines].map(([id, cs]) => { const r = D.byId.get(id); return { type:'Feature', properties:{ id, c:opColour(r?.op), op:r?.op ?? '', in:mine.has(id) ? 1 : 0 }, geometry:{ type:'LineString', coordinates:cs } }; }) });
-  map.getSource('gars').setData(fc(D.garages.filter(g => Number.isFinite(g.lat) && D.DEPOTS[ALL].some(d => d.code === g.code)), g => ({ name:g.name, code:g.code, op:g.operator, pvr:g.pvr ?? 0, cap:g.capacity ?? 0, c:opColour(g.operator), ops:shortOp(g.operator), in:gset.has(g.code) ? 1 : 0 })));
-  applyNetLayers();
-  map.resize(); const bb = netBounds(sc);
-  map.fitBounds([[bb.minLon, bb.minLat], [bb.maxLon, bb.maxLat]], { padding:{ top:70, bottom:70, left:50, right:50 }, duration:0, maxZoom:14 });
-}
-const nlBtn = (k, label, sw, on) => `<button class="ly ${on ? 'on' : ''}" data-nl="${k}" aria-pressed="${on}"><i class="sw ${sw}"></i>${label}</button>`;
 let mapMode = null;
 /* Expanded maps are the main site's /map, scoped to this operator, garage or route, in an iframe with no
    header or tab bar — so the layers, garages, live buses and styling are the same everywhere. */
@@ -1733,7 +1682,7 @@ function mapOpen(kind){
   const sc = SC(), r = kind === 'route' ? D.byId.get(S.route) : null; if(kind === 'route' && !r) return;
   mapMode = kind; fs.dataset.mode = kind; body.replaceChildren(); fs.hidden = false; document.body.style.overflow = 'hidden';
   $('#mfTitle').textContent = kind === 'route' ? `Route ${r.id}` : sc.name;
-  $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${sc.st.n} routes · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
+  $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${nOf(sc.st.n, 'route')} · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
   const q = new URLSearchParams();
   if(kind === 'route') q.set('routes', r.id);
   else if(sc.kind !== 'all'){ q.set('ids', sc.list.map(x => x.id).join(',')); q.set('title', sc.name); }
@@ -1742,7 +1691,6 @@ function mapOpen(kind){
   body.append(f);
   $('#mfClose').focus();
 }
-function chipRefresh(k){ $$(`[data-ml="${k}"]`).forEach(c => { c.classList.toggle('on', !!S.ml[k]); c.setAttribute('aria-pressed', String(!!S.ml[k])); }); }
 function mapClose(){
   const fs = $('#mapfs'); if(!fs || fs.hidden) return;
   fs.hidden = true; document.body.style.overflow = '';
@@ -1853,7 +1801,7 @@ function palRender(){
   palItems.forEach((it, i) => {
     if(it.t !== g){ g = it.t; html += `<li class="grp">${g === 'op' ? 'Scope' : g === 'gar' ? 'Garages' : 'Routes'}</li>`; }
     html += it.t === 'op'
-      ? `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><i class="dot" style="background:${it.o === ALL ? '#2a78d6' : opColour(it.o)}"></i><b style="font-weight:550">${esc(it.o)}</b><span class="sub" style="margin-left:auto">${D.ST[it.o].n} routes</span></button></li>`
+      ? `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><i class="dot" style="background:${it.o === ALL ? '#2a78d6' : opColour(it.o)}"></i><b style="font-weight:550">${esc(it.o)}</b><span class="sub" style="margin-left:auto">${nOf(D.ST[it.o].n, 'route')}</span></button></li>`
       : it.t === 'gar' ? `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><i class="dot" style="background:${opColour(it.g.operator)}"></i><b style="font-weight:550">${esc(it.g.name)}</b><span class="sub">${esc(it.g.code)}</span><span class="sub" style="margin-left:auto">${esc(shortOp(it.g.operator))}</span></button></li>`
       : `<li><button data-pi="${i}" class="${i === palIdx ? 'act' : ''}"><span class="badge" style="height:22px;min-width:36px;font-size:11.5px">${esc(it.r.id)}</span><span>${esc(it.r.from)} ⇄ ${esc(it.r.to)}</span><span class="sub" style="margin-left:auto">${esc(it.r.op)}</span></button></li>`;
   });
@@ -1865,14 +1813,14 @@ function palClose(){ $('#pal').hidden = true; }
 function palPick(i){ const it = palItems[i]; if(!it) return; palClose(); if(it.t === 'op') setOp(it.o); else if(it.t === 'gar') setGarage(it.g.code); else openRoute(it.r.id); }
 function menuRender(){
   const row = (o, dot, mt) => `<button role="option" aria-current="${o === S.op}" data-op="${esc(o)}"><i class="dot" style="background:${dot}"></i><span class="nm">${esc(o)}</span><span class="mt">${mt}</span></button>`;
-  $('#opMenu').innerHTML = row(ALL, '#2a78d6', `${D.NET.n} routes · ${OPS.length} operators`) + '<div class="msep"></div>' + OPS.map(o => row(o, opColour(o), `${D.ST[o].n} routes · ${fPct(D.ST[o].pvr / D.NET.pvr * 100, 0)}`)).join('');
+  $('#opMenu').innerHTML = row(ALL, '#2a78d6', `${nOf(D.NET.n, 'route')} · ${nOf(OPS.length, 'operator')}`) + '<div class="msep"></div>' + OPS.map(o => row(o, opColour(o), `${nOf(D.ST[o].n, 'route')} · ${fPct(D.ST[o].pvr / D.NET.pvr * 100, 0)}`)).join('');
   gMenuRender();
 }
 function gMenuRender(){
   const q = ($('#gq')?.value ?? '').trim().toLowerCase();
   const rows = D.DEPOTS[S.op].filter(d => !q || `${d.name} ${d.code} ${d.g?.operator ?? ''}`.toLowerCase().includes(q)).sort((a, b) => a.name.localeCompare(b.name));
   $('#gList').innerHTML = `<button role="option" aria-current="${!S.garage}" data-gar=""><span class="nm">All garages</span><span class="mt">${D.DEPOTS[S.op].length} · ${S.op === ALL ? 'whole network' : esc(shortOp(S.op))}</span></button>`
-    + rows.map(d => `<button role="option" aria-current="${d.code === S.garage}" data-gar="${esc(d.code)}"><i class="dot" style="background:${opColour(d.g?.operator)}"></i><span class="nm">${esc(d.name)} <span class="sub">${esc(d.code)}</span></span><span class="mt">${d.routes} routes · ${d.pvr} PVR${d.util != null ? ' · ' + Math.round(d.util * 100) + '%' : ''}</span></button>`).join('')
+    + rows.map(d => `<button role="option" aria-current="${d.code === S.garage}" data-gar="${esc(d.code)}"><i class="dot" style="background:${opColour(d.g?.operator)}"></i><span class="nm">${esc(d.name)} <span class="sub">${esc(d.code)}</span></span><span class="mt">${nOf(d.routes, 'route')} · ${d.pvr} PVR${d.util != null ? ' · ' + Math.round(d.util * 100) + '%' : ''}</span></button>`).join('')
     || '<div class="empty" style="padding:16px">No garages match.</div>';
 }
 
@@ -1882,7 +1830,7 @@ const INFO = () => { const P = D.latestPeriod ? ` (${D.latestPeriod})` : '';
   'Briefing':'Sentences generated from the figures below. Tenders: 5 years.',
   'Est. annual contract value':'Sum of each route’s current accepted annual bid (TfL).',
   'Peak vehicles':'Buses needed at the busiest time (PVR).',
-  'Share of peak vehicles':'This view’s PVR ÷ London’s PVR.',
+  'Share of peak buses':'This view’s PVR ÷ London’s PVR.',
   'Median price':'Middle £ per live mile of current contracts (TfL).',
   'Fleet age':'Average of this year − first-registration year (DVLA).',
   'Operated mileage':'Mileage run ÷ scheduled, latest period' + P + '.',
@@ -1983,7 +1931,6 @@ document.addEventListener('click', e => {
   const dr = t.closest('[data-dir]'); if(dr){ S.dir = dr.dataset.dir; $$('.dirSeg button').forEach(b => b.classList.toggle('on', b.dataset.dir === S.dir)); mapShow(D.byId.get(S.route)); return; }
   const ex = t.closest('[data-expand]'); if(ex){ mapOpen(ex.dataset.expand); return; }
   if(t.closest('#mfClose')){ mapClose(); return; }
-  const nl = t.closest('[data-nl]'); if(nl){ const k = nl.dataset.nl; S.nl[k] = !S.nl[k]; nl.classList.toggle('on', S.nl[k]); nl.setAttribute('aria-pressed', String(S.nl[k])); if(NP.map) applyNetLayers(); return; }
 
   const rl = t.closest('[data-real]'); if(rl){ S.real = rl.dataset.real === '1'; renderPrice(); return; }
   if(t.closest('#watchAll')){ S.flags.add('attn'); S.shown = 30; renderTable(); $('#routes').scrollIntoView({ behavior:'smooth', block:'start' }); return; }

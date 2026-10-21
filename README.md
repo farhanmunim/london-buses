@@ -30,14 +30,15 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|
-| Nightly full refresh | routes, geometry, stops, operators/garages/PVR, CPI-CPA, tenders + provisional awards, programme, scheduled mileage, route performance | daily 03:17 | `weekly-refresh.yml` |
+| Nightly full refresh | routes, geometry, stops, operators/garages/PVR, tenders + provisional awards, programme, scheduled mileage, route performance | daily 03:17 | `weekly-refresh.yml` |
 | Service status | line status, diversion register + history, TIMS roadworks, street-works drain, D-TRO orders | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
+| CPI watch | CPI-CPA | ONS release day only: from 09:00 London time, hourly until the new figure is in (ONS publishes at 07:00) | `refresh-cpi.yml` |
 
 Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `/api/live/vehicles` (`functions/api/live/vehicles.js`), a small server endpoint that proxies the DfT BODS GPS feed with a 10-second cache. Street works arrive by push: `/api/streetworks` (`functions/api/streetworks.js`) receives DfT Street Manager SNS notifications (signature-verified, London-filtered by SWA org code) and commits each event to the `streetworks-inbox` branch, which the status workflow folds into the archive.
 
-**New operators are automatic.** Operator names are read from the data, not listed in the code: an operator that is awarded routes but runs none yet (Go Bus, for instance) appears under *New and incoming* on the Operators page and on each affected route, and becomes a normal operator — with its own colour, garages, filters and an Intelligence entry — the moment the route data shows it running a route. `data/operator-aliases.json` is only needed to fold a renamed subsidiary into its parent brand.
+**New operators are automatic.** Operator names are read from the data, not listed in the code: an operator that is awarded routes but runs none yet (Go Bus, for instance) appears on the Operators page (tagged *Incoming*) and on each affected route, and becomes a normal operator — with its own colour, garages, filters and an Intelligence entry — the moment the route data shows it running a route. `data/operator-aliases.json` is only needed to fold a renamed subsidiary into its parent brand.
 
 ## Local development
 
@@ -50,7 +51,7 @@ npx serve .                   # any static file server; the app is one index.htm
 
 The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`; optionally `DTRO_CLIENT_ID`/`DTRO_API_KEY`/`DTRO_CLIENT_SECRET` for traffic orders — the fetcher skips gracefully without them) or the live-vehicles endpoint (`BODS_API_KEY`).
 
-Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downloads the pinned Leaflet and MapLibre builds the suites serve in place of the CDN), then `node tests/verify-<name>.mjs`. They use Playwright with a system Chromium (`/opt/pw-browsers/chromium`, or set `CHROMIUM`) and mock all external feeds, so they pass offline.
+Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downloads the pinned Leaflet and MapLibre builds the suites serve in place of the CDN), then `npm test` (every suite, one summary line each) or `node tests/verify-<name>.mjs` for one. The same suites run on GitHub for every code change (`ci.yml`). They use Playwright with a system Chromium (`/opt/pw-browsers/chromium`, or set `CHROMIUM`) and mock all external feeds, so they pass offline.
 
 ## Corrections
 
