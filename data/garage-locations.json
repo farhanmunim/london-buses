@@ -1,7 +1,17 @@
 {
-  "generatedAt": "2026-10-23T09:16:09.116Z",
-  "count": 76,
+  "generatedAt": "2026-10-24T08:45:53.253Z",
+  "count": 77,
   "garages": {
+    "?": {
+      "code": "?",
+      "name": "Beddington",
+      "operator": "Arriva",
+      "address": "Sidney House, Beddington Farm Rd, Croydon CR0 4XB",
+      "lat": 51.382896,
+      "lon": -0.130025,
+      "pvr": 10,
+      "capacity": null
+    },
     "A": {
       "code": "A",
       "name": "Sutton",
@@ -19,7 +29,7 @@
       "address": "287 High Road, Willesden, London, NW10 2JY",
       "lat": 51.548365,
       "lon": -0.238288,
-      "pvr": 100,
+      "pvr": 101,
       "capacity": 132
     },
     "AD": {
@@ -109,7 +119,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 170,
+      "pvr": 172,
       "capacity": 201
     },
     "BF": {
@@ -139,7 +149,7 @@
       "address": "239 Brixton Hill, London, SW2 1NR",
       "lat": 51.446122,
       "lon": -0.12373,
-      "pvr": 94,
+      "pvr": 67,
       "capacity": 50
     },
     "BT": {
@@ -179,7 +189,7 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 102,
+      "pvr": 100,
       "capacity": 147
     },
     "CT": {
@@ -219,7 +229,7 @@
       "address": "Central Road, Dartford, Kent, DA1 5BG",
       "lat": 51.450192,
       "lon": 0.220779,
-      "pvr": 67,
+      "pvr": 65,
       "capacity": 123
     },
     "DX": {
@@ -239,7 +249,7 @@
       "address": "Southbury Road, Ponders End, Middlesex, EN3 4HX",
       "lat": 51.648654,
       "lon": -0.050895,
-      "pvr": 123,
+      "pvr": 122,
       "capacity": 140
     },
     "EC": {
@@ -349,7 +359,7 @@
       "address": "37A Pemberton Gardens, London, N19 5RR",
       "lat": 51.56265,
       "lon": -0.131605,
-      "pvr": 158,
+      "pvr": 159,
       "capacity": 228
     },
     "KB": {
@@ -399,7 +409,7 @@
       "address": "Ernest Avenue, West Norwood, London, SE27 0HN",
       "lat": 51.430084,
       "lon": -0.103945,
-      "pvr": 132,
+      "pvr": 145,
       "capacity": 200
     },
     "NP": {
@@ -469,7 +479,7 @@
       "address": "Alperton Lane, Western Avenue, Greenford, Middlesex, UB6 8DW",
       "lat": 51.533792,
       "lon": -0.318859,
-      "pvr": 77,
+      "pvr": 76,
       "capacity": 95
     },
     "Q": {
@@ -529,7 +539,7 @@
       "address": "Wells Road, London, W12 8DA",
       "lat": 51.501934,
       "lon": -0.226176,
-      "pvr": 95,
+      "pvr": 94,
       "capacity": 135
     },
     "SF": {
@@ -639,7 +649,7 @@
       "address": "719 London Road, Thornton Heath, CR7 6AU",
       "lat": 51.39323,
       "lon": -0.114381,
-      "pvr": 78,
+      "pvr": 82,
       "capacity": 120
     },
     "TL": {
