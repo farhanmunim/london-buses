@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-10-27T09:09:08Z",
+  "generated_at_utc": "2026-10-28T09:50:22Z",
   "route_count": 675,
   "routes": {
     "1": {
@@ -3132,48 +3132,54 @@
         "full": "Walthamstow Central, Walthamstow Bus Station"
       },
       "inbound": {
-        "destination": "Lee Valley Campsite",
+        "destination": "Lee Valley Camp Site",
         "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "full": "Lee Valley Camp Site"
       }
     },
     "216": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Kingston",
-        "qualifier": "",
-        "full": "Kingston"
+        "qualifier": "Cromwell Road Bus Station",
+        "full": "Kingston, Cromwell Road Bus Station"
       },
       "inbound": {
         "destination": "Staines",
-        "qualifier": "",
+        "qualifier": "Staines Bus Station",
         "full": "Staines"
       }
     },
     "217": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Wood Green Turnpike Lane Station",
-        "qualifier": "",
-        "full": "Wood Green Turnpike Lane Station"
+        "destination": "Turnpike Lane Station",
+        "qualifier": "Turnpike Lane Bus Station",
+        "full": "Turnpike Lane Station, Turnpike Lane Bus Station"
       },
       "inbound": {
         "destination": "Waltham Cross",
-        "qualifier": "",
+        "qualifier": "Waltham Cross Bus Station",
         "full": "Waltham Cross"
       }
     },
     "218": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Hammersmith",
-        "qualifier": "",
-        "full": "Hammersmith"
+        "destination": "North Acton",
+        "qualifier": "North Acton Station",
+        "full": "North Acton"
       },
       "inbound": {
-        "destination": "North Acton",
-        "qualifier": "",
-        "full": "North Acton"
+        "destination": "Hammersmith",
+        "qualifier": "Hammersmith Bus Station",
+        "full": "Hammersmith"
       }
     },
     "219": {
@@ -4902,18 +4908,16 @@
       }
     },
     "343": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "New Cross Gate",
-        "qualifier": "New Cross / Jerningham Road",
-        "full": "New Cross Gate, New Cross / Jerningham Road"
+        "destination": "Tower Gateway",
+        "qualifier": "",
+        "full": "Tower Gateway"
       },
       "inbound": {
-        "destination": "Tower Gateway",
-        "qualifier": "Tower Gateway Station",
-        "full": "Tower Gateway"
+        "destination": "New Cross Gate",
+        "qualifier": "",
+        "full": "New Cross Gate"
       }
     },
     "344": {
