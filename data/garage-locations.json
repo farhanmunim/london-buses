@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T10:38:43.005Z",
+  "generatedAt": "2026-10-31T10:20:22.127Z",
   "count": 77,
   "garages": {
     "?": {
@@ -119,7 +119,7 @@
       "address": "Unit 10, Beddington Cross, Beddington Farm Road, Croydon, CR0 4XH",
       "lat": 51.383331,
       "lon": -0.133069,
-      "pvr": 172,
+      "pvr": 176,
       "capacity": 201
     },
     "BF": {
@@ -179,7 +179,7 @@
       "address": "Erith Road, Bexleyheath, Kent, DA7 6BX",
       "lat": 51.460146,
       "lon": 0.153803,
-      "pvr": 114,
+      "pvr": 128,
       "capacity": 175
     },
     "C": {
@@ -189,7 +189,7 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 100,
+      "pvr": 102,
       "capacity": 147
     },
     "CT": {
@@ -349,7 +349,7 @@
       "address": "151 Ruckholt Road, Leyton, London, E10 5PB",
       "lat": 51.555687,
       "lon": -0.014839,
-      "pvr": 139,
+      "pvr": 140,
       "capacity": 250
     },
     "HT": {
@@ -359,7 +359,7 @@
       "address": "37A Pemberton Gardens, London, N19 5RR",
       "lat": 51.56265,
       "lon": -0.131605,
-      "pvr": 159,
+      "pvr": 163,
       "capacity": 228
     },
     "KB": {
@@ -449,7 +449,7 @@
       "address": "High Street, Potters Bar, Herts, EN6 5BE",
       "lat": 51.697702,
       "lon": -0.176509,
-      "pvr": 124,
+      "pvr": 120,
       "capacity": 190
     },
     "PD": {
@@ -459,7 +459,7 @@
       "address": "Pettman Crescent, Plumstead, London, SE28 0BJ",
       "lat": 51.491193,
       "lon": 0.083469,
-      "pvr": 149,
+      "pvr": 148,
       "capacity": 210
     },
     "PM": {
@@ -619,7 +619,7 @@
       "address": "111 Hastings Road, Bromley, Kent, BR2 8NH",
       "lat": 51.375099,
       "lon": 0.045001,
-      "pvr": 86,
+      "pvr": 85,
       "capacity": 110
     },
     "TC": {
@@ -629,7 +629,7 @@
       "address": "Brighton Road, Croydon, Surrey, CR2 6EL",
       "lat": 51.354252,
       "lon": -0.097512,
-      "pvr": 98,
+      "pvr": 97,
       "capacity": 135
     },
     "TF": {
