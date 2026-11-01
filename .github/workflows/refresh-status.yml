@@ -94,7 +94,34 @@ jobs:
             for attempt in 1 2 3; do
               if git push; then break; fi
               if [ "$attempt" = "3" ]; then echo "Push still rejected after 3 attempts"; exit 1; fi
-              git stash push --include-untracked --quiet --message "ci-residue-$attempt" || true
-              git pull --rebase origin main
+              # Another workflow's push landed between checkout and here (a
+              # queued run checks out the SHA frozen at queue time, and the
+              # D-TRO step alone can take minutes). Rebasing conflicts on
+              # data/api/manifest.json, which every workflow rewrites
+              # (status run #226, 2026-11-01) — so move to the new head, keep
+              # THIS run's own outputs, and re-apply only its two manifest
+              # rows on top of the other workflow's manifest.
+              echo "Push rejected (attempt $attempt) — redoing on the new head"
+              OURS=$(git rev-parse HEAD)
+              git diff --name-only "$OURS~1" "$OURS" | grep -v '^data/api/manifest.json$' > "$RUNNER_TEMP/ours.txt" || true
+              git rebase --abort 2>/dev/null || true
+              git fetch origin main
+              git reset --hard origin/main
+              # Restore only the files this run changed — not whole dirs, which
+              # would clobber newer files the other workflow just pushed.
+              xargs -r git checkout "$OURS" -- < "$RUNNER_TEMP/ours.txt"
+              node -e '
+                const fs = require("fs"), A = "data/api/";
+                const mf = JSON.parse(fs.readFileSync(A + "manifest.json", "utf8"));
+                const st = JSON.parse(fs.readFileSync(A + "line-status.json", "utf8"));
+                const dv = JSON.parse(fs.readFileSync(A + "route-diversions.json", "utf8"));
+                for (const [k, at, n] of [["line-status", st.capturedAt, st.rows.length], ["route-diversions", dv.generatedAt, dv.count]])
+                  if (mf.datasets?.[k]) Object.assign(mf.datasets[k], { fetchedAt: at, status: "ok", rows: n });
+                fs.writeFileSync(A + "manifest.json", JSON.stringify(mf) + "\n");
+              '
+              git add data/api/ || true
+              git add -f data/source/diversion-history.json data/source/roadworks-history.json data/source/dtro.json || true
+              if git diff --cached --quiet; then echo "New head already carries this data"; break; fi
+              git commit -m "data: status refresh $(date -u +%Y-%m-%dT%H:%M)"
             done
           fi
