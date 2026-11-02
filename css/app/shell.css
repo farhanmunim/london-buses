@@ -1,0 +1,44 @@
+/* App shell — top bar, page frame, tab bar, "More" sheet. */
+/* ── App shell ─────────────────────────────────────────────────────────── */
+.topbar{position:sticky;top:0;z-index:60;background:color-mix(in srgb, var(--surf) 92%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.topbar-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;letter-spacing:-.01em}
+.brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
+.brand small{font-weight:600;font-size:10px;color:var(--bg);background:var(--tx);border-radius:999px;padding:2px 7px;letter-spacing:.04em}
+.nav-desktop{display:none;gap:2px;margin-left:14px}
+.nav-desktop a,.nav-desktop button{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--tx2)}
+.nav-desktop a:hover,.nav-desktop button:hover{background:var(--surf2);color:var(--tx)}
+.nav-desktop a.on,.nav-desktop button.on{background:var(--tx);color:var(--bg)}
+.topbar-spacer{flex:1}
+.net-chip{display:none;align-items:center;gap:7px;font-size:12.5px;color:var(--tx2);border:1px solid var(--bd);border-radius:999px;padding:5px 11px;background:var(--surf)}
+.net-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--good);flex:none}
+.net-chip.bad .dot{background:var(--warn)}
+@media(min-width:760px){.nav-desktop{display:flex}.net-chip{display:inline-flex}}
+
+/* main + footer share a flex column so the footer sits at the bottom of short pages and the map view fills what is left under the header and banner. */
+.shell{display:flex;flex-direction:column;min-height:calc(100dvh - var(--hdr-h,53px) - var(--sb-h,0px))}
+main{flex:1 0 auto;width:100%;max-width:var(--maxw);margin:0 auto;padding:16px 16px 28px}
+@media(min-width:760px){main{padding-bottom:56px}}
+
+.app-footer{display:flex;align-items:center;justify-content:center;min-height:34px;padding:7px 16px;border-top:1px solid var(--bd);background:var(--surf);color:var(--mu);font-size:11px;line-height:1.5;text-align:center}
+@media(max-width:759px){.app-footer{margin-bottom:calc(var(--tab-h) + env(safe-area-inset-bottom))}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.legendrow a,.card p a,.note a{text-decoration:underline}
+.rchip{min-height:24px}
+.rchip{display:inline-flex;align-items:center}
+.net-chip{display:none!important}@media(min-width:1000px){.net-chip:not([hidden]){display:inline-flex!important}}
+
+/* mobile bottom tabs */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb, var(--surf) 94%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--bd);display:flex;height:calc(var(--tab-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a,.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--mu);background:none;border:0;padding:0;font-family:inherit}
+.tabbar a.on,.tabbar button.on{color:var(--acc)}
+.tabbar svg{width:21px;height:21px}
+@media(min-width:760px){.tabbar{display:none}}
+/* One sheet element serves both breakpoints: bottom-anchored above the
+   tabbar on mobile; ≥760px the JS pins it under the topbar's More button
+   (inline left/top) so it reads as a dropdown. */
+.more-sheet{position:fixed;right:10px;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom) + 10px);z-index:61;background:var(--surf);border:1px solid var(--bd);border-radius:14px;box-shadow:var(--sh);padding:6px;min-width:170px}
+.more-sheet a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--tx)}
+.more-sheet a.on{color:var(--acc);background:var(--acc-soft)}
+.more-sheet svg{width:18px;height:18px;flex:none}
+@media(min-width:760px){.more-sheet{right:auto;bottom:auto;box-shadow:0 6px 26px rgba(28,25,23,.15)}}

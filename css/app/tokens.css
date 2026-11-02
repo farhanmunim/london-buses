@@ -1,0 +1,46 @@
+/* Design tokens — colours, type, spacing, light and dark themes. */
+/* ── Design tokens — minimal SaaS, light-only ──────────────────────────── */
+:root{
+  --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
+  --bd:#e7e5e4; --bd2:#d6d3d1;
+  --tx:#1c1917; --tx2:#57534e; --mu:#716b65;   /* --mu ≥4.5:1 on bg and surf (WCAG AA for the small labels that use it) */
+  --acc:#c81e1e; --acc-soft:#fef2f2;
+  --good:#15803d; --warn:#9a4a05; --bad:#c81e1e;
+  --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --r:12px; --r-sm:8px;
+  --sh:0 1px 2px rgba(28,25,23,.05);
+  --maxw:1080px;
+  --tab-h:58px;
+  --tipbg:#1c1917; --skel-hi:#eeedec;
+  color-scheme:light;
+}
+/* Dark theme — the boot script stamps data-theme before first paint, from
+   the stored choice or the system preference. */
+:root[data-theme="dark"]{
+  --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
+  --bd:#2b2725; --bd2:#3d3835;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#9a948d;
+  --acc:#f87171; --rnum-bg:#d73d3d; --acc-soft:#3a1515;
+  --good:#2fbf5f; --warn:#f59e0b; --bad:#f87171;
+  --sh:0 1px 2px rgba(0,0,0,.45);
+  --tipbg:#332f2c; --skel-hi:#2c2825;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.45;min-height:100dvh}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+/* Form controls don't inherit color from body — without this, dark mode
+   renders near-black UA text in the search inputs. Placeholder + caret
+   follow the theme too. */
+input,select,textarea{font:inherit;color:inherit;caret-color:var(--acc)}
+input::placeholder,textarea::placeholder{color:var(--mu);opacity:1}
+/* WebKit autofill paints its own dark-on-pale text that `color` can't touch —
+   -webkit-text-fill-color is the only override it respects. */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--tx);caret-color:var(--tx);
+  transition:background-color 999999s ease-out}
+svg{display:block}
+::selection{background:#fecaca;color:#1c1917}
+:root[data-theme="dark"] ::selection{background:#7f1d1d;color:#f0eeec}

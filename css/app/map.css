@@ -1,0 +1,85 @@
+/* Network map view and map controls. */
+/* ── Network map view ─────────────────────────────────────────────────── */
+main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
+.netmap-wrap{position:relative;flex:1 1 auto;min-height:420px}
+#netmap{position:absolute;inset:0;background:var(--surf2);z-index:0}
+[hidden]{display:none!important}
+.netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:color-mix(in srgb, var(--surf) 97%, transparent);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
+@media(min-width:760px){.netmap-panel{right:auto;width:342px}}
+/* On a phone the panel is capped so it can never cover the map it controls; its notes and route cards scroll inside it. */
+@media(max-width:759px){.netmap-panel{max-height:min(50dvh, calc(100% - 24px))}}
+.embed .topbar,.embed .tabbar,.embed .app-footer,.embed #site-banner{display:none!important}
+.embed{--hdr-h:0px;--sb-h:0px}
+.embed .nm-scope{display:none}
+.embed .shell{min-height:100dvh}
+.nm-scope{padding:11px 13px 0;font-size:12.5px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
+.nm-scope span{font-weight:500;color:var(--tx2)}
+.nm-scope+.nm-search{padding-top:6px}
+.nm-search{display:flex;align-items:center;gap:9px;padding:11px 13px}
+.nm-search svg{color:var(--mu);flex:none}
+.nm-search input{flex:1;border:none;outline:none;background:none;font-size:15px;min-width:0}
+.nm-search .clear{color:var(--mu);padding:2px;border-radius:6px}
+.nm-search .clear:hover{color:var(--tx)}
+.nm-sugg{border-top:1px solid var(--bd);max-height:36dvh;overflow-y:auto;padding:5px}
+.nm-sug{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:7px 8px;border-radius:9px;font-size:12.5px;color:var(--tx2);cursor:pointer}
+.nm-sug .rnum{min-width:38px;height:24px;font-size:12px;flex:none}
+.nm-sug .op{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm-sug .ty{margin-left:auto;font-size:11px;color:var(--mu);flex:none;padding-left:8px}
+.nm-sug.act,.nm-sug:hover{background:var(--bg)}
+.nm-nores{padding:9px 10px;font-size:12.5px;color:var(--mu)}
+.nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
+.nm-lbl{font-size:11px;color:var(--mu);font-weight:600}
+.nm-colour{display:flex;align-items:center;justify-content:space-between;flex:1 0 100%}
+.nm-gscope{display:flex;align-items:center;gap:10px;padding:0 11px 9px}
+.nm-gscope .seg{flex:1}.nm-gscope .seg button{flex:1;padding:5px 8px;font-size:12px}
+.nm-layers{display:flex;align-items:center;gap:10px;padding:8px 11px;border-top:1px solid var(--bd)}
+.nm-lbtns{display:flex;gap:6px;flex-wrap:wrap}
+.nm-lbtns .livebtn{margin:0}
+.nm-lbtns .livebtn.is-gated{opacity:.45}
+.nm-lnotes{display:flex;flex-direction:column;gap:5px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;line-height:1.45;color:var(--tx2);max-height:132px;overflow-y:auto}
+.nm-lnote b{color:var(--tx);font-weight:600}
+.nm-chip{display:inline-flex;align-items:center;gap:5px;margin-right:9px;white-space:nowrap}
+.nm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:baseline}
+.nm-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;color:var(--tx2)}
+.nm-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.nm-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
+.nm-term{transform:translate(-50%,-50%);display:inline-block;color:#fff;border:1.5px solid #fff;border-radius:7px;padding:1px 5px;font-family:var(--mono);font-weight:700;font-size:9.5px;white-space:nowrap;box-shadow:0 2px 7px rgba(0,0,0,.35)}
+.nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
+.nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
+.nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
+.nm-body{border-top:1px solid var(--bd);overflow-y:auto;padding:9px 11px;display:flex;flex-direction:column;gap:8px}
+.netmap-card{position:relative;border:1px solid var(--bd);border-radius:11px;padding:10px 12px;background:var(--surf)}
+.netmap-card .close{position:absolute;top:8px;right:8px;color:var(--mu);padding:3px;border-radius:6px}
+.netmap-card .close:hover{color:var(--tx);background:var(--bg)}
+.nm-foot{display:flex;align-items:center;gap:8px;padding:9px 13px;border-top:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--tx2)}
+.nm-foot .reset{margin-left:auto;color:var(--acc);font-weight:600;font-size:12px}
+
+/* leaflet touches */
+.leaflet-container{font-family:var(--sans)}
+.lb-bus{filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.lb-dot{position:relative;width:28px;height:28px;display:grid;place-items:center}
+.lb-dot::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#2a78d6;opacity:.3;animation:lbHalo 1.8s ease-out infinite}
+.lb-dot i{position:relative;width:17px;height:17px;border-radius:50%;background:#101828;border:2px solid #fff;display:grid;place-items:center}
+.lb-dot svg{width:11px;height:11px;display:block}
+@keyframes lbHalo{from{transform:scale(.7);opacity:.35}to{transform:scale(1.7);opacity:0}}
+@media(prefers-reduced-motion:reduce){.lb-dot::before{animation:none;opacity:.25}}
+.leaflet-popup-content-wrapper{border-radius:10px;box-shadow:0 4px 18px rgba(28,25,23,.18)}
+.leaflet-popup-content{font-family:var(--sans);font-size:12.5px;margin:10px 13px}
+.leaflet-popup-content b{font-size:13px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surf);color:var(--tx)}
+.leaflet-tooltip{background:var(--surf);color:var(--tx);border:1px solid var(--bd2);box-shadow:var(--sh)}
+.leaflet-tooltip-top:before{border-top-color:var(--bd2)}
+.lb-attr{display:flex;flex-direction:row-reverse;align-items:center;gap:6px;margin:0 8px 8px 0!important;font:11px/1.35 var(--sans)}
+.lb-attr-btn{width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--bd2);background:color-mix(in srgb,var(--surf) 90%,transparent);color:var(--tx2);font:italic 700 13px/1 Georgia,serif;cursor:pointer;box-shadow:var(--sh)}
+.lb-attr-btn:hover,.lb-attr.open .lb-attr-btn{color:var(--tx)}
+.lb-attr-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.lb-attr-txt{background:color-mix(in srgb,var(--surf) 94%,transparent);color:var(--tx2);border:1px solid var(--bd2);border-radius:8px;padding:5px 10px;box-shadow:var(--sh);max-width:min(360px,calc(100vw - 84px))}
+.lb-attr-txt[hidden]{display:none}
+.lb-attr-txt a{color:var(--acc);text-decoration:none}
+.lb-attr-txt a:hover{text-decoration:underline}
+
+/* layout fixes from the production audit */
+.opcard .chiprow{padding:0}
+.livebtn,.reset,.nm-lbtns button{white-space:nowrap}
+@media(max-width:640px){.fact .v{white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.3}}
