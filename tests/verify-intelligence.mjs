@@ -9,7 +9,7 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const srv = createServer((req, res) => {
   try{
     let u = decodeURIComponent(new URL(req.url, 'http://x').pathname); if(u === '/intelligence') u = '/intelligence.html'; if(u.endsWith('/')) u += 'index.html';
-    res.writeHead(200, { 'content-type': { '.html':'text/html', '.js':'text/javascript', '.json':'application/json', '.geojson':'application/json', '.svg':'image/svg+xml' }[extname(u)] ?? 'application/octet-stream' });
+    res.writeHead(200, { 'content-type': { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.geojson':'application/json', '.svg':'image/svg+xml' }[extname(u)] ?? 'application/octet-stream' });
     res.end(readFileSync(join(ROOT, u)));
   }catch(e){ res.writeHead(404); res.end('nf'); }
 }).listen(8961);

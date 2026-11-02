@@ -46,12 +46,31 @@ Live data is never stored. Arrivals and route status go straight from the browse
 npm install
 cp .env.example .env          # then set the keys (the file says where to get them)
 npm run refresh               # full data pipeline — optional, committed data already works
-npx serve .                   # any static file server; the app is one index.html
+npx serve .                   # any static file server (ES modules need http://, not file://)
 ```
 
 The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`; optionally `DTRO_CLIENT_ID`/`DTRO_API_KEY`/`DTRO_CLIENT_SECRET` for traffic orders — the fetcher skips gracefully without them) or the live-vehicles endpoint (`BODS_API_KEY`).
 
 Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downloads the pinned Leaflet and MapLibre builds the suites serve in place of the CDN), then `npm test` (every suite, one summary line each) or `node tests/verify-<name>.mjs` for one. The same suites run on GitHub for every code change (`ci.yml`). They use Playwright with a system Chromium (`/opt/pw-browsers/chromium`, or set `CHROMIUM`) and mock all external feeds, so they pass offline.
+
+## Code layout
+
+No build step: the pages are plain HTML that load native ES modules and ordinary stylesheets, so what is in the repo is what is served.
+
+```
+index.html              the app shell (markup + <link>/<script> tags only)
+intelligence.html       the Operator Intelligence page, same shape
+css/app/                tokens → shell → components → map → polish (load order matters; polish is last on purpose)
+css/intelligence/       base → components → features → polish
+js/app/main.js          entry point: imports every module, then boots the router
+js/app/core/            data layer, utils, router + navigation state, shell, theme, tooltip, "More" sheet
+js/app/map/             shared Leaflet layers (layers.js) and the single-route map
+js/app/views/           one module per page: routes, route-detail, network-map, operators, garages, stops, …
+js/intelligence/        same idea for the Intelligence page: data/state/format, views/, drawer/, map/, ui/
+site-banner.js          the site-wide banner, shared by every page (including the archive and 404)
+```
+
+State that several views write (the navigation token, live-poll timers, the current Leaflet map) lives in `js/app/core/nav.js` as properties of one exported `state` object, because an ES module cannot reassign another module's binding. `_headers` makes `/js/*` and `/css/*` revalidate on every load (ETag → 304), so a deploy can never serve a mixed old/new module graph.
 
 ## Corrections
 

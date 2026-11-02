@@ -53,7 +53,7 @@ The site is static files from `main`, plus two endpoints. Either host below work
 
 **What any host must do**
 
-- Serve the repository root as the site (`index.html`, `intelligence.html`, `404.html`, `data/`, `archive/`), following `main`.
+- Serve the repository root as the site (`index.html`, `intelligence.html`, `404.html`, `js/`, `css/`, `data/`, `archive/`), following `main`.
 - Apply the headers in `_headers`: HSTS, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Cache-Control: public, max-age=0, must-revalidate` on HTML, JSON, JS and CSS. Revalidation is not optional: there are no fingerprinted filenames, so it is what keeps returning visitors on the current code.
 - Send `Access-Control-Allow-Origin: *` on `/data/api/*` (the faux-API is public by design).
 - Apply the 301s in `_redirects` (`/v2*` → `/`, `/changelog.html` → `/archive/v1/changelog.html`).
@@ -81,7 +81,7 @@ The site is static files from `main`, plus two endpoints. Either host below work
 Do these only once the site answers on its final domain.
 
 - **Street Manager open data (optional).** `curl -H "X-Health-Key: <HEALTH_KEY>" "https://<domain>/api/streetworks?selftest=write"` until the JSON says `"ready": true` (it checks the token, the repository and does a write self-test; set `HEALTH_KEY` first). Then register that URL at manage-roadworks.service.gov.uk/open-data-onboarding. DfT's AWS SNS sends a subscription confirmation, which the receiver confirms itself; after that every London permit and activity event is committed to `streetworks-inbox` and folded into `data/api/streetworks-history.json` by the next status run. Without this registration the Street works page simply shows the archive as it was.
-- **CARTO basemap key.** `index.html` (`CARTO_KEY`) and `archive/v1/js/map.js` carry a CARTO client key for the dark-theme and fallback raster tiles. It is public by design but tied to an account and its allowed domains: create your own at carto.com (free tier, 5M tiles/month), allow the new domain, and replace the value in both files. The light theme uses OpenFreeMap, which needs no key.
+- **CARTO basemap key.** `js/app/map/layers.js` (`CARTO_KEY`) and `archive/v1/js/map.js` carry a CARTO client key for the dark-theme and fallback raster tiles. It is public by design but tied to an account and its allowed domains: create your own at carto.com (free tier, 5M tiles/month), allow the new domain, and replace the value in both files. The light theme uses OpenFreeMap, which needs no key.
 - **Analytics.** The pages load two trackers: Google Analytics (`G-…` in `index.html`, `404.html`, `archive/v1/*`) and a self-hosted Umami script with a per-site `data-website-id`. Add the new domain to the GA property, create a new Umami site for the domain and swap the id — or remove the tags.
 
 ## 5. Domain references to update
@@ -93,7 +93,7 @@ Search for the old hostname and replace it in: `README.md` (live-site and docs l
 ```bash
 npm install
 cp .env.example .env          # fill in the keys you have; the frontend needs none
-npx serve .                   # or any static server; the app is one index.html
+npx serve .                   # or any static server (ES modules need http://, not file://)
 npm run refresh               # the full pipeline — optional, committed data already works
 npm run test:fixtures         # once: downloads the pinned Leaflet/MapLibre builds the suites serve offline
 node tests/verify-intelligence.mjs      # any suite; they expect Chromium at /opt/pw-browsers/chromium or $CHROMIUM

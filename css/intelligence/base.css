@@ -1,0 +1,63 @@
+/* Tokens, reset and page shell. */
+:root{
+  color-scheme:light;
+  --bg:#f5f6f8; --surface:#fff; --sunken:#f2f4f7; --hover:#f9fafb;
+  --line:#e6e8ec; --line-2:#d5d9e0;
+  --ink:#101828; --ink-2:#475467; --ink-3:#667085;
+  --accent:#2a78d6; --accent-ink:#184f95; --accent-soft:#eaf2fd; --accent-line:#b7d3f6;
+  --seq-1:#cde2fb; --seq-2:#9ec5f4; --seq-3:#6da7ec; --seq-4:#2a78d6; --seq-5:#184f95;
+  --good:#0ca30c; --good-ink:#006300; --warn:#fab219; --warn-ink:#8a5a00; --crit:#d03b3b;
+  --gray-bar:#d0d5dd;
+  --zero:#104281; --hybrid:#2a78d6; --diesel:#86b6ef;
+  --radius:12px; --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 1px rgba(16,24,40,.03);
+  --pop:0 16px 40px rgba(16,24,40,.16),0 2px 8px rgba(16,24,40,.06);
+  --rail:72px; --top:64px;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r-ctl:8px; --r-card:12px; --r-badge:6px; --ease:cubic-bezier(.16,1,.3,1);
+  font-family:Geist,Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent-ink)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:8px 12px;border-radius:8px;z-index:300}
+.skip:focus{left:8px}
+
+/* shell ------------------------------------------------------------------ */
+.rail{position:fixed;inset:var(--banner-h,0px) auto 0 0;width:var(--rail);background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;z-index:50}
+/* The site banner (site-banner.js) sits under every overlay on this page — scrim 120, drawer 130, full-page map 150, modal 200 — so their own header controls, e.g. the map's Close, are never covered. */
+body #site-banner{z-index:100}
+.logo{width:40px;height:40px;border-radius:12px;background:var(--ink);display:grid;place-items:center;margin-bottom:14px}
+.rail a.nav{width:56px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0 7px;border-radius:12px;color:var(--ink-3);text-decoration:none;font-size:10.5px;font-weight:500}
+.rail a.nav svg{width:20px;height:20px}
+.rail a.nav:hover{background:var(--sunken);color:var(--ink)}
+.rail a.nav.on{background:var(--accent-soft);color:var(--accent-ink)}
+.rail .sp{flex:1}
+.col{margin-left:var(--rail);min-width:0}
+.top{position:sticky;top:0;z-index:40;height:var(--top);display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(255,255,255,.82);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.top .mlogo{display:none}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);font-size:13px;font-weight:500;box-shadow:var(--shadow)}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:#1d2939}
+.btn svg{width:16px;height:16px;flex:none}
+.opsw{position:relative}
+.opsw>.btn{font-weight:600;padding:0 10px 0 8px;white-space:nowrap}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;display:inline-block}
+.menu{position:absolute;left:0;top:44px;min-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--pop);padding:6px;z-index:60}
+.menu[hidden]{display:none}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:9px}
+.menu button:hover,.menu button[aria-current=true]{background:var(--sunken)}
+.menu .nm{font-weight:550;flex:1;white-space:nowrap}
+.menu .mt{color:var(--ink-3);font-size:12px;font-variant-numeric:tabular-nums}
+.searchbtn .stxt{flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.searchbtn{flex:1;max-width:420px;justify-content:flex-start;color:var(--ink-3);font-weight:400;background:var(--sunken);box-shadow:none;border-color:transparent}
+.searchbtn:hover{background:#eaecf0}
+kbd{margin-left:auto;font:inherit;font-size:11px;color:var(--ink-3);border:1px solid var(--line-2);background:var(--surface);border-radius:6px;padding:0 6px;line-height:18px}
+.grow{flex:1}
+.fresh{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.fresh i{width:7px;height:7px;border-radius:50%;background:var(--good)}
+main{max-width:1520px;margin:0 auto;padding:28px 32px 80px}
+.sec{margin-top:20px}

@@ -1,0 +1,185 @@
+/* Common components — cards, chips, tables, badges, forms, facts, route detail. */
+/* ── Common components ─────────────────────────────────────────────────── */
+.h1{font-size:21px;font-weight:700;letter-spacing:-.02em;margin:6px 0 2px}
+.sub{color:var(--tx2);font-size:13.5px;margin-bottom:14px}
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh)}
+.section{margin-top:18px}
+.section-h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mu);margin:0 2px 8px}
+.searchwrap{position:sticky;top:53px;z-index:50;background:var(--bg);padding:2px 0 10px;margin:0 -2px;}
+.search{display:flex;align-items:center;gap:9px;background:var(--surf);border:1px solid var(--bd2);border-radius:var(--r);padding:11px 14px;box-shadow:var(--sh)}
+.search:focus-within{border-color:var(--tx);box-shadow:0 0 0 3px rgba(28,25,23,.06)}
+:root[data-theme="dark"] .search:focus-within{box-shadow:0 0 0 3px rgba(240,238,236,.08)}
+.search input{flex:1;border:none;outline:none;background:none;font-size:16px;min-width:0}
+.search input::placeholder{color:var(--mu)}
+.search svg{color:var(--mu);flex:none}
+.search .clear{color:var(--mu);padding:2px;border-radius:6px}
+.search .clear:hover{color:var(--tx)}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:10px 2px 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:12.5px;font-weight:600;color:var(--tx2);background:var(--surf);border:1px solid var(--bd);border-radius:999px;padding:6px 12px;transition:all .12s}
+.chip:hover{border-color:var(--bd2)}
+.chip.on{background:var(--tx);border-color:var(--tx);color:var(--bg)}
+.chip .x{opacity:.7;margin-left:4px}
+.count-note{font-size:12.5px;color:var(--mu);margin:8px 2px 6px}
+.empty{color:var(--mu);text-align:center;padding:44px 0;font-size:14px}
+.skel{background:linear-gradient(90deg,var(--surf2) 25%,var(--skel-hi) 50%,var(--surf2) 75%);background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r-sm)}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* route list */
+.rlist{display:flex;flex-direction:column;gap:8px}
+.rrow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh);transition:border-color .12s}
+.rrow:hover{border-color:var(--bd2)}
+.rrow:active{background:var(--surf2)}
+.rnum{flex:none;min-width:46px;height:32px;padding:0 8px;border-radius:9px;background:var(--rnum-bg,var(--acc));color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:14.5px}
+.rnum.night{background:#6d28d9}.rnum.school{background:#15803d}.rnum.twentyfour{background:#0e7490}
+.rmeta{flex:1;min-width:0}
+.rmeta .op{font-weight:600;font-size:14px;display:flex;align-items:center;gap:7px}
+.rmeta .ga{font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rtag{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border-radius:5px;padding:2px 6px;background:var(--surf2);color:var(--tx2)}
+.rtag.electric{background:#dcfce7;color:#15803d}.rtag.hydrogen{background:#cffafe;color:#0e7490}.rtag.hybrid{background:#e0e7ff;color:#4338ca}
+:root[data-theme="dark"] .rtag.electric{background:#12351f;color:#4ade80}
+:root[data-theme="dark"] .rtag.hydrogen{background:#0b3440;color:#22d3ee}
+:root[data-theme="dark"] .rtag.hybrid{background:#232a52;color:#a5b4fc}
+.rrow .pvr{flex:none;text-align:right;font-size:12px;color:var(--mu);position:relative}
+.rrow .pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
+.warn-dot{position:absolute;top:6px;left:-12px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+@media(min-width:760px){.rlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+
+/* detail pages */
+.backrow{display:flex;align-items:center;gap:6px;color:var(--tx2);font-size:13.5px;font-weight:500;margin-bottom:10px;padding:4px 0}
+.backrow:hover{color:var(--tx)}
+.dhead{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.dnum{min-width:58px;height:42px;padding:0 10px;border-radius:11px;background:var(--acc);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-weight:700;font-size:20px}
+.dnum.night{background:#6d28d9}.dnum.school{background:#15803d}.dnum.twentyfour{background:#0e7490}
+.dtitle{min-width:0}
+.dtitle h1{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+.dtitle .sub2{font-size:13px;color:var(--tx2)}
+.statusline{display:flex;align-items:flex-start;gap:8px;margin:10px 0 0;font-size:13px}
+.statusline .dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--good)}
+.statusline.bad .dot{background:var(--warn)}
+.statusline b{font-weight:600}
+.statusline .reason{color:var(--tx2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+@media(min-width:560px){.facts{grid-template-columns:repeat(6,1fr)}}
+/* min-width:0 matters: grid items default to min-width:auto, so a long
+   no-wrap value (vehicle spec strings) would force its column wider than
+   the grid and break the page edge. The value scrolls inside the tile
+   instead — swipe to read the tail. */
+.fact{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r-sm);padding:9px 10px;min-width:0}
+.fact .l{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fact .v{font-family:var(--mono);font-weight:600;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.fact .v::-webkit-scrollbar{display:none}
+.facts--wrap .fact .l{white-space:normal;overflow:visible;text-overflow:clip}
+.facts--wrap .fact .v{white-space:normal;overflow:visible}
+.kv{display:flex;flex-direction:column}
+.kv>div{display:flex;justify-content:space-between;gap:14px;padding:9px 14px;border-top:1px solid var(--bd);font-size:13.5px}
+.kv>div:first-child{border-top:none}
+.kv .k{color:var(--tx2);flex:none}
+.kv .v{text-align:right;font-weight:500;min-width:0}
+.kv .v.mono{font-family:var(--mono);font-weight:600;font-size:13px}
+#map{height:300px;border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;background:var(--surf2);position:relative;z-index:0}
+@media(min-width:760px){#map{height:380px}}
+.mapctl{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap}
+.mapctl button:disabled{opacity:.45;cursor:default}
+.seg{display:flex;background:var(--surf2);border-radius:9px;padding:3px;gap:2px}
+.seg button{font-size:12.5px;font-weight:600;color:var(--tx2);border-radius:7px;padding:5px 12px}
+.seg button.on{background:var(--surf);color:var(--tx);box-shadow:var(--sh)}
+.livebtn{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:6px 13px}
+.livebtn.on{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
+.livebtn.iconb{padding:7px;gap:0;margin-left:0;color:var(--tx2)}
+.tabpill{margin-left:0;font-size:13px;padding:8px 16px}
+.cpmwrap{position:relative}
+.cpm-tip{position:absolute;pointer-events:none;background:var(--surf);color:var(--tx);border:1px solid var(--bd);border-radius:8px;box-shadow:var(--sh);font-size:11.5px;line-height:1.5;padding:7px 10px;white-space:nowrap;z-index:5;transform:translate(-50%,-100%)}
+.cpm-tip b{font-size:12px}
+.livebtn.iconb.on{color:var(--acc)}
+.livebtn .spin{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.livebtn.loading .spin{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divn-note{display:flex;gap:9px;background:#fffbeb;border:1px solid #fde68a;border-radius:var(--r);padding:11px 13px;font-size:13px;color:#92400e;margin-top:12px}
+:root[data-theme="dark"] .divn-note{background:#33260b;border-color:#5c4a16;color:#fcd34d}
+.divn-note b{font-weight:700}
+.bars{display:flex;align-items:flex-end;gap:3px;height:44px}
+.bars>div{flex:1;background:#fca5a5;border-radius:3px 3px 0 0;min-height:3px;position:relative}
+:root[data-theme="dark"] .bars>div{background:#61302c}
+.bars>div.hi{background:var(--acc)}
+.minibar{height:7px;border-radius:999px;background:var(--surf2);overflow:hidden}
+.minibar>i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.legendrow{display:flex;gap:14px;font-size:11.5px;color:var(--mu);margin-top:6px;flex-wrap:wrap}
+.legendrow i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* operators & garages */
+.oplist{display:grid;gap:10px}
+@media(min-width:560px){.oplist{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.oplist{grid-template-columns:repeat(3,1fr)}}
+.opcard{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:14px;box-shadow:var(--sh);display:flex;flex-direction:column;gap:10px;transition:border-color .12s}
+.opcard:hover{border-color:var(--bd2)}
+.opcard.incoming{border-style:dashed}
+.newpill{display:inline-block;vertical-align:1px;margin-left:6px;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);background:var(--acc-soft);border-radius:999px;padding:2px 7px}
+.changenote{margin:10px 0 0;padding:11px 14px;border:1px solid var(--bd);border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--surf);font-size:13px;line-height:1.5;color:var(--tx2)}
+.changenote b{color:var(--tx)}
+.ophead{display:flex;align-items:center;gap:11px}
+.avatar{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;letter-spacing:.03em;flex:none}
+.ophead .nm{font-weight:700;font-size:14.5px}
+.ophead .co{font-size:11.5px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.opstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.opstat .l{font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.opstat .v{font-family:var(--mono);font-weight:600;font-size:14px}
+.glist{display:flex;flex-direction:column;gap:8px}
+@media(min-width:760px){.glist{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+.grow{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);padding:11px 13px;box-shadow:var(--sh)}
+.grow:hover{border-color:var(--bd2)}
+.grow .g-nm{flex:1;min-width:0}
+.grow .g-nm b{font-size:14px;font-weight:600;display:block}
+.grow .g-nm span{font-size:12px;color:var(--tx2)}
+.grow .g-pvr{text-align:right;font-size:11.5px;color:var(--mu);flex:none}
+.grow .g-pvr b{display:block;font-family:var(--mono);font-size:14px;color:var(--tx);font-weight:600}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;padding:12px 14px}
+.rchip{font-family:var(--mono);font-size:12px;font-weight:600;border:1px solid var(--bd);border-radius:7px;padding:4px 9px;background:var(--surf)}
+.rchip:hover{border-color:var(--acc);color:var(--acc)}
+.util{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--bd);font-size:13px}
+.util .minibar{flex:1}
+
+/* about */
+/* About page — benchmarked on docs.html: one calm column, bordered
+   section headings, short prose, quiet tables. */
+.about{max-width:760px;margin:0 auto}
+.about h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:8px 0 3px}
+.about .absub{color:var(--tx2);font-size:13.5px;margin-bottom:20px}
+.about h2{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:32px 0 10px;padding-top:12px;border-top:1px solid var(--bd)}
+.about p{font-size:13.5px;line-height:1.65;color:var(--tx);max-width:72ch;margin:0 0 11px}
+.about p.note{font-size:12px;color:var(--mu);margin-top:8px}
+.about a{color:var(--acc);font-weight:500}
+.about .card{margin:0}
+.prose{font-size:13.5px;color:var(--tx2);line-height:1.6}
+.prose p{margin-bottom:10px}
+.prose b{color:var(--tx)}
+.prose a{color:var(--acc);font-weight:500}
+table.cpi-table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:520px}
+.cpi-table th{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:9px 14px 7px}
+.cpi-table td{padding:6.5px 14px;border-top:1px solid var(--bd)}
+.cpi-table .num{text-align:right;font-family:var(--mono)}
+.cpi-table tbody tr:first-child td{background:var(--acc-soft);font-weight:600}
+table.fresh{width:100%;border-collapse:collapse;font-size:12.5px}
+table.fresh td{padding:7px 14px;border-top:1px solid var(--bd)}
+table.fresh td+td{text-align:right;font-family:var(--mono);color:var(--tx2)}
+table.fresh td.desc{text-align:left;font-family:var(--sans);color:var(--tx2);font-size:12px;line-height:1.5}
+.footer{margin-top:34px;text-align:center;font-size:11.5px;color:var(--mu);line-height:1.7}
+
+/* UK-plate styling for vehicle registrations */
+.plate{display:inline-block;font-family:var(--mono);font-weight:600;font-size:11.5px;letter-spacing:.06em;color:#111;background:#fc0;border:1.5px solid #1c1917;border-radius:5px;padding:1.5px 7px .5px;line-height:1.5;white-space:nowrap}
+a.plate:hover{background:#ffd83d}
+/* long values (vehicle makes, company names) must not balloon a card —
+   cap the cell and let it scroll inside */
+.kv .v{max-height:76px;overflow-y:auto;overscroll-behavior:contain}
+/* full-width message inside a card (empty states, loading) — wraps, never
+   uses the k/v flex pair whose no-shrink key column overflows the card */
+.kv-empty{padding:12px 14px;color:var(--mu);font-size:13px;line-height:1.5}
+.livechip{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--good)}
+.livechip .pulse{width:8px;height:8px;border-radius:50%;background:var(--good);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* tooltips — data source + refresh cadence on any label */
+[data-tip]{text-decoration:underline dotted var(--bd2);text-underline-offset:3px;cursor:help}
+.tipbox{position:fixed;z-index:90;max-width:280px;background:var(--tipbg);color:#fff;font-size:12px;line-height:1.5;border-radius:9px;padding:9px 12px;box-shadow:0 6px 22px rgba(28,25,23,.28);pointer-events:none;opacity:0;transform:translateY(3px);transition:opacity .12s,transform .12s}
+.tipbox.show{opacity:1;transform:none}
+.tipbox .src{color:#d6d3d1}
