@@ -30,7 +30,7 @@ Attribution is mandatory per dataset — check each source's licence before publ
 
 ## Freshness
 Every data commit is one Pages build, and builds are the scarce free resource (500/month; the pipeline uses ~330). The API adds none. Current cadences: status/diversions ~2 h, tenders hourly in the TfL publication window, fleet 8 h, the rest daily or static.
-**Next step (not built yet): a "hot lane".** Publish the fastest-moving datasets (line-status, diversions, road works) from a GitHub Action straight to Cloudflare R2 (free tier: 10 GB, 1 M writes/month, free egress) behind a cache-friendly route — no commit, no build — so they can refresh every 10–15 minutes without touching the build budget. Route slices would then link to those resources instead of embedding them.
+**If fresher status is ever needed:** don't add paid services. Run a small poller on the Coolify VPS (one TfL call every few minutes, held in memory, served with CORS at e.g. `data.londonbuses.org` behind Cloudflare's free cache), and have the apps prefer it with the static copy as fallback. Not built — nobody needs it yet; the site already calls TfL directly for per-route live status.
 
 ## Live buses
-`/api/v1/live/vehicles` runs a Function per request (free tier ≈100 k/day shared with the site). If third-party traffic outgrows that, move live feeds to a single poller on the Coolify VPS (one BODS/TfL call per interval, served from memory behind Cloudflare's cache).
+`/api/v1/live/vehicles` runs a Function per request (free tier ≈100 k/day shared with the site). If third-party traffic outgrows that, move live feeds to the same VPS poller (one BODS/TfL call per interval, served from memory behind Cloudflare's cache).
