@@ -1,6 +1,6 @@
 # Public API (v1)
 
-`https://londonbuses.org/api/v1/` — open JSON, no key, CORS-enabled. Human docs: `/developers`. Machine docs: `/api/v1/openapi.json`, `/api/v1/index.json`.
+`https://londonbuses.org/api/v1/` — open JSON, no key, CORS-enabled. Human docs: `/docs#api`. Machine docs: `/api/v1/openapi.json`, `/api/v1/index.json`.
 The website is a client of this API (`js/app/core/data.js`, `js/intelligence/data.js`), so what it shows is what the API serves.
 
 ## How it is built (all free-tier)
@@ -21,7 +21,7 @@ The website is a client of this API (`js/app/core/data.js`, `js/intelligence/dat
 
 ## Versioning policy
 - Within `v1` fields are **added, never removed or retyped**. New datasets and new route-slice fields are non-breaking.
-- A breaking change ships as `/api/v2`; `v1` keeps running for a long overlap and is announced on `/developers`.
+- A breaking change ships as `/api/v2`; `v1` keeps running for a long overlap and is announced on `/docs#api`.
 - Datasets keep the pipeline's own shape (some keyed by route id, some arrays, `streetworks-history` columnar). Per-route slices (`/routes/{id}.json`) are the friendly entry point.
 
 ## Adding / changing a dataset

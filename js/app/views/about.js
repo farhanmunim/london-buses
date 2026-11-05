@@ -11,6 +11,7 @@ export async function renderAbout(){
     <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
 
     <p>londonbuses.org is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
+    <p>Building something? The data behind this site is a free, open JSON API — see the <a href="/docs#api">documentation</a>.</p>
 
     <h2>Attribution</h2>
     <p class="note" style="margin-top:0">Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors; basemap by OpenFreeMap, OpenMapTiles and CARTO.</p>

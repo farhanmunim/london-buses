@@ -9,5 +9,8 @@
 /changelog.html /archive/v1/changelog.html 301
 /v3 /intelligence 301
 /v3.html /intelligence 301
-/docs / 301
-/docs.html / 301
+/developers /docs#api 301
+/developers.html /docs#api 301
+/archive/docs /docs 301
+/archive/docs/ /docs 301
+/archive/docs/index.html /docs 301

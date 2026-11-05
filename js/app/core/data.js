@@ -1,7 +1,7 @@
 /* Data layer — API base URLs, one cached promise per endpoint, TfL live feeds, and the D.* dataset accessors. */
 import { esc, title } from './utils.js';
 
-/* The site is a client of its own public API: /api/v1/*.json (docs at /developers), generated at deploy time by
+/* The site is a client of its own public API: /api/v1/*.json (docs at /docs#api), generated at deploy time by
    scripts/build-v1.js from the committed datasets. Every response is { meta, data }; get() unwraps `data`, so
    everything downstream sees the same shapes as before.
    TEMPORARY safety net: if /api/v1 is not served (e.g. the Pages build step is not configured yet) we fall back to

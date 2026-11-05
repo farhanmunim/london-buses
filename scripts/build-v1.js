@@ -135,7 +135,7 @@ const resources = [
   ...LIVE.map(l => ({ path: l.path, summary: l.summary, attribution: l.attr, live: true })),
 ];
 write('index.json', {
-  meta: { api: 'londonbuses.org', version: 'v1', resource: '/api/v1/index.json', generatedAt: manifest.generatedAt, docs: `${ORIGIN}/developers`, openapi: `${ORIGIN}/api/v1/openapi.json`, notice: NOTICE },
+  meta: { api: 'londonbuses.org', version: 'v1', resource: '/api/v1/index.json', generatedAt: manifest.generatedAt, docs: `${ORIGIN}/docs#api`, openapi: `${ORIGIN}/api/v1/openapi.json`, notice: NOTICE },
   data: { routeIds: ids, resources, attribution: Object.values(ATTRIBUTION) },
 });
 files++;

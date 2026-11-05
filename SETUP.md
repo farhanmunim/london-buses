@@ -2,7 +2,7 @@
 
 The checklist for standing the project up in a new repository, on a new host, under a new domain. Everything below is in the order it needs doing. Nothing here is magic: a public GitHub repository runs the data pipeline on a schedule, Git is the database, and a host serves the files plus two small `/api` endpoints.
 
-How the pieces fit together is explained in `archive/docs/index.html` (sections 9–12); per-field data notes are in `data.md`.
+How the pieces fit together is explained in `docs.html` (sections 9–12); per-field data notes are in `data.md`.
 
 ---
 
@@ -53,7 +53,7 @@ The site is static files from `main`, plus two endpoints. Either host below work
 
 **What any host must do**
 
-- **Cloudflare Pages build settings:** build command `node scripts/build-v1.js`, build output directory `/` (the repository root), environment variable `NODE_VERSION=22`. The build generates the public API (`api/v1/`, gitignored — see `docs/api.md`); without it `/api/v1` is a 404 and the apps fall back to the raw `/data/api` files. After the first deploy, open `/api/v1/index.json` and `/developers` to confirm.
+- **Cloudflare Pages build settings:** build command `node scripts/build-v1.js`, build output directory `/` (the repository root), environment variable `NODE_VERSION=22`. The build generates the public API (`api/v1/`, gitignored — see `docs/api.md`); without it `/api/v1` is a 404 and the apps fall back to the raw `/data/api` files. After the first deploy, open `/api/v1/index.json` and `/docs#api` to confirm.
 - Serve the repository root as the site (`index.html`, `intelligence.html`, `404.html`, `js/`, `css/`, `data/`, `archive/`), following `main`.
 - Apply the headers in `_headers`: HSTS, `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Cache-Control: public, max-age=0, must-revalidate` on HTML, JSON, JS and CSS. Revalidation is not optional: there are no fingerprinted filenames, so it is what keeps returning visitors on the current code.
 - Send `Access-Control-Allow-Origin: *` on `/data/api/*` (the faux-API is public by design).

@@ -22,7 +22,7 @@ The repository is the data platform. GitHub Actions is the scheduler and the com
 
 Scheduled workflows fetch every dataset from its public source, validate it, and commit the results. A failed validation commits nothing — the last good data keeps serving. `scripts/build-api.js` turns the committed datasets into a set of static JSON files under `data/api/` (the "faux-API") that the app reads like an API.
 
-The full story — the app, the pipeline, storage, hosting, deployment — is in the [archived docs](archive/docs/index.html). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
+The full story — the app, the pipeline, storage, hosting, deployment — is in the [archived docs](docs.html). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
 
 ### Refresh schedule
 
@@ -55,7 +55,7 @@ Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downl
 
 ## Public API
 
-The data is published as an open, CORS-enabled JSON API at `https://londonbuses.org/api/v1/` (docs: `/developers`, spec: `/api/v1/openapi.json`) and the website itself is a client of it. Design, versioning policy and the free-tier constraints are in [docs/api.md](docs/api.md).
+The data is published as an open, CORS-enabled JSON API at `https://londonbuses.org/api/v1/` (docs: `/docs#api`, spec: `/api/v1/openapi.json`) and the website itself is a client of it. Design, versioning policy and the free-tier constraints are in [docs/api.md](docs/api.md).
 
 ## Code layout
 
@@ -66,7 +66,7 @@ index.html              the app shell (markup + <link>/<script> tags only)
 intelligence.html       the Operator Intelligence page, same shape
 css/app/                tokens → shell → components → map → polish (load order matters; polish is last on purpose)
 css/intelligence/       base → components → features → polish
-developers.html         the public API docs page (renders from /api/v1/index.json)
+docs.html               /docs — API reference + project guide (js/docs.js fills the resource list from /api/v1/index.json)
 api/v1/                 GENERATED at deploy time by scripts/build-v1.js — the public API (gitignored; see docs/api.md)
 functions/api/          Pages Functions: live buses (+ /api/v1/live/vehicles alias), street works receiver
 js/app/main.js          entry point: imports every module, then boots the router

@@ -20,7 +20,7 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL')+'  '+k); ok?pass++:fail++; };
 for(const [url, scheme, wantArchiveNote, isTarget] of [
-  ['/', 'light', false], ['/', 'dark', false], ['/404.html', 'light', false],
+  ['/', 'light', false], ['/', 'dark', false], ['/404.html', 'light', false], ['/docs.html', 'light', false], ['/docs.html', 'dark', false],
   ['/archive/v1/', 'light', true], ['/archive/v1/changelog.html', 'light', true],
   ['/intelligence.html', 'light', false, true],
 ]){

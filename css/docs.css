@@ -1,0 +1,60 @@
+/* Docs page. Same design tokens as the app (css/app/tokens.css) so it feels native. */
+:root{
+  --bg:#fafaf9; --surf:#ffffff; --surf2:#f5f5f4;
+  --bd:#e7e5e4; --bd2:#d6d3d1;
+  --tx:#1c1917; --tx2:#57534e; --mu:#716b65;
+  --acc:#dc2626; --acc-soft:#fef2f2;
+  --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  --r:12px; --sh:0 1px 2px rgba(28,25,23,.05); --maxw:820px;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#100f0e; --surf:#1b1917; --surf2:#242019;
+  --bd:#2b2725; --bd2:#3d3835;
+  --tx:#f0eeec; --tx2:#b5aea8; --mu:#8a847d;
+  --acc:#ef4444; --acc-soft:#3a1515;
+  --sh:0 1px 2px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.65}
+a{color:var(--acc);text-decoration:none;font-weight:500}
+a:hover{text-decoration:underline}
+code{font-family:var(--mono);font-size:.86em;background:var(--surf2);border:1px solid var(--bd);border-radius:5px;padding:1px 5px;overflow-wrap:break-word}
+.topbar{position:sticky;top:0;z-index:10;background:color-mix(in srgb, var(--surf) 92%, transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
+.topbar-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;color:var(--tx)}
+.brand:hover{text-decoration:none}
+.brand-icon{width:28px;height:28px;border-radius:8px;background:var(--acc);display:grid;place-items:center;flex:none}
+.topbar-in .right{margin-left:auto;font-size:13px}
+main{max-width:var(--maxw);margin:0 auto;padding:24px 16px 60px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:10px 0 4px}
+.sub{color:var(--tx2);font-size:14px;margin-bottom:20px}
+h2{font-size:19px;font-weight:700;letter-spacing:-.01em;margin:36px 0 10px;padding-top:8px;border-top:1px solid var(--bd)}
+h3{font-size:15px;font-weight:700;margin:20px 0 6px}
+p{margin:0 0 12px;color:var(--tx);max-width:72ch}
+p.muted,li.muted{color:var(--tx2)}
+ul,ol{margin:0 0 14px 22px}
+li{margin-bottom:6px;max-width:70ch}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0 16px}
+th{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd2)}
+td{padding:7px 10px;border-bottom:1px solid var(--bd);vertical-align:top}
+td:first-child{white-space:nowrap;font-weight:600}
+#lineage{table-layout:fixed;min-width:900px}#lineage td{white-space:normal;vertical-align:top;word-break:break-word}#lineage td:first-child{width:15%}#lineage td:nth-child(2){width:24%}#lineage td:nth-child(3){width:11%}#lineage td:nth-child(4){width:20%}#lineage td:nth-child(5){width:9%}
+.tablewrap{overflow-x:auto;border:1px solid var(--bd);border-radius:var(--r);background:var(--surf);box-shadow:var(--sh)}
+.tablewrap table{margin:0}
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px;margin:12px 0}
+.toc{columns:2;gap:24px;font-size:13.5px}
+@media(max-width:560px){.toc{columns:1}}
+.toc a{display:block;padding:2.5px 0;color:var(--tx2)}
+.toc a:hover{color:var(--acc)}
+.note{background:var(--acc-soft);border:1px solid color-mix(in srgb, var(--acc) 28%, transparent);border-radius:var(--r);padding:11px 14px;font-size:13.5px;margin:12px 0}
+.footer{margin-top:40px;text-align:center;font-size:12px;color:var(--mu);line-height:1.8}
+b{font-weight:700}
+pre{background:var(--surf2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;overflow-x:auto;margin:0 0 14px;font-size:13px;line-height:1.5}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+.tag{display:inline-block;font-size:10.5px;font-weight:600;padding:0 6px;border-radius:99px;background:var(--surf2);border:1px solid var(--bd);color:var(--mu);margin-left:6px;vertical-align:1px}
+.callout{background:var(--surf);border:1px solid var(--bd);border-left:3px solid var(--acc);border-radius:var(--r);padding:12px 16px;margin:14px 0;box-shadow:var(--sh)}
+.callout p{margin:0}
+h2,h3{scroll-margin-top:64px}
