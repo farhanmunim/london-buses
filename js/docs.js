@@ -14,7 +14,7 @@ try {
       return `<tr><td>${link}${r.live ? '<span class="tag">live</span>' : ''}</td><td>${esc(r.summary)}</td></tr>`;
     }).join('') + '</table>';
   document.getElementById('attribution').innerHTML = data.attribution.map(a =>
-    `<li><a href="${esc(a.url)}" rel="noopener">${esc(a.text)}</a> <span class="muted">— ${esc(a.licence)}</span></li>`).join('');
+    `<li><a href="${esc(a.url)}" rel="noopener">${esc(a.text)}</a> <span class="muted">— ${esc(a.licence)}${a.group === 'maps' ? ' (site only)' : ''}</span></li>`).join('');
 } catch {
   document.getElementById('resources').innerHTML = '<p class="muted" style="padding:12px 14px">Could not load the resource list — see <a href="/api/v1/index.json">/api/v1/index.json</a>.</p>';
   document.getElementById('attribution').innerHTML = '<li class="muted">See <a href="/api/v1/index.json">/api/v1/index.json</a>.</li>';

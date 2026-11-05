@@ -14,7 +14,8 @@ export async function renderAbout(){
     <p>Building something? The data behind this site is a free, open JSON API — see the <a href="/docs#api">documentation</a>.</p>
 
     <h2>Attribution</h2>
-    <p class="note" style="margin-top:0">Powered by TfL Open Data. Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019. Contains public sector information licensed under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/" rel="noopener" target="_blank">Open Government Licence v3.0</a>. Map data © <a href="https://www.openstreetmap.org/copyright" rel="noopener" target="_blank">OpenStreetMap</a> contributors; basemap by OpenFreeMap, OpenMapTiles and CARTO.</p>
+    <p class="note" style="margin-top:0">This site is built from open data. Please keep these credits with any data you reuse — the same list is returned with every response of the <a href="/docs#api">public API</a>.</p>
+    <div id="attrBody"><p class="muted">Loading credits…</p></div>
 
     <h2>Live right now</h2>
     <div class="card"><table class="fresh">
@@ -33,8 +34,16 @@ export async function renderAbout(){
 
     <div class="footer" style="margin-top:28px">Data may be incomplete or out of date — verify before acting on it.</div>
   </div>`;
-  const mf = await D.manifest();
+  const [mf, credits] = await Promise.all([
+    D.manifest(),
+    fetch('/data/attribution.json').then(r => r.ok ? r.json() : null).catch(() => null),   // data/attribution.json: one list for About, /docs and the API
+  ]);
   if(gone(tok)) return;
+  const attrList = g => (credits ?? []).filter(a => a.group === g).map(a =>
+    `<li><a href="${esc(a.url)}" rel="noopener" target="_blank"><b>${esc(a.text)}</b></a>. ${esc(a.used)} <span class="mu">${esc(a.licence)}.</span></li>`).join('');
+  document.getElementById('attrBody').innerHTML = credits
+    ? `<h3>Data</h3><ul class="attr">${attrList('data')}</ul><h3>Maps, software and fonts</h3><ul class="attr">${attrList('maps')}</ul>`
+    : '<p class="muted">The full list of credits could not be loaded — see <a href="/docs#api">the documentation</a>.</p>';
 
   /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
      nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps

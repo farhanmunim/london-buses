@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 /**
  * The v1 API contract, in one place: which datasets are published, what they are, and what must be
  * credited when they are reused. build-v1.js turns this registry into api/v1/ (data files, per-route
@@ -7,79 +9,15 @@
  * and needs /api/v2 — see the versioning policy in docs/api.md.
  */
 
-export const ATTRIBUTION = {
-  tfl: {
-    id: 'tfl',
-    text: 'Powered by TfL Open Data',
-    url: 'https://tfl.gov.uk/info-for/open-data-users/',
-    licence: 'TfL Open Data licence (based on the Open Government Licence v3.0)',
-  },
-  os: {
-    id: 'os',
-    text: 'Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019',
-    url: 'https://tfl.gov.uk/info-for/open-data-users/our-open-data',
-    licence: 'As supplied with TfL Open Data',
-  },
-  ogl: {
-    id: 'ogl',
-    text: 'Contains public sector information licensed under the Open Government Licence v3.0',
-    url: 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/',
-    licence: 'Open Government Licence v3.0',
-  },
-  dft: {
-    id: 'dft',
-    text: 'Department for Transport open data (STATS19, D-TRO, Street Manager, Bus Open Data Service)',
-    url: 'https://www.gov.uk/government/organisations/department-for-transport',
-    licence: 'Open Government Licence v3.0',
-  },
-  ons: {
-    id: 'ons',
-    text: 'Office for National Statistics — CPI All Items Index (D7BT)',
-    url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23',
-    licence: 'Open Government Licence v3.0',
-  },
-  dvla: {
-    id: 'dvla',
-    text: 'Vehicle make, fuel type and age derived from the DVLA Vehicle Enquiry Service',
-    url: 'https://developer-portal.driver-vehicle-licensing.api.gov.uk/',
-    licence: 'DVLA VES terms — derived aggregates only; no keeper or personal data',
-  },
-  dvsa: {
-    id: 'dvsa',
-    text: 'Operator licence data from DVSA Vehicle Operator Licensing (OGL)',
-    url: 'https://www.gov.uk/government/organisations/driver-and-vehicle-standards-agency',
-    licence: 'Open Government Licence v3.0',
-  },
-  lbr: {
-    id: 'lbr',
-    text: 'Garage and route allocations compiled from londonbusroutes.net',
-    url: 'https://www.londonbusroutes.net/',
-    licence: 'Community-maintained; credit the source',
-  },
-  osm: {
-    id: 'osm',
-    text: '© OpenStreetMap contributors (bridge-height cross-check)',
-    url: 'https://www.openstreetmap.org/copyright',
-    licence: 'Open Database Licence (ODbL)',
-  },
-  fandom: {
-    id: 'fandom',
-    text: 'Provisional tender awards (flagged "provisional") from the London Bus Routes wiki, london-bus-routes.fandom.com',
-    url: 'https://london-bus-routes.fandom.com/',
-    licence: 'CC BY-SA 3.0 — share-alike applies to those records',
-  },
-  postcodes: {
-    id: 'postcodes',
-    text: 'Garage coordinates via postcodes.io (contains OS data © Crown copyright)',
-    url: 'https://postcodes.io/',
-    licence: 'Open Government Licence v3.0',
-  },
-};
+/** Every credit the project owes, in one file shared by the API (meta.attribution, /api/v1/index.json), the About page
+ *  and /docs: data/attribution.json. `group` is "data" (datasets) or "maps" (basemaps, libraries, fonts). */
+export const ATTRIBUTION = Object.fromEntries(
+  JSON.parse(fs.readFileSync(new URL('../../data/attribution.json', import.meta.url), 'utf8')).map(a => [a.id, a]));
 
 /** name → { file (relative to data/), summary, attribution ids, shape hint }. `name` is the URL: /api/v1/{name}.json */
 export const DATASETS = [
   { name: 'routes', file: 'api/routes.json', summary: 'Every active London bus route: id, display name and type.', attr: ['tfl'] },
-  { name: 'route-meta', file: 'api/route-meta.json', summary: 'Per-route operator, garage, PVR/TVR, fleet type, propulsion, deck, frequency and contract fields, keyed by route id.', attr: ['tfl', 'lbr', 'dvla'] },
+  { name: 'route-meta', file: 'api/route-meta.json', summary: 'Per-route operator, garage, PVR/TVR, fleet type, propulsion, deck, frequency and contract fields, keyed by route id.', attr: ['tfl', 'lbr', 'bustimes', 'dvla'] },
   { name: 'route-stops', file: 'api/route-stops.json', summary: 'Ordered stop sequence for each route direction (id, name, coordinates, lines, indicator letter).', attr: ['tfl', 'os'] },
   { name: 'routes-overview', file: 'api/routes-overview.json', summary: 'Simplified geometry for every route as one GeoJSON FeatureCollection (map overview).', attr: ['tfl', 'os'] },
   { name: 'route-bboxes', file: 'api/route-bboxes.json', summary: 'Bounding box [west, south, east, north] per route.', attr: ['tfl', 'os'] },
@@ -100,14 +38,14 @@ export const DATASETS = [
   { name: 'scheduled-mileage', file: 'api/scheduled-mileage.json', summary: 'Estimated scheduled kilometres and trips per route and day type.', attr: ['tfl', 'os'] },
   { name: 'crowding', file: 'api/crowding.json', summary: 'Busiest-point crowding band per route (TfL BUSTO snapshot).', attr: ['tfl'] },
   { name: 'crowding-profile', file: 'api/crowding-profile.json', summary: 'Crowding profile along each route.', attr: ['tfl'] },
-  { name: 'bridges', file: 'api/bridges.json', summary: 'Low-bridge height restrictions.', attr: ['tfl', 'osm'] },
+  { name: 'bridges', file: 'api/bridges.json', summary: 'Low-bridge height restrictions.', attr: ['tfl', 'datastore', 'osm'] },
   { name: 'accidents', file: 'api/accidents.json', summary: 'Bus/coach-involved road collisions (DfT STATS19).', attr: ['dft', 'ogl'] },
   { name: 'cpi-cpa', file: 'api/cpi-cpa.json', summary: 'ONS CPI index and derived contract price-adjustment (CPA) rates.', attr: ['ons', 'ogl'] },
   { name: 'manifest', file: 'api/manifest.json', summary: 'What each dataset is, where it comes from, when it was last fetched and how often it updates.', attr: [] },
 ];
 
 /** Per-route slices assembled from the datasets above. */
-export const ROUTE_SLICE_ATTR = ['tfl', 'os', 'lbr', 'dvla', 'fandom'];
+export const ROUTE_SLICE_ATTR = ['tfl', 'os', 'lbr', 'bustimes', 'dvla', 'fandom'];
 
 export const LIVE = [
   { path: '/api/v1/live/vehicles', summary: 'Live bus positions for one route (?line=88), from the DfT Bus Open Data Service. Cached 10 s. Never stored.', attr: ['dft', 'ogl'] },
