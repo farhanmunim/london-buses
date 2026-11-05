@@ -14,7 +14,6 @@ export async function renderAbout(){
     <p>Building something? The data behind this site is a free, open JSON API — see the <a href="/docs#api">documentation</a>.</p>
 
     <h2>Attribution</h2>
-    <p class="note" style="margin-top:0">This site is built from open data. Please keep these credits with any data you reuse — the same list is returned with every response of the <a href="/docs#api">public API</a>.</p>
     <div id="attrBody"><p class="muted">Loading credits…</p></div>
 
     <h2>Live right now</h2>
@@ -39,11 +38,13 @@ export async function renderAbout(){
     fetch('/data/attribution.json').then(r => r.ok ? r.json() : null).catch(() => null),   // data/attribution.json: one list for About, /docs and the API
   ]);
   if(gone(tok)) return;
-  const attrList = g => (credits ?? []).filter(a => a.group === g).map(a =>
-    `<li><a href="${esc(a.url)}" rel="noopener" target="_blank"><b>${esc(a.text)}</b></a>. ${esc(a.used)} <span class="mu">${esc(a.licence)}.</span></li>`).join('');
+  /* One paragraph: the required notices (TfL / OS / OGL) in full, then the main providers inline; the full list is in /docs. */
+  const notices = (credits ?? []).filter(a => a.notice).map(a => esc(a.text)).join('. ');
+  const links = (credits ?? []).filter(a => a.main).map(a => `<a href="${esc(a.url)}" rel="noopener" target="_blank">${esc(a.short)}</a>`);
+  const alsoFrom = links.length > 1 ? links.slice(0, -1).join(', ') + ' and ' + links.at(-1) : links.join('');
   document.getElementById('attrBody').innerHTML = credits
-    ? `<h3>Data</h3><ul class="attr">${attrList('data')}</ul><h3>Maps, software and fonts</h3><ul class="attr">${attrList('maps')}</ul>`
-    : '<p class="muted">The full list of credits could not be loaded — see <a href="/docs#api">the documentation</a>.</p>';
+    ? `<p class="note" style="margin-top:0">${notices}. Also built on data from ${alsoFrom} (wiki records are CC BY-SA; DVLA data is used as route-level aggregates only). <a href="/docs#api">Every source and licence</a>.</p>`
+    : '<p class="muted">Credits could not be loaded — see <a href="/docs#api">the documentation</a>.</p>';
 
   /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
      nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps

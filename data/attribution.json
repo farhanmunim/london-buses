@@ -1,39 +1,167 @@
 [
-  { "id": "tfl", "group": "data", "text": "Powered by TfL Open Data", "url": "https://tfl.gov.uk/info-for/open-data-users/", "licence": "TfL Open Data licence (based on the Open Government Licence v3.0)",
-    "used": "Routes, stops, geometry, timetables, service status, arrivals, road disruptions (TIMS), the iBus vehicle list, crowding (BUSTO), tender results, the tendering programme and per-route performance (QSI)." },
-  { "id": "os", "group": "data", "text": "Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019", "url": "https://tfl.gov.uk/info-for/open-data-users/our-open-data", "licence": "As supplied with TfL Open Data",
-    "used": "Route geometry and stop positions." },
-  { "id": "ogl", "group": "data", "text": "Contains public sector information licensed under the Open Government Licence v3.0", "url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/", "licence": "Open Government Licence v3.0",
-    "used": "The licence under which most of the UK public-sector datasets below are published." },
-  { "id": "dft", "group": "data", "text": "Department for Transport open data (STATS19, D-TRO, Street Manager, Bus Open Data Service)", "url": "https://www.gov.uk/government/organisations/department-for-transport", "licence": "Open Government Licence v3.0",
-    "used": "Bus and coach collisions (STATS19), traffic regulation orders (D-TRO), street works (Street Manager) and live bus positions (Bus Open Data Service)." },
-  { "id": "ons", "group": "data", "text": "Office for National Statistics — CPI All Items Index (D7BT)", "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23", "licence": "Open Government Licence v3.0",
-    "used": "The CPI index and the contract price-adjustment (CPA) rates derived from it." },
-  { "id": "dvla", "group": "data", "text": "Vehicle make, fuel type and age derived from the DVLA Vehicle Enquiry Service", "url": "https://developer-portal.driver-vehicle-licensing.api.gov.uk/", "licence": "DVLA VES terms — derived aggregates only; no keeper or personal data",
-    "used": "Per-registration make, fuel type and first-registration date, aggregated into each route's fleet profile." },
-  { "id": "dvsa", "group": "data", "text": "Operator licence data from DVSA Vehicle Operator Licensing (OGL)", "url": "https://www.gov.uk/government/organisations/driver-and-vehicle-standards-agency", "licence": "Open Government Licence v3.0",
-    "used": "Garage operating-centre licences and authorised vehicle capacity." },
-  { "id": "lbr", "group": "data", "text": "Garage and route allocations compiled from londonbusroutes.net", "url": "https://www.londonbusroutes.net/", "licence": "Community-maintained; credit the source",
-    "used": "Which garage and operator runs each route, vehicle types, peak vehicle requirement and contract start/length." },
-  { "id": "bustimes", "group": "data", "text": "Operator cross-checks against bustimes.org", "url": "https://bustimes.org/", "licence": "Used as a cross-check and fallback only; not republished",
-    "used": "An independent check on each route's operator and vehicle type." },
-  { "id": "postcodes", "group": "data", "text": "Garage coordinates via postcodes.io (contains OS data © Crown copyright)", "url": "https://postcodes.io/", "licence": "Open Government Licence v3.0",
-    "used": "Turning garage postcodes into map positions." },
-  { "id": "datastore", "group": "data", "text": "Contains data from the London Datastore (Greater London Authority / TfL)", "url": "https://data.london.gov.uk/", "licence": "UK Open Government Licence",
-    "used": "Low-bridge height restrictions (EPOWR)." },
-  { "id": "osm", "group": "data", "text": "© OpenStreetMap contributors", "url": "https://www.openstreetmap.org/copyright", "licence": "Open Database Licence (ODbL)",
-    "used": "Bridge-height cross-check, and the underlying map data of the basemaps." },
-  { "id": "fandom", "group": "data", "text": "Provisional tender awards (flagged \"provisional\") from the London Bus Routes wiki, london-bus-routes.fandom.com", "url": "https://london-bus-routes.fandom.com/", "licence": "CC BY-SA 3.0 — share-alike applies to those records",
-    "used": "Tender awards TfL has decided but not yet published; replaced by TfL's own record when it appears." },
-
-  { "id": "openfreemap", "group": "maps", "text": "Basemap: OpenFreeMap, using the OpenMapTiles schema", "url": "https://openfreemap.org/", "licence": "OpenMapTiles (CC BY 4.0) with data © OpenStreetMap contributors (ODbL)",
-    "used": "The light-theme vector basemap." },
-  { "id": "carto", "group": "maps", "text": "Dark-theme basemap tiles © CARTO", "url": "https://carto.com/attributions", "licence": "CC BY 3.0, data © OpenStreetMap contributors",
-    "used": "The dark-theme and fallback raster basemap." },
-  { "id": "leaflet", "group": "maps", "text": "Maps drawn with Leaflet and leaflet.heat", "url": "https://leafletjs.com/", "licence": "BSD-2-Clause",
-    "used": "The map library." },
-  { "id": "maplibre", "group": "maps", "text": "Vector tiles rendered with MapLibre GL JS and maplibre-gl-leaflet", "url": "https://maplibre.org/", "licence": "BSD-3-Clause",
-    "used": "Vector basemap rendering." },
-  { "id": "fonts", "group": "maps", "text": "Typefaces: Geist (Vercel) and JetBrains Mono, served by Google Fonts", "url": "https://fonts.google.com/", "licence": "SIL Open Font Licence 1.1",
-    "used": "Site typography." }
+  {
+    "id": "tfl",
+    "group": "data",
+    "text": "Powered by TfL Open Data",
+    "url": "https://tfl.gov.uk/info-for/open-data-users/",
+    "licence": "TfL Open Data licence (based on the Open Government Licence v3.0)",
+    "used": "Routes, stops, geometry, timetables, service status, arrivals, road disruptions (TIMS), the iBus vehicle list, crowding (BUSTO), tender results, the tendering programme and per-route performance (QSI).",
+    "notice": true
+  },
+  {
+    "id": "os",
+    "group": "data",
+    "text": "Contains OS data © Crown copyright and database rights 2016 and Geomni UK Map data © and database rights 2019",
+    "url": "https://tfl.gov.uk/info-for/open-data-users/our-open-data",
+    "licence": "As supplied with TfL Open Data",
+    "used": "Route geometry and stop positions.",
+    "notice": true
+  },
+  {
+    "id": "ogl",
+    "group": "data",
+    "text": "Contains public sector information licensed under the Open Government Licence v3.0",
+    "url": "https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/",
+    "licence": "Open Government Licence v3.0",
+    "used": "The licence under which most of the UK public-sector datasets below are published.",
+    "notice": true
+  },
+  {
+    "id": "dft",
+    "group": "data",
+    "text": "Department for Transport open data (STATS19, D-TRO, Street Manager, Bus Open Data Service)",
+    "url": "https://www.gov.uk/government/organisations/department-for-transport",
+    "licence": "Open Government Licence v3.0",
+    "used": "Bus and coach collisions (STATS19), traffic regulation orders (D-TRO), street works (Street Manager) and live bus positions (Bus Open Data Service).",
+    "main": true,
+    "short": "Department for Transport",
+    "blurb": "collisions, traffic orders, street works and live bus positions"
+  },
+  {
+    "id": "ons",
+    "group": "data",
+    "text": "Office for National Statistics — CPI All Items Index (D7BT)",
+    "url": "https://www.ons.gov.uk/economy/inflationandpriceindices/timeseries/d7bt/mm23",
+    "licence": "Open Government Licence v3.0",
+    "used": "The CPI index and the contract price-adjustment (CPA) rates derived from it.",
+    "main": true,
+    "short": "Office for National Statistics",
+    "blurb": "the CPI index behind contract price adjustments"
+  },
+  {
+    "id": "dvla",
+    "group": "data",
+    "text": "Vehicle make, fuel type and age derived from the DVLA Vehicle Enquiry Service",
+    "url": "https://developer-portal.driver-vehicle-licensing.api.gov.uk/",
+    "licence": "DVLA VES terms — derived aggregates only; no keeper or personal data",
+    "used": "Per-registration make, fuel type and first-registration date, aggregated into each route's fleet profile.",
+    "main": true,
+    "short": "DVLA",
+    "blurb": "vehicle make, fuel and age, as route-level aggregates only"
+  },
+  {
+    "id": "dvsa",
+    "group": "data",
+    "text": "Operator licence data from DVSA Vehicle Operator Licensing (OGL)",
+    "url": "https://www.gov.uk/government/organisations/driver-and-vehicle-standards-agency",
+    "licence": "Open Government Licence v3.0",
+    "used": "Garage operating-centre licences and authorised vehicle capacity."
+  },
+  {
+    "id": "lbr",
+    "group": "data",
+    "text": "Garage and route allocations compiled from londonbusroutes.net",
+    "url": "https://www.londonbusroutes.net/",
+    "licence": "Community-maintained; credit the source",
+    "used": "Which garage and operator runs each route, vehicle types, peak vehicle requirement and contract start/length.",
+    "main": true,
+    "short": "londonbusroutes.net",
+    "blurb": "garage and route allocations, contract details"
+  },
+  {
+    "id": "bustimes",
+    "group": "data",
+    "text": "Operator cross-checks against bustimes.org",
+    "url": "https://bustimes.org/",
+    "licence": "Used as a cross-check and fallback only; not republished",
+    "used": "An independent check on each route's operator and vehicle type."
+  },
+  {
+    "id": "postcodes",
+    "group": "data",
+    "text": "Garage coordinates via postcodes.io (contains OS data © Crown copyright)",
+    "url": "https://postcodes.io/",
+    "licence": "Open Government Licence v3.0",
+    "used": "Turning garage postcodes into map positions."
+  },
+  {
+    "id": "datastore",
+    "group": "data",
+    "text": "Contains data from the London Datastore (Greater London Authority / TfL)",
+    "url": "https://data.london.gov.uk/",
+    "licence": "UK Open Government Licence",
+    "used": "Low-bridge height restrictions (EPOWR)."
+  },
+  {
+    "id": "osm",
+    "group": "data",
+    "text": "© OpenStreetMap contributors",
+    "url": "https://www.openstreetmap.org/copyright",
+    "licence": "Open Database Licence (ODbL)",
+    "used": "Bridge-height cross-check, and the underlying map data of the basemaps.",
+    "main": true,
+    "short": "OpenStreetMap contributors",
+    "blurb": "map data, with basemaps by OpenFreeMap and CARTO"
+  },
+  {
+    "id": "fandom",
+    "group": "data",
+    "text": "Provisional tender awards (flagged \"provisional\") from the London Bus Routes wiki, london-bus-routes.fandom.com",
+    "url": "https://london-bus-routes.fandom.com/",
+    "licence": "CC BY-SA 3.0 — share-alike applies to those records",
+    "used": "Tender awards TfL has decided but not yet published; replaced by TfL's own record when it appears.",
+    "main": true,
+    "short": "London Bus Routes wiki",
+    "blurb": "provisional tender awards (CC BY-SA 3.0)"
+  },
+  {
+    "id": "openfreemap",
+    "group": "maps",
+    "text": "Basemap: OpenFreeMap, using the OpenMapTiles schema",
+    "url": "https://openfreemap.org/",
+    "licence": "OpenMapTiles (CC BY 4.0) with data © OpenStreetMap contributors (ODbL)",
+    "used": "The light-theme vector basemap."
+  },
+  {
+    "id": "carto",
+    "group": "maps",
+    "text": "Dark-theme basemap tiles © CARTO",
+    "url": "https://carto.com/attributions",
+    "licence": "CC BY 3.0, data © OpenStreetMap contributors",
+    "used": "The dark-theme and fallback raster basemap."
+  },
+  {
+    "id": "leaflet",
+    "group": "maps",
+    "text": "Maps drawn with Leaflet and leaflet.heat",
+    "url": "https://leafletjs.com/",
+    "licence": "BSD-2-Clause",
+    "used": "The map library."
+  },
+  {
+    "id": "maplibre",
+    "group": "maps",
+    "text": "Vector tiles rendered with MapLibre GL JS and maplibre-gl-leaflet",
+    "url": "https://maplibre.org/",
+    "licence": "BSD-3-Clause",
+    "used": "Vector basemap rendering."
+  },
+  {
+    "id": "fonts",
+    "group": "maps",
+    "text": "Typefaces: Geist (Vercel) and JetBrains Mono, served by Google Fonts",
+    "url": "https://fonts.google.com/",
+    "licence": "SIL Open Font Licence 1.1",
+    "used": "Site typography."
+  }
 ]
