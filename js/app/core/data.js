@@ -1,17 +1,22 @@
 /* Data layer — API base URLs, one cached promise per endpoint, TfL live feeds, and the D.* dataset accessors. */
 import { esc, title } from './utils.js';
 
-/* The data layer reads this site's own faux-API — data/api/*.json, rebuilt
-   by the GitHub Actions pipeline and deployed with the site. Same shapes the
-   Atlas API used to serve, so everything downstream is unchanged. */
-const API = '/data/api';
+/* The site is a client of its own public API: /api/v1/*.json (docs at /developers), generated at deploy time by
+   scripts/build-v1.js from the committed datasets. Every response is { meta, data }; get() unwraps `data`, so
+   everything downstream sees the same shapes as before.
+   TEMPORARY safety net: if /api/v1 is not served (e.g. the Pages build step is not configured yet) we fall back to
+   the raw files at /data/api. Remove LEGACY once the API build is confirmed live in production. */
+const API = '/api/v1';
+const LEGACY = '/data/api';
 const TFL = 'https://api.tfl.gov.uk';   // CORS-open, no key needed at browser rates
 
 /* ── Data layer — one cached promise per endpoint ─────────────────────── */
 const _cache = new Map();
 function get(path){
   if(_cache.has(path)) return _cache.get(path);
-  const p = fetch(API + path + '.json').then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  const getJson = url => fetch(url).then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+  const p = getJson(API + path + '.json').then(j => j?.meta?.version === 'v1' && 'data' in j ? j.data : j)
+    .catch(() => getJson(LEGACY + path + '.json'))
     .catch(err => { console.warn('data', path, err.message); _cache.delete(path); return null; });
   _cache.set(path, p);
   return p;

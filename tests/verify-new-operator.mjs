@@ -30,11 +30,11 @@ async function open(hash, { running = false, viewport = { width: 1280, height: 9
   await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk|atlas\.farhan\.app|mochi|openfreemap|basemaps|tiles/, r => r.abort());
   if(running){
     // the day the route data shows Go Bus running the three routes from its own garage
-    await page.route('**/data/api/route-meta.json', async r => { const j = await (await r.fetch()).json(); for(const id of GO) Object.assign(j.routes[id], { operator:'Go Bus', company:'Go Bus Ltd', garage:'GBX', garageName:'Go Bus Depot' }); r.fulfill({ json: j }); });
-    await page.route('**/data/api/garages.json', async r => { const j = await (await r.fetch()).json();
+    await page.route('**/api/v1/route-meta.json', async r => { const env = await (await r.fetch()).json(), j = env.data; for(const id of GO) Object.assign(j.routes[id], { operator:'Go Bus', company:'Go Bus Ltd', garage:'GBX', garageName:'Go Bus Depot' }); r.fulfill({ json: env }); });
+    await page.route('**/api/v1/garages.json', async r => { const env = await (await r.fetch()).json(), j = env.data;
       for(const g of j.garages) g.routes = (g.routes ?? []).filter(x => !GO.includes(x));
       j.garages.push({ code:'GBX', name:'Go Bus Depot', operator:'Go Bus', company:'Go Bus Ltd', postcode:'SE10 0NU', postcodeSource:'garage', lat:51.49, lng:0.01, pvr:6, capacity:12, routes:GO });
-      r.fulfill({ json: j }); });
+      r.fulfill({ json: env }); });
   }
   await page.goto('http://127.0.0.1:8979/' + hash, { waitUntil: 'load' }); await page.waitForTimeout(2200);
   return { ctx, page };

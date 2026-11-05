@@ -5,11 +5,11 @@ import { bounds, KX } from '../geometry.js';
 /* ── lazy datasets + corridor maths for the route brief ──────────────────── */
 const LZ = {};
 const lazy = (k, url) => LZ[k] ??= get(url).catch(e => { delete LZ[k]; throw e; });
-export const routeGeo = id => lazy('geo:' + id, `/data/routes/${encodeURIComponent(id)}.geojson`);
-export const stopsData = () => lazy('stops', '/data/api/route-stops.json');
-export const profileData = () => lazy('profile', '/data/api/crowding-profile.json');
-const accData = () => lazy('acc', '/data/api/accidents.json');
-const bridgeData = () => lazy('bridges', '/data/api/bridges.json');
+export const routeGeo = id => lazy('geo:' + id, `/api/v1/routes/${encodeURIComponent(id)}/geometry.json`);
+export const stopsData = () => lazy('stops', '/api/v1/route-stops.json');
+export const profileData = () => lazy('profile', '/api/v1/crowding-profile.json');
+const accData = () => lazy('acc', '/api/v1/accidents.json');
+const bridgeData = () => lazy('bridges', '/api/v1/bridges.json');
 export function runsOf(geo, dir){
   const feats = geo?.features ?? [], want = dir === 'outbound' ? '1' : '2';
   const use = feats.filter(f => String(f.properties?.direction) === want); const src = use.length ? use : feats;

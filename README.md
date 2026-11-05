@@ -53,6 +53,10 @@ The site runs entirely from the committed `data/api/*.json`. You can work on the
 
 Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downloads the pinned Leaflet and MapLibre builds the suites serve in place of the CDN), then `npm test` (every suite, one summary line each) or `node tests/verify-<name>.mjs` for one. The same suites run on GitHub for every code change (`ci.yml`). They use Playwright with a system Chromium (`/opt/pw-browsers/chromium`, or set `CHROMIUM`) and mock all external feeds, so they pass offline.
 
+## Public API
+
+The data is published as an open, CORS-enabled JSON API at `https://londonbuses.org/api/v1/` (docs: `/developers`, spec: `/api/v1/openapi.json`) and the website itself is a client of it. Design, versioning policy and the free-tier constraints are in [docs/api.md](docs/api.md).
+
 ## Code layout
 
 No build step: the pages are plain HTML that load native ES modules and ordinary stylesheets, so what is in the repo is what is served.
@@ -62,6 +66,9 @@ index.html              the app shell (markup + <link>/<script> tags only)
 intelligence.html       the Operator Intelligence page, same shape
 css/app/                tokens → shell → components → map → polish (load order matters; polish is last on purpose)
 css/intelligence/       base → components → features → polish
+developers.html         the public API docs page (renders from /api/v1/index.json)
+api/v1/                 GENERATED at deploy time by scripts/build-v1.js — the public API (gitignored; see docs/api.md)
+functions/api/          Pages Functions: live buses (+ /api/v1/live/vehicles alias), street works receiver
 js/app/main.js          entry point: imports every module, then boots the router
 js/app/core/            data layer, utils, router + navigation state, shell, theme, tooltip, "More" sheet
 js/app/map/             shared Leaflet layers (layers.js) and the single-route map

@@ -1,5 +1,5 @@
 /* Migration suite — both front-ends must run entirely off the repo's own
-   data/api/ faux-API + TfL-direct live endpoints, with zero requests to the
+   public /api/v1 API + TfL-direct live endpoints, with zero requests to the
    retired Atlas API and no trace of the scrapped QSI/MPS surfaces.
    Run: node tests/verify-migration.mjs   (serves the repo itself). */
 import { chromium } from 'playwright-core';
@@ -45,6 +45,8 @@ await page.route('**/api/live/vehicles*', r => r.fulfill({
   body: JSON.stringify({ feed:'vehicles', live:true, capturedAt:new Date().toISOString(), count:0, data:[] }),
 }));
 await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager/, r => r.abort());
+const apiHits = [], legacyHits = [];
+page.on('request', r => { const u = r.url(); if(/\/api\/v1\/[^/]+\.json/.test(u)) apiHits.push(u); if(/\/data\/(api\/|routes\/|route_destinations)/.test(u)) legacyHits.push(u); });
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 const checks = {}; let pass = 0, fail = 0;
 const F = (k, ok) => { checks[k] = ok; console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
@@ -76,6 +78,10 @@ const mapOk = await page.evaluate(() => ({
 F('v2 network map draws (' + mapOk.layers + ' layers, "' + mapOk.count + '")', mapOk.el && mapOk.layers > 0 && /\d+ routes/.test(mapOk.count));
 
 /* ── v1: home + route card ── */
+/* v2 must be a client of the public API: /api/v1 only, never the raw /data files (the fallback must stay dormant). */
+F('v2 reads /api/v1 (' + apiHits.length + ' requests)', apiHits.length >= 5);
+F('v2 made no requests to the legacy /data files', legacyHits.length === 0);
+if(legacyHits.length) console.log(legacyHits.slice(0,5));
 await page.goto('http://127.0.0.1:8902/archive/v1/', { waitUntil:'load' }); await page.waitForTimeout(4500);
 const v1 = await page.evaluate(() => ({
   textLen: document.body.innerText.length,

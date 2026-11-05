@@ -4,6 +4,8 @@
   "description": "londonbuses.org — the London bus network: routes, operators, garages, tenders and live data",
   "type": "module",
   "scripts": {
+    "build": "node scripts/build-v1.js",
+    "pretest": "node scripts/build-v1.js",
     "test": "node tests/run-all.mjs",
     "refresh": "node scripts/refresh.js",
     "fetch-data": "node scripts/fetch-data.js",
@@ -29,6 +31,7 @@
     "audit-summary": "node scripts/audit-summary.js",
     "fetch-line-status": "node scripts/fetch-line-status.js",
     "build-api": "node scripts/build-api.js",
+    "build-v1": "node scripts/build-v1.js",
     "fetch-cpi": "node scripts/fetch-cpi.js",
     "fetch-fandom-tenders": "node scripts/fetch-fandom-tenders.js",
     "build-diversion-history": "node scripts/build-diversion-history.js",

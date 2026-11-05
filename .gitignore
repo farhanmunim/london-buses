@@ -59,3 +59,6 @@ data/source/
 # ── Local test harness (one-off puppeteer / scratchpads, never shipped) ────
 _test_*.mjs
 _tmp_*
+
+# ── Generated public API (scripts/build-v1.js) — built on every deploy, never committed ──
+/api/v1/

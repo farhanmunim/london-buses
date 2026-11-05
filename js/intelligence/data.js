@@ -5,7 +5,12 @@ import { AGE_LIMIT, ALL, brandRoot, CLASS, opColour, OPS, propClass } from './to
 export function setData(v){ D = v; }
 
 /* ── data ────────────────────────────────────────────────────────────────── */
-export const get = p => fetch(p).then(r => r.ok ? r.json() : Promise.reject(new Error(p + ' → ' + r.status)));
+/* Reads the public API (/api/v1, { meta, data } envelope) and returns `data`. TEMPORARY: falls back to the raw
+   pipeline files if /api/v1 is not served yet (e.g. the Pages build step is missing) — remove once confirmed live. */
+const getJson = p => fetch(p).then(r => r.ok ? r.json() : Promise.reject(new Error(p + ' → ' + r.status)));
+const legacyOf = p => p.replace(/^\/api\/v1\/routes\/([^/]+)\/geometry\.json$/, '/data/routes/$1.geojson')
+  .replace('/api/v1/route-destinations.json', '/data/route_destinations.json').replace('/api/v1/', '/data/api/');
+export const get = p => getJson(p).then(j => j?.meta?.version === 'v1' && 'data' in j ? j.data : j).catch(() => getJson(legacyOf(p)));
 const opt = p => get(p).catch(() => null);
 export let D;                                   // everything below hangs off this
 export const TODAY = new Date(); export const TODAY_ISO = TODAY.toISOString().slice(0, 10);
@@ -31,13 +36,13 @@ export const grp = name => {                    // tender-form names → the 8 c
 const rival = name => { const g = grp(name); if(g !== 'Other') return g; const n = String(name).trim(); return /ct plus|hct/i.test(n) ? 'HCT Group (CT Plus)' : n; };
 
 export async function load(){
-  const [meta, tenders] = await Promise.all([get('/data/api/route-meta.json'), get('/data/api/tenders.json')]);
+  const [meta, tenders] = await Promise.all([get('/api/v1/route-meta.json'), get('/api/v1/tenders.json')]);
   const [fleet, garages, prog, perf, sched, crowd, status, dest, overview, manifest, vehicles, cpi, divhist, works] = await Promise.all([
-    opt('/data/api/fleet.json'), opt('/data/api/garages.json'), opt('/data/api/tender-programme.json'),
-    opt('/data/api/route-performance.json'), opt('/data/api/scheduled-mileage.json'), opt('/data/api/crowding.json'),
-    opt('/data/api/line-status.json'), opt('/data/route_destinations.json'), opt('/data/api/routes-overview.json'),
-    opt('/data/api/manifest.json'), opt('/data/api/vehicles.json'), opt('/data/api/cpi-cpa.json'),
-    opt('/data/api/diversion-history.json'), opt('/data/api/roadworks.json'),
+    opt('/api/v1/fleet.json'), opt('/api/v1/garages.json'), opt('/api/v1/tender-programme.json'),
+    opt('/api/v1/route-performance.json'), opt('/api/v1/scheduled-mileage.json'), opt('/api/v1/crowding.json'),
+    opt('/api/v1/line-status.json'), opt('/api/v1/route-destinations.json'), opt('/api/v1/routes-overview.json'),
+    opt('/api/v1/manifest.json'), opt('/api/v1/vehicles.json'), opt('/api/v1/cpi-cpa.json'),
+    opt('/api/v1/diversion-history.json'), opt('/api/v1/roadworks.json'),
   ]);
   return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:(garages?.garages ?? []).filter(g => g.routes?.length), prog:prog?.entries ?? [],
            perf, sched:sched?.routes ?? {}, crowd:crowd?.routes ?? {}, status:status?.rows ?? [], dest:dest?.routes ?? dest ?? {},

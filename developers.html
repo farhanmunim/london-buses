@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API · londonbuses.org</title>
+<meta name="description" content="A free, open, CORS-enabled JSON API for London's bus network: routes, stops, geometry, garages, fleet, tenders, status, diversions and road works.">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://londonbuses.org/developers">
+<link rel="stylesheet" href="/css/developers.css">
+</head>
+<body>
+<script src="/site-banner.js"></script>
+<main class="wrap">
+  <p class="crumb"><a href="/">← londonbuses.org</a></p>
+  <h1>londonbuses.org API</h1>
+  <p class="lead">Open data on London's bus network as plain JSON. No key, no sign-up, CORS-enabled — call it from a browser, a script or a server. It is the same data the website runs on.</p>
+
+  <h2>Quick start</h2>
+  <pre><code>curl https://londonbuses.org/api/v1/routes/88.json
+curl https://londonbuses.org/api/v1/line-status.json
+curl "https://londonbuses.org/api/v1/live/vehicles?line=88"</code></pre>
+  <p>Every response is an envelope: <code>{ "meta": { version, resource, generatedAt, source, attribution[] }, "data": … }</code>. <code>meta.generatedAt</code> tells you how fresh the data is; <code>/api/v1/manifest.json</code> lists every dataset's source and update cadence.</p>
+
+  <h2>Using it fairly</h2>
+  <ul>
+    <li><b>Attribution is required.</b> Keep the credits in <code>meta.attribution</code> (or the list below) visible wherever you show the data.</li>
+    <li><b>Be kind to the cache.</b> Responses revalidate (ETag / 304) so polling is cheap — but data only changes every few hours, so poll accordingly. <code>meta.generatedAt</code> and the manifest show cadence.</li>
+    <li><b>Stable within v1.</b> Fields are only added, never removed or retyped. Breaking changes ship as <code>/api/v2</code>, with <code>v1</code> kept running for a long overlap.</li>
+    <li><b>Provided as is</b>, without warranty. Not affiliated with Transport for London or any operator. Live bus positions are capped at one request per route every 10 seconds.</li>
+  </ul>
+
+  <h2>Resources</h2>
+  <p>Machine-readable: <a href="/api/v1/index.json">index.json</a> · <a href="/api/v1/openapi.json">openapi.json</a> (OpenAPI 3.1).</p>
+  <div id="resources" class="table-wrap"><p class="muted">Loading…</p></div>
+
+  <h2>Attribution</h2>
+  <ul id="attribution"><li class="muted">Loading…</li></ul>
+</main>
+<script type="module" src="/js/developers.js"></script>
+</body>
+</html>

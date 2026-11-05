@@ -59,7 +59,7 @@ async function openMap(vp, { clock = false, hash = '#/map', min = 20 } = {}){
     window.__maps = []; let lib;
     Object.defineProperty(window, 'L', { configurable: true, get(){ return lib; }, set(v){ lib = v; try{ v.Map.addInitHook(function(){ window.__maps.push(this); }); }catch{} } });
   });
-  page.on('request', r => { const u = r.url(); if(/\/data\/api\//.test(u)) requests.push({ data: u.split('/data/api/')[1], t: Date.now() }); });
+  page.on('request', r => { const u = r.url(); if(/\/api\/v1\//.test(u)) requests.push({ data: u.split('/api/v1/')[1], t: Date.now() }); });
   if(clock) await page.clock.install();
   await page.goto('http://127.0.0.1:8965/' + hash, { waitUntil: 'load' });
   await page.waitForSelector('#nmLayers [data-lyr]', { timeout: 20000 });
