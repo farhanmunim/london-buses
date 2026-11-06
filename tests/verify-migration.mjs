@@ -78,7 +78,7 @@ const mapOk = await page.evaluate(() => ({
 F('v2 network map draws (' + mapOk.layers + ' layers, "' + mapOk.count + '")', mapOk.el && mapOk.layers > 0 && /\d+ routes/.test(mapOk.count));
 
 /* ── v1: home + route card ── */
-/* v2 must be a client of the public API: /api/v1 only, never the raw /data files (the fallback must stay dormant). */
+/* v2 must be a client of the public API: /api/v1 only, never the raw /data files. */
 F('v2 reads /api/v1 (' + apiHits.length + ' requests)', apiHits.length >= 5);
 F('v2 made no requests to the legacy /data files', legacyHits.length === 0);
 if(legacyHits.length) console.log(legacyHits.slice(0,5));

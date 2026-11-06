@@ -5,12 +5,9 @@ import { AGE_LIMIT, ALL, brandRoot, CLASS, opColour, OPS, propClass } from './to
 export function setData(v){ D = v; }
 
 /* ── data ────────────────────────────────────────────────────────────────── */
-/* Reads the public API (/api/v1, { meta, data } envelope) and returns `data`. TEMPORARY: falls back to the raw
-   pipeline files if /api/v1 is not served yet (e.g. the Pages build step is missing) — remove once confirmed live. */
-const getJson = p => fetch(p).then(r => r.ok ? r.json() : Promise.reject(new Error(p + ' → ' + r.status)));
-const legacyOf = p => p.replace(/^\/api\/v1\/routes\/([^/]+)\/geometry\.json$/, '/data/routes/$1.geojson')
-  .replace('/api/v1/route-destinations.json', '/data/route_destinations.json').replace('/api/v1/', '/data/api/');
-export const get = p => getJson(p).then(j => j?.meta?.version === 'v1' && 'data' in j ? j.data : j).catch(() => getJson(legacyOf(p)));
+/* Reads the public API (/api/v1, { meta, data } envelope) and returns `data`. */
+export const get = p => fetch(p).then(r => r.ok ? r.json() : Promise.reject(new Error(p + ' → ' + r.status)))
+  .then(j => j?.meta?.version === 'v1' && 'data' in j ? j.data : j);
 const opt = p => get(p).catch(() => null);
 export let D;                                   // everything below hangs off this
 export const TODAY = new Date(); export const TODAY_ISO = TODAY.toISOString().slice(0, 10);
