@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T10:54:45.509Z",
+  "generatedAt": "2026-11-08T11:04:01.431Z",
   "count": 77,
   "garages": {
     "?": {
@@ -39,7 +39,7 @@
       "address": "Regents Avenue, Palmers Green, London, N13 5UR",
       "lat": 51.612839,
       "lon": -0.108213,
-      "pvr": 83,
+      "pvr": 80,
       "capacity": 120
     },
     "AF": {
@@ -249,7 +249,7 @@
       "address": "Southbury Road, Ponders End, Middlesex, EN3 4HX",
       "lat": 51.648654,
       "lon": -0.050895,
-      "pvr": 122,
+      "pvr": 114,
       "capacity": 140
     },
     "EC": {
@@ -449,7 +449,7 @@
       "address": "High Street, Potters Bar, Herts, EN6 5BE",
       "lat": 51.697702,
       "lon": -0.176509,
-      "pvr": 120,
+      "pvr": 128,
       "capacity": 190
     },
     "PD": {
@@ -499,7 +499,7 @@
       "address": "Silverthorne Road, Battersea, London, SW8 3HE",
       "lat": 51.472356,
       "lon": -0.145866,
-      "pvr": 211,
+      "pvr": 215,
       "capacity": 245
     },
     "RA": {

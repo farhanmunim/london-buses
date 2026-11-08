@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-07T10:22:45Z",
-  "route_count": 671,
+  "generated_at_utc": "2026-11-08T10:32:44Z",
+  "route_count": 675,
   "routes": {
     "1": {
       "service_types": [
@@ -48,17 +48,15 @@
       }
     },
     "4": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Blackfriars Station",
+        "destination": "Blackfriars",
         "qualifier": "",
-        "full": "Blackfriars Station"
+        "full": "Blackfriars"
       },
       "inbound": {
         "destination": "Archway",
-        "qualifier": "Archway Station",
+        "qualifier": "",
         "full": "Archway"
       }
     },
@@ -554,48 +552,42 @@
       }
     },
     "39": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Clapham Junction",
-        "qualifier": "Clapham Junction Stn / the Falcon",
+        "qualifier": "",
         "full": "Clapham Junction"
       },
       "inbound": {
-        "destination": "Putney Bridge",
-        "qualifier": "Putney Bridge Station",
-        "full": "Putney Bridge"
+        "destination": "Putney",
+        "qualifier": "",
+        "full": "Putney"
       }
     },
     "40": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Clerkenwell Green",
-        "qualifier": "Clerkenwell Road",
-        "full": "Clerkenwell Green, Clerkenwell Road"
+        "destination": "Clerkenwell",
+        "qualifier": "",
+        "full": "Clerkenwell"
       },
       "inbound": {
         "destination": "Dulwich Library",
-        "qualifier": "Eynella Road / Dulwich Library",
+        "qualifier": "",
         "full": "Dulwich Library"
       }
     },
     "41": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Tottenham Hale",
-        "qualifier": "Tottenham Hale Bus Station",
-        "full": "Tottenham Hale"
+        "destination": "Archway",
+        "qualifier": "",
+        "full": "Archway"
       },
       "inbound": {
-        "destination": "Archway",
-        "qualifier": "Archway Station",
-        "full": "Archway"
+        "destination": "Tottenham Hale",
+        "qualifier": "",
+        "full": "Tottenham Hale"
       }
     },
     "42": {
@@ -899,16 +891,18 @@
       }
     },
     "63": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "King's Cross",
-        "qualifier": "",
+        "qualifier": "King's Cross Station / York Way",
         "full": "King's Cross"
       },
       "inbound": {
         "destination": "Honor Oak",
-        "qualifier": "",
-        "full": "Honor Oak"
+        "qualifier": "Therapia Road",
+        "full": "Honor Oak, Therapia Road"
       }
     },
     "64": {
@@ -1272,73 +1266,63 @@
       }
     },
     "90": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Feltham, Leisure West",
+        "destination": "Feltham",
         "qualifier": "",
-        "full": "Feltham, Leisure West"
+        "full": "Feltham"
       },
       "inbound": {
         "destination": "Northolt",
-        "qualifier": "Northolt Station",
+        "qualifier": "",
         "full": "Northolt"
       }
     },
     "91": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Trafalgar Square",
-        "qualifier": "Whitehall / Trafalgar Square",
+        "qualifier": "",
         "full": "Trafalgar Square"
       },
       "inbound": {
-        "destination": "Wood Green",
-        "qualifier": "Wood Green Station / River Park Road",
-        "full": "Wood Green"
+        "destination": "Wood Green Station",
+        "qualifier": "",
+        "full": "Wood Green Station"
       }
     },
     "92": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "St Raphael's North",
-        "qualifier": "Ikea Brent Park",
-        "full": "St Raphael's North, Ikea Brent Park"
-      },
-      "inbound": {
         "destination": "Ealing Hospital",
         "qualifier": "",
         "full": "Ealing Hospital"
+      },
+      "inbound": {
+        "destination": "Brent Park",
+        "qualifier": "",
+        "full": "Brent Park"
       }
     },
     "93": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Putney Bridge",
-        "qualifier": "Putney Bridge Station",
-        "full": "Putney Bridge"
+        "destination": "Putney",
+        "qualifier": "",
+        "full": "Putney"
       },
       "inbound": {
         "destination": "North Cheam",
-        "qualifier": "Priory Road",
-        "full": "North Cheam, Priory Road"
+        "qualifier": "",
+        "full": "North Cheam"
       }
     },
     "94": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Piccadilly Circus",
-        "qualifier": "Charles I I Street",
-        "full": "Piccadilly Circus, Charles I I Street"
+        "destination": "Marble Arch",
+        "qualifier": "",
+        "full": "Marble Arch"
       },
       "inbound": {
         "destination": "Acton Green",
@@ -1347,32 +1331,28 @@
       }
     },
     "95": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Shepherd's Bush",
-        "qualifier": "Shepherd's Bush Green",
+        "qualifier": "",
         "full": "Shepherd's Bush"
       },
       "inbound": {
-        "destination": "Southall, Town Hall",
+        "destination": "Southall",
         "qualifier": "",
-        "full": "Southall, Town Hall"
+        "full": "Southall"
       }
     },
     "96": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Woolwich",
-        "qualifier": "Thomas Street",
-        "full": "Woolwich, Thomas Street"
+        "qualifier": "",
+        "full": "Woolwich"
       },
       "inbound": {
         "destination": "Bluewater",
-        "qualifier": "Bluewater Shopping Centre",
+        "qualifier": "",
         "full": "Bluewater"
       }
     },
@@ -3106,14 +3086,14 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "Moorgate, Finsbury Square",
-        "qualifier": "Finsbury Square",
-        "full": "Moorgate, Finsbury Square"
+        "destination": "Finsbury Square",
+        "qualifier": "",
+        "full": "Finsbury Square"
       },
       "inbound": {
-        "destination": "Highgate Village",
-        "qualifier": "Highgate School",
-        "full": "Highgate Village, Highgate School"
+        "destination": "Highgate School",
+        "qualifier": "",
+        "full": "Highgate School"
       }
     },
     "215": {
@@ -3340,16 +3320,18 @@
       }
     },
     "232": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Wood Green Coburg Road",
-        "qualifier": "",
-        "full": "Wood Green Coburg Road"
+        "destination": "Wood Green, Haringey Heartlands",
+        "qualifier": "Coburg Road",
+        "full": "Wood Green, Haringey Heartlands, Coburg Road"
       },
       "inbound": {
-        "destination": "St Raphael's Estate",
-        "qualifier": "",
-        "full": "St Raphael's Estate"
+        "destination": "St Raphael's",
+        "qualifier": "Mitchell Way",
+        "full": "St Raphael's, Mitchell Way"
       }
     },
     "233": {
@@ -5417,58 +5399,50 @@
       }
     },
     "389": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Barnet, Western Way",
-        "qualifier": "Western Way",
-        "full": "Barnet, Western Way"
+        "destination": "Barnet",
+        "qualifier": "",
+        "full": "Barnet"
       },
       "inbound": {
-        "destination": "Barnet, The Spires",
-        "qualifier": "The Spires",
-        "full": "Barnet, The Spires"
+        "destination": "Western Way",
+        "qualifier": "",
+        "full": "Western Way"
       }
     },
     "390": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Victoria",
-        "qualifier": "Victoria Bus Station",
+        "qualifier": "",
         "full": "Victoria"
       },
       "inbound": {
         "destination": "Archway",
-        "qualifier": "Archway Station",
+        "qualifier": "",
         "full": "Archway"
       }
     },
     "393": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Chalk Farm",
-        "qualifier": "Chalk Farm Road / Morrisons",
-        "full": "Chalk Farm"
+        "destination": "Chalk Farm Morrisons",
+        "qualifier": "",
+        "full": "Chalk Farm Morrisons"
       },
       "inbound": {
-        "destination": "Clapton Pond",
-        "qualifier": "Lea Bridge Roundabout",
-        "full": "Clapton Pond, Lea Bridge Roundabout"
+        "destination": "Clapton",
+        "qualifier": "",
+        "full": "Clapton"
       }
     },
     "394": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Islington, Angel",
-        "qualifier": "Tolpuddle St / Islington Police Station",
-        "full": "Islington, Angel, Tolpuddle St / Islington Police Station"
+        "destination": "Islington Tolpuddle Street",
+        "qualifier": "",
+        "full": "Islington Tolpuddle Street"
       },
       "inbound": {
         "destination": "Homerton Hospital",
@@ -5477,137 +5451,119 @@
       }
     },
     "395": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Greenford, Westway Cross",
-        "qualifier": "Westway Cross Retail Park",
-        "full": "Greenford, Westway Cross, Westway Cross Retail Park"
+        "destination": "Harrow",
+        "qualifier": "",
+        "full": "Harrow"
       },
       "inbound": {
-        "destination": "Harrow",
-        "qualifier": "Harrow Bus Station",
-        "full": "Harrow"
+        "destination": "Westway Cross",
+        "qualifier": "",
+        "full": "Westway Cross"
       }
     },
     "396": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Ilford Broadway",
-        "qualifier": "Roden Street",
-        "full": "Ilford Broadway, Roden Street"
+        "destination": "Ilford Sainsbury's",
+        "qualifier": "",
+        "full": "Ilford Sainsbury's"
       },
       "inbound": {
-        "destination": "King George Hospital",
+        "destination": "Little Heath King George Hospital",
         "qualifier": "",
-        "full": "King George Hospital"
+        "full": "Little Heath King George Hospital"
       }
     },
     "397": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Debden",
-        "qualifier": "The Broadway",
-        "full": "Debden, The Broadway"
+        "destination": "Crooked Billet Sainsbury's",
+        "qualifier": "",
+        "full": "Crooked Billet Sainsbury's"
       },
       "inbound": {
-        "destination": "Crooked Billet, Sainsbury's",
-        "qualifier": "Salisbury Hall Sainsbury's",
-        "full": "Crooked Billet, Sainsbury's, Salisbury Hall Sainsbury's"
+        "destination": "Debden",
+        "qualifier": "",
+        "full": "Debden"
       }
     },
     "398": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Wood End",
-        "qualifier": "Hemery Road",
-        "full": "Wood End, Hemery Road"
+        "destination": "Wood End Lilian Board Way",
+        "qualifier": "",
+        "full": "Wood End Lilian Board Way"
       },
       "inbound": {
         "destination": "Ruislip",
-        "qualifier": "Ruislip Station",
+        "qualifier": "",
         "full": "Ruislip"
       }
     },
     "399": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Hadley Wood Station",
+        "destination": "Barnet",
         "qualifier": "",
-        "full": "Hadley Wood Station"
+        "full": "Barnet"
       },
       "inbound": {
-        "destination": "Barnet, The Spires",
-        "qualifier": "The Spires",
-        "full": "Barnet, The Spires"
+        "destination": "Hadley Wood",
+        "qualifier": "",
+        "full": "Hadley Wood"
       }
     },
     "401": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Bexleyheath, Shopping Centre",
-        "qualifier": "Bexleyheath Clock Tower",
-        "full": "Bexleyheath, Shopping Centre, Bexleyheath Clock Tower"
+        "destination": "Bexleyheath",
+        "qualifier": "",
+        "full": "Bexleyheath"
       },
       "inbound": {
-        "destination": "Thamesmead",
-        "qualifier": "Thamesmead Town Centre",
-        "full": "Thamesmead"
+        "destination": "Thamesmead Town Centre",
+        "qualifier": "",
+        "full": "Thamesmead Town Centre"
       }
     },
     "403": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Croydon",
-        "qualifier": "West Croydon Bus Station",
-        "full": "West Croydon"
+        "destination": "Croydon",
+        "qualifier": "",
+        "full": "Croydon"
       },
       "inbound": {
         "destination": "Warlingham",
-        "qualifier": "Warlingham / Sainsbury's",
+        "qualifier": "",
         "full": "Warlingham"
       }
     },
     "404": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Caterham-on-the-Hill",
-        "qualifier": "Westway",
-        "full": "Caterham-on-the-Hill, Westway"
+        "destination": "Cane Hill",
+        "qualifier": "",
+        "full": "Cane Hill"
       },
       "inbound": {
-        "destination": "Coulsdon, Cane Hill",
-        "qualifier": "Crawford Crescent",
-        "full": "Coulsdon, Cane Hill, Crawford Crescent"
+        "destination": "Caterham",
+        "qualifier": "",
+        "full": "Caterham"
       }
     },
     "405": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "West Croydon",
-        "qualifier": "Park Street",
-        "full": "West Croydon, Park Street"
+        "destination": "Croydon Katharine Street",
+        "qualifier": "",
+        "full": "Croydon Katharine Street"
       },
       "inbound": {
         "destination": "Redhill",
-        "qualifier": "Redhill Bus Station",
+        "qualifier": "",
         "full": "Redhill"
       }
     },
@@ -5642,18 +5598,16 @@
       }
     },
     "410": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Wallington",
-        "qualifier": "Shotfield",
-        "full": "Wallington, Shotfield"
+        "destination": "Crystal Palace",
+        "qualifier": "",
+        "full": "Crystal Palace"
       },
       "inbound": {
-        "destination": "Crystal Palace",
-        "qualifier": "Crystal Palace Parade",
-        "full": "Crystal Palace"
+        "destination": "Wallington",
+        "qualifier": "",
+        "full": "Wallington"
       }
     },
     "411": {
@@ -6926,6 +6880,21 @@
         "full": "Romford Station"
       }
     },
+    "652": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Upminster",
+        "qualifier": "Upminster Station",
+        "full": "Upminster"
+      },
+      "inbound": {
+        "destination": "Rainham, Abbey Wood Lane",
+        "qualifier": "Abbey Wood Lane",
+        "full": "Rainham, Abbey Wood Lane"
+      }
+    },
     "653": {
       "service_types": [
         "Regular"
@@ -7031,6 +7000,21 @@
         "full": "Petts Wood"
       }
     },
+    "662": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Holy Cross School",
+        "qualifier": "Sandal Road / Holy Cross School",
+        "full": "Holy Cross School"
+      },
+      "inbound": {
+        "destination": "Surbiton",
+        "qualifier": "Claremont Road / Surbiton Station",
+        "full": "Surbiton"
+      }
+    },
     "663": {
       "service_types": [
         "Regular"
@@ -7074,6 +7058,36 @@
         "destination": "Surbiton",
         "qualifier": "Howard Road",
         "full": "Surbiton, Howard Road"
+      }
+    },
+    "667": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "West Hatch School",
+        "qualifier": "Club House",
+        "full": "West Hatch School, Club House"
+      },
+      "inbound": {
+        "destination": "Ilford",
+        "qualifier": "Hainault Street",
+        "full": "Ilford, Hainault Street"
+      }
+    },
+    "669": {
+      "service_types": [
+        "Regular"
+      ],
+      "outbound": {
+        "destination": "Cleeve Park School",
+        "qualifier": "Bexley Lane / Cleeve Park School",
+        "full": "Cleeve Park School"
+      },
+      "inbound": {
+        "destination": "Thamesmead",
+        "qualifier": "Thamesmead Town Centre",
+        "full": "Thamesmead"
       }
     },
     "670": {
@@ -7388,17 +7402,17 @@
     },
     "969": {
       "service_types": [
-        "Regular"
+        "Mobility"
       ],
       "outbound": {
         "destination": "Roehampton Vale",
-        "qualifier": "Roehampton Vale / Asda",
-        "full": "Roehampton Vale"
+        "qualifier": "Asda",
+        "full": "Roehampton Vale, Asda"
       },
       "inbound": {
-        "destination": "Whitton, Lincoln Avenue",
-        "qualifier": "Selkirk Road",
-        "full": "Whitton, Lincoln Avenue, Selkirk Road"
+        "destination": "Whitton",
+        "qualifier": "Gladstone Avenue",
+        "full": "Whitton, Gladstone Avenue"
       }
     },
     "A10": {
@@ -9852,11 +9866,13 @@
       }
     },
     "W16": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Leytonstone Station",
-        "qualifier": "",
-        "full": "Leytonstone Station"
+        "destination": "Leytonstone",
+        "qualifier": "Leytonstone Station / Grove Green Road",
+        "full": "Leytonstone"
       },
       "inbound": {
         "destination": "Chingford Mount",
@@ -9865,16 +9881,18 @@
       }
     },
     "W19": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Argall Avenue Industrial Estate",
-        "qualifier": "",
-        "full": "Argall Avenue Industrial Estate"
+        "destination": "Ilford",
+        "qualifier": "Hainault Street",
+        "full": "Ilford, Hainault Street"
       },
       "inbound": {
-        "destination": "Ilford",
-        "qualifier": "",
-        "full": "Ilford"
+        "destination": "Walthamstow, Argall Avenue",
+        "qualifier": "Argall Avenue Industrial Estate",
+        "full": "Walthamstow, Argall Avenue, Argall Avenue Industrial Estate"
       }
     },
     "W3": {
