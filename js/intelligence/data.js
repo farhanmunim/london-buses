@@ -256,6 +256,20 @@ export function build(raw){
     return { x:String(y), net:n.length >= 10 ? median(n) : null, op:o && o.length >= minOwn ? median(o) : null, nn:n.length, on:o?.length ?? 0 };
   });
 
+  // zero-emission price gap: every priced award of the last five years whose vehicle basis TfL stated ("awarded on new
+  // electrics", "existing hybrids"…). One point per award; the view splits them electric vs diesel/hybrid and by whether
+  // the route changed hands, so the same awards feed the head-to-head and the gap chart.
+  const GAP = [];
+  for(const a of Object.values(raw.tenders.byId ?? {})){
+    if(!a.awardDate || a.awardDate < from5 || !(a.costPerMile > 0) || a.costPerMile > 35) continue;
+    const p = a.vehicle?.propulsion; if(!p || !grp(a.operator)) continue;
+    const f = cpiBy.get(a.awardDate.slice(0, 7)), k = f && cpiNow ? cpiNow / f : null;
+    const w = rival(a.operator), fr = grp(a.fromOperator) ? rival(a.fromOperator) : null;
+    GAP.push({ ev:propClass(p) === 'zero', prop:p, basis:a.vehicle?.basis ?? null, g:grp(a.operator), w, fr, same:fr ? fr === w : null,
+               v:a.costPerMile, real:k ? a.costPerMile * k : null, k, bid:a.acceptedBid > 0 ? a.acceptedBid : null, miles:a.contractedMilesPA > 0 ? a.contractedMilesPA : null,
+               tok:String(a.route ?? '').split('/').map(t => t.trim()), route:a.route, date:a.awardDate });
+  }
+
   // depots: peak vehicles against licensed operating-centre capacity
   const gByCode = new Map(raw.garages.map(g => [g.code, g]));
   const mkDepots = list => {
@@ -288,5 +302,5 @@ export function build(raw){
     if(op === ALL) return { kind:'all', key:ALL, name:ALL, op:ALL, st:NET, F:FNET, rec:REC[ALL], depots:DEPOTS[ALL], colour:'#2a78d6', list:NET.list };
     return { kind:'op', key:op, name:op, op, st:ST[op], F:FLEET[op], rec:REC[op], depots:DEPOTS[op], colour:opColour(op), list:ST[op].list };
   };
-  return { routes, byId, bench, INCOMING, ST, NET, REC, FLEET, FNET, PRICE, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
+  return { routes, byId, bench, INCOMING, ST, NET, REC, FLEET, FNET, PRICE, GAP, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
 }
