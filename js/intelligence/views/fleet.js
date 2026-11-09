@@ -5,6 +5,7 @@ import { fInt, fNum, fPct, nOf, sum, warnIcon } from '../format.js';
 import { SC } from '../state.js';
 import { AGE_LIMIT, CLASS, opColour, OPS } from '../tokens.js';
 import { shortOp } from './hero.js';
+import { renderGap } from './gap.js';
 import { renderH2H, renderPrice, renderRecord } from './record.js';
 
 /* ── view: fleet register / depots / quality ─────────────────────────────── */
@@ -89,4 +90,4 @@ function renderAgeOut(){
       <div><h4 class="mh" style="margin-top:0">Routes with the most ageing vehicles</h4>${routes.map(r => `<button class="nx" data-r="${esc(r.id)}"><span class="badge" style="height:22px;min-width:38px;font-size:11.5px">${esc(r.id)}</span><span class="cor">${esc(r.from)} <span class="sub">⇄</span> ${esc(r.to)}</span><span class="sub" style="white-space:nowrap">${r.vOld} of ${r.vSeen}</span></button>`).join('') || '<div class="sub">No routes with several ageing vehicles.</div>'}</div></div>
       <div class="sub" style="margin-top:10px">Ages come from the registration year of each vehicle in the fleet register, so a bus reaches ${AGE_LIMIT} in the calendar year ${AGE_LIMIT} years after its first registration. Buses past the limit may be on approved extensions, in reserve or re-bodied: the register dates the chassis. Per-route counts are vehicles recently seen on that route.</div></div>`;
 }
-export function renderCards(){ renderRecord(); renderH2H(); renderPrice(); renderFleet(); renderDepots(); renderQuality(); renderAgeOut(); renderWatch(); }
+export function renderCards(){ renderRecord(); renderH2H(); renderPrice(); renderGap(); renderFleet(); renderDepots(); renderQuality(); renderAgeOut(); renderWatch(); }

@@ -212,6 +212,38 @@ F('zero page errors (scopes and maps)', errors.length === 0);
   }
 }
 
+/* ── zero-emission price gap ─────────────────────────────────────────────── */
+{
+  const g = await open(1440, 900, '#op=Stagecoach%20London'); const gp = g.page;
+  const rows = () => gp.locator('#evgap .gr:not(.ghead)');
+  const head = await txt(gp, '#evgap .ghd');
+  F(`the gap card leads with Stagecoach’s electric vs diesel/hybrid gap (${head.slice(0, 6).trim()})`, /^[+−]\d+(\.\d)?%/.test(head) && /Stagecoach/.test(head) && /London [+−]\d/.test(head));
+  F('it lists every operator with a dumbbell row, the scoped operator emphasised', await rows().count() >= 9 && /Stagecoach/.test(await txt(gp, '#evgap .gr.sel')) && await gp.locator('#evgap .pt.ev').count() >= 6 && await gp.locator('#evgap .pt.ne').count() >= 6);
+  F('re-tenders are split into retained, won and lost', /Retained/.test(await txt(gp, '#evgap')) && /Won from rivals/.test(await txt(gp, '#evgap')) && /Lost to rivals/.test(await txt(gp, '#evgap')));
+  F('no NaN reaches the chart', !(await gp.evaluate(() => /NaN/.test(document.getElementById('evgap').innerHTML))));
+  const before = await gp.evaluate(() => [...document.querySelectorAll('#evgap .vl')].map(e => e.textContent).join('|'));
+  await gp.click('#evgap [data-gapw="miles"]'); await gp.waitForTimeout(150);
+  const after = await gp.evaluate(() => [...document.querySelectorAll('#evgap .vl')].map(e => e.textContent).join('|'));
+  F('"By miles" re-prices the rows as total £ ÷ total miles', before !== after && /total £ ÷ total contracted miles/.test(await txt(gp, '#evgap .legend')) && /^[+−]\d/.test(await txt(gp, '#evgap .ghd')));
+  F('a re-rendered card keeps its info button', await gp.locator('#evgap .info.corner').count() === 1 && await gp.locator('#market .info.corner').count() === 1);
+  await gp.click('#evgap [data-real="0"]'); await gp.waitForTimeout(150);
+  F('the Real/Nominal basis is shared with the Price per mile card', /as awarded/.test(await txt(gp, '#evgap .ch p')) && /as awarded/.test(await txt(gp, '#price .ch p')));
+  await gp.click('#evgap [data-gapview="table"]'); await gp.waitForTimeout(150);
+  F('the gap chart has a table view', await gp.locator('#evgap table.dt').count() === 2 && await gp.locator('#evgap table.dt tbody tr').count() >= 10);
+  await gp.locator('#evgap .gr.sel, #evgap table.dt tr.sel').first().hover().catch(() => {});
+  await gp.click('#evgap [data-gapview="chart"]'); await gp.waitForTimeout(150);
+  await gp.hover('#evgap .gr.sel'); await gp.waitForTimeout(150);
+  F('hovering a row shows both prices and the award counts', (await gp.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /Electric: £[\d.]+ · \d+ awards/.test(await txt(gp, '#tip')));
+  F('zero page errors (price gap)', g.errors.length === 0);
+  await g.ctx.close();
+  const n = await open(1440, 900); const np = n.page;
+  F('at network level the right pane splits re-tenders by outcome', /Kept the incumbent/.test(await txt(np, '#evgap')) && /Changed operator/.test(await txt(np, '#evgap')) && /All London/.test(await txt(np, '#evgap .gr.sel')));
+  await n.ctx.close();
+  const d = await open(1440, 900, '#op=Go-Ahead%20London&garage=A'); const dp = d.page;
+  F('at garage level the garage’s own routes lead the chart and losses are not claimed', /Sutton garage/.test(await txt(dp, '#evgap .gr.sel')) && /losses cannot be shown/.test(await txt(dp, '#evgap')) && !/Lost to rivals/.test(await txt(dp, '#evgap')));
+  await d.ctx.close();
+}
+
 /* ── tender tags, quick filters and info buttons ───────────────────────── */
 ({ ctx, page, errors } = await open(1440, 900));
 const nInfo = await page.locator('.info.corner').count();

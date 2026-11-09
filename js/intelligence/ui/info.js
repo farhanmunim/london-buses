@@ -26,6 +26,7 @@ const INFO = () => { const P = D.latestPeriod ? ` (${D.latestPeriod})` : '';
   'Head-to-head':'Routes won from and lost to each rival, 5 years.',
   'Tender momentum':'Routes each operator won and lost, 5 years.',
   'Price per mile':'Median award £ per live mile by year. Real = CPI-adjusted.',
+  'Zero-emission price gap':'£ per live mile of awards on electric buses vs diesel and hybrid, last 5 years. Gap = electric ÷ diesel & hybrid − 1. By miles = total £ ÷ total contracted miles.',
   'Fleet register':'Registered vehicles by first-registration year (DVLA).',
   'Depots':'Peak vehicles ÷ licensed capacity per garage. Spares excluded.',
   'Garage':'Peak vehicles ÷ licensed capacity. Spares excluded.',
@@ -58,7 +59,7 @@ function decorate(root = document){
   const keys = Object.keys(infoMap).sort((a, b) => b.length - a.length);
   const titleOf = el => (el.matches('.kpi, .mini > div') ? el.querySelector('.l')?.firstChild?.textContent ?? el.querySelector('.l')?.textContent : el.matches('.drawer section') ? el.querySelector('h4')?.textContent : el.querySelector('.ch h2')?.textContent)?.trim();
   for(const el of root.querySelectorAll('.card, .kpi, .mini > div, .drawer section')){
-    if(el.dataset.i || el.closest('.menu')) continue;
+    if(el.closest('.menu') || el.querySelector(':scope > .info.corner')) continue;   // re-rendering a card's innerHTML drops its button; put it back
     const t = titleOf(el); if(!t) continue;
     const key = el.matches('.mini > div') && infoMap['r:' + t] ? 'r:' + t : keys.find(k => !k.startsWith('r:') && (t === k.trim() || t.startsWith(k.trim() + ' ·')));
     const text = (key && infoMap[key]) || el.dataset.info; if(!text) continue;
