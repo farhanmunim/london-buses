@@ -259,11 +259,11 @@ export function build(raw){
   // zero-emission price gap: every priced award of the last five years whose vehicle basis TfL stated ("awarded on new
   // electrics", "existing hybrids"…). One point per award; the view splits them electric vs diesel/hybrid and by whether
   // the route changed hands, so the same awards feed the head-to-head and the gap chart.
-  const GAP = [];
+  const GAP = [], lastCpi = raw.cpi.at(-1)?.month ?? '';
   for(const a of Object.values(raw.tenders.byId ?? {})){
     if(!a.awardDate || a.awardDate < from5 || !(a.costPerMile > 0) || a.costPerMile > 35) continue;
     const p = a.vehicle?.propulsion; if(!p || !grp(a.operator)) continue;
-    const f = cpiBy.get(a.awardDate.slice(0, 7)), k = f && cpiNow ? cpiNow / f : null;
+    const f = cpiBy.get(a.awardDate.slice(0, 7)), k = f && cpiNow ? cpiNow / f : (a.awardDate.slice(0, 7) > lastCpi ? 1 : null);   // newer than the last CPI print: today's money already
     const w = rival(a.operator), fr = grp(a.fromOperator) ? rival(a.fromOperator) : null;
     GAP.push({ ev:propClass(p) === 'zero', prop:p, basis:a.vehicle?.basis ?? null, g:grp(a.operator), w, fr, same:fr ? fr === w : null,
                v:a.costPerMile, real:k ? a.costPerMile * k : null, k, bid:a.acceptedBid > 0 ? a.acceptedBid : null, miles:a.contractedMilesPA > 0 ? a.contractedMilesPA : null,

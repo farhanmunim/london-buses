@@ -26,7 +26,7 @@ import './ui/events.js';
     $('#app').innerHTML = `<section id="overview"><div id="hero"></div><section class="card sec" id="brief" aria-label="Briefing"></section><div class="grid sec" id="kpis"></div><div class="grid sec" id="kpis2" aria-label="Commercial and operational signals"></div></section>
       <div class="grid sec"><section class="card s5" id="market" aria-label="Market position"></section><section class="card s7" id="runway" aria-label="Contract runway"></section></div>
       <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="h2h" aria-label="Head-to-head"></section><section class="card s4" id="price" aria-label="Price per mile"></section></div>
-      <section class="card sec" id="evgap" aria-label="Electric price gap"></section>
+      <section class="card sec" id="evgap" aria-label="Price versus rivals"></section>
       <section class="card sec" id="renewals" aria-label="Renewal calendar"></section>
       <div class="grid sec"><section class="card s4" id="fleet" aria-label="Fleet register"></section><section class="card s4" id="depots" aria-label="Depots"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
       <section class="card sec" id="ageout" aria-label="Replacement runway"></section>

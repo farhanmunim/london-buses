@@ -212,28 +212,28 @@ F('zero page errors (scopes and maps)', errors.length === 0);
   }
 }
 
-/* ── electric price gap ──────────────────────────────────────────────────── */
+/* ── price versus rivals ─────────────────────────────────────────────────── */
 {
   const g = await open(1440, 900, '#op=Stagecoach%20London'); const gp = g.page;
   const rows = () => gp.locator('#evgap .gr:not(.hhead)');
   const head = await txt(gp, '#evgap .ghd');
-  F(`the gap card leads with one plain sentence about Stagecoach (${head.slice(0, 6).trim()})`, /^([+−]\d+(\.\d)?%|same)/.test(head) && /Stagecoach pays .* per mile for routes awarded on electric buses/.test(head) && /Across London, electric costs/.test(head));
-  F('it lists every operator as a left/right bar row, the scoped operator emphasised', await rows().count() >= 9 && /Stagecoach/.test(await txt(gp, '#evgap .gr.sel')) && await gp.locator('#evgap .gr .r i, #evgap .gr .l i').count() >= 6);
-  F('re-tenders are split into routes kept, won and lost', /When Stagecoach’s routes were re-tendered/.test(await txt(gp, '#evgap')) && /Kept/.test(await txt(gp, '#evgap')) && /Won from rivals/.test(await txt(gp, '#evgap')) && /Lost to rivals/.test(await txt(gp, '#evgap')));
+  F('the card leads with two numbers and one sentence about Stagecoach against everyone else', await gp.locator('#evgap .gk .big').count() === 2 && /Against every other operator’s winning bids, Stagecoach wins routes with/.test(head) && /electric bids .*(cheaper|dearer|the same price)/.test(head) && /diesel and hybrid bids/.test(head));
+  F('one pane for electric and one for diesel/hybrid, each with every rival and an all-others total', await gp.locator('#evgap .gpane').count() === 2 && await rows().count() >= 12 && await gp.locator('#evgap .gr.tot').count() === 2 && !/\bStagecoach\b/.test(await gp.locator('#evgap .gpane .gr:not(.hhead):not(.tot) .nm').allTextContents().then(t => t.join('|'))));
+  F('bars point left when Stagecoach is cheaper and right when dearer', await gp.locator('#evgap .gr .l i, #evgap .gr .r i').count() >= 6 && /Stagecoach cheaper/.test(await txt(gp, '#evgap .hhead')));
   F('no NaN reaches the chart and there is a single view toggle', !(await gp.evaluate(() => /NaN/.test(document.getElementById('evgap').innerHTML))) && await gp.locator('#evgap .seg').count() === 1);
+  await gp.locator('#evgap .gr.tot').first().scrollIntoViewIfNeeded(); await gp.waitForTimeout(300); await gp.hover('#evgap .gr.tot >> nth=0'); await gp.waitForTimeout(200);
+  F('hovering a row shows both prices and the award counts', (await gp.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /Stagecoach: £[\d.]+ per mile · \d+ awards/.test(await txt(gp, '#tip')) && /All other operators: £[\d.]+ per mile/.test(await txt(gp, '#tip')));
   await gp.click('#evgap [data-gapview="table"]'); await gp.waitForTimeout(150);
-  F('the gap chart has a table view with both prices', await gp.locator('#evgap table.dt').count() === 2 && await gp.locator('#evgap table.dt tbody tr').count() >= 10 && /£\d/.test(await txt(gp, '#evgap table.dt tbody tr')));
+  F('the table view carries both prices for both bus types', await gp.locator('#evgap table.dt thead th').count() === 7 && await gp.locator('#evgap table.dt tbody tr').count() >= 6 && /£\d/.test(await txt(gp, '#evgap table.dt tbody tr')));
   F('a re-rendered card keeps its info button', await gp.locator('#evgap .info.corner').count() === 1 && await gp.locator('#market .info.corner').count() === 1);
   await gp.click('#evgap [data-gapview="chart"]'); await gp.waitForTimeout(150);
-  await gp.hover('#evgap .gr.sel'); await gp.waitForTimeout(150);
-  F('hovering a row shows both prices and the award counts', (await gp.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /Electric: £[\d.]+ per mile · \d+ awards/.test(await txt(gp, '#tip')));
-  F('zero page errors (price gap)', g.errors.length === 0);
+  F('zero page errors (price versus rivals)', g.errors.length === 0);
   await g.ctx.close();
   const n = await open(1440, 900); const np = n.page;
-  F('at network level the right pane splits re-tenders by outcome', /Kept their operator/.test(await txt(np, '#evgap')) && /Changed operator/.test(await txt(np, '#evgap')) && /All London/.test(await txt(np, '#evgap .gr.sel')));
+  F('at network level every operator is set against everyone else and the headline gives London’s two prices', await np.locator('#evgap .gr:not(.hhead)').count() >= 12 && /Across London, routes awarded on electric buses cost/.test(await txt(np, '#evgap .ghd')) && /£\d/.test(await txt(np, '#evgap .gk .big')));
   await n.ctx.close();
   const d = await open(1440, 900, '#op=Go-Ahead%20London&garage=A'); const dp = d.page;
-  F('at garage level the garage’s own routes lead the chart and losses are not claimed', /Sutton garage/.test(await txt(dp, '#evgap .gr.sel')) && /cannot be shown/.test(await txt(dp, '#evgap')) && !/Lost to rivals/.test(await txt(dp, '#evgap')));
+  F('at garage level the garage’s own routes are compared and the small sample is said', /Routes now at Sutton garage were won with/.test(await txt(dp, '#evgap .ghd')) && /sample is small/.test(await txt(dp, '#evgap')));
   await d.ctx.close();
 }
 
