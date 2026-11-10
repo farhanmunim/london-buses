@@ -29,8 +29,7 @@ document.addEventListener('click', e => {
   const ex = t.closest('[data-expand]'); if(ex){ mapOpen(ex.dataset.expand); return; }
   if(t.closest('#mfClose')){ mapClose(); return; }
 
-  const rl = t.closest('[data-real]'); if(rl){ S.real = rl.dataset.real === '1'; renderPrice(); renderGap(); return; }
-  const gw = t.closest('[data-gapw]'); if(gw){ S.gapW = gw.dataset.gapw; renderGap(); return; }
+  const rl = t.closest('[data-real]'); if(rl){ S.real = rl.dataset.real === '1'; renderPrice(); return; }
   const gv = t.closest('[data-gapview]'); if(gv){ S.gapView = gv.dataset.gapview; renderGap(); return; }
   if(t.closest('#watchAll')){ S.flags.add('attn'); S.shown = 30; renderTable(); $('#routes').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const m = t.closest('[data-metric]'); if(m){ S.metric = m.dataset.metric; renderMarket(); return; }
@@ -80,7 +79,7 @@ addEventListener('hashchange', () => { const r = fromHash(); renderAll(); r ? op
 
 $('#aboutBody').innerHTML = `<h2>Operator intelligence · v3 concept</h2><p style="margin:0;color:var(--ink-2)">A design exploration for the next evolution of this project: from a route explorer to an operator-level intelligence dashboard. Everything here is real data from the project's own open dataset; nothing is mocked.</p>
   <h5>The idea</h5><ul><li><b>One route brief, everywhere.</b> A route's shape, PVR, fleet, price, operated mileage, contract runway and next tender form one compact unit — a table row and the detail drawer show the same fields.</li><li><b>Operator KPIs are roll-ups of those fields,</b> so headline numbers always agree with the rows beneath them.</li><li><b>Market → Contracts → Fleet → Routes</b> is the reading order: where you stand, what is at risk, what you run, then every route.</li></ul>
-  <h5>What is live</h5><ul><li>Operator switcher, ⌘K search, sortable and filterable routes, per-route drawer (←/→ to step), CSV export, shareable links.</li><li>Contract runway buckets are clickable and filter the table.</li><li><b>Zero-emission price gap:</b> the £/mile of awards on electric buses against diesel and hybrid awards, per operator and for the routes that changed hands, as a median or as total £ ÷ total miles.</li><li>Route shapes and the operator footprint are plain SVG from TfL geometry — no map tiles.</li></ul>
+  <h5>What is live</h5><ul><li>Operator switcher, ⌘K search, sortable and filterable routes, per-route drawer (←/→ to step), CSV export, shareable links.</li><li>Contract runway buckets are clickable and filter the table.</li><li><b>Electric price gap:</b> how much more TfL pays per mile when a route is awarded on electric buses rather than diesel or hybrid, per operator and for routes that changed hands.</li><li>Route shapes and the operator footprint are plain SVG from TfL geometry — no map tiles.</li></ul>
   <h5>Caveats worth knowing</h5><ul><li>Contract value is the sum of accepted annual bids per route's current contract — an estimate.</li><li>Tender record groups subsidiaries into their parent brand and counts only cross-group changes.</li><li>Operated mileage and reliability are the reported figures for the latest published period.</li></ul>
   <h5>Next ideas</h5><ul><li>Saved watchlists of routes.</li><li>Alerts when a contract nears its end or a tender is issued.</li><li>Garage-to-garage comparison and a depot-capacity forecast against the age-limit runway.</li><li>Scenario tool: what a re-tender at the network median price would change.</li></ul>
   <div style="margin-top:18px;display:flex;justify-content:flex-end"><button class="btn primary" id="aboutClose">Close</button></div>`;

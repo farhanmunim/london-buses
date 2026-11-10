@@ -26,7 +26,7 @@ const INFO = () => { const P = D.latestPeriod ? ` (${D.latestPeriod})` : '';
   'Head-to-head':'Routes won from and lost to each rival, 5 years.',
   'Tender momentum':'Routes each operator won and lost, 5 years.',
   'Price per mile':'Median award £ per live mile by year. Real = CPI-adjusted.',
-  'Zero-emission price gap':'£ per live mile of awards on electric buses vs diesel and hybrid, last 5 years. Gap = electric ÷ diesel & hybrid − 1. By miles = total £ ÷ total contracted miles.',
+  'Electric price gap':'Median £ per live mile of TfL awards on electric buses vs awards on diesel and hybrid buses, last 5 years, in today’s money. +10% = electric awards cost 10% more per mile. Most electric awards are for new buses, so part of the gap is new-vehicle cost. Awards with no stated vehicle type are left out.',
   'Fleet register':'Registered vehicles by first-registration year (DVLA).',
   'Depots':'Peak vehicles ÷ licensed capacity per garage. Spares excluded.',
   'Garage':'Peak vehicles ÷ licensed capacity. Spares excluded.',
