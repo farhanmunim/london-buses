@@ -125,6 +125,14 @@
     "blurb": "provisional tender awards (CC BY-SA 3.0)"
   },
   {
+    "id": "lots",
+    "group": "data",
+    "text": "Contract lengths and start dates on recent tender awards from the London Omnibus Traction Society (LOTS) news bulletins, lots.org.uk",
+    "url": "https://www.lots.org.uk/news.php",
+    "licence": "© LOTS — reported facts (route, operator, contract length, start date) used with attribution",
+    "used": "The contract term stated at award, which TfL's results register does not publish; it labels each contract end as a short, standard or full term."
+  },
+  {
     "id": "openfreemap",
     "group": "maps",
     "text": "Basemap: OpenFreeMap, using the OpenMapTiles schema",

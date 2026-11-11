@@ -67,6 +67,12 @@ jobs:
         # `provisional` and drop out once the TfL page appears.
         run: node scripts/fetch-fandom-tenders.js
 
+      - name: Fetch contract terms (LOTS bulletins)
+        # lots.org.uk writes the contract length in words on every award
+        # ("for 7 years starting on …"), which TfL's register and the wiki
+        # lack. One POST returns the whole history; content-stable write.
+        run: node scripts/fetch-lots-tenders.js
+
       - name: Fetch tendering programme
         # content.tfl.gov.uk is not behind the forms WAF; unchanged years
         # short-circuit on Last-Modified so this is seconds when quiet.
@@ -85,7 +91,7 @@ jobs:
           # timestamps on every run, so gating on the source files avoids a
           # no-op commit (and a Cloudflare build) when TfL published nothing
           # new. Both fetchers write content-stably (no timestamp-only churn).
-          git add -f data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json || true
+          git add -f data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json data/source/lots-tenders.json || true
           if git diff --cached --quiet; then
             echo "No new tender awards"
           else
@@ -106,9 +112,9 @@ jobs:
               git rebase --abort 2>/dev/null || true
               git fetch origin main
               git reset --hard origin/main
-              git checkout "$OURS" -- data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json || true
+              git checkout "$OURS" -- data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json data/source/lots-tenders.json || true
               node scripts/build-api.js
-              git add -f data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json || true
+              git add -f data/source/tenders.json data/source/tender-programme.json data/source/fandom-tenders.json data/source/lots-tenders.json || true
               git add data/api/ || true
               if git diff --cached --quiet; then echo "New head already carries this data"; break; fi
               git commit -m "data: tender refresh $(date -u +%Y-%m-%dT%H:%M)"

@@ -28,6 +28,16 @@ function rnList(){
   list = [...list].sort((a, b) => a.cEnd.localeCompare(b.cEnd) || b.pvr - a.pvr || (natKey(a.id) < natKey(b.id) ? -1 : 1));
   return { sc, all, list, gap, bench };
 }
+/* The ending contract's term, in words: a 3-year bridging contract comes back to market early, a 5-year one may
+   run to 7 on its extension, a 7-year one is a full term. Stated by the LOTS award bulletin when we have it,
+   otherwise start to end. */
+export function termOf(r){
+  const a = r.cur, t = a?.termYearsStated ?? a?.termYears ?? (r.cStart && r.cEnd ? Math.round((Date.parse(r.cEnd) - Date.parse(r.cStart)) / 3.15576e10 * 10) / 10 : null);
+  if(!Number.isFinite(t)) return null;
+  const kind = t <= 4 ? 'short contract' : t < 6 ? (a?.twoYearExtension ? '2-yr extension possible' : 'standard term') : 'full term';
+  return { t, kind, stated:a?.termSource === 'lots' };
+}
+const termTag = r => { const x = termOf(r); return x ? ` · <span class="termtag ${x.t <= 4 ? 'short' : ''}" data-tip="${x.t}-year contract: ${x.kind}${x.stated ? '\nTerm as stated in the LOTS award bulletin' : '\nTerm from the contract start and end dates'}">${x.t}-yr ${esc(x.kind)}</span>` : ''; };
 export function renderRenewals(){
   const { sc, all, list, gap, bench } = rnList();
   const quarters = []; { const t = new Date(TODAY); let y = t.getUTCFullYear(), q = Math.floor(t.getUTCMonth() / 3);
@@ -49,7 +59,7 @@ export function renderRenewals(){
     const was = oldBid(r), a = e?.acceptedBid > 0 ? e.acceptedBid : was;
     const d = e ? (e.acceptedBid > 0 && was ? e.acceptedBid - was : null) : (r.fcValue != null && was ? r.fcValue - was : null);
     const price = cp > 0 ? `<span data-tip="${e ? 'New contract price' : 'Current price'}\n£${cp.toFixed(2)} per mile${e ? ' (awarded ' + esc(fDate(e.awardDate)) + ')' : ' as awarded'}${gp != null ? `\n${gp >= 0 ? '+' : '−'}${Math.abs(gp).toFixed(0)}% against £${bench.toFixed(2)}, the median of awards in the last 24 months` : ''}"><small>${e ? 'New £/mile' : '£/mile'}</small><b>£${cp.toFixed(2)}</b>${gp != null ? `<em class="pd ${gp > 5 ? 'hi' : gp < -5 ? 'lo' : ''}">${gp >= 0 ? '▲' : '▼'} ${Math.abs(gp).toFixed(0)}%</em>` : ''}</span>` : `<span><small>£/mile</small><b>—</b></span>`;
-    return `${head}<button type="button" class="rnrow" data-r="${esc(r.id)}"><span class="rm"><span class="badge">${esc(r.id)}</span><span class="t"><b>${esc(r.from)} ⇄ ${esc(r.to)}</b><span class="sub"><i class="dot" style="background:${opColour(r.op)}"></i>${esc(shortOp(r.op))} · ${esc(r.garageName ?? '')}</span></span></span>
+    return `${head}<button type="button" class="rnrow" data-r="${esc(r.id)}"><span class="rm"><span class="badge">${esc(r.id)}</span><span class="t"><b>${esc(r.from)} ⇄ ${esc(r.to)}</b><span class="sub"><i class="dot" style="background:${opColour(r.op)}"></i>${esc(shortOp(r.op))} · ${esc(r.garageName ?? '')}${termTag(r)}</span></span></span>
       <span class="rn"><span><small>Ends</small><b>${esc(fDate(r.cEnd))}</b></span><span><small>PVR</small><b>${fInt(r.pvr)}</b></span>${price}
       <span data-tip="${e ? 'Awarded annual value' : 'Annual value'}\n${e ? 'The new contract’s accepted bid' + (d != null ? '; ' + (d >= 0 ? '+' : '−') + fGbp(Math.abs(d)) + ' against the current contract' : '') : 'Current accepted bid' + (d != null ? `\nAt the recent median £/mile a re-tender would be about ${fGbp(r.fcValue)} (${d >= 0 ? '+' : '−'}${fGbp(Math.abs(d))}). Indicative only` : '')}"><small>${e ? 'New a year' : 'A year'}</small><b>${fGbp(a)}</b>${d != null ? `<em class="pd ${d > 0 ? 'hi' : 'lo'}">${d > 0 ? '▲' : '▼'} ${fGbp(Math.abs(d))}</em>` : ''}</span>
       <span class="rt">${tenderCell(r)}</span></span></button>`;

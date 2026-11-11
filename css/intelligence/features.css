@@ -135,3 +135,6 @@
 .gpane table.dt tr.sel td{font-weight:600;color:var(--ink)}
 @media (max-width:1100px){.gapw{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:860px){.hh.gr{grid-template-columns:104px 1fr 1fr 52px}.hhead.gr{font-size:10.5px}.ghd{flex-direction:column;gap:8px}.gks{gap:18px}.gk .big{font-size:30px}.hh.gr.tot .nm span{white-space:normal;line-height:1.2}}
+
+/* contract-term tag on renewal rows */
+.termtag{color:var(--ink-3)}.termtag.short{color:var(--warn-ink);font-weight:600}

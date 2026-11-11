@@ -43,6 +43,7 @@ const STEPS = [
   { label: 'Step 8/17 — Route → vehicle observations (TfL)',        script: 'fetch-route-vehicles.js' },
   { label: 'Step 9/17 — Tender award results (TfL)',                script: 'fetch-tenders.js' },
   { label: 'Step 9b/17 — Provisional awards (fandom wiki)',         script: 'fetch-fandom-tenders.js' },
+  { label: 'Step 9c/17 — Contract terms (LOTS bulletins)',          script: 'fetch-lots-tenders.js' },
   { label: 'Step 10/17 — Tender programme PDFs (TfL)',              script: 'fetch-tender-programme.js' },
   { label: 'Step 11/17 — Line status + diversions (TfL)',           script: 'fetch-line-status.js' },
   // CPI + CPA rates moved to refresh-cpi.yml: ONS publishes at 07:00 UK, long after this 03:17 UTC run, so it is checked from 09:00 London time on release day.
@@ -72,6 +73,7 @@ const SOFT_FAIL = new Set([
   'fetch-route-vehicles.js',
   'fetch-tenders.js',
   'fetch-fandom-tenders.js',
+  'fetch-lots-tenders.js',
   'fetch-line-status.js',
   'fetch-scheduled-mileage.js',
   'fetch-route-performance.js',

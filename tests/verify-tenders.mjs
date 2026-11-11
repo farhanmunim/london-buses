@@ -15,6 +15,13 @@ const srv = createServer((req, res) => {
 const tenders = JSON.parse(readFileSync(join(ROOT, 'data/api/tenders.json')));
 const total = Object.values(tenders.byId).filter(a => a.awardDate).length;
 const progTotal = JSON.parse(readFileSync(join(ROOT, 'data/api/tender-programme.json'))).entries.length;
+// LOTS contract terms: the stated term is joined to the award it describes and never produces an absurd term
+const _all = Object.values(tenders.byId ?? {}), _stated = _all.filter(a => a.termYearsStated), _prov = _all.filter(a => a.provisional);
+const lotsChecks = [
+  [`awards carry a term stated by the LOTS bulletin (${_stated.length})`, _stated.length >= 50 && _stated.every(a => a.termSource === 'lots' && a.termYears === a.termYearsStated)],
+  ['no award has a contract term outside 1–12 years', _all.every(a => a.termYears == null || (a.termYears >= 1 && a.termYears <= 12))],
+  [`provisional awards mostly have a contract start and term (${_prov.filter(a => a.contractStart && a.termYears).length} of ${_prov.length})`, !_prov.length || _prov.filter(a => a.contractStart && a.termYears).length >= _prov.length * 0.8],
+];
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? '/opt/pw-browsers/chromium' });
 const page = await (await browser.newContext({ viewport:{width:1280,height:900}, acceptDownloads:true })).newPage();
@@ -30,6 +37,7 @@ await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\
 const errors = []; page.on('pageerror', e => errors.push(String(e.message)));
 let pass = 0, fail = 0;
 const F = (k, ok) => { console.log((ok?'PASS':'FAIL') + '  ' + k); ok?pass++:fail++; };
+for(const [k, ok] of lotsChecks) F(k, ok);
 
 /* tenders page */
 await page.goto('http://127.0.0.1:8909/#/tender', { waitUntil:'load' }); await page.waitForTimeout(2500);

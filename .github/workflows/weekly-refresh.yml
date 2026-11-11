@@ -125,6 +125,7 @@ jobs:
           # btIDs TfL has published since last time.
           git add -f data/source/tenders.json               || true
           git add -f data/source/fandom-tenders.json        || true
+          git add -f data/source/lots-tenders.json          || true
           git add -f data/source/diversion-history.json    || true
           git add -f data/source/roadworks-history.json    || true
           git add -f data/source/dtro.json                  || true
@@ -185,7 +186,7 @@ jobs:
                 data/frequencies.json data/garages.geojson || true
               git add -f data/audit/data-quality.json data/source/geocode_cache.json \
                 data/source/vehicle-fleet.json data/source/route-vehicles.json \
-                data/source/tenders.json data/source/fandom-tenders.json \
+                data/source/tenders.json data/source/fandom-tenders.json data/source/lots-tenders.json \
                 data/source/diversion-history.json data/source/roadworks-history.json \
                 data/source/route-performance.json data/source/tender-programme.json || true
               git add -f data/source/dtro.json 2>/dev/null || true

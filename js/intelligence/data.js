@@ -95,7 +95,11 @@ export function build(raw){
     routes.push({
       id, op:m.operator, company:m.company, garage:m.garage, garageName:m.garageName, pvr:m.pvr ?? 0, tvr:m.tvr, vehicle:m.fleet,
       prop:m.propulsion ?? 'diesel', deck:m.deck, freq:m.frequency, km:m.lengthKm, type:m.type,
-      cStart:m.contractStart ?? null, cEnd:m.contractEnd ?? null,
+      cStart:m.contractStart ?? null, cEnd:(() => {   // a term stated at award (LOTS) beats the end decoded from LBR's contract code
+        const t = cur?.termYearsStated, st = m.contractStart ?? cur?.contractStart;
+        if(!t || !st || !cur?.contractStart || Math.abs(Date.parse(cur.contractStart) - Date.parse(st)) > 60 * 864e5) return m.contractEnd ?? null;
+        const d = new Date(st); d.setUTCDate(d.getUTCDate() + Math.round(t * 365.25)); const e = d.toISOString().slice(0, 10);
+        return !m.contractEnd || Math.abs(Date.parse(e) - Date.parse(m.contractEnd)) > 200 * 864e5 ? e : m.contractEnd; })(),
       from:short(d?.outbound), to:short(d?.inbound),
       age:fl?.avgAgeYears ?? null, fleetN:fl?.count ?? 0, makes:fl?.makes ?? [],
       cur, hist, bids:cur?.numberOfTenderers > 0 ? cur.numberOfTenderers : null,

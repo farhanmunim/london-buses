@@ -241,7 +241,43 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   }
   // Routes the sweep has not covered yet keep their previous fleet snapshot.
   for (const [name, p] of Object.entries(prevRoute)) byRoute[name] ??= p;
+
+  // Rare workings. A bus's HOME routes are the ones it has been seen on across
+  // many sweep days in the observation window (TTL 56 d); a sighting on another
+  // route on only a day or two, while it has a home elsewhere, is a rare
+  // working — a bus borrowed for a few journeys. Flagged, not removed: the
+  // registration stays in `regs` (it did work the route), and the UI shows it
+  // apart from the regular allocation. A bus with no home yet (new, or little
+  // data) is never flagged. Note the sweep only records buses with live
+  // arrival predictions, so these are real passenger journeys — a bus logged
+  // on to a route while running dead to the garage (a "ghost") never gets here.
+  // A home must be CURRENT (seen there inside the 14-day window) — a bus moved
+  // to a new route three weeks ago is a transfer, not a run of rare workings.
+  const HOME_DAYS = 5, RARE_DAYS = 2;
+  const perReg = {};                                       // reg → [{ route, days, sightings, lastSeenAt }]
+  for (const [name, obs] of Object.entries(rv.routes ?? {}))
+    for (const o of obs ?? []) (perReg[String(o.reg).toUpperCase()] ??= []).push({ route: name, days: o.days ?? 0, sightings: o.sightings ?? 0, lastSeenAt: o.lastSeenAt ?? null });
+  const recentMs = x => new Date(x.lastSeenAt ?? 0).getTime();
+  const homeOf = {}, rareOf = {};
+  for (const [reg, list] of Object.entries(perReg)) {
+    const home = list.filter(x => x.days >= HOME_DAYS && recentMs(x) >= cutoff).map(x => x.route).sort();
+    if (!home.length) continue;
+    homeOf[reg] = home;
+    for (const x of list)
+      if (!home.includes(x.route) && x.days <= RARE_DAYS && recentMs(x) >= cutoff)
+        (rareOf[reg] ??= []).push(x.route);
+  }
+  let rareTotal = 0;
+  for (const [name, fr] of Object.entries(byRoute)) {
+    const rare = (fr.regs ?? []).filter(r => rareOf[r]?.includes(name)).map(r => {
+      const o = perReg[r]?.find(x => x.route === name);
+      return { reg: r, days: o?.days ?? null, lastSeenAt: o?.lastSeenAt ?? null, home: homeOf[r] ?? [] };
+    });
+    fr.rare = rare;
+    rareTotal += rare.length;
+  }
   write(API('fleet.json'), { generatedAt: now, enriched: true, byRoute: sortKeys(byRoute) });
+  console.log(`fleet.json — ${rareTotal} rare workings flagged across ${Object.values(byRoute).filter(f => f.rare?.length).length} routes`);
 
   const byReg = {};
   for (const [reg, v] of Object.entries(vf)) {
@@ -260,6 +296,8 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
       deck: (primary && lookup[primary.vehicleType]?.deck) ?? primary?.deck ?? prev.deck ?? null,
       fleetCode: v.bonnetNo ?? prev.fleetCode ?? null,
       propulsionSource: prev.propulsionSource ?? (v.fuelType ? 'dvla' : null),
+      home: homeOf[reg] ?? [],                              // routes it works regularly (5+ sweep days)
+      rare: (rareOf[reg] ?? []).sort(),                     // recent one-off workings away from home
     };
   }
   write(API('vehicles.json'), { generatedAt: now, byReg: sortKeys(byReg) });
@@ -509,6 +547,71 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
         a.termYears = Math.round((Date.parse(a.contractEnd) - Date.parse(a.contractStart)) / 3.15576e10 * 10) / 10;
     }
   }
+  // ── LOTS award bulletins: the stated contract term ─────────────────────
+  // lots.org.uk writes the term in words on every award ("for 7 years
+  // starting on 09/10/2027"). Join each bulletin line to the award it
+  // describes (same route token, and either the same contract start or an
+  // award date within 60 days of the post) and carry the STATED term, which
+  // beats the inferred one: termYears is otherwise end − start with the end
+  // decoded from londonbusroutes.net's contract code, and is missing on ~40%
+  // of awards since 2025. A bulletin line that matches no award at all is
+  // added as a provisional row (source: lots) — a backstop should the wiki
+  // feed fall silent; the TfL page wins once it appears, as with fandom rows.
+  {
+    const lots = tryRead(DATA('source/lots-tenders.json'));
+    const byTok = {};
+    for (const e of lots?.entries ?? []) for (const tok of String(e.route_id ?? '').split('/').map(x => x.trim().toUpperCase()).filter(Boolean)) (byTok[tok] ??= []).push(e);
+    const near = (a, e) => (a.contractStart && e.contract_start && Math.abs(Date.parse(a.contractStart) - Date.parse(e.contract_start)) <= 7 * 864e5)
+      || (a.awardDate && e.posted && Math.abs(Date.parse(a.awardDate) - Date.parse(e.posted)) <= 60 * 864e5);
+    const matched = new Set();
+    let stated = 0, filled = 0;
+    for (const [name, list] of Object.entries(byRoute)) {
+      for (const a of list) {
+        const cands = (byTok[name] ?? []).filter(e => near(a, e));
+        if (!cands.length) continue;
+        const e = cands.sort((x, y) => Math.abs(Date.parse(x.posted) - Date.parse(a.awardDate ?? x.posted)) - Math.abs(Date.parse(y.posted) - Date.parse(a.awardDate ?? y.posted)))[0];
+        matched.add(e);
+        if (!a.contractStart && e.contract_start) { a.contractStart = e.contract_start; filled++; }
+        if (e.term_years) {
+          // The stated term wins over the inferred one (end − start, with the end decoded from a contract code):
+          // where they disagree by more than half a year the end date is re-derived from the stated term.
+          a.termYearsStated = e.term_years; a.termSource = 'lots'; stated++;
+          const disagree = Number.isFinite(a.termYears) && Math.abs(a.termYears - e.term_years) > 0.6;
+          a.termYears = e.term_years;
+          if (a.contractStart && (!a.contractEnd || disagree)) {
+            const d = new Date(a.contractStart); d.setUTCDate(d.getUTCDate() + Math.round(e.term_years * 365.25)); a.contractEnd = d.toISOString().slice(0, 10);
+          }
+        }
+        if (!a.fromOperator && e.previous_operator) a.fromOperator = tenderOperator(e.previous_operator);
+        if (!a.pvr && e.pvr) a.pvr = e.pvr;
+        if (!a.vehicle && e.vehicles) a.vehicle = { basis: null, propulsion: null, deck: null, raw: e.vehicles };
+      }
+    }
+    let added = 0;
+    const cut = new Date(Date.now() - 18 * 30 * 864e5).toISOString().slice(0, 10);
+    for (const [i, e] of (lots?.entries ?? []).entries()) {
+      if (matched.has(e) || !e.posted || e.posted < cut || !e.route_id) continue;
+      const tokens = String(e.route_id).split('/').map(x => x.trim().toUpperCase()).filter(Boolean);
+      const award = {
+        btID: `L${i}`, provisional: true, provisionalSource: 'lots',
+        route: e.route_id, operator: tenderOperator(e.awarded_operator), operatorRaw: e.awarded_operator ?? null,
+        awardDate: e.posted, numberOfTenderers: null, acceptedBid: null, lowestBid: null, highestBid: null, costPerMile: null, contractedMilesPA: null,
+        jointBid: null, jb: { isJoint: false, partners: [], total: null, raw: null },
+        notes: 'Provisional — reported in the LOTS news bulletin (lots.org.uk); TfL result page not yet published. Dated by the bulletin, not the award.',
+        vehicle: e.vehicles ? { basis: null, propulsion: null, deck: null, raw: e.vehicles } : null, tranche: null, pvr: e.pvr ?? null,
+        contractStart: e.contract_start ?? null, termYears: e.term_years ?? null, termYearsStated: e.term_years ?? null, termSource: e.term_years ? 'lots' : null,
+        fromOperator: e.previous_operator ? tenderOperator(e.previous_operator) : null,
+      };
+      if (award.contractStart && award.termYears) { const d = new Date(award.contractStart); d.setUTCDate(d.getUTCDate() + Math.round(award.termYears * 365.25)); award.contractEnd = d.toISOString().slice(0, 10); }
+      award.operatorChange = !!(award.fromOperator && award.operator && award.fromOperator !== award.operator);
+      byId[award.btID] = award;
+      for (const tok of tokens) { const copy = { ...award }; (tokenCopies[award.btID] ??= []).push(copy); (byRoute[tok] ??= []).push(copy); }
+      added++;
+    }
+    for (const list of Object.values(byRoute)) list.sort((a, b) => String(b.awardDate ?? '').localeCompare(String(a.awardDate ?? '')));
+    if (lots) console.log(`tenders.json — LOTS terms: ${stated} awards with a stated term, ${filled} contract starts filled${added ? `, +${added} LOTS-only provisional awards` : ''}`);
+  }
+
   // Reconcile byId from the PRIMARY route token's enriched copy (first token
   // of the award's route id — e.g. 299 for "299/389/399"), so the flat table
   // row always matches that route's page instead of whichever token happened
@@ -518,7 +621,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   for (const [btID, copies] of Object.entries(tokenCopies)) {
     const primary = copies[0];
     if (!primary) continue;
-    for (const f of ['fromOperator', 'fromOperatorRaw', 'operatorChange', 'contractStart', 'tranche', 'vehicle', 'twoYearExtension', 'contractEnd', 'termYears'])
+    for (const f of ['fromOperator', 'fromOperatorRaw', 'operatorChange', 'contractStart', 'tranche', 'vehicle', 'twoYearExtension', 'contractEnd', 'termYears', 'termYearsStated', 'termSource', 'pvr'])
       if (f in primary) byId[btID][f] = primary[f];
   }
   write(API('tenders.json'), {

@@ -9,6 +9,7 @@ import { garLegend, liveStop, mapShow, MH, MP } from '../map/route-map.js';
 import { S } from '../state.js';
 import { AGE_LIMIT, ALL, opColour, PROP_LABEL } from '../tokens.js';
 import { renderAll, syncHash } from '../ui/actions.js';
+import { termOf } from '../views/renewals.js';
 import { filtered } from '../views/routes-table.js';
 
 function renderDrawer(r){
@@ -44,7 +45,7 @@ function renderDrawer(r){
         <div class="kv"><span>Diversion notices, last 30 days</span><b>${r.divDays} <span class="sub" style="font-weight:400">of 30 days</span></b></div>
         <div class="kv"><span>Roadworks on the route now</span><b>${r.works.length}</b></div></section>
       <section><h4>Contract</h4>
-        <div class="kv"><span>Current contract</span><b>${fMon(r.cStart)} → ${fMon(r.cEnd)}</b></div>
+        <div class="kv"><span>Current contract</span><b>${fMon(r.cStart)} → ${fMon(r.cEnd)}${(() => { const x = termOf(r); return x ? ` · ${x.t}-yr ${esc(x.kind)}` : ''; })()}</b></div>
         <div class="kv"><span>Annual value (accepted bid)</span><b>${fGbp(r.cur?.acceptedBid)}</b></div>
         <div class="kv"><span>Bids received</span><b>${r.cur?.numberOfTenderers ?? '—'}${r.cur?.lowestBid && r.cur?.acceptedBid ? ` <span class="sub" style="font-weight:400">· accepted ${r.cur.acceptedBid <= r.cur.lowestBid ? 'the lowest' : '+' + ((r.cur.acceptedBid / r.cur.lowestBid - 1) * 100).toFixed(1) + '% over lowest'}</span>` : ''}</b></div>
         ${r.next ? `<div class="kv"><span>Next tender</span><b>issues ${fMon(r.next.issueDate)} · starts ${fMon(r.next.contractStart)}</b></div>` : ''}</section>

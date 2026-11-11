@@ -174,11 +174,14 @@ async function buildRouteSections(route, m, tok){
     if(fl.makes?.length) rows.push(`<div><span class="k">Makes</span><span class="v">${fl.makes.map(x=>`${esc(title(x.make))} (${x.n})`).join(', ')}</span></div>`);
     if(fl.regs?.length) rows.push(`<div id="deckRow"><span class="k">Deck</span><span class="v">—</span></div>`);
     if(fl.regs?.length){
-      const shown = fl.regs.slice(0, 24);
-      const hidden = fl.regs.slice(shown.length);
+      const rareSet = new Set((fl.rare ?? []).map(x => x.reg));
+      const regular = fl.regs.filter(r => !rareSet.has(r));
+      const shown = regular.slice(0, 24);
+      const hidden = regular.slice(shown.length);
       rows.push(`<div><span class="k">Registrations</span><span class="v" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end">${shown.map(r => plate(r)).join('')}${hidden.length
         ? `<span id="regMore" hidden style="display:contents">${hidden.map(r => plate(r)).join('')}</span><button id="regMoreBtn" style="color:var(--acc);font-weight:600;font-size:12px;align-self:center">+${hidden.length} more</button>`
         : ''}</span></div>`);
+      if(fl.rare?.length) rows.push(`<div><span class="k" title="Buses seen in service here on only a day or two in the last fortnight while regularly working another route">Rare workings</span><span class="v" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end">${fl.rare.map(x => `<span title="Usually on ${esc(x.home.join(', '))} · seen here ${nOf(x.days ?? 1, 'day')}">${plate(x.reg)}</span>`).join('')}</span></div>`);
     }
     if(rows.length) frag.push(`<div class="section"><div class="section-h">Fleet</div><div class="card"><div class="kv">${rows.join('')}</div></div></div>`);
   }
@@ -210,6 +213,11 @@ async function buildRouteSections(route, m, tok){
     if(v && (v.basis || v.propulsion || v.deck)){
       const bits = [v.basis, v.propulsion, v.deck ? v.deck + '-deck' : null, v.euro ? 'Euro ' + v.euro : null].filter(Boolean);
       r.push(`<div><span class="k">Awarded vehicle</span><span class="v">${esc(bits.join(' · '))}</span></div>`);
+    }
+    if(num(a.termYears)){
+      const t = a.termYears, label = a.termSource === 'lots' ? 'as awarded (LOTS bulletin)' : 'contract start to end';
+      const kind = t <= 4 ? 'short contract' : t < 6 ? (a.twoYearExtension ? 'with a 2-year extension option' : 'standard term') : 'full term';
+      r.push(`<div><span class="k">Term</span><span class="v"><span class="mono">${esc(String(t))} years</span> · ${esc(kind)} <span style="color:var(--tx2)">· ${esc(label)}</span></span></div>`);
     }
     if(num(a.tranche)) r.push(`<div><span class="k">Tranche</span><span class="v mono">${a.tranche}</span></div>`);
     return r;

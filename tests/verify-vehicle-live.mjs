@@ -34,7 +34,8 @@ await page.route('**://api.tfl.gov.uk/Line/**', r => r.fulfill({ status:502, bod
 await page.route('**/api/live/vehicles*', r => {
   const line = new URL(r.request().url()).searchParams.get('line');
   const v = { feed:'vehicles', live:true, capturedAt:new Date().toISOString(),
-    data: line === '214' ? [{ reg:'LA19KAK', lat:51.5539, lng:-0.1461, bearing:120, direction:'1', destination:'Highgate Village', publishedLine:'214' }] : [] };
+    data: line === '214' ? [{ reg:'LA19KAK', lat:51.5539, lng:-0.1461, bearing:120, direction:'1', destination:'Highgate Village', publishedLine:'214' },
+                            { reg:'LA19GHO', lat:51.5501, lng:-0.1402, bearing:300, direction:'2', destination:'Holloway Garage', publishedLine:'214' }] : [] };
   return r.fulfill({ contentType:'application/json', headers:{'access-control-allow-origin':'*','cache-control':'public, max-age=15'}, body: JSON.stringify(v) });
 });
 await page.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|atlas\.farhan\.app/, r => r.abort());
@@ -67,6 +68,13 @@ F(`live note shows next update ("${note.trim()}")`, /next update in \d+ s/.test(
 await page.waitForTimeout(2500);
 const note2 = await page.locator('#vLiveNote').textContent().catch(() => '');
 F(`countdown ticks ("${note2.trim()}")`, /next update in \d+ s|updating…/.test(note2) && note2 !== note);
+
+/* 5. a "ghost bus": logged on to the route but heading to the garage — said so, drawn hollow */
+await page.goto('http://127.0.0.1:8903/#/vehicle/LA19GHO?line=214', { waitUntil:'load' });
+await page.waitForTimeout(2500);
+const gnote = await page.locator('#vLiveNote').textContent().catch(() => '');
+F(`a bus heading to the garage is flagged as a probable ghost ("${gnote.trim().slice(0, 70)}…")`, /ghost bus/.test(gnote) && /Holloway Garage/.test(gnote));
+F('the ghost is drawn as a hollow marker', await page.evaluate(() => !!document.querySelector('#map .lb-bus.ghost')));
 
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log('  errors: ' + errors.join(' | '));

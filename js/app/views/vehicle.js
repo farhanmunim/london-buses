@@ -4,7 +4,7 @@ import { addLiveTimer, state } from '../core/nav.js';
 import { main } from '../core/shell.js';
 import { isDark } from '../core/theme.js';
 import { esc, title } from '../core/utils.js';
-import { bindStopPopup, busIcon, makeMap } from '../map/layers.js';
+import { bindStopPopup, busIcon, isGhost, makeMap } from '../map/layers.js';
 
 /* ════════════════════ VEHICLE ════════════════════ */
 export async function renderVehicleDetail(regArg){
@@ -38,7 +38,7 @@ export async function renderVehicleDetail(regArg){
     ${facts.length ? `<div class="facts" style="margin-top:14px">${facts.map(([l,val]) =>
       `<div class="fact"><div class="l">${l}</div><div class="v" title="${esc(val)}">${esc(val)}</div></div>`).join('')}</div>` : ''}
     ${v?.routes?.length ? `<div class="section"><div class="section-h">Observed on</div>
-      <div class="card"><div class="chiprow">${v.routes.map(r => `<a class="rchip" href="#/route/${encodeURIComponent(r)}">${esc(r)}</a>`).join('')}</div></div></div>` : ''}
+      <div class="card"><div class="chiprow">${v.routes.map(r => `<a class="rchip${v.rare?.includes(r) ? ' rare' : ''}" href="#/route/${encodeURIComponent(r)}" title="${v.rare?.includes(r) ? 'Rare working: seen here on only a day or two, usually on ' + esc((v.home ?? []).join(', ')) : v.home?.includes(r) ? 'Regular allocation' : ''}">${esc(r)}${v.rare?.includes(r) ? '<small>rare</small>' : ''}</a>`).join('')}</div>${v.rare?.length ? `<div class="sub2" style="margin-top:8px">Routes marked <b>rare</b> are rare workings: in service there on only a day or two in the last fortnight, while the bus is usually on ${esc((v.home ?? []).join(', '))}.</div>` : ''}</div></div>` : ''}
     <div class="section" id="vLiveSec" hidden><div class="section-h">Live location</div>
       <div id="map" style="height:260px"></div>
       <div class="legendrow" style="margin-top:7px"><span id="vLiveNote">Looking for this bus in the live feed…</span></div>
@@ -83,6 +83,11 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = state.navToken){
   state.map.setView([first.lat, first.lng], 14);   // layers need a live projection before they're added
 
   const line = String(first.publishedLine ?? ctxLine ?? candidates[0]).toUpperCase();
+  // What a live sighting on this route means for this bus: a regular route, a rare working, or a ghost.
+  const known = (v?.routes ?? []).map(x => String(x).toUpperCase());
+  const status = b => isGhost(b) ? `heading to ${esc(title(b.destination))}: probably running out of service with the machine still logged on (a “ghost bus”)`
+    : !known.includes(line) && v ? `never recorded in service on it by the register (a rare working, or a ghost if it is not carrying passengers)`
+    : v?.rare?.map(x => String(x).toUpperCase()).includes(line) ? 'a rare working for this bus' : '';
   D.overview().then(ov => {
     if(tok !== state.navToken || !state.map) return;   // never paint this vehicle's line onto the next view's map
     const feats = (ov?.features ?? []).filter(f => (f.properties?.name ?? '').toUpperCase() === line);
@@ -104,15 +109,17 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = state.navToken){
 
   let busMarker = null;
   function drawBus(b){
-    const icon = busIcon(b.bearing);
+    const icon = busIcon(b.bearing, isGhost(b));
     if(busMarker){ busMarker.setLatLng([b.lat, b.lng]); busMarker.setIcon(icon); }
     else busMarker = L.marker([b.lat, b.lng], { icon })
       .bindPopup(`${plate(R, false)}<br>${esc(b.destination ? 'to ' + title(b.destination) : '')}`)
       .addTo(state.map);
   }
+  let flag = status(first);
   const noteText = extra => {
-    if(note) note.innerHTML = `<span class="livechip"><i class="pulse"></i>LIVE</span> · on route ${esc(line)} · ${extra}`;
+    if(note) note.innerHTML = `<span class="livechip"><i class="pulse"></i>LIVE</span> · on route ${esc(line)}${flag ? ` · <span class="busflag ${isGhost(lastBus) ? 'ghost' : 'rare'}" style="display:inline">${flag}</span>` : ''} · ${extra}`;
   };
+  let lastBus = first;
   drawBus(first);
   let b = L.latLngBounds([[first.lat, first.lng]]);
   if(stopLL) b = b.extend(stopLL);
@@ -131,7 +138,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = state.navToken){
       const cur = await findBus();
       nextIn = feedOk ? nextPollS(lastFeed, 15) : 8;
       if(!document.getElementById('vLiveSec')) return;
-      if(cur){ gone = false; drawBus(cur); noteText(`next update in ${nextIn} s`); }
+      if(cur){ gone = false; lastBus = cur; flag = status(cur); drawBus(cur); noteText(`next update in ${nextIn} s`); }
       else if(!feedOk){ if(!gone) noteText('reconnecting…'); }   // feed down ≠ bus gone
       else { gone = true; if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.'; }
     }

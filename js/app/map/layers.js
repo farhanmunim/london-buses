@@ -167,19 +167,31 @@ export const troItems = orders => orders.flatMap(o => (o.provisions ?? []).flatM
 
 /* Live bus marker, as on the Intelligence map: dark dot with a white ring, a white chevron pointing along the
    bearing and a soft pulsing halo. The dark fill keeps it distinct from every route-line colour. */
-export function busIcon(bearing){
+export function busIcon(bearing, ghost = false){
   const arrow = Number.isFinite(bearing)
-    ? `<svg viewBox="0 0 24 24" style="transform:rotate(${bearing - 90}deg)"><path d="M9 6l7 6-7 6" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
-  return L.divIcon({ className:'lb-bus', iconSize:[28,28], iconAnchor:[14,14], html:`<div class="lb-dot"><i>${arrow}</i></div>` });
+    ? `<svg viewBox="0 0 24 24" style="transform:rotate(${bearing - 90}deg)"><path d="M9 6l7 6-7 6" fill="none" stroke="${ghost ? '#667085' : '#fff'}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+  return L.divIcon({ className:'lb-bus' + (ghost ? ' ghost' : ''), iconSize:[28,28], iconAnchor:[14,14], html:`<div class="lb-dot"><i>${arrow}</i></div>` });
 }
+/* A "ghost bus": the GPS feed reports it on the route because the ticket machine is still logged on, but its
+   destination says it is running dead to the garage (or out of service), not carrying passengers. */
+export const isGhost = v => /\b(garage|depot|not in service|out of service|dead run)\b/i.test(String(v?.destination ?? ''));
+/* A "rare working": a bus in service on a route the register has never seen it on, while it has a regular home
+   elsewhere — borrowed for a few journeys. Decided from the vehicle register (sweep sightings), not the GPS feed. */
+export const isRareHere = (rec, route) => !!(rec && route && rec.home?.length && !rec.home.includes(String(route)) && !(rec.routes ?? []).includes(String(route)));
 export function busesLayer(rows, reg){
   const layer = L.layerGroup();
   for(const v of rows){
-    const icon = busIcon(v.bearing);
-    const rec = v.reg ? reg?.[String(v.reg).toUpperCase()] : null;
+    const ghost = isGhost(v);
+    const icon = busIcon(v.bearing, ghost);
+    const R = v.reg ? String(v.reg).toUpperCase() : null;
+    const rec = R ? reg?.[R] : null;
     const bits = [rec?.make ? title(rec.make) : null, rec?.body ?? null, rec?.year ?? null, rec?.propulsion ? title(rec.propulsion) : null].filter(Boolean).join(' · ');
+    const route = v._route ?? v.publishedLine ?? null;
+    const flag = ghost
+      ? `<br><span class="busflag ghost">Probably not in service: heading to the garage with the ticket machine still logged on to the route (a “ghost bus”)</span>`
+      : isRareHere(rec, route) ? `<br><span class="busflag rare">Rare working: usually on route${rec.home.length === 1 ? '' : 's'} ${esc(rec.home.join(', '))}</span>` : '';
     L.marker([v.lat, v.lng], { icon })
-      .bindPopup(`${v._route ? `<b>Route ${esc(v._route)}</b><br>` : ''}${v.reg ? plate(v.reg) : '<b>Bus</b>'}<br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}${v.reg?`<br><a href="#/vehicle/${encodeURIComponent(String(v.reg).toUpperCase())}" style="color:var(--acc);font-weight:600">Vehicle details ›</a>`:''}`)
+      .bindPopup(`${v._route ? `<b>Route ${esc(v._route)}</b><br>` : ''}${v.reg ? plate(v.reg) : '<b>Bus</b>'}<br>${esc(v.destination ? 'to ' + title(v.destination) : '')}${bits?`<br><span style="color:var(--tx2)">${esc(bits)}</span>`:''}${flag}${R?`<br><a href="#/vehicle/${encodeURIComponent(R)}${route ? '?line=' + encodeURIComponent(String(route)) : ''}" style="color:var(--acc);font-weight:600">Vehicle details ›</a>`:''}`)
       .addTo(layer);
   }
   return layer;
