@@ -13,8 +13,11 @@ const netmapState = {
   f: { type:new Set(), prop:new Set(), deck:new Set(), freq:new Set(), op:new Set() },   // multi-select filters
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
   scopeIds: null, scopeTitle: '',                // set by a scoped link (an operator's or garage's routes)
+  pinOn: false, pin: null, pinR: 1500, pinIds: null,   // catchment pin: armed?, {lat,lng}, radius (m), routes inside
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
+const fmtKm = m => m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km` : `${m} m`;
+const PIN_ICON = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-11a6 6 0 0 1 12 0c0 5.3-6 11-6 11z"/><circle cx="12" cy="10" r="2.2"/></svg>`;
 export async function renderNetworkMap(){
   const tok = state.navToken;
   main.innerHTML = `
@@ -44,9 +47,15 @@ export async function renderNetworkMap(){
         </div>
         <div class="nm-layers">
           <span class="nm-lbl">Layers</span>
-          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}</div>
+          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}<button type="button" class="livebtn iconb" data-lyr="pin" title="Catchment pin — drop a pin and list every route within a radius" aria-label="Catchment pin" aria-pressed="false">${PIN_ICON}</button></div>
         </div>
         <div class="nm-gscope" id="nmGarScope" hidden><span class="nm-lbl">Garages</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes</button><button type="button" data-gs="all">All garages</button></div></div>
+        <div class="nm-pinbox" id="nmPin" hidden>
+          <div class="nm-pinhead"><span class="nm-lbl">Catchment</span><span id="nmPinSum" class="nm-pinsum">Click the map to drop a pin</span><button type="button" class="reset" id="nmPinClear" hidden>Clear pin</button></div>
+          <label class="nm-pinr"><span>Radius</span><input type="range" id="nmPinR" min="250" max="5000" step="250" value="${netmapState.pinR}" aria-label="Catchment radius in metres"><b id="nmPinRv">${(netmapState.pinR / 1000).toFixed(netmapState.pinR % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km</b></label>
+          <div class="nm-pinops" id="nmPinOps"></div>
+          <div class="nm-pinroutes" id="nmPinRoutes"></div>
+        </div>
         <div class="nm-lnotes" id="nmLNotes" aria-live="polite" hidden></div>
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
@@ -126,6 +135,7 @@ export async function renderNetworkMap(){
   const passes = (name) => {
     const m = meta?.[name] ?? {};
     if(st.scopeIds && !st.scopeIds.has(name.toUpperCase())) return false;
+    if(st.pinIds && !st.pinIds.has(name.toUpperCase())) return false;
     if(st.f.type.size && !st.f.type.has(typeInfo.get(name.toUpperCase()))) return false;
     if(st.f.op.size   && !st.f.op.has(m.operator)) return false;
     if(st.f.prop.size && !st.f.prop.has(m.propulsion)) return false;
@@ -151,6 +161,7 @@ export async function renderNetworkMap(){
     style: styleFor,
     onEachFeature: (f, ly) => {
       ly.on('click', () => {
+        if(st.pinOn) return;                                   // the map click moves the catchment pin instead
         const up = (f.properties?.name ?? '').toUpperCase();
         if(st.pills.includes(up)) removeFocus(up);
         else addFocus(up);
@@ -220,6 +231,7 @@ export async function renderNetworkMap(){
     const cEl = document.getElementById('nmCount');
     if(cEl) cEl.textContent = st.pills.length
       ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
+      : st.pinIds ? `${nOf(vis.size, 'route')} within ${fmtKm(st.pinR)} of the pin`
       : (filtered ? `${vis.size} of ${nOf(allNames.size, 'route')}` : `${nOf(allNames.size, 'route')}`);
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
@@ -331,7 +343,7 @@ export async function renderNetworkMap(){
   st.gScope = 'route';
   st.ly = { garages:true, stops:false, live:false, bridges:false, inc:false, sw:false, tro:false };
 
-  const filteredNow = () => !!(st.scopeIds || st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size);
+  const filteredNow = () => !!(st.scopeIds || st.pinIds || st.f.type.size || st.f.prop.size || st.f.deck.size || st.f.freq.size || st.f.op.size);
   const visibleNames = () => { const v = new Set(); for(const n of allNames) if(st.pills.includes(n.toUpperCase()) || passes(n)) v.add(n); return v; };
   /* The routes the layers are about (upper-case): 1–3 of them, or [] for the whole network. */
   function layerScope(){
@@ -410,7 +422,7 @@ export async function renderNetworkMap(){
         n++;
         L.marker([g.lat, g.lng], { icon: garagePinIcon(g, names && hit ? 34 : (names ? 26 : 30)), zIndexOffset: hit && names ? 300 : 0 })
           .bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')}`, { direction:'top', offset:[0,-14] })
-          .bindPopup(() => garagePopupHtml(g, meta))
+          .bindPopup(() => garagePopupHtml(g, meta, `<div style="padding:6px 0 0;border-top:1px solid var(--bd);margin-top:4px"><button type="button" class="reset" data-pinat="${g.lat},${g.lng}" style="padding:0;color:var(--acc);font-weight:600;font-size:12px">Catchment from this garage ›</button></div>`))
           .addTo(group);
       }
       group.addTo(state.map);
@@ -534,7 +546,8 @@ export async function renderNetworkMap(){
     syncGarScope();
     const focused = layerScope().length > 0;
     document.querySelectorAll('#nmLayers [data-lyr]').forEach(b => {
-      const k = b.dataset.lyr, gated = needsFocus(k) && !focused;
+      const k = b.dataset.lyr; if(k === 'pin') return;
+      const gated = needsFocus(k) && !focused;
       b.classList.toggle('on', !!st.ly[k]); b.setAttribute('aria-pressed', String(!!st.ly[k]));
       b.classList.toggle('is-gated', gated); b.setAttribute('aria-disabled', String(gated));
       b.title = gated ? `${LY_LABEL[k]} — search or filter to 1–3 routes to enable` : LY_LABEL[k];
@@ -560,6 +573,7 @@ export async function renderNetworkMap(){
   document.getElementById('nmLayers').addEventListener('click', e => {
     const b = e.target.closest('[data-lyr]'); if(!b) return;
     const k = b.dataset.lyr;
+    if(k === 'pin'){ st.pinOn ? pinOff() : pinArm(); return; }
     if(needsFocus(k) && !layerScope().length){
       setLyNote('hint', `${LY_LABEL[k]} appear when 1–3 routes are searched or filtered — the live feed isn’t polled for the whole network.`);
       clearTimeout(hintTimer); hintTimer = setTimeout(() => setLyNote('hint', ''), 6000);
@@ -567,6 +581,81 @@ export async function renderNetworkMap(){
     }
     st.ly[k] = !st.ly[k]; syncLyButtons(); syncLayer(k);
   });
+
+  /* ── Catchment pin ─────────────────────────────────────────────────────────
+     Drop a pin anywhere (or on a garage from its popup) and every route whose line passes within the radius is
+     listed and the rest of the network fades — the quick way to see what a depot could reach, or what a site
+     has running past it. Distance is from the pin to the nearest point of each route's drawn line, in metres. */
+  const geoms = (ov.features ?? []).map(f => {
+    const g = f.geometry, parts = g?.type === 'LineString' ? [g.coordinates] : g?.type === 'MultiLineString' ? g.coordinates : [];
+    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+    for(const part of parts) for(const [lng, lat] of part){ if(lat < minLat) minLat = lat; if(lat > maxLat) maxLat = lat; if(lng < minLng) minLng = lng; if(lng > maxLng) maxLng = lng; }
+    return { name: String(f.properties?.name ?? '').toUpperCase(), parts, minLat, maxLat, minLng, maxLng };
+  }).filter(x => x.name && x.parts.length);
+  function catchment(lat, lng, r){
+    const kx = 111320 * Math.cos(lat * Math.PI / 180), ky = 110540, dLat = r / ky, dLng = r / kx, r2 = r * r, hit = new Set();
+    for(const g of geoms){
+      if(hit.has(g.name) || g.maxLat < lat - dLat || g.minLat > lat + dLat || g.maxLng < lng - dLng || g.minLng > lng + dLng) continue;
+      outer: for(const part of g.parts){
+        let px = (part[0][0] - lng) * kx, py = (part[0][1] - lat) * ky;
+        if(px * px + py * py <= r2){ hit.add(g.name); break; }
+        for(let i = 1; i < part.length; i++){
+          const qx = (part[i][0] - lng) * kx, qy = (part[i][1] - lat) * ky, vx = qx - px, vy = qy - py, len2 = vx * vx + vy * vy;
+          const t = len2 ? Math.max(0, Math.min(1, -(px * vx + py * vy) / len2)) : 0, cx = px + t * vx, cy = py + t * vy;
+          if(cx * cx + cy * cy <= r2){ hit.add(g.name); break outer; }
+          px = qx; py = qy;
+        }
+      }
+    }
+    return hit;
+  }
+  const pinIcon = L.divIcon({ className: 'lb-pin', iconSize: [30, 40], iconAnchor: [15, 38], html: `<svg viewBox="0 0 30 40" width="30" height="40"><path d="M15 1C7.3 1 1.5 6.9 1.5 14.4 1.5 24.6 15 38 15 38s13.5-13.4 13.5-23.6C28.5 6.9 22.7 1 15 1z" fill="#dc2626" stroke="#fff" stroke-width="2"/><circle cx="15" cy="14.5" r="5" fill="#fff"/></svg>` });
+  let pinMarker = null, pinCircle = null, pinTimer = 0;
+  const pinBox = document.getElementById('nmPin');
+  function syncPinBox(){
+    const b = document.querySelector('#nmLayers [data-lyr="pin"]');
+    if(b){ b.classList.toggle('on', st.pinOn); b.setAttribute('aria-pressed', String(st.pinOn)); }
+    pinBox.hidden = !st.pinOn;
+    document.getElementById('netmap').classList.toggle('pin-arm', st.pinOn && !st.pin);
+    document.getElementById('nmPinClear').hidden = !st.pin;
+    document.getElementById('nmPinRv').textContent = fmtKm(st.pinR);
+    const sum = document.getElementById('nmPinSum'), ops = document.getElementById('nmPinOps'), list = document.getElementById('nmPinRoutes');
+    if(!st.pin){ sum.textContent = 'Click the map to drop a pin, or choose a garage and pick “Catchment from this garage”.'; ops.innerHTML = ''; list.innerHTML = ''; return; }
+    const names = [...(st.pinIds ?? [])].sort(cmpRoute);
+    const byOp = {}; for(const n of names){ const o = meta?.[n]?.operator ?? meta?.[Object.keys(meta ?? {}).find(k => k.toUpperCase() === n) ?? '']?.operator ?? 'Unknown'; byOp[o] = (byOp[o] ?? 0) + 1; }
+    const opsSorted = Object.entries(byOp).sort((a, b) => b[1] - a[1]);
+    sum.innerHTML = `<b>${nOf(names.length, 'route')}</b> within ${fmtKm(st.pinR)} · ${nOf(opsSorted.length, 'operator')}`;
+    ops.innerHTML = opsSorted.map(([o, n]) => `<span class="nm-chip"><span class="nm-dot" style="background:${opColor(o)}"></span>${esc(o.replace(' London', '').replace(' Bus', ''))} <b>${n}</b></span>`).join('');
+    list.innerHTML = names.map(n => `<a class="rnum ${esc(typeInfo.get(n) ?? 'regular')}" href="#/route/${encodeURIComponent(n)}" title="Open route ${esc(n)}">${esc(n)}</a>`).join('');
+  }
+  function recomputePin(){
+    if(!st.pin){ st.pinIds = null; }
+    else st.pinIds = catchment(st.pin.lat, st.pin.lng, st.pinR);
+    syncPinBox(); repaint();
+  }
+  function drawPin(){
+    if(!st.pin){ if(pinMarker){ state.map.removeLayer(pinMarker); pinMarker = null; } if(pinCircle){ state.map.removeLayer(pinCircle); pinCircle = null; } return; }
+    const ll = [st.pin.lat, st.pin.lng];
+    if(!pinCircle) pinCircle = L.circle(ll, { radius: st.pinR, color: '#dc2626', weight: 1.5, opacity: .8, fillColor: '#dc2626', fillOpacity: .08, interactive: false }).addTo(state.map);
+    else { pinCircle.setLatLng(ll); pinCircle.setRadius(st.pinR); }
+    if(!pinMarker){
+      pinMarker = L.marker(ll, { icon: pinIcon, draggable: true, zIndexOffset: 1000, keyboard: false }).bindTooltip('Drag to move · the panel lists every route within the circle', { direction: 'top', offset: [0, -36] }).addTo(state.map);
+      pinMarker.on('drag', e => { const p = e.target.getLatLng(); st.pin = { lat: p.lat, lng: p.lng }; pinCircle?.setLatLng(p); clearTimeout(pinTimer); pinTimer = setTimeout(recomputePin, 120); });
+      pinMarker.on('dragend', () => { clearTimeout(pinTimer); recomputePin(); });
+    } else pinMarker.setLatLng(ll);
+  }
+  function setPin(lat, lng){ st.pin = { lat, lng }; drawPin(); recomputePin(); }
+  function pinArm(){ st.pinOn = true; syncPinBox(); setLyNote('pin', st.pin ? '' : 'Click anywhere on the map to drop the catchment pin. Drag it to move it; the slider sets the radius.'); if(st.pin){ drawPin(); recomputePin(); } }
+  function pinOff(){ st.pinOn = false; st.pin = null; st.pinIds = null; drawPin(); setLyNote('pin', ''); syncPinBox(); repaint(); }
+  state.map.on('click', e => { if(!st.pinOn) return; setLyNote('pin', ''); setPin(e.latlng.lat, e.latlng.lng); });
+  document.getElementById('nmPinR').addEventListener('input', e => { st.pinR = Number(e.target.value) || 1500; document.getElementById('nmPinRv').textContent = fmtKm(st.pinR); pinCircle?.setRadius(st.pinR); clearTimeout(pinTimer); pinTimer = setTimeout(recomputePin, 80); });
+  document.getElementById('nmPinClear').addEventListener('click', () => { st.pin = null; st.pinIds = null; drawPin(); syncPinBox(); repaint(); setLyNote('pin', 'Click anywhere on the map to drop the catchment pin.'); });
+  document.getElementById('netmap').addEventListener('click', e => {
+    const b = e.target.closest('[data-pinat]'); if(!b) return;
+    const [lat, lng] = b.dataset.pinat.split(',').map(Number); if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    state.map.closePopup(); if(!st.pinOn){ st.pinOn = true; syncPinBox(); } setLyNote('pin', ''); setPin(lat, lng);
+  });
+  if(st.pinOn){ syncPinBox(); if(st.pin){ drawPin(); recomputePin(); } }
 
   syncPop();
   syncFocus(st.pills.length > 0);
@@ -676,6 +765,7 @@ export async function renderNetworkMap(){
     ]);
   });
   document.getElementById('nmReset').addEventListener('click', () => {
+    if(st.pinOn) pinOff();
     st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();
     nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);

@@ -76,11 +76,39 @@ const click = async (page, k, opts = {}) => { await page.click(`#nmLayers [data-
 const addRoutes = async (page, text) => { await page.fill('#nmq', text); await page.press('#nmq', 'Enter'); await page.waitForTimeout(900); };
 const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height|serious|street|order)/, '$1 ')) ?? [])[1]?.replace(/,/g, '') ?? NaN);
 
+/* ── 0 · the catchment pin ──────────────────────────────────────────────── */
+{
+  const { ctx, page } = await openMap({ width: 1280, height: 800 });
+  await click(page, 'pin');
+  F('arming the catchment pin shows its panel and a crosshair, and asks for a click', !(await page.evaluate(() => document.getElementById('nmPin').hidden)) && (await page.evaluate(() => document.getElementById('netmap').classList.contains('pin-arm'))) && /drop the catchment pin/.test(await note(page, 'pin')));
+  const box = await page.locator('#netmap').boundingBox();
+  await page.mouse.click(box.x + box.width * 0.62, box.y + box.height * 0.5); await page.waitForTimeout(600);
+  const dropped = await page.evaluate(() => ({ routes: document.querySelectorAll('#nmPinRoutes a').length, ops: document.querySelectorAll('#nmPinOps .nm-chip').length, pin: !!document.querySelector('.lb-pin'), count: document.getElementById('nmCount').textContent, sum: document.getElementById('nmPinSum').textContent }));
+  F(`dropping the pin lists the routes inside the circle (${dropped.routes} routes, ${dropped.ops} operators)`, dropped.pin && dropped.routes > 3 && dropped.ops >= 1 && /within 1\.5 km of the pin/.test(dropped.count) && /routes within/.test(dropped.sum));
+  const drawn = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
+  F(`only the routes inside the circle stay drawn (${drawn} lines for ${dropped.routes} routes)`, drawn >= dropped.routes && drawn <= dropped.routes * 4);   // a route is up to a few drawn lines (directions, variants)
+  await page.fill('#nmPinR', '3000'); await page.dispatchEvent('#nmPinR', 'input'); await page.waitForTimeout(400);
+  const wider = await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length);
+  F(`widening the radius to 3 km finds more routes (${dropped.routes} → ${wider})`, wider > dropped.routes && /3 km/.test(await page.textContent('#nmPinRv')));
+  const pin = await page.locator('.lb-pin').boundingBox();
+  await page.mouse.move(pin.x + 15, pin.y + 30); await page.mouse.down(); await page.mouse.move(pin.x + 100, pin.y + 30, { steps: 6 }); await page.mouse.move(pin.x + 220, pin.y + 30, { steps: 6 }); await page.mouse.up(); await page.waitForTimeout(500);
+  const moved = await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length);
+  F(`dragging the pin recomputes the list (${wider} → ${moved})`, moved > 0 && moved !== wider);
+  await page.click('#nmPinClear'); await page.waitForTimeout(300);
+  F('Clear pin removes the pin and restores the whole network, still armed for the next click', !(await page.evaluate(() => !!document.querySelector('.lb-pin'))) && /^675 routes|^\d+ routes$/.test(await page.textContent('#nmCount')) && (await page.evaluate(() => document.getElementById('netmap').classList.contains('pin-arm'))));
+  await click(page, 'pin');
+  F('switching the pin layer off hides its panel', await page.evaluate(() => document.getElementById('nmPin').hidden) && !(await btn(page, 'pin')).on);
+  await page.locator('.leaflet-marker-icon:not(.lb-pin)').first().click(); await page.waitForTimeout(500);
+  await page.click('[data-pinat]'); await page.waitForTimeout(700);
+  F('a garage popup can drop the pin on that garage', (await btn(page, 'pin')).on && (await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length)) > 0);
+  await ctx.close();
+}
+
 /* ── 1 · the controls ───────────────────────────────────────────────────── */
 {
   const { ctx, page } = await openMap({ width: 1280, height: 800 });
   const labels = await page.$$eval('#nmLayers [data-lyr]', bs => bs.map(b => b.getAttribute('aria-label')));
-  F(`the Layers row has all seven layers (${labels.join(', ')})`, labels.length === 7 && ['Garages', 'Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
+  F(`the Layers row has all seven layers plus the catchment pin (${labels.join(', ')})`, labels.length === 8 && labels.includes('Catchment pin') && ['Garages', 'Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
   F('with no routes narrowed, Live buses and Stops are gated', (await btn(page, 'live')).gated && (await btn(page, 'stops')).gated);
   F('with no routes narrowed, the other layers are available', !(await btn(page, 'bridges')).gated && !(await btn(page, 'inc')).gated && !(await btn(page, 'sw')).gated && !(await btn(page, 'tro')).gated);
   const fetchedBefore = requests.filter(r => /bridges|accidents|streetworks|dtro|route-stops/.test(r.data ?? '')).length;
@@ -203,7 +231,7 @@ for(const [name, vp] of [['phone', { width: 390, height: 844 }], ['small phone',
     const bs = [...document.querySelectorAll('#nmLayers [data-lyr]')].map(b => { const r = b.getBoundingClientRect(); return { w: r.width, h: r.height, inPanel: r.left >= panel.left - 1 && r.right <= panel.right + 1 }; });
     return { panelInside: panel.left >= -1 && panel.right <= innerWidth + 1 && panel.bottom <= wrap.bottom + 1, scrollsX: document.documentElement.scrollWidth > innerWidth + 1, buttons: bs };
   });
-  F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 7 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
+  F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 8 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
   F(`${name}: the panel fits the screen and nothing scrolls sideways`, m.panelInside && !m.scrollsX);
   await ctx.close();
 }

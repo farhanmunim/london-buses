@@ -158,7 +158,7 @@ const fr = page.frameLocator('#mfBody iframe');
 await fr.locator('#nmCount').waitFor({ timeout: 30000 });
 await page.waitForTimeout(800);
 F('the expanded map is the main /map in an embedded frame (all London, no header, banner or tab bar)', await page.evaluate(() => { const f = document.querySelector('#mfBody iframe'); const d = f?.contentDocument; return !!d && /#\/map\?/.test(f.src) && /embed=1/.test(f.src) && d.documentElement.classList.contains('embed') && getComputedStyle(d.querySelector('.topbar')).display === 'none' && !d.getElementById('site-banner'); }));
-F('the embedded map has the main map layers row incl. garages', await fr.locator('#nmLayers [data-lyr]').count() === 7 && /routes/.test(await fr.locator('#nmCount').textContent()));
+F('the embedded map has the main map layers row incl. garages', await fr.locator('#nmLayers [data-lyr]').count() === 8 && /routes/.test(await fr.locator('#nmCount').textContent()));
 F('the network map opens full page and titles itself', await page.evaluate(() => !document.getElementById('mapfs').hidden) && /All London/.test(await txt(page, '#mfTitle')));
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 await page.click('#opBtn'); await page.click('#opMenu [data-op="Go-Ahead London"]'); await page.waitForTimeout(300);
