@@ -644,7 +644,11 @@ export async function renderNetworkMap(){
       pinMarker.on('dragend', () => { clearTimeout(pinTimer); recomputePin(); });
     } else pinMarker.setLatLng(ll);
   }
-  function setPin(lat, lng){ st.pin = { lat, lng }; drawPin(); recomputePin(); }
+  function setPin(lat, lng){
+    st.pin = { lat, lng }; drawPin(); recomputePin();
+    // Phones: the panel is a short sheet over the map, so bring the results into view and keep the pin visible.
+    if(innerWidth < 760){ pinBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const panel = document.getElementById('nmPanel'), pt = state.map.latLngToContainerPoint([lat, lng]); if(pt.y < panel.offsetTop + panel.offsetHeight + 24) state.map.panBy([0, pt.y - (panel.offsetTop + panel.offsetHeight + 90)], { animate: true }); }
+  }
   function pinArm(){ st.pinOn = true; syncPinBox(); setLyNote('pin', st.pin ? '' : 'Click anywhere on the map to drop the catchment pin. Drag it to move it; the slider sets the radius.'); if(st.pin){ drawPin(); recomputePin(); } }
   function pinOff(){ st.pinOn = false; st.pin = null; st.pinIds = null; drawPin(); setLyNote('pin', ''); syncPinBox(); repaint(); }
   state.map.on('click', e => { if(!st.pinOn) return; setLyNote('pin', ''); setPin(e.latlng.lat, e.latlng.lng); });
