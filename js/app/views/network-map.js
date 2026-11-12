@@ -154,13 +154,14 @@ export async function renderNetworkMap(){
     if(st.pills.length){
       return st.pills.includes(up)
         ? { color: focusColor(up), opacity: 1, weight: 5 }
-        : { color: '#a8a29e', opacity: .12, weight: 1.5 };
+        : FADED(name);
     }
-    const base = st.colorBy === 'type'
-      ? (TYPE_COLORS[typeInfo.get(up)] ?? '#dc2626')
-      : opColor(meta?.[name]?.operator);
-    return { color: base, opacity: .75, weight: 2 };
+    return { color: baseColor(name), opacity: .75, weight: 2 };
   };
+  /* the route's own colour in the current mode (operator or type) … */
+  const baseColor = name => st.colorBy === 'type' ? (TYPE_COLORS[typeInfo.get(name.toUpperCase())] ?? '#dc2626') : opColor(meta?.[name]?.operator);
+  /* … and the same colour, faint: context lines behind a search, filter or pin still hint at who runs what around it */
+  const FADED = name => ({ color: baseColor(name), opacity: .22, weight: 1.5 });
 
   const layer = L.geoJSON(ov, {
     style: styleFor,
@@ -224,7 +225,7 @@ export async function renderNetworkMap(){
       }
       if(!visible){
         if(!state.map.hasLayer(ly)) ly.addTo(state.map);
-        ly.setStyle({ color: '#a8a29e', opacity: .14, weight: 1.5 }); ly.options.interactive = false;
+        ly.setStyle(FADED(name)); ly.options.interactive = false;
         if(ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
         ly.bringToBack();
         return;
