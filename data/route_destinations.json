@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-11T11:08:39Z",
-  "route_count": 675,
+  "generated_at_utc": "2026-11-12T11:27:32Z",
+  "route_count": 674,
   "routes": {
     "1": {
       "service_types": [
@@ -664,15 +664,15 @@
       "service_types": [
         "Regular"
       ],
+      "outbound": {
+        "destination": "Smithfield, St Bartholomew's Hospital",
+        "qualifier": "St Bartholomew's Hospital",
+        "full": "Smithfield, St Bartholomew's Hospital"
+      },
       "inbound": {
         "destination": "Paddington",
         "qualifier": "Paddington Station",
         "full": "Paddington"
-      },
-      "outbound": {
-        "destination": "St Bartholomew's Hospital",
-        "qualifier": "",
-        "full": "St Bartholomew's Hospital"
       }
     },
     "47": {
@@ -3130,24 +3130,22 @@
         "full": "Walthamstow Central, Walthamstow Bus Station"
       },
       "inbound": {
-        "destination": "Lee Valley Campsite",
+        "destination": "Lee Valley Camp Site",
         "qualifier": "",
-        "full": "Lee Valley Campsite"
+        "full": "Lee Valley Camp Site"
       }
     },
     "216": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Kingston",
-        "qualifier": "Cromwell Road Bus Station",
-        "full": "Kingston, Cromwell Road Bus Station"
+        "qualifier": "",
+        "full": "Kingston"
       },
       "inbound": {
-        "destination": "Staines Bus Station",
+        "destination": "Staines",
         "qualifier": "",
-        "full": "Staines Bus Station"
+        "full": "Staines"
       }
     },
     "217": {
@@ -3268,42 +3266,48 @@
       }
     },
     "226": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Golders Green",
-        "qualifier": "",
+        "qualifier": "Golders Green Station",
         "full": "Golders Green"
       },
       "inbound": {
-        "destination": "Ealing",
-        "qualifier": "",
-        "full": "Ealing"
+        "destination": "Ealing Broadway",
+        "qualifier": "Haven Green / Ealing Broadway Stn",
+        "full": "Ealing Broadway"
       }
     },
     "227": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Crystal Palace",
         "qualifier": "",
         "full": "Crystal Palace"
       },
       "inbound": {
-        "destination": "Bromley",
-        "qualifier": "",
-        "full": "Bromley"
+        "destination": "Bromley North",
+        "qualifier": "Bromley North Station",
+        "full": "Bromley North"
       }
     },
     "228": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Maida Hill Chippenham Gardens",
-        "qualifier": "",
-        "full": "Maida Hill Chippenham Gardens"
+        "destination": "Maida Hill, Chippenham Gardens",
+        "qualifier": "Chippenham Road / Shirland Road",
+        "full": "Maida Hill, Chippenham Gardens, Chippenham Road / Shirland Road"
       },
       "inbound": {
-        "destination": "Park Royal",
+        "destination": "Central Middlesex Hospital",
         "qualifier": "",
-        "full": "Park Royal"
+        "full": "Central Middlesex Hospital"
       }
     },
     "229": {
@@ -6781,21 +6785,6 @@
         "full": "Muswell Hill"
       }
     },
-    "635": {
-      "service_types": [
-        "Regular"
-      ],
-      "outbound": {
-        "destination": "Hounslow, Bus Station",
-        "qualifier": "",
-        "full": "Hounslow, Bus Station"
-      },
-      "inbound": {
-        "destination": "St. Paul's School",
-        "qualifier": "",
-        "full": "St. Paul's School"
-      }
-    },
     "638": {
       "service_types": [
         "Regular"
@@ -6830,15 +6819,15 @@
       "service_types": [
         "Regular"
       ],
-      "outbound": {
-        "destination": "Bentley Wood School",
-        "qualifier": "Bentley Wood High School",
-        "full": "Bentley Wood School, Bentley Wood High School"
-      },
       "inbound": {
         "destination": "South Harrow",
         "qualifier": "South Harrow Bus Station",
         "full": "South Harrow"
+      },
+      "outbound": {
+        "destination": "Bentley Wood High School",
+        "qualifier": "",
+        "full": "Bentley Wood High School"
       }
     },
     "642": {
@@ -7887,16 +7876,18 @@
       }
     },
     "EL2": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Becontree Heath",
-        "qualifier": "",
-        "full": "Becontree Heath"
+        "destination": "Dagenham Dock",
+        "qualifier": "Dagenham Dock Terminus",
+        "full": "Dagenham Dock"
       },
       "inbound": {
-        "destination": "Dagenham Dock",
-        "qualifier": "",
-        "full": "Dagenham Dock"
+        "destination": "Becontree Heath",
+        "qualifier": "Becontree Heath Leisure Centre",
+        "full": "Becontree Heath"
       }
     },
     "EL3": {
@@ -8565,16 +8556,18 @@
       }
     },
     "N21": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
         "destination": "Trafalgar Square",
-        "qualifier": "",
-        "full": "Trafalgar Square"
+        "qualifier": "Charing Cross Station",
+        "full": "Trafalgar Square, Charing Cross Station"
       },
       "inbound": {
-        "destination": "Bexleyheath",
-        "qualifier": "",
-        "full": "Bexleyheath"
+        "destination": "Bexleyheath, Shopping Centre",
+        "qualifier": "Geddes Place",
+        "full": "Bexleyheath, Shopping Centre, Geddes Place"
       }
     },
     "N22": {
@@ -9628,17 +9621,15 @@
       }
     },
     "SL3": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Bromley North",
-        "qualifier": "Bromley North Station",
-        "full": "Bromley North"
+        "destination": "Bromley",
+        "qualifier": "",
+        "full": "Bromley"
       },
       "inbound": {
         "destination": "Thamesmead",
-        "qualifier": "Thamesmead Town Centre",
+        "qualifier": "",
         "full": "Thamesmead"
       }
     },
