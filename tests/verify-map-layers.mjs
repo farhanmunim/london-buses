@@ -104,6 +104,24 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await ctx.close();
 }
 
+/* ── 0b · the Routes control (like Garages: appears whenever routes are narrowed) ── */
+{
+  const { ctx, page } = await openMap({ width: 1280, height: 800 });
+  F('with nothing narrowed there is no Routes control', await page.evaluate(() => document.getElementById('nmRouteScope').hidden));
+  await addRoutes(page, '25');
+  const all0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3');
+  F(`searching a route shows the Routes control on "All routes", the rest faded behind (${all0} faded lines)`, !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="all"]').classList.contains('on'))) && all0 > 200);
+  await page.click('#nmRouteScope [data-rs="sel"]'); await page.waitForTimeout(400);
+  const faded1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
+  F(`"Selected routes" draws only the searched route (${bright1} lines, ${faded1} faded)`, faded1 === 0 && bright1 >= 1 && bright1 <= 6);
+  await page.click('#nmReset'); await page.waitForTimeout(400);
+  await page.click('#nmFilters'); await page.click('#nmPop .chip[data-f="type"][data-v="night"]'); await page.waitForTimeout(400);
+  F('a filter shows the control on "Selected routes" by default', !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))));
+  await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
+  F('"All routes" behind a filter fades the rest of the network in', (await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3')) > 200);
+  await ctx.close();
+}
+
 /* ── 1 · the controls ───────────────────────────────────────────────────── */
 {
   const { ctx, page } = await openMap({ width: 1280, height: 800 });

@@ -14,6 +14,7 @@ const netmapState = {
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
   scopeIds: null, scopeTitle: '',                // set by a scoped link (an operator's or garage's routes)
   pinOn: false, pin: null, pinR: 1500, pinIds: null,   // catchment pin: armed?, {lat,lng}, radius (m), routes inside
+  rScope: null,                                // when routes are narrowed: 'sel' draws only them, 'all' fades the rest in behind; null = the default for the narrowing
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
 const fmtKm = m => m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km` : `${m} m`;
@@ -49,6 +50,7 @@ export async function renderNetworkMap(){
           <span class="nm-lbl">Layers</span>
           <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}<button type="button" class="livebtn iconb" data-lyr="pin" title="Catchment pin — drop a pin and list every route within a radius" aria-label="Catchment pin" aria-pressed="false">${PIN_ICON}</button></div>
         </div>
+        <div class="nm-gscope" id="nmRouteScope" hidden><span class="nm-lbl">Routes</span><div class="seg" role="group" aria-label="Which route lines to draw"><button type="button" data-rs="sel">Selected routes</button><button type="button" data-rs="all">All routes</button></div></div>
         <div class="nm-gscope" id="nmGarScope" hidden><span class="nm-lbl">Garages</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes</button><button type="button" data-gs="all">All garages</button></div></div>
         <div class="nm-pinbox" id="nmPin" hidden>
           <div class="nm-pinhead"><span class="nm-lbl">Catchment</span><span id="nmPinSum" class="nm-pinsum">Click the map to drop a pin</span><button type="button" class="reset" id="nmPinClear" hidden>Clear pin</button></div>
@@ -212,10 +214,19 @@ export async function renderNetworkMap(){
       const name = ly.feature?.properties?.name ?? '';
       const up = name.toUpperCase();
       const focused = st.pills.includes(up);
-      const visible = focused || passes(name);
-      if(!visible){
+      const visible = focused || (st.pills.length && !routesAll() ? false : passes(name));   // searched routes + "Selected": nothing else
+      // Routes outside the selection: drawn faded and inert ("All routes") or not at all ("Selected routes").
+      // The default keeps the old behaviour — context lines behind searched routes, nothing behind a filter.
+      if(!visible && !routesAll()){
         if(ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
         if(state.map.hasLayer(ly)) state.map.removeLayer(ly);
+        return;
+      }
+      if(!visible){
+        if(!state.map.hasLayer(ly)) ly.addTo(state.map);
+        ly.setStyle({ color: '#a8a29e', opacity: .14, weight: 1.5 }); ly.options.interactive = false;
+        if(ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
+        ly.bringToBack();
         return;
       }
       if(!state.map.hasLayer(ly)) ly.addTo(state.map);
@@ -540,7 +551,15 @@ export async function renderNetworkMap(){
     lyRT[k] = handle;
   }
   const narrowingNow = () => st.pills.length > 0 || filteredNow();
+  const routesAll = () => st.rScope ? st.rScope === 'all' : st.pills.length > 0;
+  function syncRouteScope(){
+    const box = document.getElementById('nmRouteScope'); if(!box) return;
+    box.hidden = !narrowingNow();
+    const cur = routesAll() ? 'all' : 'sel';
+    box.querySelectorAll('[data-rs]').forEach(b => { const on = b.dataset.rs === cur; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+  }
   function syncGarScope(){
+    syncRouteScope();
     const box = document.getElementById('nmGarScope'); if(!box) return;
     box.hidden = !(st.ly.garages && narrowingNow());
     box.querySelectorAll('[data-gs]').forEach(b => { const on = b.dataset.gs === st.gScope; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
@@ -568,6 +587,10 @@ export async function renderNetworkMap(){
     // Adding several routes in a burst ("25, 88, N38") rebuilds once, so live buses poll once, not once per route added.
     if(changed){ clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => { for(const k of Object.keys(st.ly)) if(st.ly[k] && k !== 'garages') syncLayer(k); }, LY_REBUILD_MS); }
   }
+  document.getElementById('nmRouteScope').addEventListener('click', e => {
+    const b = e.target.closest('[data-rs]'); if(!b) return;
+    st.rScope = b.dataset.rs; syncRouteScope(); repaint();
+  });
   document.getElementById('nmGarScope').addEventListener('click', e => {
     const b = e.target.closest('[data-gs]'); if(!b || b.dataset.gs === st.gScope) return;
     st.gScope = b.dataset.gs; syncGarScope(); syncLayer('garages');
@@ -773,7 +796,7 @@ export async function renderNetworkMap(){
   });
   document.getElementById('nmReset').addEventListener('click', () => {
     if(st.pinOn) pinOff();
-    st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();
+    st.rScope = null; st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();
     nmq.value = ''; qClear.hidden = true; hideSugg();
     syncPop(); syncFocus(false);
     state.map.setView([51.505,-0.118], 11);
