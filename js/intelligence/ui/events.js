@@ -8,7 +8,9 @@ import { csv, fromHash, renderAll, setGarage, setOp } from './actions.js';
 import { gMenuRender } from './menus.js';
 import { palClose, palIdx, palItems, palOpen, palPick, palRender, setPalIdx } from './palette.js';
 import { renderMarket } from '../views/market.js';
+import { renderFeed } from '../views/feed.js';
 import { renderGap } from '../views/gap.js';
+import { renderRadar } from '../views/radar.js';
 import { renderPrice } from '../views/record.js';
 import { renderRenewals, rnCsv } from '../views/renewals.js';
 import { renderTable } from '../views/routes-table.js';
@@ -31,6 +33,11 @@ document.addEventListener('click', e => {
 
   const rl = t.closest('[data-real]'); if(rl){ S.real = rl.dataset.real === '1'; renderPrice(); return; }
   const gv = t.closest('[data-gapview]'); if(gv){ S.gapView = gv.dataset.gapview; renderGap(); return; }
+  const ff = t.closest('[data-feedf]'); if(ff){ S.feedF = ff.dataset.feedf; renderFeed(); return; }
+  const rk = t.closest('[data-radar-km]'); if(rk){ S.radarKm = +rk.dataset.radarKm; renderRadar(); return; }
+  if(t.closest('[data-radar-all]')){ S.radarAll = true; renderRadar(); return; }
+  if(t.closest('#printBtn')){ window.print(); return; }
+  if(t.closest('#fresh')){ $('#healthM').hidden = false; return; } if(t.id === 'healthM' || t.closest('#healthClose')){ $('#healthM').hidden = true; return; }
   if(t.closest('#watchAll')){ S.flags.add('attn'); S.shown = 30; renderTable(); $('#routes').scrollIntoView({ behavior:'smooth', block:'start' }); return; }
   const m = t.closest('[data-metric]'); if(m){ S.metric = m.dataset.metric; renderMarket(); return; }
   const mv = t.closest('[data-mview]'); if(mv){ S.mView = mv.dataset.mview; renderMarket(); return; }
@@ -42,7 +49,7 @@ document.addEventListener('click', e => {
   const f = t.closest('[data-flag]'); if(f){ S.flags.has(f.dataset.flag) ? S.flags.delete(f.dataset.flag) : S.flags.add(f.dataset.flag); S.shown = 30; renderTable(); return; }
   const th = t.closest('th[data-sort]'); if(th){ const k = th.dataset.sort; S.sort = S.sort.k === k ? { k, dir:-S.sort.dir } : { k, dir:k === 'id' || k === 'end' || k === 'next' ? 1 : -1 }; renderTable(); return; }
   if(t.closest('#moreBtn')){ S.shown += 30; renderTable(); return; }
-  const row = t.closest('tr.row, .nx[data-r], .rnrow[data-r]'); if(row){ openRoute(row.dataset.r); return; }
+  const row = t.closest('tr.row, .nx[data-r], .rnrow[data-r], .fi[data-r], tr.rr[data-r], .qr[data-r]'); if(row){ if(row.dataset.r) openRoute(row.dataset.r); return; }
   if(t.closest('#dClose') || t.id === 'scrim'){ closeRoute(); return; }
   if(t.closest('#dPrev')){ stepRoute(-1); return; } if(t.closest('#dNext')){ stepRoute(1); return; }
   if(t.closest('#opBtn')){ const o = $('#opMenu'); o.hidden = !o.hidden; $('#gMenu').hidden = true; $('#opBtn').setAttribute('aria-expanded', String(!o.hidden)); return; }
@@ -66,7 +73,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if(e.key === 'Escape' && !$('#mapfs').hidden){ mapClose(); return; }
-  if(e.key === 'Escape'){ if(!$('#aboutM').hidden) $('#aboutM').hidden = true; else if(S.route) closeRoute(); else { $('#opMenu').hidden = true; $('#gMenu').hidden = true; } return; }
+  if(e.key === 'Escape'){ if(!$('#aboutM').hidden) $('#aboutM').hidden = true; else if(!$('#healthM').hidden) $('#healthM').hidden = true; else if(S.route) closeRoute(); else { $('#opMenu').hidden = true; $('#gMenu').hidden = true; } return; }
   if(e.key === '/' && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); palOpen(); return; }
   if(S.route && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ if(e.key === 'ArrowRight') stepRoute(1); if(e.key === 'ArrowLeft') stepRoute(-1); }
   if((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('tr.row')){ e.preventDefault(); openRoute(e.target.dataset.r); }
@@ -79,7 +86,7 @@ addEventListener('hashchange', () => { const r = fromHash(); renderAll(); r ? op
 
 $('#aboutBody').innerHTML = `<h2>Operator intelligence · v3 concept</h2><p style="margin:0;color:var(--ink-2)">A design exploration for the next evolution of this project: from a route explorer to an operator-level intelligence dashboard. Everything here is real data from the project's own open dataset; nothing is mocked.</p>
   <h5>The idea</h5><ul><li><b>One route brief, everywhere.</b> A route's shape, PVR, fleet, price, operated mileage, contract runway and next tender form one compact unit — a table row and the detail drawer show the same fields.</li><li><b>Operator KPIs are roll-ups of those fields,</b> so headline numbers always agree with the rows beneath them.</li><li><b>Market → Contracts → Fleet → Routes</b> is the reading order: where you stand, what is at risk, what you run, then every route.</li></ul>
-  <h5>What is live</h5><ul><li>Operator switcher, ⌘K search, sortable and filterable routes, per-route drawer (←/→ to step), CSV export, shareable links.</li><li>Contract runway buckets are clickable and filter the table.</li><li><b>Price versus rivals:</b> whether the chosen operator’s winning bids are cheaper or dearer per mile than each other operator’s, for electric and for diesel/hybrid buses, weighted by contracted miles.</li><li>Route shapes and the operator footprint are plain SVG from TfL geometry — no map tiles.</li></ul>
+  <h5>What is live</h5><ul><li>Operator switcher, ⌘K search, sortable and filterable routes, per-route drawer (←/→ to step), CSV export, shareable links.</li><li>Contract runway buckets are clickable and filter the table.</li><li><b>Price versus rivals:</b> whether the chosen operator’s winning bids are cheaper or dearer per mile than each other operator’s, for electric and for diesel/hybrid buses, weighted by contracted miles.</li><li><b>What changed:</b> the last 30 days as one list — awards, tenders issued, contracts starting, fleet moves, routes slipping below standard.</li><li><b>Bid radar and depot occupancy:</b> every upcoming tender with the operators whose garages sit within reach of it, and each garage’s licensed capacity projected 36 months ahead as awarded contracts start.</li><li><b>Secured revenue, market competitiveness, electrification and performance at risk:</b> contract value by year, bidders and single-bid share by year, the electric share awards already commit to, and reliability turned into bonus and deduction pounds.</li><li><b>Data health</b> behind the “Data as of” chip, and a print-ready <b>Brief</b> of any view.</li><li>Route shapes and the operator footprint are plain SVG from TfL geometry — no map tiles.</li></ul>
   <h5>Caveats worth knowing</h5><ul><li>Contract value is the sum of accepted annual bids per route's current contract — an estimate.</li><li>Tender record groups subsidiaries into their parent brand and counts only cross-group changes.</li><li>Operated mileage and reliability are the reported figures for the latest published period.</li></ul>
   <h5>Next ideas</h5><ul><li>Saved watchlists of routes.</li><li>Alerts when a contract nears its end or a tender is issued.</li><li>Garage-to-garage comparison and a depot-capacity forecast against the age-limit runway.</li><li>Scenario tool: what a re-tender at the network median price would change.</li></ul>
   <div style="margin-top:18px;display:flex;justify-content:flex-end"><button class="btn primary" id="aboutClose">Close</button></div>`;

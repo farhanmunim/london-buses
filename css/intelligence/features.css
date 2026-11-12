@@ -138,3 +138,47 @@
 
 /* contract-term tag on renewal rows */
 .termtag{color:var(--ink-3)}.termtag.short{color:var(--warn-ink);font-weight:600}
+
+/* what changed ------------------------------------------------------------- */
+.fday{font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin:12px 0 4px}.fday:first-child{margin-top:0}
+.fi{display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:start;width:100%;text-align:left;border:0;background:none;padding:7px 8px;border-radius:9px;font-size:13px;color:var(--ink-2);line-height:1.45}
+.fi:hover{background:var(--hover)}.fi b{color:var(--ink);font-weight:600}.fi .tag{margin-left:4px}
+.fk{display:inline-flex;align-items:center;justify-content:center;height:20px;border-radius:999px;font-size:11px;font-weight:600;padding:0 8px;background:var(--sunken);color:var(--ink-2);margin-top:1px}
+.fk.award{background:var(--accent-soft);color:var(--accent-ink)}.fk.tender{background:#fff6e5;color:var(--warn-ink)}.fk.start{background:#f0faf0;color:var(--good-ink)}.fk.fleet{background:#f3e8ff;color:#6b21a8}.fk.perf{background:#fde8e8;color:#b42318}
+.seg button small{font-weight:600;color:var(--ink-3);margin-left:2px}.seg button:disabled{opacity:.45;cursor:default}
+/* shared kpi strip, bars, tags ------------------------------------------------ */
+.rkpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px}.rkpis .big{font-size:26px}.rkpis .sub{margin-top:2px;line-height:1.35}
+.big.pos{color:var(--good-ink)}.big.neg{color:#b42318}
+.tag.warn{background:#fff6e5;color:var(--warn-ink)}.tag.good{background:#f0faf0;color:var(--good-ink)}
+.tw{overflow-x:auto}
+/* bid radar ------------------------------------------------------------------ */
+table.radar td{vertical-align:top}table.radar tr.rr{cursor:pointer}table.radar tr.rr:hover td{background:var(--hover)}table.radar tr.defend td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.reach{min-width:260px}.rc{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;background:var(--sunken);font-size:12px;color:var(--ink-2);margin:0 4px 4px 0}.rc b{color:var(--ink)}.rc.inc{outline:1.5px solid var(--line-2)}.rc small{color:var(--warn-ink);font-weight:600}
+/* depot occupancy ------------------------------------------------------------ */
+.occ{display:inline-flex;align-items:center;gap:8px;min-width:120px}.occ i{display:block;width:70px;height:8px;border-radius:999px;background:var(--seq-1);overflow:hidden}
+.occ i::after{content:"";display:block;height:100%;width:var(--w,0);background:var(--accent);border-radius:999px}.occ.hot i::after{background:var(--warn)}.occ.over i::after{background:var(--crit)}
+.occ b{font-variant-numeric:tabular-nums;font-weight:600;font-size:12.5px}.occ.over b{color:var(--crit)}.occ.hot b{color:var(--warn-ink)}
+table.occt tr.orow{cursor:pointer}table.occt tr.orow:hover td{background:var(--hover)}.occspark{display:block}
+/* secured revenue ------------------------------------------------------------ */
+.rchart{display:flex;gap:8px;align-items:flex-end;padding-top:8px}.rcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.rstack{width:100%;max-width:46px;display:flex;flex-direction:column-reverse;justify-content:flex-start;background:linear-gradient(var(--line) 1px,transparent 1px) 0 0/100% 25%;border-bottom:1px solid var(--line-2)}
+.rstack i{display:block;width:100%}.rstack .sec{background:var(--seq-5);border-radius:3px 3px 0 0}.rstack .end{background:var(--seq-2)}.rstack .won{background:var(--good);border-radius:3px 3px 0 0}
+.rcol .rv{font-size:11px;font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}.rcol .ry{font-size:11px;color:var(--ink-3)}
+/* competitiveness --------------------------------------------------------------- */
+.cbar{display:flex;align-items:center;gap:8px;min-width:120px}.cbar i{display:block;flex:1;max-width:90px;height:8px;border-radius:999px;background:var(--gray-bar)}.cbar.own i{background:var(--accent)}.cbar b{font-size:12px;font-variant-numeric:tabular-nums;min-width:36px}
+.cbar+.cbar{margin-top:3px}
+/* electrification ---------------------------------------------------------------- */
+.erows{display:flex;flex-direction:column;gap:6px}.erow{display:grid;grid-template-columns:44px 1fr 1fr;gap:12px;align-items:center;padding:4px 0}
+.erow .ey{font-size:12px;color:var(--ink-3);font-weight:600}.erow .eshare,.erow .eage{display:flex;align-items:center;gap:8px}.erow .eshare i{display:block;height:14px;border-radius:4px;background:var(--zero);min-width:2px;max-width:100%}.erow .eage i{display:block;height:14px;border-radius:4px;background:var(--warn);min-width:0}
+.erow b{font-size:12px;font-variant-numeric:tabular-nums}
+/* performance at risk -------------------------------------------------------------- */
+.hh.qr{grid-template-columns:70px 1fr 1fr 70px;border:0;background:none;width:100%;text-align:left;cursor:pointer;border-radius:8px}.hh.qr:hover{background:var(--hover)}
+.hh.qr .l i{background:#e4958f;opacity:1}.hh.qr .r i{background:var(--good)}.hh.qr .n.pos{color:var(--good-ink)}.hh.qr .n.neg{color:#b42318}.hh.qh{grid-template-columns:70px 1fr 1fr 70px}
+/* data health ------------------------------------------------------------------------ */
+.fresh.late i{background:var(--warn)}.fresh.stale i{background:var(--crit)}
+.hs{display:inline-flex;height:20px;align-items:center;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--sunken);color:var(--ink-2)}.hs.fresh{background:#f0faf0;color:var(--good-ink)}.hs.late{background:#fff6e5;color:var(--warn-ink)}.hs.stale{background:#fde8e8;color:#b42318}
+@media (max-width:860px){.rkpis{grid-template-columns:1fr 1fr}.rkpis .big{font-size:22px}.fi{grid-template-columns:78px 1fr;font-size:12.5px}.erow{grid-template-columns:40px 1fr 1fr;gap:8px}}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+table.radar{min-width:860px}table.radar td .sub{white-space:nowrap}table.radar td:first-child{min-width:150px}
+table.comp th,table.comp td{padding-left:6px;padding-right:6px}.cbar{min-width:96px}.cbar i{max-width:60px}
+@media (max-width:860px){.ch .ctl .seg{flex-wrap:wrap;justify-content:flex-start}.ch .ctl{justify-content:flex-start;margin-left:0;width:100%}}

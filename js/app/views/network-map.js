@@ -84,6 +84,9 @@ export async function renderNetworkMap(){
     st.scopeIds = ids.length ? new Set(ids) : null;
     st.scopeTitle = q.get('title') ?? '';
     st.garagesAll = false; st.gScope = 'route';
+    const pin = (q.get('pin') ?? '').split(',').map(Number);   // pin=lat,lng,radius — a catchment opened from elsewhere
+    if(pin.length >= 2 && pin.every(Number.isFinite)){ st.pinOn = true; st.pin = { lat: pin[0], lng: pin[1] }; st.pinR = pin[2] >= 250 ? pin[2] : 1500; }
+    else { st.pinOn = false; st.pin = null; st.pinIds = null; }
   } else if(!/[?&]embed=1/.test(location.hash)) { st.scopeIds = null; st.scopeTitle = ''; }
   const typeInfo = new Map(routes.map(r => [r.name.toUpperCase(), r.type]));
   const TYPE_COLORS = { regular:'#dc2626', night:'#6d28d9', twentyfour:'#0e7490', school:'#15803d' };
@@ -659,7 +662,7 @@ export async function renderNetworkMap(){
     const [lat, lng] = b.dataset.pinat.split(',').map(Number); if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
     state.map.closePopup(); if(!st.pinOn){ st.pinOn = true; syncPinBox(); } setLyNote('pin', ''); setPin(lat, lng);
   });
-  if(st.pinOn){ syncPinBox(); if(st.pin){ drawPin(); recomputePin(); } }
+  if(st.pinOn){ syncPinBox(); if(st.pin){ drawPin(); recomputePin(); state.map.setView([st.pin.lat, st.pin.lng], 13); } }
 
   syncPop();
   syncFocus(st.pills.length > 0);

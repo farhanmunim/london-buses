@@ -237,11 +237,41 @@ F('zero page errors (scopes and maps)', errors.length === 0);
   await d.ctx.close();
 }
 
+/* ── v3 cards: what changed, bid radar, occupancy, revenue, competitiveness, electrification, performance at risk, health, brief ── */
+{
+  const g = await open(1440, 900, '#op=Stagecoach%20London'); const gp = g.page;
+  const n = async sel => gp.locator(sel).count();
+  F(`What changed lists dated items with kind filters (${await n('#changed .fi')})`, await n('#changed .fi') > 0 && await n('#changed .fday') > 0 && await n('#changed [data-feedf]') === 6);
+  await gp.click('#changed [data-feedf="perf"]').catch(() => {}); await gp.waitForTimeout(150);
+  F('a kind filter narrows the feed', (await gp.locator('#changed .fi .fk').allTextContents()).every(t => t === 'Performance') || await n('#changed .fi') === 0);
+  F(`Bid radar lists upcoming tenders with Defend/Attack and operators within reach (${await n('#radar tr.rr')})`, await n('#radar tr.rr') > 0 && await n('#radar .tag') > 0 && await n('#radar .rc') > 0 && /within 5 km/.test(await txt(gp, '#radar .ch p')));
+  await gp.click('#radar [data-radar-km="8"]'); await gp.waitForTimeout(300);
+  F('the reach switch re-renders at 8 km', /within 8 km/.test(await txt(gp, '#radar .ch p')) && await n('#radar tr.rr') > 0);
+  F(`Depot occupancy shows every garage with now / 12 / 36 month bars (${await n('#occupancy tr.orow')})`, await n('#occupancy tr.orow') >= 5 && await n('#occupancy .occ') >= 15 && await n('#occupancy .occspark') >= 5);
+  F('Secured revenue draws eight years and three KPIs', await n('#revenue .rcol') === 8 && await n('#revenue .rkpis .big') === 3 && /£\d/.test(await txt(gp, '#revenue .rkpis')));
+  F('Market competitiveness tables eight years with London and own bars', await n('#competition tbody tr') === 8 && await n('#competition .cbar.own') > 0 && /bidders per tender/.test(await txt(gp, '#competition')));
+  F('Electrification shows five years and a share per year', await n('#electrify .erow') === 5 && /%/.test(await txt(gp, '#electrify .eshare')));
+  F('Performance at risk prices routes with bonus and deduction', await n('#qic .qr') > 0 && /net a year/.test(await txt(gp, '#qic')) && /£/.test(await txt(gp, '#qic .rkpis')));
+  await gp.locator('#qic .qr').first().click(); await gp.waitForTimeout(350);
+  F('a performance row opens the route brief', await n('#drawer.open') === 1); await gp.keyboard.press('Escape'); await gp.waitForTimeout(200);
+  await gp.click('#fresh'); await gp.waitForTimeout(200);
+  F('the Data as of chip opens the data-health panel', !(await gp.evaluate(() => document.getElementById('healthM').hidden)) && await n('#healthBody tbody tr') >= 15 && await n('#healthBody .hs') >= 15);
+  await gp.keyboard.press('Escape'); await gp.waitForTimeout(150);
+  F('Esc closes it and a Brief (print) button is offered', await gp.evaluate(() => document.getElementById('healthM').hidden) && await n('#printBtn') === 1 && await n('.rail a[data-sec="pipeline"]') === 1);
+  F('zero page errors (v3 cards)', g.errors.length === 0);
+  await g.ctx.close();
+  const d = await open(1440, 900, '#op=Go-Ahead%20London&garage=A'); const dp = d.page;
+  F('garage scope offers a Catchment map button and scopes the radar to tenders it could reach', await dp.locator('.acts [data-expand="pin"]').count() === 1 && /could bid for from Sutton/.test(await txt(dp, '#radar .ch p')));
+  await dp.click('.acts [data-expand="pin"]'); await dp.waitForTimeout(500);
+  F('the Catchment button opens the map with a pin at the garage', /pin=51\./.test(await dp.locator('#mfBody iframe').getAttribute('src') ?? '') && /Catchment/.test(await txt(dp, '#mfTitle')));
+  await dp.keyboard.press('Escape'); await d.ctx.close();
+}
+
 /* ── tender tags, quick filters and info buttons ───────────────────────── */
 ({ ctx, page, errors } = await open(1440, 900));
 const nInfo = await page.locator('.info.corner').count();
 F(`every KPI and card carries an info button (${nInfo})`, nInfo >= 20 && await page.locator('.card:not([data-i])').count() <= 1);
-await page.locator('#kpis .kpi .info.corner').first().hover(); await page.waitForTimeout(150);
+await page.locator('#kpis .kpi .info.corner').first().scrollIntoViewIfNeeded(); await page.waitForTimeout(300); await page.locator('#kpis .kpi .info.corner').first().hover(); await page.waitForTimeout(200);
 F('hovering an info button explains the figure', (await page.evaluate(() => document.getElementById('tip').classList.contains('on'))) && /contract/i.test(await txt(page, '#tip')));
 const thTip = await page.locator('#routes th[data-tip]').count();
 F(`route-table columns explain themselves (${thTip})`, thTip >= 8);

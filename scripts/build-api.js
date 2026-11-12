@@ -256,7 +256,7 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
   const HOME_DAYS = 5, RARE_DAYS = 2;
   const perReg = {};                                       // reg → [{ route, days, sightings, lastSeenAt }]
   for (const [name, obs] of Object.entries(rv.routes ?? {}))
-    for (const o of obs ?? []) (perReg[String(o.reg).toUpperCase()] ??= []).push({ route: name, days: o.days ?? 0, sightings: o.sightings ?? 0, lastSeenAt: o.lastSeenAt ?? null });
+    for (const o of obs ?? []) (perReg[String(o.reg).toUpperCase()] ??= []).push({ route: name, days: o.days ?? 0, sightings: o.sightings ?? 0, lastSeenAt: o.lastSeenAt ?? null, firstSeenAt: o.firstSeenAt ?? null });
   const recentMs = x => new Date(x.lastSeenAt ?? 0).getTime();
   const homeOf = {}, rareOf = {};
   for (const [reg, list] of Object.entries(perReg)) {
@@ -276,8 +276,21 @@ const activeRoutes = new Set(Object.keys(read(DATA('route_stops.json')).routes ?
     fr.rare = rare;
     rareTotal += rare.length;
   }
-  write(API('fleet.json'), { generatedAt: now, enriched: true, byRoute: sortKeys(byRoute) });
-  console.log(`fleet.json — ${rareTotal} rare workings flagged across ${Object.values(byRoute).filter(f => f.rare?.length).length} routes`);
+  // Transfers: a bus whose current home (seen there 5+ days, first seen within 21 days) replaced an older home
+  // it has not been seen on for 10+ days — a reallocation between routes, usually between garages.
+  const transfers = [];
+  const routeGarage = Object.fromEntries(Object.entries(cls).map(([k, v]) => [k, v.garageCode ?? v.garage ?? null]));
+  for (const [reg, list] of Object.entries(perReg)) {
+    const homes = list.filter(x => x.days >= HOME_DAYS);
+    const fresh = homes.filter(x => recentMs(x) >= cutoff && x.firstSeenAt && Date.parse(x.firstSeenAt) >= Date.now() - 21 * 864e5);
+    const old = homes.filter(x => recentMs(x) < Date.now() - 10 * 864e5);
+    if (!fresh.length || !old.length) continue;
+    const at = fresh.map(x => x.firstSeenAt).sort()[0];
+    transfers.push({ reg, from: old.map(x => x.route).sort(), to: fresh.map(x => x.route).sort(), at, fromGarage: routeGarage[old[0].route] ?? null, toGarage: routeGarage[fresh[0].route] ?? null, operator: displayOperator(vf[reg]?.operator) ?? null });
+  }
+  transfers.sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  write(API('fleet.json'), { generatedAt: now, enriched: true, byRoute: sortKeys(byRoute), transfers: transfers.slice(0, 600) });
+  console.log(`fleet.json — ${transfers.length} recent transfers · ${rareTotal} rare workings flagged across ${Object.values(byRoute).filter(f => f.rare?.length).length} routes`);
 
   const byReg = {};
   for (const [reg, v] of Object.entries(vf)) {

@@ -193,10 +193,11 @@ export function mapOpen(kind){
   const fs = $('#mapfs'), body = $('#mfBody'); if(!fs) return;
   const sc = SC(), r = kind === 'route' ? D.byId.get(S.route) : null; if(kind === 'route' && !r) return;
   mapMode = kind; fs.dataset.mode = kind; body.replaceChildren(); fs.hidden = false; document.body.style.overflow = 'hidden';
-  $('#mfTitle').textContent = kind === 'route' ? `Route ${r.id}` : sc.name;
+  $('#mfTitle').textContent = kind === 'route' ? `Route ${r.id}` : kind === 'pin' ? `Catchment · ${sc.name}` : sc.name;
   $('#mfSub').textContent = kind === 'route' ? `${r.from} ⇄ ${r.to} · ${r.op}` : `${nOf(sc.st.n, 'route')} · ${sc.st.garages} garage${sc.st.garages === 1 ? '' : 's'}`;
   const q = new URLSearchParams();
   if(kind === 'route') q.set('routes', r.id);
+  else if(kind === 'pin' && sc.kind === 'garage' && Number.isFinite(sc.g?.lat)){ q.set('pin', `${sc.g.lat},${sc.g.lng},3000`); q.set('title', sc.name); }
   else if(sc.kind !== 'all'){ q.set('ids', sc.list.map(x => x.id).join(',')); q.set('title', sc.name); }
   q.set('embed', '1');
   const f = Object.assign(document.createElement('iframe'), { className:'mapframe', title:kind === 'route' ? `Map of route ${r.id}` : `Map of ${sc.name}`, src:'/#/map?' + q });

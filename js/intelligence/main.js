@@ -23,12 +23,16 @@ import './ui/events.js';
     D.bb = D.lines.size ? robustBounds([...D.lines.values()]) : { minLon:-0.5, maxLon:0.3, minLat:51.3, maxLat:51.7 };
     const gen = raw.manifest?.generatedAt;
     $('#fresh').innerHTML = `<i></i>Data as of ${gen ? esc(fDate(gen)) : 'recently'}`;
-    $('#app').innerHTML = `<section id="overview"><div id="hero"></div><section class="card sec" id="brief" aria-label="Briefing"></section><div class="grid sec" id="kpis"></div><div class="grid sec" id="kpis2" aria-label="Commercial and operational signals"></div></section>
+    $('#app').innerHTML = `<section id="overview"><div id="hero"></div><section class="card sec" id="brief" aria-label="Briefing"></section><section class="card sec" id="changed" aria-label="What changed"></section><div class="grid sec" id="kpis"></div><div class="grid sec" id="kpis2" aria-label="Commercial and operational signals"></div></section>
       <div class="grid sec"><section class="card s5" id="market" aria-label="Market position"></section><section class="card s7" id="runway" aria-label="Contract runway"></section></div>
       <div class="grid sec" id="contracts"><section class="card s4" id="record" aria-label="Tender record"></section><section class="card s4" id="h2h" aria-label="Head-to-head"></section><section class="card s4" id="price" aria-label="Price per mile"></section></div>
       <section class="card sec" id="evgap" aria-label="Price versus rivals"></section>
+      <div class="grid sec"><section class="card s7" id="revenue" aria-label="Secured revenue"></section><section class="card s5" id="competition" aria-label="Market competitiveness"></section></div>
+      <section class="card sec" id="radar" aria-label="Bid radar"></section>
+      <section class="card sec" id="occupancy" aria-label="Depot occupancy forecast"></section>
       <section class="card sec" id="renewals" aria-label="Renewal calendar"></section>
       <div class="grid sec"><section class="card s4" id="fleet" aria-label="Fleet register"></section><section class="card s4" id="depots" aria-label="Depots"></section><section class="card s4" id="quality" aria-label="Service quality"></section></div>
+      <div class="grid sec"><section class="card s7" id="electrify" aria-label="Electrification"></section><section class="card s5" id="qic" aria-label="Performance at risk"></section></div>
       <section class="card sec" id="ageout" aria-label="Replacement runway"></section>
       <section class="card sec" id="watch" aria-label="Needs attention"></section>
       <section class="card sec" id="routes" aria-label="Routes"></section>`;
@@ -36,8 +40,8 @@ import './ui/events.js';
     const orig = fromHash(); renderAll();
     // rail: "Contracts" jumps to the runway card, "Fleet" to the fleet card; the section in view is highlighted
     const spy = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting) $$('.rail a.nav[data-sec]').forEach(a => a.classList.toggle('on', a.dataset.sec === en.target.dataset.spy)); }), { rootMargin:'-30% 0px -60% 0px' });
-    [['overview', '#overview'], ['market', '#market'], ['contracts', '#runway'], ['renewals', '#renewals'], ['fleet', '#fleet'], ['routes', '#routes']].forEach(([k, sel]) => { const el = $(sel); if(el){ el.dataset.spy = k; spy.observe(el); } });
-    $$('.rail a.nav[data-sec]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const id = { contracts:'runway', fleet:'fleet' }[a.dataset.sec] ?? a.dataset.sec; document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); $$('.rail a.nav').forEach(x => x.classList.toggle('on', x === a)); }));
+    [['overview', '#overview'], ['market', '#market'], ['contracts', '#runway'], ['pipeline', '#radar'], ['renewals', '#renewals'], ['fleet', '#fleet'], ['routes', '#routes']].forEach(([k, sel]) => { const el = $(sel); if(el){ el.dataset.spy = k; spy.observe(el); } });
+    $$('.rail a.nav[data-sec]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); const id = { contracts:'runway', fleet:'fleet', pipeline:'radar' }[a.dataset.sec] ?? a.dataset.sec; document.getElementById(id)?.scrollIntoView({ behavior:'smooth', block:'start' }); $$('.rail a.nav').forEach(x => x.classList.toggle('on', x === a)); }));
     if(orig) openRoute(orig, false); else syncHash();
   }catch(e){
     console.error(e);

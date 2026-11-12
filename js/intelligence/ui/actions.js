@@ -6,7 +6,15 @@ import { mapClose } from '../map/route-map.js';
 import { S, SC } from '../state.js';
 import { ALL, OPS } from '../tokens.js';
 import { menuRender } from './menus.js';
+import { renderCompetition } from '../views/competition.js';
+import { renderElectrify } from '../views/electrify.js';
+import { renderFeed } from '../views/feed.js';
 import { renderCards } from '../views/fleet.js';
+import { renderHealth } from '../views/health.js';
+import { renderOccupancy } from '../views/occupancy.js';
+import { renderQic } from '../views/qic.js';
+import { renderRadar } from '../views/radar.js';
+import { renderRevenue } from '../views/revenue.js';
 import { renderHero } from '../views/hero.js';
 import { renderMarket } from '../views/market.js';
 import { renderRenewals } from '../views/renewals.js';
@@ -15,11 +23,11 @@ import { renderRunway } from '../views/runway.js';
 
 /* ── wiring ──────────────────────────────────────────────────────────────── */
 export function renderAll(){
-  renderHero(); renderMarket(); renderRunway(); renderRenewals(); renderCards(); renderTable(); menuRender();
+  renderHero(); renderFeed(); renderMarket(); renderRunway(); renderRevenue(); renderCompetition(); renderRadar(); renderOccupancy(); renderRenewals(); renderCards(); renderElectrify(); renderQic(); renderTable(); renderHealth(); menuRender();
   $('#opBtn').setAttribute('aria-expanded', 'false'); $('#opMenu').hidden = true; $('#gMenu').hidden = true; $('#gBtn').setAttribute('aria-expanded', 'false');
 }
-export function setGarage(code){ mapClose(); if(code){ const g = D.garageScope(code); if(!g) return; S.garage = code; S.op = g.op; } else S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; S.rnQ = null; S.rnShown = 25; S.rnFilter = 'open'; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
-export function setOp(o){ mapClose(); S.op = o; S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
+export function setGarage(code){ mapClose(); if(code){ const g = D.garageScope(code); if(!g) return; S.garage = code; S.op = g.op; } else S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; S.rnQ = null; S.rnShown = 25; S.rnFilter = 'open'; S.radarAll = false; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
+export function setOp(o){ mapClose(); S.op = o; S.garage = null; S.q = ''; S.prop = 'all'; S.flags.clear(); S.year = null; S.shown = 30; S.radarAll = false; closeRoute(); renderAll(); syncHash(); window.scrollTo({ top:0 }); }
 export function syncHash(){
   const h = '#op=' + encodeURIComponent(S.op) + (S.garage ? '&garage=' + encodeURIComponent(S.garage) : '') + (S.route ? '&route=' + encodeURIComponent(S.route) : '');
   if(location.hash !== h) history.replaceState(null, '', h);

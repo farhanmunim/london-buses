@@ -41,7 +41,7 @@ export async function load(){
     opt('/api/v1/manifest.json'), opt('/api/v1/vehicles.json'), opt('/api/v1/cpi-cpa.json'),
     opt('/api/v1/diversion-history.json'), opt('/api/v1/roadworks.json'),
   ]);
-  return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, garages:(garages?.garages ?? []).filter(g => g.routes?.length), prog:prog?.entries ?? [],
+  return { meta:meta.routes, tenders, fleet:fleet?.byRoute ?? {}, transfers:fleet?.transfers ?? [], garages:(garages?.garages ?? []).filter(g => g.routes?.length), prog:prog?.entries ?? [],
            perf, sched:sched?.routes ?? {}, crowd:crowd?.routes ?? {}, status:status?.rows ?? [], dest:dest?.routes ?? dest ?? {},
            overview, manifest, veh:vehicles?.byReg ?? {}, cpi:cpi?.months ?? [], divhist:divhist?.entries ?? [], works:works?.disruptions ?? [] };
 }
@@ -306,5 +306,6 @@ export function build(raw){
     if(op === ALL) return { kind:'all', key:ALL, name:ALL, op:ALL, st:NET, F:FNET, rec:REC[ALL], depots:DEPOTS[ALL], colour:'#2a78d6', list:NET.list };
     return { kind:'op', key:op, name:op, op, st:ST[op], F:FLEET[op], rec:REC[op], depots:DEPOTS[op], colour:opColour(op), list:ST[op].list };
   };
-  return { routes, byId, bench, INCOMING, ST, NET, REC, FLEET, FNET, PRICE, GAP, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy };
+  return { routes, byId, bench, INCOMING, ST, NET, REC, FLEET, FNET, PRICE, GAP, DEPOTS, scope, garageScope, YEAR, latestPeriod:periods.at(-1) ?? null, netMedianCpm, relPass, last13, lines, periods, worksBy,
+           prog:raw.prog, awards:Object.values(raw.tenders.byId ?? {}), transfers:raw.transfers, manifest:raw.manifest, cpiNow, grp };
 }
