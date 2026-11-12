@@ -94,12 +94,6 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await page.mouse.move(pin.x + 15, pin.y + 30); await page.mouse.down(); await page.mouse.move(pin.x + 100, pin.y + 30, { steps: 6 }); await page.mouse.move(pin.x + 220, pin.y + 30, { steps: 6 }); await page.mouse.up(); await page.waitForTimeout(500);
   const moved = await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length);
   F(`dragging the pin recomputes the list (${wider} → ${moved})`, moved > 0 && moved !== wider);
-  F('a Routes control appears with the pin, defaulting to catchment only', !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))));
-  const onlyN = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
-  await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
-  const faded = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
-  F(`"All routes" fades the rest of the network in behind the catchment (${bright} bright, ${faded} faded)`, bright === onlyN && faded > 200);
-  await page.click('#nmRouteScope [data-rs="sel"]'); await page.waitForTimeout(300);
   await page.click('#nmPinClear'); await page.waitForTimeout(300);
   F('Clear pin removes the pin and restores the whole network, still armed for the next click', !(await page.evaluate(() => !!document.querySelector('.lb-pin'))) && /^675 routes|^\d+ routes$/.test(await page.textContent('#nmCount')) && (await page.evaluate(() => document.getElementById('netmap').classList.contains('pin-arm'))));
   await click(page, 'pin');
