@@ -100,7 +100,7 @@ npm run test:fixtures         # once: downloads the pinned Leaflet/MapLibre buil
 node tests/verify-intelligence.mjs      # any suite; they expect Chromium at /opt/pw-browsers/chromium or $CHROMIUM
 ```
 
-The tender fetcher falls back to a real browser when TfL's forms sit behind a Cloudflare challenge (`TENDERS_BROWSER` to point at a Chromium binary; CI runs it under `xvfb-run`). From a datacentre IP the challenge is interactive and cannot be passed, so when the award cache goes stale, run `npm run tenders-local` from a home connection and commit the result.
+The tender fetcher falls back to a real browser when TfL's forms sit behind a Cloudflare challenge (`TENDERS_BROWSER` to point at a Chromium binary; CI runs it under `xvfb-run`). From a datacentre IP the challenge is interactive and cannot be passed, so when the award cache goes stale, run `npm run tenders-local` from a home connection and commit the result (it fetches the TfL awards, the community-wiki provisional awards and the LOTS contract terms, then rebuilds the served API).
 
 ## 7. Launch-day checklist
 
