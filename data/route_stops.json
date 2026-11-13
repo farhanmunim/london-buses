@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-12T11:37:24Z",
+  "generated_at_utc": "2026-11-13T11:19:43Z",
   "route_count": 675,
   "routes": {
     "1": [
@@ -174478,10 +174478,6 @@
       {
         "id": "490013767B",
         "towards": "Aldwych"
-      },
-      {
-        "id": "490013767W",
-        "towards": "Aldgate And Limehouse"
       },
       {
         "id": "490013767T",
