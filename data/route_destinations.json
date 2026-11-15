@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-14T10:37:21Z",
+  "generated_at_utc": "2026-11-15T11:05:57Z",
   "route_count": 675,
   "routes": {
     "1": {
@@ -348,18 +348,16 @@
       }
     },
     "25": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Holborn Viaduct, City Thameslink Station",
-        "qualifier": "Holborn Circus",
-        "full": "Holborn Viaduct, City Thameslink Station, Holborn Circus"
+        "destination": "City Thameslink Station",
+        "qualifier": "",
+        "full": "City Thameslink Station"
       },
       "inbound": {
         "destination": "Ilford",
-        "qualifier": "Hainault Street",
-        "full": "Ilford, Hainault Street"
+        "qualifier": "",
+        "full": "Ilford"
       }
     },
     "26": {
@@ -3618,18 +3616,16 @@
       }
     },
     "249": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Anerley Station",
-        "qualifier": "Jasmine Grove",
-        "full": "Anerley Station, Jasmine Grove"
+        "destination": "Clapham Common",
+        "qualifier": "",
+        "full": "Clapham Common"
       },
       "inbound": {
-        "destination": "Clapham Common",
-        "qualifier": "Clapham Common Old Town",
-        "full": "Clapham Common"
+        "destination": "Anerley Station",
+        "qualifier": "",
+        "full": "Anerley Station"
       }
     },
     "250": {
@@ -3678,18 +3674,16 @@
       }
     },
     "253": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Euston",
-        "qualifier": "Mornington Cres Stn / Camden Tn Library",
-        "full": "Euston, Mornington Cres Stn / Camden Tn Library"
+        "destination": "Tottenham Court Road Station",
+        "qualifier": "",
+        "full": "Tottenham Court Road Station"
       },
       "inbound": {
-        "destination": "Hackney Central",
-        "qualifier": "Hackney Central Station",
-        "full": "Hackney Central"
+        "destination": "Hackney Central Station",
+        "qualifier": "",
+        "full": "Hackney Central Station"
       }
     },
     "254": {
@@ -3708,18 +3702,16 @@
       }
     },
     "255": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Balham",
-        "qualifier": "Balham Station / Balham Station Road",
+        "qualifier": "",
         "full": "Balham"
       },
       "inbound": {
-        "destination": "Pollards Hill",
-        "qualifier": "South Lodge Avenue / Yorkshire Road",
-        "full": "Pollards Hill, South Lodge Avenue / Yorkshire Road"
+        "destination": "Pollards Hill South Lodge Avenue",
+        "qualifier": "",
+        "full": "Pollards Hill South Lodge Avenue"
       }
     },
     "256": {
@@ -3843,33 +3835,29 @@
       }
     },
     "264": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Tooting, St. George's Hospital",
-        "qualifier": "St George's Hospital",
-        "full": "Tooting, St. George's Hospital"
+        "destination": "St George's Hospital",
+        "qualifier": "",
+        "full": "St George's Hospital"
       },
       "inbound": {
-        "destination": "Croydon Town Centre",
-        "qualifier": "West Croydon Bus Station",
-        "full": "Croydon Town Centre, West Croydon Bus Station"
+        "destination": "Croydon",
+        "qualifier": "",
+        "full": "Croydon"
       }
     },
     "265": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Tolworth",
-        "qualifier": "Tolworth / King Charles Road",
-        "full": "Tolworth"
+        "destination": "Putney Bridge",
+        "qualifier": "",
+        "full": "Putney Bridge"
       },
       "inbound": {
-        "destination": "Putney Heath",
-        "qualifier": "Putney Bridge Station",
-        "full": "Putney Heath, Putney Bridge Station"
+        "destination": "Tolworth",
+        "qualifier": "",
+        "full": "Tolworth"
       }
     },
     "266": {
@@ -3888,32 +3876,28 @@
       }
     },
     "267": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Fulwell",
-        "qualifier": "South Road / Fulwell",
-        "full": "Fulwell"
+        "destination": "Hammersmith",
+        "qualifier": "",
+        "full": "Hammersmith"
       },
       "inbound": {
-        "destination": "Hammersmith",
-        "qualifier": "Hammersmith Bus Station",
-        "full": "Hammersmith"
+        "destination": "Fulwell",
+        "qualifier": "",
+        "full": "Fulwell"
       }
     },
     "268": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Finchley Road, O2 Centre",
-        "qualifier": "O2 Centre / Sainsbury's",
-        "full": "Finchley Road, O2 Centre, O2 Centre / Sainsbury's"
+        "destination": "Finchley Road O2 Centre",
+        "qualifier": "",
+        "full": "Finchley Road O2 Centre"
       },
       "inbound": {
         "destination": "Golders Green",
-        "qualifier": "Golders Green Station",
+        "qualifier": "",
         "full": "Golders Green"
       }
     },
@@ -4227,50 +4211,54 @@
         "full": "Woodlands Estate, Garland Road Clinic"
       },
       "inbound": {
-        "destination": "Queen Elizabeth Hospital / West Entrance",
-        "qualifier": "",
-        "full": "Queen Elizabeth Hospital / West Entrance"
+        "destination": "Queen Elizabeth Hospital",
+        "qualifier": "Queen Elizabeth Hospital / West Entrance",
+        "full": "Queen Elizabeth Hospital"
       }
     },
     "292": {
       "service_types": [
         "Regular"
       ],
+      "outbound": {
+        "destination": "Colindale, Superstores",
+        "qualifier": "",
+        "full": "Colindale, Superstores"
+      },
       "inbound": {
         "destination": "Borehamwood, Rossington Avenue",
         "qualifier": "Rossington Avenue",
         "full": "Borehamwood, Rossington Avenue"
-      },
-      "outbound": {
-        "destination": "Colindale Superstores",
-        "qualifier": "",
-        "full": "Colindale Superstores"
       }
     },
     "293": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Morden",
+        "destination": "Epsom Hospital",
         "qualifier": "",
-        "full": "Morden"
+        "full": "Epsom Hospital"
       },
       "inbound": {
-        "destination": "Epsom General Hospital",
-        "qualifier": "",
-        "full": "Epsom General Hospital"
+        "destination": "Morden",
+        "qualifier": "Morden Station",
+        "full": "Morden"
       }
     },
     "294": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
+        "destination": "Noak Hill",
+        "qualifier": "Wincanton Road",
+        "full": "Noak Hill, Wincanton Road"
+      },
+      "inbound": {
         "destination": "Havering Park",
         "qualifier": "",
         "full": "Havering Park"
-      },
-      "inbound": {
-        "destination": "Noak Hill",
-        "qualifier": "",
-        "full": "Noak Hill"
       }
     },
     "295": {
@@ -5834,17 +5822,15 @@
       }
     },
     "424": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Fulham, Craven Cottage",
-        "qualifier": "Stevenage Road / Fulham Football Club",
-        "full": "Fulham, Craven Cottage, Stevenage Road / Fulham Football Club"
+        "destination": "Fulham Craven Cottage",
+        "qualifier": "",
+        "full": "Fulham Craven Cottage"
       },
       "inbound": {
         "destination": "Putney Heath",
-        "qualifier": "Putney Heath / Green Man",
+        "qualifier": "",
         "full": "Putney Heath"
       }
     },
@@ -5939,18 +5925,16 @@
       }
     },
     "434": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Caterham",
-        "qualifier": "Caterham Valley",
+        "qualifier": "",
         "full": "Caterham"
       },
       "inbound": {
-        "destination": "Coulsdon, Ridgemount Avenue",
-        "qualifier": "Ridgemount Avenue",
-        "full": "Coulsdon, Ridgemount Avenue"
+        "destination": "Rickman Hill",
+        "qualifier": "",
+        "full": "Rickman Hill"
       }
     },
     "436": {
@@ -6048,9 +6032,9 @@
         "Regular"
       ],
       "outbound": {
-        "destination": "Marylebone",
-        "qualifier": "Great Central Street",
-        "full": "Marylebone, Great Central Street"
+        "destination": "Great Central Street",
+        "qualifier": "",
+        "full": "Great Central Street"
       },
       "inbound": {
         "destination": "Deptford Bridge",
@@ -6059,48 +6043,42 @@
       }
     },
     "456": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "North Middlesex Hospital",
         "qualifier": "",
         "full": "North Middlesex Hospital"
       },
       "inbound": {
-        "destination": "Crews Hill",
+        "destination": "Crews Hill Golf Ride",
         "qualifier": "",
-        "full": "Crews Hill"
+        "full": "Crews Hill Golf Ride"
       }
     },
     "460": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "North Finchley",
-        "qualifier": "North Finchley Bus Station",
-        "full": "North Finchley"
+        "destination": "Willesden",
+        "qualifier": "",
+        "full": "Willesden"
       },
       "inbound": {
-        "destination": "Willesden, Bus Garage",
-        "qualifier": "Pound Lane",
-        "full": "Willesden, Bus Garage, Pound Lane"
+        "destination": "North Finchley",
+        "qualifier": "",
+        "full": "North Finchley"
       }
     },
     "462": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Ilford",
-        "qualifier": "Hainault Street",
-        "full": "Ilford, Hainault Street"
+        "qualifier": "",
+        "full": "Ilford"
       },
       "inbound": {
-        "destination": "Limes Farm Estate",
-        "qualifier": "Limes Farm / Copperfield",
-        "full": "Limes Farm Estate, Limes Farm / Copperfield"
+        "destination": "Limes Farm",
+        "qualifier": "",
+        "full": "Limes Farm"
       }
     },
     "463": {
@@ -7594,33 +7572,29 @@
       }
     },
     "B16": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Kidbrooke",
-        "qualifier": "Wingfield School",
-        "full": "Kidbrooke, Wingfield School"
+        "destination": "Bexleyheath Bus Garage",
+        "qualifier": "",
+        "full": "Bexleyheath Bus Garage"
       },
       "inbound": {
-        "destination": "Bexleyheath, Bus Garage",
+        "destination": "Kidbrooke",
         "qualifier": "",
-        "full": "Bexleyheath, Bus Garage"
+        "full": "Kidbrooke"
       }
     },
     "BL1": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Waterloo",
-        "qualifier": "Waterloo Station / Waterloo Road",
+        "qualifier": "",
         "full": "Waterloo"
       },
       "inbound": {
-        "destination": "Lewisham, Shopping Centre",
-        "qualifier": "Molesworth Street",
-        "full": "Lewisham, Shopping Centre, Molesworth Street"
+        "destination": "Lewisham",
+        "qualifier": "",
+        "full": "Lewisham"
       }
     },
     "C1": {
@@ -7939,43 +7913,42 @@
       }
     },
     "G1": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Battersea, Shaftesbury Estate",
-        "qualifier": "Shaftesbury Estate / Wickersley Road",
-        "full": "Battersea, Shaftesbury Estate, Shaftesbury Estate / Wickersley Road"
+        "destination": "Shaftesbury Estate",
+        "qualifier": "",
+        "full": "Shaftesbury Estate"
       },
       "inbound": {
-        "destination": "Streatham, Green Lane",
-        "qualifier": "Hermitage Lane",
-        "full": "Streatham, Green Lane, Hermitage Lane"
+        "destination": "Streatham High Road Green Lane",
+        "qualifier": "",
+        "full": "Streatham High Road Green Lane"
       }
     },
     "H10": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Harrow",
-        "qualifier": "St Mark's Hospital",
-        "full": "Harrow, St Mark's Hospital"
+        "destination": "St Mark's Hospital",
+        "qualifier": "",
+        "full": "St Mark's Hospital"
+      },
+      "inbound": {
+        "destination": "St Mark's Hospital",
+        "qualifier": "",
+        "full": "St Mark's Hospital"
       }
     },
     "H11": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
+        "destination": "Harrow",
+        "qualifier": "",
+        "full": "Harrow"
+      },
+      "inbound": {
         "destination": "Mount Vernon Hospital",
         "qualifier": "",
         "full": "Mount Vernon Hospital"
-      },
-      "inbound": {
-        "destination": "Harrow",
-        "qualifier": "Harrow Bus Station",
-        "full": "Harrow"
       }
     },
     "H12": {
