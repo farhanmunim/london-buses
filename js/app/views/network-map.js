@@ -62,7 +62,7 @@ export async function renderNetworkMap(){
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
         <div class="nm-body" id="nmInfo" hidden></div>
-        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record — filters are ignored">Export CSV</button><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
+        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record">Export CSV</button><button class="reset" id="nmExportAll" style="margin-left:0" title="Every route, ignoring the search, filters and pin" hidden>All routes</button><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
       </div>
     </div>`;
 
@@ -250,6 +250,10 @@ export async function renderNetworkMap(){
       : (filtered ? `${vis.size} of ${nOf(allNames.size, 'route')}` : `${nOf(allNames.size, 'route')}`);
     const reset = document.getElementById('nmReset');
     if(reset) reset.hidden = !(st.pills.length || filtered);
+    // Export follows the view: the searched / filtered / pinned routes when there are any, else everything.
+    const narrowed = st.pills.length || filtered, exp = document.getElementById('nmExport'), expAll = document.getElementById('nmExportAll');
+    if(exp){ const n = narrowed ? (st.pills.length ? st.pills.length : vis.size) : allNames.size; exp.textContent = narrowed ? `Export ${n} route${n === 1 ? '' : 's'}` : 'Export CSV'; exp.title = narrowed ? 'The routes currently selected, with their full record' : 'Every route with its full record'; }
+    if(expAll) expAll.hidden = !narrowed;
     syncTermini();
     syncLegend();
     syncLayers();
@@ -784,17 +788,24 @@ export async function renderNetworkMap(){
   });
   // Export EVERY route's full record — deliberately ignores the active
   // search pills and filters (the CSV is the whole network, always).
-  document.getElementById('nmExport').addEventListener('click', () => {
+  /* Export: the selected routes (search, filters, pin) or every route. Same columns either way. */
+  function exportCsv(all){
     const num = v => (Number.isFinite(v) ? v : '');
-    downloadCsv('london-bus-routes.csv', [
+    const narrowed = !all && (st.pills.length || filteredNow());
+    const keep = narrowed ? (st.pills.length ? new Set(st.pills) : new Set([...visibleNames()].map(n => n.toUpperCase()))) : null;
+    const list = (routes ?? []).filter(r => !keep || keep.has(r.name.toUpperCase())).sort((a, b) => cmpRoute(a.name, b.name));
+    const what = !narrowed ? 'all' : st.pinIds && !st.pills.length ? `within-${fmtKm(st.pinR).replace(/\s/g, '')}-of-pin` : st.pills.length ? st.pills.join('-').toLowerCase() : 'filtered';
+    downloadCsv(`london-bus-routes-${what}.csv`, [
       ['route','type','operator','company','garage_code','garage_name','pvr','tvr','vehicle_model','propulsion','length_km','contract_start','contract_end'],
-      ...(routes ?? []).map(r => {
+      ...list.map(r => {
         const m = meta?.[r.name] ?? {};
         return [r.name, m.type ?? r.type ?? '', m.operator ?? '', m.company ?? '', m.garage ?? '', m.garageName ?? '',
           num(m.pvr), num(m.tvr), m.fleet ?? '', m.propulsion ?? '', num(m.lengthKm), m.contractStart ?? '', m.contractEnd ?? ''];
       }),
     ]);
-  });
+  }
+  document.getElementById('nmExport').addEventListener('click', () => exportCsv(false));
+  document.getElementById('nmExportAll').addEventListener('click', () => exportCsv(true));
   document.getElementById('nmReset').addEventListener('click', () => {
     if(st.pinOn) pinOff();
     st.rScope = null; st.pills = []; st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear();

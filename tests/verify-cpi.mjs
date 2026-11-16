@@ -84,7 +84,7 @@ const [dl2] = await Promise.all([
 const mapCsv = readFileSync(await dl2.path(), 'utf8');
 const mapRows = mapCsv.split('\r\n').length - 1;
 F('map export downloads every route (' + mapRows + ' rows)',
-  dl2.suggestedFilename() === 'london-bus-routes.csv' && mapRows > 600 && mapCsv.includes('pvr') && mapCsv.includes('"88"'));
+  dl2.suggestedFilename() === 'london-bus-routes-all.csv' && mapRows > 600 && mapCsv.includes('pvr') && mapCsv.includes('"88"'));
 
 F('zero page errors', errors.length === 0);
 if(errors.length) console.log(errors.slice(0,4));

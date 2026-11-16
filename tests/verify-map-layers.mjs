@@ -114,7 +114,12 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await page.click('#nmRouteScope [data-rs="sel"]'); await page.waitForTimeout(400);
   const faded1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
   F(`"Selected routes" draws only the searched route (${bright1} lines, ${faded1} faded)`, faded1 === 0 && bright1 >= 1 && bright1 <= 6);
+  F('the export follows the selection: "Export 1 route", with an All routes alternative', (await page.textContent('#nmExport')).trim() === 'Export 1 route' && !(await page.evaluate(() => document.getElementById('nmExportAll').hidden)));
+  const [dlSel] = await Promise.all([page.waitForEvent('download', { timeout: 6000 }).catch(() => null), page.click('#nmExport')]);
+  const selCsv = dlSel ? readFileSync(await dlSel.path(), 'utf8') : '';
+  F(`exporting the selection downloads just that route (${dlSel?.suggestedFilename()})`, !!dlSel && /london-bus-routes-25\.csv/.test(dlSel.suggestedFilename()) && selCsv.trim().split('\n').length === 2 && /^"?25"?,/m.test(selCsv));
   await page.click('#nmReset'); await page.waitForTimeout(400);
+  F('with nothing narrowed the button is plain "Export CSV" and the All routes button is gone', (await page.textContent('#nmExport')).trim() === 'Export CSV' && (await page.evaluate(() => document.getElementById('nmExportAll').hidden)));
   await page.click('#nmFilters'); await page.click('#nmPop .chip[data-f="type"][data-v="night"]'); await page.waitForTimeout(400);
   F('a filter shows the control on "Selected routes" by default', !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))));
   await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
