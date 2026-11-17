@@ -81,6 +81,14 @@ async function hovers(page, sel, label){
   F('with the map library blocked, the More menu still opens', await page.locator('#moreSheet:not([hidden])').count() === 1);
   await page.click('#moreSheet a[data-nav="streetworks"]'); await page.waitForTimeout(800);
   F('and its links still navigate', /streetworks/.test(await page.evaluate(() => location.hash)));
+  {
+    const r = await open('#/route/335'); const rp = r.page;
+    await rp.waitForSelector('#map .leaflet-marker-icon', { timeout: 20000 }).catch(() => {}); await rp.waitForTimeout(800);
+    await rp.locator('#map .leaflet-marker-icon').first().hover({ force: true }).catch(() => {}); await rp.waitForTimeout(400);
+    const gtip = await rp.locator('.leaflet-tooltip').first().textContent().catch(() => '');
+    F(`the operating garage pin shows its distance to the route on hover ("${gtip.trim()}")`, /operates route 335 · [\d.]+ mi/.test(gtip));
+    await r.ctx.close();
+  }
   await page.goto('http://127.0.0.1:8973/#/map', { waitUntil: 'load' }); await page.waitForTimeout(1500);
   F('a map page says plainly that the map could not load', /map could not load/i.test(await page.evaluate(() => document.body.innerText)));
   await ctx.close();

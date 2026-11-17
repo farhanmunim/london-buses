@@ -32,9 +32,15 @@ export async function initRouteMap(route, m = {}, tok = state.navToken){
   const garagePins = (garages ?? []).filter(g =>
     codes.includes(String(g.code).toUpperCase()) && garageLocOk(g));
   const opMarkers = new Map();
+  // The operating garage gets the same hover text as every other pin: name, operator and its distance to the route.
+  const routePts = [...(stopRec.outbound ?? []), ...(stopRec.inbound ?? [])].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lng));
+  const nearest = g => { let d = Infinity, at = null; for(const st of routePts){ const dm = haversineM(st.lat, st.lng, g.lat, g.lng); if(dm < d){ d = dm; at = st; } } return { mi: Number.isFinite(d) && at ? (d / 1609.344).toFixed(2) : null, at }; };
+  const kvRow = (l, v) => `<div style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:5px 0;border-top:1px solid var(--bd)"><span style="color:var(--tx2)">${l}</span><b style="font-family:var(--mono);font-size:12.5px">${v}</b></div>`;
   for(const g of garagePins){
+    const { mi, at } = nearest(g);
     const mk = L.marker([g.lat, g.lng], { icon: garagePinIcon(g, 34), zIndexOffset: 500 })
-      .bindPopup(() => garagePopupHtml(g, metaAll))
+      .bindTooltip(`${esc(g.name)} (${esc(g.code)}) · ${esc(g.operator ?? '—')} · operates route ${esc(route.name)}${mi ? ` · ${mi} mi` : ''}`, { direction:'top' })
+      .bindPopup(() => garagePopupHtml(g, metaAll, mi ? kvRow(`Distance to route ${esc(route.name)}`, `${mi} mi`) + kvRow('Measured at', esc(at.name)) : ''))
       .addTo(state.map);
     opMarkers.set(String(g.code).toUpperCase(), mk);
   }
