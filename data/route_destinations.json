@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-16T11:35:40Z",
+  "generated_at_utc": "2026-11-17T12:01:25Z",
   "route_count": 675,
   "routes": {
     "1": {
@@ -121,18 +121,16 @@
       }
     },
     "9": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Hammersmith",
-        "qualifier": "Hammersmith Bus Station",
-        "full": "Hammersmith"
+        "destination": "Aldwych",
+        "qualifier": "",
+        "full": "Aldwych"
       },
       "inbound": {
-        "destination": "Aldwych",
-        "qualifier": "Aldwych / Drury Lane",
-        "full": "Aldwych"
+        "destination": "Hammersmith",
+        "qualifier": "",
+        "full": "Hammersmith"
       }
     },
     "11": {
@@ -580,16 +578,18 @@
       }
     },
     "41": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Archway",
-        "qualifier": "",
-        "full": "Archway"
+        "destination": "Tottenham Hale",
+        "qualifier": "Tottenham Hale Bus Station",
+        "full": "Tottenham Hale"
       },
       "inbound": {
-        "destination": "Tottenham Hale",
-        "qualifier": "",
-        "full": "Tottenham Hale"
+        "destination": "Archway",
+        "qualifier": "Archway Station",
+        "full": "Archway"
       }
     },
     "42": {
@@ -1232,9 +1232,9 @@
         "full": "Aldwych"
       },
       "inbound": {
-        "destination": "Wandsworth",
-        "qualifier": "Wandsworth Plain",
-        "full": "Wandsworth"
+        "destination": "Wandsworth Plain",
+        "qualifier": "",
+        "full": "Wandsworth Plain"
       }
     },
     "88": {
@@ -1268,73 +1268,63 @@
       }
     },
     "90": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Feltham, Leisure West",
+        "destination": "Feltham",
         "qualifier": "",
-        "full": "Feltham, Leisure West"
+        "full": "Feltham"
       },
       "inbound": {
         "destination": "Northolt",
-        "qualifier": "Northolt Station",
+        "qualifier": "",
         "full": "Northolt"
       }
     },
     "91": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Trafalgar Square",
-        "qualifier": "Whitehall / Trafalgar Square",
+        "qualifier": "",
         "full": "Trafalgar Square"
       },
       "inbound": {
-        "destination": "Wood Green",
-        "qualifier": "Wood Green Station / River Park Road",
-        "full": "Wood Green"
+        "destination": "Wood Green Station",
+        "qualifier": "",
+        "full": "Wood Green Station"
       }
     },
     "92": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "St Raphael's North",
-        "qualifier": "Ikea Brent Park",
-        "full": "St Raphael's North, Ikea Brent Park"
-      },
-      "inbound": {
         "destination": "Ealing Hospital",
         "qualifier": "",
         "full": "Ealing Hospital"
+      },
+      "inbound": {
+        "destination": "Brent Park",
+        "qualifier": "",
+        "full": "Brent Park"
       }
     },
     "93": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Putney Bridge",
-        "qualifier": "Putney Bridge Station",
-        "full": "Putney Bridge"
+        "destination": "Putney",
+        "qualifier": "",
+        "full": "Putney"
       },
       "inbound": {
         "destination": "North Cheam",
-        "qualifier": "Priory Road",
-        "full": "North Cheam, Priory Road"
+        "qualifier": "",
+        "full": "North Cheam"
       }
     },
     "94": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
-        "destination": "Piccadilly Circus",
-        "qualifier": "Charles I I Street",
-        "full": "Piccadilly Circus, Charles I I Street"
+        "destination": "Marble Arch",
+        "qualifier": "",
+        "full": "Marble Arch"
       },
       "inbound": {
         "destination": "Acton Green",
@@ -1343,18 +1333,16 @@
       }
     },
     "95": {
-      "service_types": [
-        "Regular"
-      ],
+      "service_types": [],
       "outbound": {
         "destination": "Shepherd's Bush",
-        "qualifier": "Shepherd's Bush Green",
+        "qualifier": "",
         "full": "Shepherd's Bush"
       },
       "inbound": {
-        "destination": "Southall, Town Hall",
+        "destination": "Southall",
         "qualifier": "",
-        "full": "Southall, Town Hall"
+        "full": "Southall"
       }
     },
     "96": {
@@ -5608,29 +5596,33 @@
       }
     },
     "410": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Crystal Palace",
-        "qualifier": "",
-        "full": "Crystal Palace"
+        "destination": "Wallington",
+        "qualifier": "Shotfield",
+        "full": "Wallington, Shotfield"
       },
       "inbound": {
-        "destination": "Wallington",
-        "qualifier": "",
-        "full": "Wallington"
+        "destination": "Crystal Palace",
+        "qualifier": "Crystal Palace Parade",
+        "full": "Crystal Palace"
       }
     },
     "411": {
-      "service_types": [],
+      "service_types": [
+        "Regular"
+      ],
       "outbound": {
-        "destination": "Kingston",
-        "qualifier": "",
-        "full": "Kingston"
+        "destination": "West Molesey",
+        "qualifier": "Central Square",
+        "full": "West Molesey, Central Square"
       },
       "inbound": {
-        "destination": "West Molesey",
-        "qualifier": "",
-        "full": "West Molesey"
+        "destination": "Kingston",
+        "qualifier": "Cromwell Road Bus Station",
+        "full": "Kingston, Cromwell Road Bus Station"
       }
     },
     "412": {
