@@ -3,8 +3,9 @@ name: CPI Release Watch
 # ONS publishes the CPI index once a month at 07:00 UK time. CPI is refreshed
 # here and only here (it was removed from the 03:17 UTC nightly run, which
 # fires hours before any release): the first check is at 09:00 London time,
-# two hours after publication, then hourly through the working day until the
-# figure is in. The gate is two-fold: London time must be 09:00 or later, and
+# two hours after publication, and that one job then polls ONS every ten
+# minutes until the figure is in or 17:00 passes — one run, not a chain of
+# hourly runs GitHub may never schedule. The gate is two-fold: London time must be 09:00 or later, and
 # `nextRelease` in the served file must be today or earlier — fetch-cpi.js
 # moves `nextRelease` to the following month the moment the new figure lands,
 # so every later run is a one-second no-op. If a release day is missed
@@ -22,7 +23,7 @@ on:
     # the London-time gate below keeps whichever of the two is too early quiet.
     - cron: "3 8-17 * * *"
   workflow_run:
-    workflows: ["Intraday Status Refresh", "Intraday Fleet Sweep"]
+    workflows: ["Intraday Status Refresh", "Intraday Fleet Sweep", "Nightly Data Refresh"]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -34,14 +35,17 @@ on:
 permissions:
   contents: write
 
+# Its own lane, not the shared data-refresh group: on release day this job
+# polls ONS for hours, and must never hold up the status and fleet refreshes.
+# Its commit step already copes with another workflow pushing first.
 concurrency:
-  group: data-refresh
+  group: cpi-watch
   cancel-in-progress: false
 
 jobs:
   cpi:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 360
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -79,9 +83,21 @@ jobs:
         if: steps.due.outputs.due == 'yes'
         run: npm install --no-audit --no-fund
 
-      - name: Fetch CPI + CPA rates
+      - name: Fetch CPI + CPA rates (poll ONS until the new figure lands)
         if: steps.due.outputs.due == 'yes'
-        run: node scripts/fetch-cpi.js
+        # GitHub's cron fires a fraction of its slots on this repo, so one run
+        # cannot assume another will follow. On release day this step keeps
+        # polling ONS every 10 minutes until the served file changes (the new
+        # month is in) or 17:00 London passes. A forced run polls once.
+        run: |
+          for i in $(seq 1 48); do
+            node scripts/fetch-cpi.js || true
+            if ! git diff --quiet -- data/api/cpi-cpa.json; then echo "New CPI figure fetched on poll $i"; break; fi
+            H=$((10#$(TZ=Europe/London date +%H)))
+            if [ "${{ github.event.inputs.force }}" = "true" ] || [ "$H" -ge 17 ]; then echo "Stopping: $([ "$H" -ge 17 ] && echo 'past 17:00 London' || echo 'forced run polls once')"; break; fi
+            echo "ONS has not published yet (poll $i, $(TZ=Europe/London date +%H:%M) London) — next check in 10 min"
+            sleep 600
+          done
 
       - name: Update the manifest row
         if: steps.due.outputs.due == 'yes'
