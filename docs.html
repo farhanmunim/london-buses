@@ -308,7 +308,7 @@ console.log(data.meta.operator, data.tenders.length, meta.generatedAt);</code></
   <tr><td><code>weekly-refresh.yml</code></td><td>daily 03:17</td><td>The full pipeline (every fetch and build step plus the audit gate). The name is historical.</td></tr>
   <tr><td><code>refresh-status.yml</code></td><td>every 2 h, 07:41–21:41</td><td>Service status, the diversion register + history, TIMS roadworks, the street-works drain (folds DfT Street Manager events pushed to the <code>streetworks-inbox</code> branch), and the D-TRO order search.</td></tr>
   <tr><td><code>refresh-fleet.yml</code></td><td>07:20 / 15:20 / 23:20</td><td>Arrivals sweep and DVLA fleet data.</td></tr>
-  <tr><td><code>refresh-cpi.yml</code></td><td>hourly 09:03–17:03, plus after every status/fleet run</td><td>The ONS CPI index and contract price-adjustment rates; a no-op until ONS publishes (once a month).</td></tr>
+  <tr><td><code>refresh-cpi.yml</code></td><td>every 10 min 06:00–09:50 UTC, hourly to 17:03, plus after every status/fleet/nightly run</td><td>The ONS CPI index and contract price-adjustment rates; a no-op except on ONS release day, when one run polls from 07:00 London until the new figure is in.</td></tr>
   <tr><td><code>refresh-tenders.yml</code></td><td>hourly 07:20–20:20, plus after every other run</td><td>Tender awards and the programme.</td></tr>
 </table></div>
 <p>Built-in safety:</p>

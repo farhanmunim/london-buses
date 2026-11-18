@@ -34,7 +34,7 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 | Service status | line status, diversion register + history, TIMS roadworks, street-works drain, D-TRO orders | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + provisional awards + LOTS contract terms + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
-| CPI watch | CPI-CPA | ONS release day only: from 09:00 London time one job polls ONS every 10 minutes until the new figure is in (ONS publishes at 07:00) | `refresh-cpi.yml` |
+| CPI watch | CPI-CPA | ONS release day only: from 07:00 London time, when ONS publishes, one job polls ONS every 10 minutes until the new figure is in — on the site before 09:00 | `refresh-cpi.yml` |
 
 Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `/api/live/vehicles` (`functions/api/live/vehicles.js`), a small server endpoint that proxies the DfT BODS GPS feed with a 10-second cache. Street works arrive by push: `/api/streetworks` (`functions/api/streetworks.js`) receives DfT Street Manager SNS notifications (signature-verified, London-filtered by SWA org code) and commits each event to the `streetworks-inbox` branch, which the status workflow folds into the archive.
 
