@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-19T11:59:59Z",
+  "generated_at_utc": "2026-11-20T11:59:12Z",
   "route_count": 677,
   "routes": {
     "1": [
@@ -78855,28 +78855,32 @@
         "towards": "Highbury Cnr, Newington Green Or Stoke Newington"
       },
       {
-        "id": "490006848W",
-        "towards": "Stoke Newington"
+        "id": "490007178X",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490011332E",
-        "towards": "Stoke Newington"
+        "id": "490011601Y",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490008767S",
+        "id": "490013294S",
+        "towards": "Newington Green Or Highbury Corner"
+      },
+      {
+        "id": "490008616S",
+        "towards": "Newington Green Or Highbury Corner"
+      },
+      {
+        "id": "490003053S",
+        "towards": "Newington Green Or Highbury Corner"
+      },
+      {
+        "id": "490008145E",
+        "towards": "Newington Green Or Stoke Newington"
+      },
+      {
+        "id": "490007537E",
         "towards": "Newington Green"
-      },
-      {
-        "id": "490016297S",
-        "towards": "Highbury Corner"
-      },
-      {
-        "id": "490016298S",
-        "towards": "Highbury Corner"
-      },
-      {
-        "id": "490016299S",
-        "towards": "Highbury Corner"
       },
       {
         "id": "490003915E",
@@ -79122,31 +79126,31 @@
         "towards": "Finsbury Park"
       },
       {
-        "id": "490016299N",
-        "towards": "Stoke Newington"
-      },
-      {
-        "id": "490016298N",
-        "towards": "Stoke Newington"
-      },
-      {
-        "id": "490016297N",
-        "towards": "Stoke Newington"
-      },
-      {
-        "id": "490008766N",
-        "towards": "Manor House"
-      },
-      {
-        "id": "490004519N",
-        "towards": "Manor House"
-      },
-      {
-        "id": "490003100W",
+        "id": "490007537W",
         "towards": "Finsbury Park"
       },
       {
-        "id": "490011332W",
+        "id": "490008145W",
+        "towards": "Finsbury Park Or Highbury Corner"
+      },
+      {
+        "id": "490015544N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490003053N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490008616N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490015699N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490011601Z",
         "towards": "Finsbury Park"
       },
       {
@@ -179942,7 +179946,7 @@
         "towards": "Holloway Nags Head"
       },
       {
-        "id": "490006889W",
+        "id": "490006889Z",
         "towards": "Holloway, Nags Head"
       },
       {
@@ -179954,8 +179958,8 @@
         "towards": "Camden Town, Kings Cross Or Tufnell Park"
       },
       {
-        "id": "490008296N",
-        "towards": "Highgate, Tufnell Park Or Barnsbury"
+        "id": "490008298R",
+        "towards": "Kings Cross Or Camden Town"
       },
       {
         "id": "490013694S",
@@ -180367,6 +180371,10 @@
       },
       {
         "id": "490000083X",
+        "towards": "Manor House Or Highbury Corner"
+      },
+      {
+        "id": "490000083R",
         "towards": "Manor House Or Highbury Corner"
       },
       {
