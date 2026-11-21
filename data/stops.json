@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-20T11:59:12Z",
-  "stop_count": 20004,
+  "generated_at_utc": "2026-11-21T11:28:10Z",
+  "stop_count": 20003,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -5184,15 +5184,6 @@
       "routes": [
         "492",
         "96"
-      ]
-    },
-    "2400A070700A": {
-      "name": "Chartwell",
-      "indicator": "o/s",
-      "lat": 51.24552,
-      "lon": 0.08299,
-      "routes": [
-        "246"
       ]
     },
     "2400A070830A": {

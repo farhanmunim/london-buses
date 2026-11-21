@@ -1,17 +1,7 @@
 {
-  "generatedAt": "2026-11-20T12:21:08.176Z",
-  "count": 77,
+  "generatedAt": "2026-11-21T11:49:06.672Z",
+  "count": 76,
   "garages": {
-    "?": {
-      "code": "?",
-      "name": "Beddington",
-      "operator": "Arriva",
-      "address": "Sidney House, Beddington Farm Rd, Croydon CR0 4XB",
-      "lat": 51.382896,
-      "lon": -0.130025,
-      "pvr": 10,
-      "capacity": null
-    },
     "A": {
       "code": "A",
       "name": "Sutton",
@@ -149,7 +139,7 @@
       "address": "239 Brixton Hill, London, SW2 1NR",
       "lat": 51.446122,
       "lon": -0.12373,
-      "pvr": 67,
+      "pvr": 94,
       "capacity": 50
     },
     "BT": {
@@ -359,7 +349,7 @@
       "address": "37A Pemberton Gardens, London, N19 5RR",
       "lat": 51.56265,
       "lon": -0.131605,
-      "pvr": 163,
+      "pvr": 162,
       "capacity": 228
     },
     "KB": {
@@ -409,7 +399,7 @@
       "address": "Ernest Avenue, West Norwood, London, SE27 0HN",
       "lat": 51.430084,
       "lon": -0.103945,
-      "pvr": 145,
+      "pvr": 132,
       "capacity": 200
     },
     "NP": {
@@ -649,7 +639,7 @@
       "address": "719 London Road, Thornton Heath, CR7 6AU",
       "lat": 51.39323,
       "lon": -0.114381,
-      "pvr": 82,
+      "pvr": 78,
       "capacity": 120
     },
     "TL": {

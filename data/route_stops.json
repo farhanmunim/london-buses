@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-20T11:59:12Z",
+  "generated_at_utc": "2026-11-21T11:28:10Z",
   "route_count": 677,
   "routes": {
     "1": [
@@ -81937,9 +81937,6 @@
       {
         "id": "2400A006560A",
         "towards": "Brasted Or Edenbridge"
-      },
-      {
-        "id": "2400A070700A"
       },
       {
         "id": "2400A006470A",
