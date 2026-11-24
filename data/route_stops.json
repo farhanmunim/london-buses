@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-11-23T13:06:30Z",
+  "generated_at_utc": "2026-11-24T14:06:41Z",
   "route_count": 677,
   "routes": {
     "1": [
@@ -38762,6 +38762,10 @@
         "towards": "Cranford Or Southall"
       },
       {
+        "id": "490008272W",
+        "towards": "Cranford Or Southall"
+      },
+      {
         "id": "490012443N",
         "towards": "Cranford Or Southall"
       },
@@ -56175,7 +56179,7 @@
       },
       {
         "id": "490008471B",
-        "towards": "Newbury Park"
+        "towards": "Ilford Town Centre And Newbury Park"
       },
       {
         "id": "490008467F",
@@ -96622,7 +96626,7 @@
         "id": "210021003620"
       },
       {
-        "id": "210021002820"
+        "id": "210021002840"
       },
       {
         "id": "210021002850"
@@ -100933,8 +100937,7 @@
         "towards": "Forest Gate, Bow Or Hackney"
       },
       {
-        "id": "490019793W",
-        "towards": "Hackney Wick, Leyton Or Plaistow"
+        "id": "490019793W"
       },
       {
         "id": "490003260S",
@@ -120916,8 +120919,7 @@
     ],
     "388": [
       {
-        "id": "490019793W",
-        "towards": "Hackney Wick, Leyton Or Plaistow"
+        "id": "490019793W"
       },
       {
         "id": "490019793X"
@@ -153075,7 +153077,7 @@
       },
       {
         "id": "490007923S",
-        "towards": "Abbey Wood Or Crossway"
+        "towards": "Abbey Wood"
       }
     ],
     "674": [
@@ -165464,7 +165466,7 @@
       },
       {
         "id": "490008471B",
-        "towards": "Newbury Park"
+        "towards": "Ilford Town Centre And Newbury Park"
       }
     ],
     "EL2": [
@@ -173119,7 +173121,7 @@
       },
       {
         "id": "490007923S",
-        "towards": "Abbey Wood Or Crossway"
+        "towards": "Abbey Wood"
       },
       {
         "id": "490012364S",
@@ -179933,44 +179935,36 @@
         "id": "490000083G"
       },
       {
-        "id": "490011623P",
-        "towards": "Holloway Nags Head"
+        "id": "490006847N",
+        "towards": "Highbury Cnr, Newington Green Or Stoke Newington"
       },
       {
-        "id": "490000083S",
-        "towards": "Holloway Nags Head"
+        "id": "490007178X",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490006889Z",
-        "towards": "Holloway, Nags Head"
+        "id": "490011601Y",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490003929S",
-        "towards": "Camden Town, Highgate Or Tufnell Park"
+        "id": "490013294S",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490008368S",
-        "towards": "Camden Town, Kings Cross Or Tufnell Park"
+        "id": "490008616S",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490008298R",
-        "towards": "Kings Cross Or Camden Town"
+        "id": "490003053S",
+        "towards": "Newington Green Or Highbury Corner"
       },
       {
-        "id": "490013694S",
-        "towards": "Barnsbury Or Highbury Corner"
+        "id": "490008146W",
+        "towards": "Angel Islington Or Nags Head Holloway"
       },
       {
-        "id": "490000114Y",
-        "towards": "Barnsbury Or Highbury Corner"
-      },
-      {
-        "id": "490012451S",
-        "towards": "Angel Islington, Hoxton Or Highbury Grove"
-      },
-      {
-        "id": "490000108B",
-        "towards": "Angel Islington, Hoxton Or Highbury Grove"
+        "id": "490008143D",
+        "towards": "Angel Islington Or Holloway Nags Head"
       },
       {
         "id": "490000108G",
@@ -180329,48 +180323,36 @@
         "towards": "Dalston Or Finsbury Park"
       },
       {
-        "id": "490000108A",
+        "id": "490008143C",
+        "towards": "Stoke Newington, Dalston Or Finsbury Park"
+      },
+      {
+        "id": "490015544N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490003053N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490008616N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490015699N",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490011601Z",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490009986V",
+        "towards": "Finsbury Park"
+      },
+      {
+        "id": "490011623P",
         "towards": "Holloway Nags Head"
-      },
-      {
-        "id": "490012451N",
-        "towards": "Holloway Nags Head"
-      },
-      {
-        "id": "490009224Y",
-        "towards": "Holloway Nags Head"
-      },
-      {
-        "id": "490000114U",
-        "towards": "Finsbury Park, Archway Or Kentish Town"
-      },
-      {
-        "id": "490004720T",
-        "towards": "Finsbury Park, Archway Or Kentish Town"
-      },
-      {
-        "id": "490008296L",
-        "towards": "Highgate Village, Archway Or Finsbury Park"
-      },
-      {
-        "id": "490019152ZZ",
-        "towards": "Finsbury Park Or Hornsey Rise"
-      },
-      {
-        "id": "490008367J",
-        "towards": "Finsbury Park Or Hornsey Rise"
-      },
-      {
-        "id": "490006272E",
-        "towards": "Manor House Or Highbury"
-      },
-      {
-        "id": "490000083X",
-        "towards": "Manor House Or Highbury Corner"
-      },
-      {
-        "id": "490000083R",
-        "towards": "Manor House Or Highbury Corner"
       },
       {
         "id": "490000083AP"
@@ -182497,8 +182479,7 @@
         "towards": "Forest Gate, Bow Or Hackney"
       },
       {
-        "id": "490019793W",
-        "towards": "Hackney Wick, Leyton Or Plaistow"
+        "id": "490019793W"
       },
       {
         "id": "490020204S",
