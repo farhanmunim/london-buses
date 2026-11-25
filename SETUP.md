@@ -87,7 +87,7 @@ Do these only once the site answers on its final domain.
 
 ## 5. Domain references to update
 
-Search for the old hostname and replace it in: `README.md` (live-site and docs links), `robots.txt` (comment and `Sitemap:` line), `sitemap.xml` (`<loc>` entries), and the `archive/v1/` titles if you want the classic app's title to match. `functions/api/live/vehicles.js` derives its upstream User-Agent from the request host, so it needs no edit. `site-banner.js` carries the migration notice: set `ON = false` once the move is done.
+Search for the old hostname and replace it in: `README.md` (live-site and docs links), `robots.txt` (comment and `Sitemap:` line), `sitemap.xml` (`<loc>` entries), and the `archive/v1/` titles if you want the classic app's title to match. `functions/api/live/vehicles.js` derives its upstream User-Agent from the request host, so it needs no edit.
 
 ## 6. Local development and tests
 
@@ -112,5 +112,4 @@ The tender fetcher falls back to a real browser when TfL's forms sit behind a Cl
 - [ ] CARTO key replaced and the new domain allowed on it
 - [ ] Analytics ids re-pointed or removed
 - [ ] Old hostname replaced in `README.md`, `robots.txt`, `sitemap.xml`
-- [ ] `site-banner.js` switched off
 - [ ] Test suites green after `npm run test:fixtures`

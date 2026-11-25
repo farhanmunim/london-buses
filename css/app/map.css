@@ -9,7 +9,7 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 /* On a phone the panel is capped so it can never cover the map it controls; its notes and route cards scroll inside it. */
 @media(max-width:759px){.netmap-panel{max-height:min(50dvh, calc(100% - 24px));overflow-y:auto;overscroll-behavior:contain}
   .nm-pinroutes{max-height:96px}.nm-pinhead .reset{margin-left:0}.nm-pinbox{padding-bottom:8px}}
-.embed .topbar,.embed .tabbar,.embed .app-footer,.embed #site-banner{display:none!important}
+.embed .topbar,.embed .tabbar,.embed .app-footer{display:none!important}
 .embed{--hdr-h:0px;--sb-h:0px}
 .embed .nm-scope{display:none}
 .embed .shell{min-height:100dvh}

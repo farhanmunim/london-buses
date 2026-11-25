@@ -105,7 +105,7 @@ const firstId = await page.locator('#routes tbody tr.row').first().getAttribute(
 await page.locator('#routes tbody tr.row').first().click(); await page.waitForTimeout(350);
 F(`row click opens the route brief (${firstId})`, await page.locator('#drawer.open').count() === 1 && (await txt(page, '#drawer .badge')) === firstId && /route=/.test(await page.evaluate(() => location.hash)));
 const dr = await page.evaluate(() => ({ cells: document.querySelectorAll('#drawer .mini > div').length, charts: document.querySelectorAll('#drawer svg[role=img]').length, hasShape: !!document.querySelector('#drawer .shape path') || /route map/i.test(document.querySelector('#drawer')?.textContent ?? '') }));
-F('the open route brief is not covered by the site banner (its controls are clickable)', await clickable('#drawer .x button'));
+F('the open route brief’s controls are clickable', await clickable('#drawer .x button'));
 F(`brief carries the KPI and signal cells, a shape and trend charts (${dr.charts} charts)`, dr.cells >= 9 && dr.hasShape && dr.charts >= 3);
 await page.keyboard.press('ArrowRight'); await page.waitForTimeout(250);
 F('→ steps to the next route in the table', (await txt(page, '#drawer .badge')) !== firstId);
@@ -153,7 +153,7 @@ F('"All London" is the first operator-menu choice', /All London/.test(await txt(
 
 /* ── full-page maps ─────────────────────────────────────────────────────── */
 await page.click('.acts [data-expand="net"]'); await page.waitForTimeout(600);
-F('the full-page map is not covered by the site banner (Close is clickable)', await clickable('#mfClose'));
+F('the full-page map’s Close is clickable', await clickable('#mfClose'));
 const fr = page.frameLocator('#mfBody iframe');
 await fr.locator('#nmCount').waitFor({ timeout: 30000 });
 await page.waitForTimeout(800);
@@ -244,7 +244,7 @@ F('zero page errors (scopes and maps)', errors.length === 0);
   F(`What changed lists dated items with kind filters (${await n('#changed .fi')})`, await n('#changed .fi') > 0 && await n('#changed .fday') > 0 && await n('#changed [data-feedf]') === 6);
   await gp.click('#changed [data-feedf="perf"]').catch(() => {}); await gp.waitForTimeout(150);
   F('a kind filter narrows the feed', (await gp.locator('#changed .fi .fk').allTextContents()).every(t => t === 'Performance') || await n('#changed .fi') === 0);
-  F(`Bid radar lists upcoming tenders with Defend/Attack and operators within reach (${await n('#radar tr.rr')})`, await n('#radar tr.rr') > 0 && await n('#radar .tag') > 0 && await n('#radar .rc') > 0 && /within 5 km/.test(await txt(gp, '#radar .ch p')));
+  F(`Bid radar lists upcoming tenders tagged Own route / Within reach, with operators within reach (${await n('#radar tr.rr')})`, await n('#radar tr.rr') > 0 && await n('#radar .tag') > 0 && await n('#radar .rc') > 0 && /within 5 km/.test(await txt(gp, '#radar .ch p')));
   await gp.click('#radar [data-radar-km="8"]'); await gp.waitForTimeout(300);
   F('the reach switch re-renders at 8 km', /within 8 km/.test(await txt(gp, '#radar .ch p')) && await n('#radar tr.rr') > 0);
   F(`Depot occupancy shows every garage with now / 12 / 36 month bars (${await n('#occupancy tr.orow')})`, await n('#occupancy tr.orow') >= 5 && await n('#occupancy .occ') >= 15 && await n('#occupancy .occspark') >= 5);
@@ -261,7 +261,7 @@ F('zero page errors (scopes and maps)', errors.length === 0);
   F('zero page errors (v3 cards)', g.errors.length === 0);
   await g.ctx.close();
   const d = await open(1440, 900, '#op=Go-Ahead%20London&garage=A'); const dp = d.page;
-  F('garage scope offers a Catchment map button and scopes the radar to tenders it could reach', await dp.locator('.acts [data-expand="pin"]').count() === 1 && /could bid for from Sutton/.test(await txt(dp, '#radar .ch p')));
+  F('garage scope offers a Catchment map button and scopes the radar to tenders it could reach', await dp.locator('.acts [data-expand="pin"]').count() === 1 && /within reach of Sutton garage/.test(await txt(dp, '#radar .ch p')));
   await dp.click('.acts [data-expand="pin"]'); await dp.waitForTimeout(500);
   F('the Catchment button opens the map with a pin at the garage', /pin=51\./.test(await dp.locator('#mfBody iframe').getAttribute('src') ?? '') && /Catchment/.test(await txt(dp, '#mfTitle')));
   await dp.keyboard.press('Escape'); await d.ctx.close();
