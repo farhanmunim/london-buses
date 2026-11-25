@@ -84,7 +84,7 @@ export async function renderGarageDetail(code){
       </div>
     </div>
     <div class="section"><div class="section-h">On the map</div><div id="map"></div>
-      <div class="legendrow" style="margin-top:8px"><span>Every route based at ${esc(g.name)} — tap a line to open it.</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>Every route based at ${esc(g.name)}. Tap a line to open it.</span></div>
     </div>`;
   initGarageMap(g, tok);
 }
@@ -120,7 +120,7 @@ async function initGarageMap(g, tok = state.navToken){
   } else {
     // Say why the pin is missing instead of leaving a silent gap.
     const note = document.querySelector('#map + .legendrow span');
-    if(note) note.textContent += ' Exact garage location isn’t in the dataset yet — its record only carries the operating company’s registered-office postcode.';
+    if(note) note.textContent += ' Exact garage location isn’t in the dataset yet. Its record only carries the operating company’s registered-office postcode.';
   }
   try{
     let b = group.getBounds();

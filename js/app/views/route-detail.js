@@ -39,7 +39,7 @@ export async function renderRouteDetail(name){
   if(!route){
     main.innerHTML = `<a class="backrow" href="#/">‹ All routes</a><div class="empty">${routes?.length
       ? `Route “${esc(id)}” isn’t in the current TfL network.`
-      : 'The stop directory is unreachable right now — try again shortly.'}</div>`;
+      : 'The stop directory is unreachable right now. Try again shortly.'}</div>`;
     return;
   }
 
@@ -61,7 +61,7 @@ export async function renderRouteDetail(name){
   D.incoming().then(inc => {
     const i = inc.byRoute.get(route.name); if(!i || gone(tok)) return;
     const el = document.getElementById('dstatus'); if(!el) return;
-    el.insertAdjacentHTML('beforebegin', `<div class="changenote" role="note"><b>Changing operator:</b> <a href="#/operator/${encodeURIComponent(i.op)}" style="color:var(--acc);font-weight:600">${esc(i.op)}</a> has been awarded this route${i.from ? ` (now run by ${esc(i.from)})` : ''}, ${esc(incWhen(i))}.${i.provisional ? ' Provisional — community-reported, not yet in TfL’s published results.' : ''}</div>`);
+    el.insertAdjacentHTML('beforebegin', `<div class="changenote" role="note"><b>Changing operator:</b> <a href="#/operator/${encodeURIComponent(i.op)}" style="color:var(--acc);font-weight:600">${esc(i.op)}</a> has been awarded this route${i.from ? ` (now run by ${esc(i.from)})` : ''}, ${esc(incWhen(i))}.${i.provisional ? ' Provisional, community-reported, not yet in TfL’s published results.' : ''}</div>`);
   });
 
   /* live status — seconds-fresh feed, snapshot fallback, silently
@@ -242,10 +242,10 @@ async function buildRouteSections(route, m, tok){
         upcoming.twoYearExtension ? '+2 yr option' : null,
       ].filter(Boolean).join(' · ');
       frag.push(`<div class="divn-note" style="margin-top:14px"><span aria-hidden="true">📋</span>
-        <div><b>Coming up for tender</b> — ${upcoming.programmeYear ? `${esc(upcoming.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2'))} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tender/programme" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
+        <div><b>Coming up for tender</b>: ${upcoming.programmeYear ? `${esc(upcoming.programmeYear.replace(/^(\d{4})-\d{2}(\d{2})$/, '$1/$2'))} programme` : 'tendering programme'}${upcoming.tranche ? `, tranche ${esc(upcoming.tranche)}` : ''}: ${bits}. <a href="#/tender/programme" style="color:inherit;text-decoration:underline">Tendering programme ›</a></div>
       </div>`);
     }
-  } catch(e) { /* programme is enrichment — never fatal */ }
+  } catch(e) { /* programme is enrichment, never fatal */ }
 
   frag.push(cpmChartHtml(route.name, tn));
   if(rows.length || latest){
@@ -273,7 +273,7 @@ async function buildRouteSections(route, m, tok){
       const dv = document.getElementById('deckVal');
       if(dv) dv.textContent = dd && sd ? `Mixed · ${dd} DD / ${sd} SD` : dd ? 'Double deck' : 'Single deck';
       const kv = document.getElementById('deckRow');
-      if(kv) kv.querySelector('.v').textContent = dd && sd ? `Mixed — ${dd} double, ${sd} single` : dd ? `Double deck (${dd})` : `Single deck (${sd})`;
+      if(kv) kv.querySelector('.v').textContent = dd && sd ? `Mixed: ${dd} double, ${sd} single` : dd ? `Double deck (${dd})` : `Single deck (${sd})`;
     });
   }
 
@@ -380,7 +380,7 @@ function cpmChartHtml(routeName, awards){
     const changed = i > 0 && pts[i-1].a.operator && p.a.operator && pts[i-1].a.operator !== p.a.operator;
     const html = `<b>£${p.a.costPerMile.toFixed(2)}/mile</b> · ${esc(fmtDate(p.a.awardDate) ?? p.a.awardDate)}<br>${esc(p.a.operator ?? 'Unknown operator')}`
       + (Number.isFinite(p.a.acceptedBid) ? `<br>Accepted bid £${p.a.acceptedBid.toLocaleString('en-GB')}/yr` : '')
-      + (changed ? `<br><span style="color:var(--acc);font-weight:600">Operator change</span> — from ${esc(pts[i-1].a.operator)}` : '');
+      + (changed ? `<br><span style="color:var(--acc);font-weight:600">Operator change</span>, from ${esc(pts[i-1].a.operator)}` : '');
     return `<circle class="cpm-hit" cx="${X(p.t).toFixed(1)}" cy="${Y(p.a.costPerMile).toFixed(1)}" r="14" fill="transparent" style="cursor:pointer" data-x="${(X(p.t)/W*100).toFixed(2)}" data-y="${(Y(p.a.costPerMile)/H*100).toFixed(2)}" data-cpmtip="${esc(html)}" tabindex="0" role="img" aria-label="${esc(fmtDate(p.a.awardDate) ?? '')} £${p.a.costPerMile.toFixed(2)} per mile, ${esc(p.a.operator ?? '')}"/>`;
   }).join('');
 
@@ -404,6 +404,6 @@ function cpmChartHtml(routeName, awards){
       </div>
       <div class="legendrow" style="padding:7px 8px 3px;flex-wrap:wrap">${legend}</div>
     </div>
-    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile at each award (not indexed against <a href="#/cpi" style="color:var(--acc)">CPI-CPA</a>) — a colour change marks an operator change; hover a dot for the award. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
+    <div class="legendrow" style="margin-top:7px"><span>Nominal £/mile at each award (not indexed against <a href="#/cpi" style="color:var(--acc)">CPI-CPA</a>): a colour change marks an operator change; hover a dot for the award. ${pts.length} priced awards, ${y0}–${new Date(pts[pts.length-1].t).getUTCFullYear()}.</span></div>
   </div>`;
 }

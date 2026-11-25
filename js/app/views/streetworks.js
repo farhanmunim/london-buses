@@ -18,7 +18,7 @@ export async function renderStreetworks(){
   const sw = await D.streetworks();
   if(gone(tok)) return;
   if(!sw?.entries?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">No street works archived yet — the feed went live on 18 Sep 2026 and fills as events arrive. Try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">No street works archived yet. The feed went live on 18 Sep 2026 and fills as events arrive. Try again shortly.</div></div>`;
     return;
   }
   const PAGE = DIVN_PAGE, inputCss = divnInputCss;
@@ -61,8 +61,8 @@ export async function renderStreetworks(){
 
   main.innerHTML = `<div class="wrap">
     <div><h1 style="margin:2px 0 4px">Street works</h1>
-      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory street-works record</b> for London — every permit and work event for the 33 London highway authorities + TfL (${rows.length.toLocaleString('en-GB')} works so far). Filter, and export as CSV.</div>
-      <div style="color:var(--mu);font-size:12px;margin-top:6px">Updated live since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet — for roadworks already joined to routes see each route's page, for the legal orders behind closures the <a href="#/tro" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">traffic orders →</a>, and for notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
+      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory street-works record</b> for London: every permit and work event for the 33 London highway authorities + TfL (${rows.length.toLocaleString('en-GB')} works so far). Filter, and export as CSV.</div>
+      <div style="color:var(--mu);font-size:12px;margin-top:6px">Updated live since 18 Sep 2026; the archive folds new events roughly every 2 h. Works aren't matched to bus routes yet, for roadworks already joined to routes see each route's page, for the legal orders behind closures the <a href="#/tro" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">traffic orders →</a>, and for notified diversions the <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversion history →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="swq" type="search" aria-label="Search street works" placeholder="Search street, ref or promoter" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="swha" aria-label="Filter by highway authority" style="${inputCss}"><option value="">All boroughs</option>${boroughs.map(b => `<option>${esc(b)}</option>`).join('')}</select>

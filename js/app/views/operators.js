@@ -8,7 +8,7 @@ import { cmpRoute, esc, fmtDate, nOf, num, opColor, opInitials, plural, stripTag
 /* ════════════════════ OPERATORS ════════════════════ */
 export async function renderOperators(){
   const tok = state.navToken;
-  main.innerHTML = `<h1 class="h1">Operators</h1><div class="sub">Who runs London’s buses — routes, fleet size and electrification.</div>
+  main.innerHTML = `<h1 class="h1">Operators</h1><div class="sub">Who runs London’s buses, routes, fleet size and electrification.</div>
     <div class="oplist" id="oplist">${'<div class="skel" style="height:120px"></div>'.repeat(6)}</div>`;
   const [meta, garages] = await Promise.all([D.meta(), D.garages()]);
   if(gone(tok)) return;
@@ -24,7 +24,7 @@ export async function renderOperators(){
   const gCount = new Map();
   for(const g of garages ?? []) if(g.operator) gCount.set(g.operator, (gCount.get(g.operator) ?? 0) + 1);
   const list = [...agg.entries()].sort((a,b) => b[1].routes - a[1].routes);
-  if(!list.length){ document.getElementById('oplist').innerHTML = '<div class="empty">The route data is unreachable right now — try again shortly.</div>'; return; }
+  if(!list.length){ document.getElementById('oplist').innerHTML = '<div class="empty">The route data is unreachable right now. Try again shortly.</div>'; return; }
   document.getElementById('oplist').innerHTML = list.map(([op,a]) => {
     const evPct = a.evKnown ? Math.round(a.ev / a.evKnown * 100) : null;
     return `<a class="opcard" href="#/operator/${encodeURIComponent(op)}">

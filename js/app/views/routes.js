@@ -24,7 +24,7 @@ export async function renderRoutes(){
 
   const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
   if(gone(tok)) return;
-  if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The route data is unreachable right now — try again shortly.</div>'; return; }
+  if(!routes){ document.getElementById('rlist').innerHTML = '<div class="empty">The route data is unreachable right now. Try again shortly.</div>'; return; }
   const disrupted = new Set((lineStatus?.rows ?? []).filter(r => r.severity !== 10).map(r => r.route));
 
   const ops = [...new Set(Object.values(meta).map(m => m?.operator).filter(Boolean))].sort();
@@ -99,7 +99,7 @@ export async function renderRoutes(){
     const row = e.target.closest('.rrow'); if(!row || !routesViewState.selecting) return;
     e.preventDefault();
     const id = row.dataset.r, set = routesViewState.compare;
-    if(set.has(id)) set.delete(id); else if(set.size < MAX) set.add(id); else { document.getElementById('cmpBarText').innerHTML = `<b>Up to ${MAX} routes</b> at a time — untick one first`; return; }
+    if(set.has(id)) set.delete(id); else if(set.size < MAX) set.add(id); else { document.getElementById('cmpBarText').innerHTML = `<b>Up to ${MAX} routes</b> at a time, untick one first`; return; }
     row.classList.toggle('picked', set.has(id)); row.setAttribute('aria-checked', String(set.has(id)));
     row.querySelector('.rtick').innerHTML = set.has(id) ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>' : '';
     syncBar();

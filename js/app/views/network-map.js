@@ -29,7 +29,7 @@ export async function renderNetworkMap(){
         <div class="nm-scope" id="nmScope" hidden></div>
         <div class="nm-search">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></svg>
-          <input id="nmq" aria-label="Search routes on the map" placeholder="Search routes — 25, N38, X68…" autocomplete="off" enterkeyhint="go" />
+          <input id="nmq" aria-label="Search routes on the map" placeholder="Search routes: 25, N38, X68…" autocomplete="off" enterkeyhint="go" />
           <button class="clear" id="nmqClear" aria-label="Clear search" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
         <div class="nm-sugg" id="nmSugg" hidden></div>
@@ -48,7 +48,7 @@ export async function renderNetworkMap(){
         </div>
         <div class="nm-layers">
           <span class="nm-lbl">Layers</span>
-          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}<button type="button" class="livebtn iconb" data-lyr="pin" title="Catchment pin — drop a pin and list every route within a radius" aria-label="Catchment pin" aria-pressed="false">${PIN_ICON}</button></div>
+          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}<button type="button" class="livebtn iconb" data-lyr="pin" title="Catchment pin, drop a pin and list every route within a radius" aria-label="Catchment pin" aria-pressed="false">${PIN_ICON}</button></div>
         </div>
         <div class="nm-gscope" id="nmRouteScope" hidden><span class="nm-lbl">Routes</span><div class="seg" role="group" aria-label="Which route lines to draw"><button type="button" data-rs="sel">Selected routes</button><button type="button" data-rs="all">All routes</button></div></div>
         <div class="nm-gscope" id="nmGarScope" hidden><span class="nm-lbl">Garages</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes</button><button type="button" data-gs="all">All garages</button></div></div>
@@ -459,7 +459,7 @@ export async function renderNetworkMap(){
         const [raws, reg] = await Promise.all([Promise.all(scope.map(n => D.liveVehicles(n))), D.vehiclesReg()]);
         if(!alive()) return;
         nextIn = Math.min(...raws.map(r => r ? nextPollS(r, 15) : 8));
-        if(raws.every(r => !r) && layer){ show('<b>Live buses</b> — reconnecting…'); return; }   // keep the last positions
+        if(raws.every(r => !r) && layer){ show('<b>Live buses</b>: reconnecting…'); return; }   // keep the last positions
         const rows = raws.flatMap((raw, i) => (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng)).map(v => ({ ...v, _route:scope[i] })));
         if(layer) state.map.removeLayer(layer);
         layer = busesLayer(rows, reg).addTo(state.map);
@@ -579,7 +579,7 @@ export async function renderNetworkMap(){
       const gated = needsFocus(k) && !focused;
       b.classList.toggle('on', !!st.ly[k]); b.setAttribute('aria-pressed', String(!!st.ly[k]));
       b.classList.toggle('is-gated', gated); b.setAttribute('aria-disabled', String(gated));
-      b.title = gated ? `${LY_LABEL[k]} — search or filter to 1–3 routes to enable` : LY_LABEL[k];
+      b.title = gated ? `${LY_LABEL[k]}, search or filter to 1–3 routes to enable` : LY_LABEL[k];
     });
   }
   /* Called from repaint(): rebuild the active layers when the scope changes. */
@@ -608,7 +608,7 @@ export async function renderNetworkMap(){
     const k = b.dataset.lyr;
     if(k === 'pin'){ st.pinOn ? pinOff() : pinArm(); return; }
     if(needsFocus(k) && !layerScope().length){
-      setLyNote('hint', `${LY_LABEL[k]} appear when 1–3 routes are searched or filtered — the live feed isn’t polled for the whole network.`);
+      setLyNote('hint', `${LY_LABEL[k]} appear when 1–3 routes are searched or filtered. The live feed isn’t polled for the whole network.`);
       clearTimeout(hintTimer); hintTimer = setTimeout(() => setLyNote('hint', ''), 6000);
       return;
     }

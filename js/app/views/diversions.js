@@ -23,7 +23,7 @@ export async function renderDiversions(){
   const [hist, dMeta] = await Promise.all([D.divHistory(), D.meta()]);
   if(gone(tok)) return;
   if(!hist?.entries?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">The diversion history is unreachable right now — try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">The diversion history is unreachable right now. Try again shortly.</div></div>`;
     return;
   }
   const all = divnSorted(hist);

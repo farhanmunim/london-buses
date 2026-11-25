@@ -8,10 +8,10 @@ export async function renderAbout(){
   const tok = state.navToken;
   main.innerHTML = `<div class="about">
     <h1>About</h1>
-    <div class="absub">Every London bus route, operator, garage and contract — built entirely from open data.</div>
+    <div class="absub">Every London bus route, operator, garage and contract, built entirely from open data.</div>
 
-    <p>londonbuses.org is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner — for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
-    <p>Building something? The data behind this site is a free, open JSON API — see the <a href="/docs#api">documentation</a>.</p>
+    <p>londonbuses.org is an independent project. It is <b>not affiliated with Transport for London</b> or any bus operator, and it is not a journey planner: for travel advice use <a href="https://tfl.gov.uk" rel="noopener" target="_blank">tfl.gov.uk</a>.</p>
+    <p>Building something? The data behind this site is a free, open JSON API: see the <a href="/docs#api">documentation</a>.</p>
 
     <h2>Attribution</h2>
     <div id="attrBody"><p class="muted">Loading credits…</p></div>
@@ -19,10 +19,10 @@ export async function renderAbout(){
     <h2>Live right now</h2>
     <div class="card"><table class="fresh">
       <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus arrivals</td><td class="desc">Re-syncs every ~30 s while a stop board is open.</td></tr>
-      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">GPS positions — every ~15–20 s while the live layer is on.</td></tr>
+      <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Bus positions</td><td class="desc">GPS positions, every ~15–20 s while the live layer is on.</td></tr>
       <tr><td><span class="livechip"><i class="pulse"></i>LIVE</span> Route status</td><td class="desc">Checked on view, re-polled every 60 s.</td></tr>
     </table></div>
-    <p class="note">Live feeds are never stored — the browser reads them directly, with the last published snapshot as fallback.</p>
+    <p class="note">Live feeds are never stored. The browser reads them directly, with the last published snapshot as fallback.</p>
 
     <h2>When each dataset refreshes</h2>
     <div class="card"><table class="fresh" id="freshTable"><tr><td colspan="3" style="color:var(--mu)">Loading…</td></tr></table></div>
@@ -31,7 +31,7 @@ export async function renderAbout(){
     <h2>Credits</h2>
     <p>Built by <a href="https://farhan.app" rel="noopener" target="_blank">Farhan Munim</a>. Thanks to Daniel Plumb, Mark Leonard-Adoko, Ross Levine, Paul Tran and Andy Corbett for data, feedback and reference material. The original map-first app is preserved as the <a href="/archive/v1/">classic map app ›</a></p>
 
-    <div class="footer" style="margin-top:28px">Data may be incomplete or out of date — verify before acting on it.</div>
+    <div class="footer" style="margin-top:28px">Data may be incomplete or out of date. Verify before acting on it.</div>
   </div>`;
   const [mf, credits] = await Promise.all([
     D.manifest(),
@@ -44,7 +44,7 @@ export async function renderAbout(){
   const alsoFrom = links.length > 1 ? links.slice(0, -1).join(', ') + ' and ' + links.at(-1) : links.join('');
   document.getElementById('attrBody').innerHTML = credits
     ? `<p class="note" style="margin-top:0">${notices}. Also built on data from ${alsoFrom} (wiki records are CC BY-SA; DVLA data is used as route-level aggregates only). <a href="/docs#api">Every source and licence</a>.</p>`
-    : '<p class="muted">Credits could not be loaded — see <a href="/docs#api">the documentation</a>.</p>';
+    : '<p class="muted">Credits could not be loaded, see <a href="/docs#api">the documentation</a>.</p>';
 
   /* Refresh schedule per pipeline — mirrors .github/workflows (keep in sync):
      nightly full refresh 03:17, status every 2 h 07:41–21:41, fleet sweeps

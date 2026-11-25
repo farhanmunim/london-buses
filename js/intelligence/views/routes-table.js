@@ -59,7 +59,7 @@ function rowHtml(r){
 export function renderTable(){
   const list = filtered(), s = SC().st;
   const chip = (k, label, on, attr) => `<button class="fchip ${on ? 'on' : ''}" ${attr}>${label}</button>`;
-  $('#routes').innerHTML = `<div class="ch"><div><h2>Routes</h2><p>${list.length} of ${nOf(s.n, 'route')} · every row is a route brief — click for the full picture</p></div></div>
+  $('#routes').innerHTML = `<div class="ch"><div><h2>Routes</h2><p>${list.length} of ${nOf(s.n, 'route')} · every row is a route brief, click for the full picture</p></div></div>
     <div class="tools"><label class="sfield"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="rq" placeholder="Filter by route, place or garage" value="${esc(S.q)}" aria-label="Filter routes"></label>
       ${[['all', 'All'], ['diesel', 'Diesel'], ['hybrid', 'Hybrid'], ['zero', 'Zero-emission']].map(([k, l]) => chip(k, l, S.prop === k, `data-prop="${k}"`)).join('')}
       <span style="width:1px;height:20px;background:var(--line-2);margin:0 4px"></span>

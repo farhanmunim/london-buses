@@ -22,7 +22,7 @@ export function health(){
 const age = h => h < 1 ? `${Math.round(h * 60)} min ago` : h < 48 ? `${h.toFixed(h < 10 ? 1 : 0)} h ago` : `${Math.round(h / 24)} days ago`;
 export function renderHealth(){
   const { rows, worst } = health(), chip = $('#fresh');
-  if(chip){ chip.classList.toggle('late', worst === 'late'); chip.classList.toggle('stale', worst === 'stale'); chip.title = worst === 'fresh' ? 'All datasets refreshed on time — click for details' : worst === 'late' ? 'Some datasets are behind their usual refresh — click for details' : 'Some datasets have not refreshed for a long time — click for details'; chip.style.cursor = 'pointer'; }
+  if(chip){ chip.classList.toggle('late', worst === 'late'); chip.classList.toggle('stale', worst === 'stale'); chip.title = worst === 'fresh' ? 'All datasets refreshed on time, click for details' : worst === 'late' ? 'Some datasets are behind their usual refresh, click for details' : 'Some datasets have not refreshed for a long time, click for details'; chip.style.cursor = 'pointer'; }
   const body = $('#healthBody'); if(!body) return;
   body.innerHTML = `<h2>Data health</h2><p style="margin:0 0 12px;color:var(--ink-2)">How old each dataset is against how often it should move. Late means behind its usual refresh; stale means several refreshes missed.</p>
     <table class="dt"><thead><tr><th>Dataset</th><th>Last refreshed</th><th>Usually every</th><th>Status</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r.label)}</td><td>${esc(age(r.h))}</td><td>${r.exp === null ? 'seeded snapshot' : r.exp < 48 ? r.exp + ' h' : Math.round(r.exp / 24) + ' days'}</td><td><span class="hs ${r.status}">${r.status === 'static' ? 'snapshot' : r.status}</span></td></tr>`).join('')}</tbody></table>

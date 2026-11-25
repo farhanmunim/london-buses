@@ -32,7 +32,7 @@ export async function renderVehicleDetail(regArg){
       </span>
       <div class="dtitle">
         <h1 style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">${plate(R,false)}${v?.operator ? `<a href="#/operator/${encodeURIComponent(v.operator)}" style="font-size:14px;font-weight:600;color:var(--acc)">${esc(v.operator)}</a>` : ''}</h1>
-        <div class="sub2">${v ? 'From the vehicle register' : 'Not in the current vehicle register — it may not have been observed recently.'}</div>
+        <div class="sub2">${v ? 'From the vehicle register' : 'Not in the current vehicle register. It may not have been observed recently.'}</div>
       </div>
     </div>
     ${facts.length ? `<div class="facts" style="margin-top:14px">${facts.map(([l,val]) =>
@@ -74,7 +74,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = state.navToken){
   const note = document.getElementById('vLiveNote');
   if(!first){
     document.getElementById('map').remove();
-    if(note) note.textContent = 'Not in the live GPS feed right now — it may not be in service.';
+    if(note) note.textContent = 'Not in the live GPS feed right now. It may not be in service.';
     return;
   }
 
@@ -140,7 +140,7 @@ async function initVehicleLiveMap(R, v, ctxLine, ctxStop, tok = state.navToken){
       if(!document.getElementById('vLiveSec')) return;
       if(cur){ gone = false; lastBus = cur; flag = status(cur); drawBus(cur); noteText(`next update in ${nextIn} s`); }
       else if(!feedOk){ if(!gone) noteText('reconnecting…'); }   // feed down ≠ bus gone
-      else { gone = true; if(note) note.textContent = 'The bus has left the live feed — it may have completed its trip.'; }
+      else { gone = true; if(note) note.textContent = 'The bus has left the live feed. It may have completed its trip.'; }
     }
   }, 1000));
 }

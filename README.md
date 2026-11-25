@@ -6,13 +6,13 @@ An interactive map and data explorer for every bus route in London. Search route
 
 ## What it does
 
-The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Traffic orders, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`. `/intelligence` is an experimental page (linked from the More menu; the old `/v3` URL redirects to it) — an operator-intelligence dashboard prototype on the same data, for planning what comes next. It opens on the whole network and can be scoped to one operator or one garage; its maps (network, garages, route) expand to full page, its fleet view tracks how many buses reach TfL's 14-year age limit by year, and it carries a what-changed feed, a bid radar (upcoming tenders with the operators whose garages are within reach), a depot occupancy forecast, secured revenue, market competitiveness, electrification and performance-at-risk cards, a data-health panel and a print-ready brief; its contracts section shows price versus rivals: whether an operator's winning bids are cheaper or dearer per mile than each other operator's, for electric and for diesel/hybrid buses.
+The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions, Street works, Traffic orders, Mileage and CPI-CPA. It works well on phones. The original map-first app is preserved at `/archive/v1/`. `/intelligence` is an experimental page (linked from the More menu; the old `/v3` URL redirects to it), an operator-intelligence dashboard prototype on the same data, for planning what comes next. It opens on the whole network and can be scoped to one operator or one garage; its maps (network, garages, route) expand to full page, its fleet view tracks how many buses reach TfL's 14-year age limit by year, and it carries a what-changed feed, a bid radar (upcoming tenders with the operators whose garages are within reach), a depot occupancy forecast, secured revenue, market competitiveness, electrification and performance-at-risk cards, a data-health panel and a print-ready brief; its contracts section shows price versus rivals: whether an operator's winning bids are cheaper or dearer per mile than each other operator's, for electric and for diesel/hybrid buses.
 
 - Draws the whole network as one colour-coded map, with a **catchment pin**: drop a pin anywhere (or on a garage from its popup), set the radius, drag it about, and every route running within the circle is listed by operator while the rest of the network fades. Whenever routes are searched or filtered, **Routes** and **Garages** toggles switch between only the selected ones and the whole network faded in behind. Click a route for full detail: geometry, stops, operator, vehicle type, propulsion, fleet age, contract value, next tender, and its **rare workings** (buses borrowed from another route) listed apart from the regular fleet; on the live map a bus heading to the garage with the machine still logged on is flagged as a probable **ghost bus**.
 - Route maps add layers on demand: stops, **live buses** (GPS), every **garage** with its distance to the route, **low bridges** graded by double-deck clearance, bus-involved **collisions** as a heatmap, current **street works** from the DfT Street Manager feed, and statutory **traffic orders** (D-TRO) with each closure's official diversion route drawn.
 - **Tender**: every published TfL award since 2003, plus the forward tendering programme. Awards show the previous and new operator in separate columns. Both tables are searchable by route, operator or tranche, with analysis numbers computed for the current filter (median £/mile and trend, bids per tender, incumbent retention). Route pages chart their own award history.
 - **CPI-CPA**: the ONS CPI index by month and the contract price adjustment rates derived from it. Verified against ONS reference tables.
-- **Diversions**: a day-by-day history of every TfL-notified diversion, accumulated from status snapshots (TfL publishes no archive). **Street works**: the statutory DfT Street Manager record for London's 33 highway authorities + TfL, pushed live over SNS into the repo. **Traffic orders**: the statutory D-TRO record — closures, bus lanes, banned turns and official diversion routes, corridor-joined to routes. **Mileage**: scheduled-vs-operated km per route per TfL reporting period.
+- **Diversions**: a day-by-day history of every TfL-notified diversion, accumulated from status snapshots (TfL publishes no archive). **Street works**: the statutory DfT Street Manager record for London's 33 highway authorities + TfL, pushed live over SNS into the repo. **Traffic orders**: the statutory D-TRO record, closures, bus lanes, banned turns and official diversion routes, corridor-joined to routes. **Mileage**: scheduled-vs-operated km per route per TfL reporting period.
 - Live service status per route, straight from TfL. Per-route crowding: peak load, busiest stop, busiest time.
 - Stackable filters, multi-route comparison, per-operator statistics, CSV exports throughout.
 
@@ -20,13 +20,13 @@ The app at `/` covers Routes, Map, Operators, Garages, Stops, Tender, Diversions
 
 The repository is the data platform. GitHub Actions is the scheduler and the computer. Git is the database. A static host serves the files, plus two small server endpoints: one for live bus GPS, one receiving the DfT street-works push feed.
 
-Scheduled workflows fetch every dataset from its public source, validate it, and commit the results. A failed validation commits nothing — the last good data keeps serving. `scripts/build-api.js` turns the committed datasets into a set of static JSON files under `data/api/` (the "faux-API") that the app reads like an API.
+Scheduled workflows fetch every dataset from its public source, validate it, and commit the results. A failed validation commits nothing, so the last good data keeps serving. `scripts/build-api.js` turns the committed datasets into a set of static JSON files under `data/api/` (the "faux-API") that the app reads like an API.
 
-The full story — the app, the pipeline, storage, hosting, deployment — is in the [archived docs](docs.html). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
+The full story (the app, the pipeline, storage, hosting, deployment) is in the [archived docs](docs.html). Deep per-field data notes are in [data.md](data.md); the deployment checklist is [SETUP.md](SETUP.md).
 
 ### Refresh schedule
 
-Cron times are UTC (that is what GitHub Actions runs on). The About page in the app shows the same schedule in London time, with last-updated and next-check times per dataset. A run commits — and the site redeploys — only when the data actually changed.
+Cron times are UTC (that is what GitHub Actions runs on). The About page in the app shows the same schedule in London time, with last-updated and next-check times per dataset. A run commits, and the site redeploys, only when the data actually changed.
 
 | Pipeline | Datasets | Schedule | Workflow |
 |---|---|---|---|
@@ -34,22 +34,22 @@ Cron times are UTC (that is what GitHub Actions runs on). The About page in the 
 | Service status | line status, diversion register + history, TIMS roadworks, street-works drain, D-TRO orders | every 2 h, 07:41–21:41 | `refresh-status.yml` |
 | Fleet sweeps | arrivals samples → DVLA-enriched fleet | every 8 h at 07:20 / 15:20 / 23:20 | `refresh-fleet.yml` |
 | Tender checks | awards + provisional awards + LOTS contract terms + programme | hourly 07:20–20:20, plus after every other run | `refresh-tenders.yml` |
-| CPI watch | CPI-CPA | ONS release day only: from 07:00 London time, when ONS publishes, one job polls ONS every 10 minutes until the new figure is in — on the site before 09:00 | `refresh-cpi.yml` |
+| CPI watch | CPI-CPA | ONS release day only: from 07:00 London time, when ONS publishes, one job polls ONS every 10 minutes until the new figure is in, on the site before 09:00 | `refresh-cpi.yml` |
 
 Live data is never stored. Arrivals and route status go straight from the browser to TfL. Live bus positions come through `/api/live/vehicles` (`functions/api/live/vehicles.js`), a small server endpoint that proxies the DfT BODS GPS feed with a 10-second cache. Street works arrive by push: `/api/streetworks` (`functions/api/streetworks.js`) receives DfT Street Manager SNS notifications (signature-verified, London-filtered by SWA org code) and commits each event to the `streetworks-inbox` branch, which the status workflow folds into the archive.
 
-**New operators are automatic.** Operator names are read from the data, not listed in the code: an operator that is awarded routes but runs none yet (Go Bus, for instance) appears on the Operators page (tagged *Incoming*) and on each affected route, and becomes a normal operator — with its own colour, garages, filters and an Intelligence entry — the moment the route data shows it running a route. `data/operator-aliases.json` is only needed to fold a renamed subsidiary into its parent brand.
+**New operators are automatic.** Operator names are read from the data, not listed in the code: an operator that is awarded routes but runs none yet (Go Bus, for instance) appears on the Operators page (tagged *Incoming*) and on each affected route, and becomes a normal operator, with its own colour, garages, filters and an Intelligence entry, the moment the route data shows it running a route. `data/operator-aliases.json` is only needed to fold a renamed subsidiary into its parent brand.
 
 ## Local development
 
 ```bash
 npm install
 cp .env.example .env          # then set the keys (the file says where to get them)
-npm run refresh               # full data pipeline — optional, committed data already works
+npm run refresh               # full data pipeline; optional, the committed data already works
 npx serve .                   # any static file server (ES modules need http://, not file://)
 ```
 
-The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`; optionally `DTRO_CLIENT_ID`/`DTRO_API_KEY`/`DTRO_CLIENT_SECRET` for traffic orders — the fetcher skips gracefully without them) or the live-vehicles endpoint (`BODS_API_KEY`).
+The site runs entirely from the committed `data/api/*.json`. You can work on the frontend with no keys at all. Keys are only needed to run the pipeline (`BUS_API_KEY`, `DVLA_API_KEY`; optionally `DTRO_CLIENT_ID`/`DTRO_API_KEY`/`DTRO_CLIENT_SECRET` for traffic orders, the fetcher skips gracefully without them) or the live-vehicles endpoint (`BODS_API_KEY`).
 
 Tests live in `tests/`. Run `npm run test:fixtures` once after cloning (it downloads the pinned Leaflet and MapLibre builds the suites serve in place of the CDN), then `npm test` (every suite, one summary line each) or `node tests/verify-<name>.mjs` for one. The same suites run on GitHub for every code change (`ci.yml`). They use Playwright with a system Chromium (`/opt/pw-browsers/chromium`, or set `CHROMIUM`) and mock all external feeds, so they pass offline.
 
@@ -66,8 +66,8 @@ index.html              the app shell (markup + <link>/<script> tags only)
 intelligence.html       the Operator Intelligence page, same shape
 css/app/                tokens → shell → components → map → polish (load order matters; polish is last on purpose)
 css/intelligence/       base → components → features → polish (+ print, for the Brief button)
-docs.html               /docs — API reference + project guide (js/docs.js fills the resource list from /api/v1/index.json)
-api/v1/                 GENERATED at deploy time by scripts/build-v1.js — the public API (gitignored; see docs/api.md)
+docs.html               /docs: API reference + project guide (js/docs.js fills the resource list from /api/v1/index.json)
+api/v1/                 GENERATED at deploy time by scripts/build-v1.js: the public API (gitignored; see docs/api.md)
 functions/api/          Pages Functions: live buses (+ /api/v1/live/vehicles alias), street works receiver
 js/app/main.js          entry point: imports every module, then boots the router
 js/app/core/            data layer, utils, router + navigation state, shell, theme, tooltip, "More" sheet
@@ -80,7 +80,7 @@ State that several views write (the navigation token, live-poll timers, the curr
 
 ## Corrections
 
-Per-route data fixes go in `data/route-overrides.json` — anything set there beats scraped data and survives every refresh. Rebuild with `npm run build-classifications`, `build-overview`, `build-api`, run the tests, commit.
+Per-route data fixes go in `data/route-overrides.json`, anything set there beats scraped data and survives every refresh. Rebuild with `npm run build-classifications`, `build-overview`, `build-api`, run the tests, commit.
 
 ## Thanks
 

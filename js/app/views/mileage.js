@@ -28,7 +28,7 @@ export async function renderMileage(){
   </div>`;
   const mWrap = document.getElementById('mWrap');
   if(!perf?.periods?.length || !perf?.routes){
-    mWrap.innerHTML = `<div class="empty" style="padding:28px 0">The per-period performance dataset is still building — its crawler hasn't published <span style="font-family:var(--mono)">route-performance.json</span> yet. Check back soon.</div>`;
+    mWrap.innerHTML = `<div class="empty" style="padding:28px 0">The per-period performance dataset is still building. Its crawler hasn't published <span style="font-family:var(--mono)">route-performance.json</span> yet. Check back soon.</div>`;
     document.getElementById('mExport').hidden = true;
     return;
   }
@@ -65,7 +65,7 @@ export async function renderMileage(){
   const mOps = [...new Set(Object.values(mOpOf).filter(Boolean))].sort();
   mWrap.innerHTML = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
-      <input id="mq" type="search" aria-label="Search mileage by route" placeholder="Search route (e.g. 24) — shows all its periods" style="flex:1;min-width:140px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
+      <input id="mq" type="search" aria-label="Search mileage by route" placeholder="Search route (e.g. 24): shows all its periods" style="flex:1;min-width:140px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">
       <select id="mper" aria-label="Reporting period" style="${inputCss}">${periodsDesc.map(p => `<option${p === newest ? ' selected' : ''}>${esc(p)}</option>`).join('')}</select>
       ${opFilterHtml('mop', mOps)}
       <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2)"><input id="mbelow" type="checkbox">Below standard only</label>
@@ -73,12 +73,12 @@ export async function renderMileage(){
     <div class="card" style="overflow-x:auto"><table class="cpi-table" style="min-width:980px">
       <thead><tr>
         <th>Route</th><th>Period</th>
-        <th class="num" title="Kilometres operated as % of schedule — red when below the route's contractual minimum standard">Operated %</th>
+        <th class="num" title="Kilometres operated as % of schedule: red when below the route's contractual minimum standard">Operated %</th>
         <th class="num" title="Contractual minimum operated-mileage standard">Min std</th>
         <th class="num" title="Route reliability for the period, in the route's own metric">Reliability</th>
-        <th class="num" title="Estimate: dailyKm × (20 weekday + 4 Saturday + 4 Sunday) per 28-day period, from the current timetable${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. scheduled km</th>
-        <th class="num" title="Est. scheduled km × (100 − operated %) ÷ 100${schedRoutes ? '' : ' — scheduled-mileage data building…'}">Est. lost km</th>
-        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days) — period calendar dates aren't published"><a href="#/diversions" style="color:inherit;text-decoration:underline dotted" title="Open the full diversion history">Diversions</a></th>
+        <th class="num" title="Estimate: dailyKm × (20 weekday + 4 Saturday + 4 Sunday) per 28-day period, from the current timetable${schedRoutes ? '' : ': scheduled-mileage data building…'}">Est. scheduled km</th>
+        <th class="num" title="Est. scheduled km × (100 − operated %) ÷ 100${schedRoutes ? '' : ': scheduled-mileage data building…'}">Est. lost km</th>
+        <th class="num" title="Diversion-history entries overlapping the period. Only computable for the newest period (approximated as the last 28 days): period calendar dates aren't published"><a href="#/diversions" style="color:inherit;text-decoration:underline dotted" title="Open the full diversion history">Diversions</a></th>
       </tr></thead>
       <tbody id="mBody"></tbody>
     </table></div>
@@ -87,7 +87,7 @@ export async function renderMileage(){
       <span id="mPage" style="font-size:12.5px;color:var(--tx2)"></span>
       <button class="livebtn" id="mNext">Next ›</button>
     </div>
-    <div class="legendrow" style="margin-top:8px"><span>${schedRoutes ? 'Scheduled km are timetable-derived estimates (20 weekdays + 4 Saturdays + 4 Sundays per 28-day period). ' : ''}Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days) — period calendar dates aren't published.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show — for now.'}</span></div>`;
+    <div class="legendrow" style="margin-top:8px"><span>${schedRoutes ? 'Scheduled km are timetable-derived estimates (20 weekdays + 4 Saturdays + 4 Sundays per 28-day period). ' : ''}Search a route to see every period for it; otherwise one row per route for the selected period. Diversion counts use the <a href="#/diversions" style="color:var(--acc)">diversion history</a>'s snapshots and are only computable for the newest period (last 28 days): period calendar dates aren't published.${schedRoutes ? '' : ' The scheduled-mileage dataset hasn’t been published yet, so the est. km columns show, for now.'}</span></div>`;
   const mst = { q:'', per:newest, op:'', below:false, page:0 };
   const rowFor = (id, per) => {
     const p = perfRoutes[id] ?? {};
@@ -127,10 +127,10 @@ export async function renderMileage(){
       <td class="num"${r.op != null && r.minStd != null && Math.round(r.op * 10) < Math.round(r.minStd * 10) ? ' style="color:var(--bad);font-weight:600" title="Below the contractual minimum standard"' : ''}>${r.op != null ? r.op.toFixed(1) + '%' : '—'}</td>
       <td class="num">${r.minStd != null ? r.minStd.toFixed(1) + '%' : '—'}</td>
       <td class="num" style="white-space:nowrap">${r.rel != null ? esc(String(r.rel)) + ' <span style="color:var(--mu);font-size:11px">' + esc(r.metric) + '</span>' : '—'}</td>
-      <td class="num" title="Estimated from the current timetable — 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>
+      <td class="num" title="Estimated from the current timetable: 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>
       <td class="num">${r.lost != null ? r.lost.toLocaleString('en-GB') : '—'}</td>
       <td class="num">${r.div != null ? `<a href="#/diversions" style="color:inherit" title="Open the full diversion history">${r.div}</a>` : '<span title="period dates not published" style="color:var(--mu)">—</span>'}</td></tr>`).join('')
-      : `<tr><td colspan="8" style="color:var(--mu);padding:18px 14px">No rows match — route search is exact (e.g. 24), and only routes in TfL's per-route reports appear.</td></tr>`;
+      : `<tr><td colspan="8" style="color:var(--mu);padding:18px 14px">No rows match. Route search is exact (e.g. 24), and only routes in TfL's per-route reports appear.</td></tr>`;
     document.getElementById('mCount').textContent = ` · ${list.length.toLocaleString('en-GB')} row${list.length === 1 ? '' : 's'}${mst.q.trim() ? '' : ` · ${mst.per}`}`;
     document.getElementById('mPage').textContent = `Page ${mst.page + 1} of ${pages}`;
     document.getElementById('mPrev').disabled = mst.page === 0;

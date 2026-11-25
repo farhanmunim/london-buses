@@ -98,8 +98,8 @@ export async function renderStops(){
       nearBtn.classList.remove('loading','on');
       const cEl2 = document.getElementById('sCount');
       if(cEl2) cEl2.textContent = err.code === 1
-        ? 'Location permission was declined — search by name instead.'
-        : 'Couldn’t get your location — try again or search by name.';
+        ? 'Location permission was declined. Search by name instead.'
+        : 'Couldn’t get your location. Try again or search by name.';
     }, { enableHighAccuracy:false, timeout:10000, maximumAge:60000 });
   });
 }
@@ -159,12 +159,12 @@ export async function renderStopDetail(id){
         // stop we can show — say so instead of rendering a ghost live board.
         main.innerHTML = `<a class="backrow" href="#/stops">‹ Stop search</a><div class="empty">${raw || reg
           ? `Stop “${esc(id)}” isn’t in the stop directory.`
-          : 'The stop directory is unreachable right now — try again shortly.'}</div>`;
+          : 'The stop directory is unreachable right now. Try again shortly.'}</div>`;
         return;
       }
       el.innerHTML = `<div class="kv-empty">${raw
-        ? 'No buses predicted right now — the stop may not be served at this time of day.'
-        : 'Live arrivals are unreachable right now — retrying shortly.'}</div>`;
+        ? 'No buses predicted right now. The stop may not be served at this time of day.'
+        : 'Live arrivals are unreachable right now. Retrying shortly.'}</div>`;
       return;
     }
     // TfL Countdown's platformName is the stop-flag letter ("A") — surface it

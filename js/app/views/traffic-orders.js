@@ -17,7 +17,7 @@ export async function renderTro(){
   const snap = await D.dtro();
   if(gone(tok)) return;
   if(!snap?.orders?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">No traffic regulation orders fetched yet — the feed refreshes regularly. Try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">No traffic regulation orders fetched yet. The feed refreshes regularly. Try again shortly.</div></div>`;
     return;
   }
   const PAGE = DIVN_PAGE, inputCss = divnInputCss, routeChip = divnRouteChip;
@@ -47,7 +47,7 @@ export async function renderTro(){
 
   main.innerHTML = `<div class="wrap">
     <div><h1 style="margin:2px 0 4px">Traffic orders</h1>
-      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory traffic regulation orders</b> shaping how buses move — road closures, bus lanes and gates, banned turns and one-ways, filtered to the ${rows.length.toLocaleString('en-GB')} bus-relevant orders in Greater London (of ${(snap.totalOrders ?? rows.length).toLocaleString('en-GB')} fetched). Filter, and export as CSV.</div>
+      <div style="color:var(--tx2);font-size:13.5px">The <b>statutory traffic regulation orders</b> shaping how buses move: road closures, bus lanes and gates, banned turns and one-ways, filtered to the ${rows.length.toLocaleString('en-GB')} bus-relevant orders in Greater London (of ${(snap.totalOrders ?? rows.length).toLocaleString('en-GB')} fetched). Filter, and export as CSV.</div>
       <div style="color:var(--mu);font-size:12px;margin-top:6px">Publication is mandatory for new orders from autumn 2026, so coverage grows as each authority onboards. Orders within 35 m of a route's corridor carry route chips; closures often include the <b style="color:var(--tx2)">official diversion route</b>, drawn on each route's map. See also <a href="#/streetworks" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">street works →</a> and <a href="#/diversions" style="color:var(--mu);font-weight:600;text-decoration:underline dotted">diversions →</a></div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center">
       <input id="troq" type="search" aria-label="Search traffic orders" placeholder="Search order, street or authority" style="flex:1;min-width:160px;max-width:280px;border:1px solid var(--bd);background:var(--surf);border-radius:999px;padding:8px 15px;font-size:13.5px;color:var(--tx)">

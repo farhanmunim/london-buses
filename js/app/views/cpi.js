@@ -12,7 +12,7 @@ export async function renderCpi(){
   const d = await D.cpi();
   if(gone(tok)) return;
   if(!d?.months?.length){
-    main.innerHTML = `<div class="wrap"><div class="empty">The CPI-CPA dataset is unreachable right now — try again shortly.</div></div>`;
+    main.innerHTML = `<div class="wrap"><div class="empty">The CPI-CPA dataset is unreachable right now. Try again shortly.</div></div>`;
     return;
   }
   const rows = [...d.months].reverse();   // newest first
@@ -31,7 +31,7 @@ export async function renderCpi(){
     ['Rolling average', pct2(latest.ra), '85% of 12-month avg YoY'],
   ];
   const trFwd = r => `<tr style="background:var(--acc-soft)">
-    <td style="font-weight:600">${esc(monthLabel(r.month))} <span style="font-size:9.5px;font-weight:700;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:0 4px;vertical-align:1px" title="Actual rate, fully determined by published CPI — this month's own index is not yet released">CONFIRMED</span></td>
+    <td style="font-weight:600">${esc(monthLabel(r.month))} <span style="font-size:9.5px;font-weight:700;color:var(--acc);border:1px solid var(--acc);border-radius:4px;padding:0 4px;vertical-align:1px" title="Actual rate, fully determined by published CPI, this month's own index is not yet released">CONFIRMED</span></td>
     <td class="num" style="color:var(--mu)">—</td>
     <td class="num" style="color:var(--mu)">—</td>
     <td class="num" title="${esc(r.p2p ?? '')}">${r.p2p ? pct2(r.p2p) : '—'}</td>
@@ -54,7 +54,7 @@ export async function renderCpi(){
         <thead><tr><th>Month</th><th class="num">CPI index</th><th class="num">YoY</th><th class="num">P2P (85%)</th><th class="num">Rolling avg (85%)</th></tr></thead>
         <tbody>${fwd.map(trFwd).join('')}${rows.map(tr).join('')}</tbody>
       </table></div>
-      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). YoY here is derived from the published 1-dp index — as the CPA calculation requires — so it can differ from the headline 12-month rate (computed from unrounded indices) by up to 0.1 pp.${d.releaseDate ? ` Released ${esc(fmtDate(d.releaseDate) ?? '')}.` : ''}${d.nextRelease ? ` Next release ${esc(d.nextRelease)}.` : ''}</span></div>
+      <div class="legendrow" style="margin-top:8px"><span>yoy[M] = (CPI[M] − CPI[M−12]) ÷ CPI[M−12] · P2P[M] = yoy[M−4] × 0.85 · RA[M] = avg(yoy[M−12] … yoy[M−1]) × 0.85. Values rounded half-up at 8 dp (hover a cell for full precision). YoY here is derived from the published 1-dp index, as the CPA calculation requires, so it can differ from the headline 12-month rate (computed from unrounded indices) by up to 0.1 pp.${d.releaseDate ? ` Released ${esc(fmtDate(d.releaseDate) ?? '')}.` : ''}${d.nextRelease ? ` Next release ${esc(d.nextRelease)}.` : ''}</span></div>
     </div>
   </div>`;
   document.getElementById('cpiExport')?.addEventListener('click', () => {
