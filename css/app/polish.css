@@ -4,7 +4,7 @@
    (so a tap never leaves a control stuck lit), a tactile press, a single spring easing, and one
    keyboard focus ring. Kept at the end so it layers over the component rules above. */
 :root{--ease:cubic-bezier(.16,1,.3,1);--hov:color-mix(in srgb, var(--tx) 5.5%, transparent);--hov-2:color-mix(in srgb, var(--tx) 9%, transparent)}
-.nav-desktop a,.nav-desktop button,.tabbar a,.tabbar button,.more-sheet a,.chip,.livebtn,.seg button,.reset,.rchip,.backrow,.rrow,.opcard,.grow,.nm-sug,.search,.search .clear,.netmap-card .close,.brand-icon,.brand,#themeBtn,a[data-nav="about"],select,input[type=search],input[type=text]{transition:background-color .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease),transform .18s var(--ease),opacity .18s var(--ease),filter .18s var(--ease)}
+.nav-desktop a,.nav-desktop button,.tabbar a,.tabbar button,.more-sheet a,.chip,.livebtn,.seg button,.reset,.rchip,.backrow,.rrow,.opcard,.grow,.nm-sug,.search,.search .clear,.netmap-card .close,.netmap-card .go,.nm-lrow,.nm-tabs [data-tab],.brand-icon,.brand,#themeBtn,a[data-nav="about"],select,input[type=search],input[type=text]{transition:background-color .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease),transform .18s var(--ease),opacity .18s var(--ease),filter .18s var(--ease)}
 :where(a,button,select,summary,[role=button],[tabindex]):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 :where(input,textarea):focus-visible{outline:none}
 select{cursor:pointer}
@@ -33,6 +33,8 @@ input[type=search],input[type=text],select{border-radius:inherit}
   .livebtn.on:hover{background:color-mix(in srgb, var(--acc) 14%, var(--surf));border-color:var(--acc);color:var(--acc)}
   .livebtn.is-gated:hover,.livebtn[aria-disabled="true"]:hover{background:var(--surf);border-color:var(--bd);color:var(--tx2)}
   .livebtn.iconb:hover{color:var(--acc)}
+  .nm-tabs [data-tab]:not(.on):hover{color:var(--tx);background:var(--hov)}
+  .netmap-card .go:hover{color:var(--acc)}
   .seg button:hover:not(.on):not(:disabled){color:var(--tx);background:var(--hov)}
   .seg button.on:hover{filter:brightness(1.02)}
   .reset:hover,.backrow:hover{color:var(--tx);text-decoration:underline;text-underline-offset:3px}

@@ -62,17 +62,19 @@ async function openMap(vp, { clock = false, hash = '#/map', min = 20 } = {}){
   page.on('request', r => { const u = r.url(); if(/\/api\/v1\//.test(u)) requests.push({ data: u.split('/api/v1/')[1], t: Date.now() }); });
   if(clock) await page.clock.install();
   await page.goto('http://127.0.0.1:8965/' + hash, { waitUntil: 'load' });
-  await page.waitForSelector('#nmLayers [data-lyr]', { timeout: 20000 });
+  await page.waitForSelector('#nmLayers [data-lyr]', { timeout: 20000, state: 'attached' });
   await page.waitForFunction(n => document.querySelectorAll('.leaflet-interactive, .leaflet-marker-icon').length > n, min, { timeout: 25000 });
   return { ctx, page };
 }
 const view = (page, lat, lng, z) => page.evaluate(([la, ln, zz]) => { window.__maps.filter(m => document.body.contains(m.getContainer())).pop().setView([la, ln], zz, { animate: false }); }, [lat, lng, z]);
 const zoom = (page, z) => page.evaluate(zz => { window.__maps.filter(m => document.body.contains(m.getContainer())).pop().setZoom(zz, { animate: false }); }, z);
-const note = (page, k) => page.evaluate(kk => document.querySelector(`#nmLNotes [data-lyr="${kk}"]`)?.textContent ?? '', k);
+/* a layer's note: the text under its name in the Layers tab while it is on ('' when off); 'hint' is the gating hint under the list */
+const note = (page, k) => page.evaluate(kk => { if(kk === 'hint') return document.querySelector('#nmLNotes [data-lyr="hint"]')?.textContent ?? ''; const b = document.querySelector(`#nmLayers [data-lyr="${kk}"]`); return b?.classList.contains('on') ? (b.querySelector('[data-note]')?.textContent ?? '') : ''; }, k);
+const tab = async (page, t) => { await page.click(`.nm-tabs [data-tab="${t}"]`); await page.waitForTimeout(120); };
 const btn = (page, k) => page.evaluate(kk => { const b = document.querySelector(`#nmLayers [data-lyr="${kk}"]`); return { on: b.classList.contains('on'), pressed: b.getAttribute('aria-pressed'), gated: b.getAttribute('aria-disabled') === 'true', label: b.getAttribute('aria-label') }; }, k);
 const count = (page, test) => page.evaluate(src => { const map = window.__maps.filter(m => document.body.contains(m.getContainer())).pop(); const f = new Function('l', 'return ' + src); let n = 0; map.eachLayer(l => { try{ if(f(l)) n++; }catch{} }); return n; }, test);
-const settled = (page, k) => page.waitForFunction(kk => { const n = document.querySelector(`#nmLNotes [data-lyr="${kk}"]`); return n && !/^Loading/.test(n.textContent); }, k, { timeout: 30000 });
-const click = async (page, k, opts = {}) => { await page.click(`#nmLayers [data-lyr="${k}"]`, opts); await page.waitForTimeout(500); };
+const settled = (page, k) => page.waitForFunction(kk => { const n = document.querySelector(`#nmLayers [data-lyr="${kk}"] [data-note]`); return n && !/^Loading/.test(n.textContent); }, k, { timeout: 30000 });
+const click = async (page, k, opts = {}) => { await tab(page, 'layers'); await page.click(`#nmLayers [data-lyr="${k}"]`, opts); await page.waitForTimeout(500); };
 const addRoutes = async (page, text) => { await page.fill('#nmq', text); await page.press('#nmq', 'Enter'); await page.waitForTimeout(900); };
 const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height|serious|street|order)/, '$1 ')) ?? [])[1]?.replace(/,/g, '') ?? NaN);
 
@@ -87,14 +89,14 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   F(`dropping the pin lists the routes inside the circle (${dropped.routes} routes, ${dropped.ops} operators)`, dropped.pin && dropped.routes > 3 && dropped.ops >= 1 && /within 1\.5 km of the pin/.test(dropped.count) && /routes within/.test(dropped.sum));
   const drawn = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
   F(`only the routes inside the circle stay drawn (${drawn} lines for ${dropped.routes} routes)`, drawn >= dropped.routes && drawn <= dropped.routes * 4);   // a route is up to a few drawn lines (directions, variants)
-  await page.fill('#nmPinR', '3000'); await page.dispatchEvent('#nmPinR', 'input'); await page.waitForTimeout(400);
+  await tab(page, 'routes'); await page.fill('#nmPinR', '3000'); await page.dispatchEvent('#nmPinR', 'input'); await page.waitForTimeout(400);
   const wider = await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length);
   F(`widening the radius to 3 km finds more routes (${dropped.routes} → ${wider})`, wider > dropped.routes && /3 km/.test(await page.textContent('#nmPinRv')));
   const pin = await page.locator('.lb-pin').boundingBox();
   await page.mouse.move(pin.x + 15, pin.y + 30); await page.mouse.down(); await page.mouse.move(pin.x + 100, pin.y + 30, { steps: 6 }); await page.mouse.move(pin.x + 220, pin.y + 30, { steps: 6 }); await page.mouse.up(); await page.waitForTimeout(500);
   const moved = await page.evaluate(() => document.querySelectorAll('#nmPinRoutes a').length);
   F(`dragging the pin recomputes the list (${wider} → ${moved})`, moved > 0 && moved !== wider);
-  await page.click('#nmPinClear'); await page.waitForTimeout(300);
+  await tab(page, 'routes'); await page.click('#nmPinClear'); await page.waitForTimeout(300);
   F('Clear pin removes the pin and restores the whole network, still armed for the next click', !(await page.evaluate(() => !!document.querySelector('.lb-pin'))) && /^675 routes|^\d+ routes$/.test(await page.textContent('#nmCount')) && (await page.evaluate(() => document.getElementById('netmap').classList.contains('pin-arm'))));
   await click(page, 'pin');
   F('switching the pin layer off hides its panel', await page.evaluate(() => document.getElementById('nmPin').hidden) && !(await btn(page, 'pin')).on);
@@ -111,7 +113,7 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await addRoutes(page, '25');
   const faded0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
   F(`searching a route shows the Routes control on "Selected routes" and draws only that route (${bright0} lines, ${faded0} faded)`, !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))) && faded0 === 0 && bright0 >= 1 && bright0 <= 6);
-  await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
+  await tab(page, 'routes'); await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
   const faded1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3');
   F(`"All routes" fades the rest of the network in behind the searched route (${faded1} faded lines)`, faded1 > 200);
   F('the export follows the selection: "Export 1 route", with an All routes alternative', (await page.textContent('#nmExport')).trim() === 'Export 1 route' && !(await page.evaluate(() => document.getElementById('nmExportAll').hidden)));
@@ -120,9 +122,9 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   F(`exporting the selection downloads just that route (${dlSel?.suggestedFilename()})`, !!dlSel && /london-bus-routes-25\.csv/.test(dlSel.suggestedFilename()) && selCsv.trim().split('\n').length === 2 && /^"?25"?,/m.test(selCsv));
   await page.click('#nmReset'); await page.waitForTimeout(400);
   F('with nothing narrowed the button is plain "Export CSV" and the All routes button is gone', (await page.textContent('#nmExport')).trim() === 'Export CSV' && (await page.evaluate(() => document.getElementById('nmExportAll').hidden)));
-  await page.click('#nmFilters'); await page.click('#nmPop .chip[data-f="type"][data-v="night"]'); await page.waitForTimeout(400);
+  await tab(page, 'routes'); await page.click('#nmFilters'); await page.click('#nmPop .chip[data-f="type"][data-v="night"]'); await page.waitForTimeout(400);
   F('a filter shows the control on "Selected routes" by default', !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))));
-  await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
+  await tab(page, 'routes'); await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
   F('"All routes" behind a filter fades the rest of the network in', (await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3')) > 200);
   await ctx.close();
 }
@@ -131,14 +133,14 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
 {
   const { ctx, page } = await openMap({ width: 1280, height: 800 });
   const labels = await page.$$eval('#nmLayers [data-lyr]', bs => bs.map(b => b.getAttribute('aria-label')));
-  F(`the Layers row has all seven layers plus the catchment pin (${labels.join(', ')})`, labels.length === 8 && labels.includes('Catchment pin') && ['Garages', 'Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
+  F(`the Layers tab has all seven layers plus the catchment pin (${labels.join(', ')})`, labels.length === 8 && labels.includes('Catchment pin') && ['Garages', 'Stops', 'Live buses', 'Low bridges', 'Incidents', 'Street works', 'Traffic orders'].every(l => labels.includes(l)));
   F('with no routes narrowed, Live buses and Stops are gated', (await btn(page, 'live')).gated && (await btn(page, 'stops')).gated);
   F('with no routes narrowed, the other layers are available', !(await btn(page, 'bridges')).gated && !(await btn(page, 'inc')).gated && !(await btn(page, 'sw')).gated && !(await btn(page, 'tro')).gated);
   const fetchedBefore = requests.filter(r => /bridges|accidents|streetworks|dtro|route-stops/.test(r.data ?? '')).length;
   F('nothing heavy is fetched until a layer is switched on', fetchedBefore === 0);
 
   await click(page, 'live', { force: true });   // aria-disabled, but a user can still click it
-  F('clicking gated Live buses explains why and does not poll', /1–3 routes/.test(await note(page, 'hint')) && !(await btn(page, 'live')).on && requests.filter(r => r.line).length === 0);
+  F('clicking gated Live buses explains why and does not poll', /1 to 3 routes/.test(await note(page, 'hint')) && !(await btn(page, 'live')).on && requests.filter(r => r.line).length === 0);
 
   /* ── 2 · network mode: dense layers are gated by zoom ─────────────────── */
   await click(page, 'bridges');
@@ -192,8 +194,9 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   await page.waitForTimeout(500);
   const gCount = () => page.locator('.leaflet-marker-icon:has(span:text-matches("^\\([A-Z]+\\)$"))').count();
   const gNarrow = await gCount();
+  await tab(page, 'layers');
   F(`focused route: Garages shows only its own garage(s) (${gNarrow}) and the switch appears`, gNarrow >= 1 && gNarrow <= 2 && await page.locator('#nmGarScope').isVisible());
-  await page.locator('#nmGarScope [data-gs="all"]').click(); await page.waitForTimeout(400);
+  await tab(page, 'layers'); await page.locator('#nmGarScope [data-gs="all"]').click(); await page.waitForTimeout(400);
   const gAll = await gCount();
   F(`"All garages" shows every garage (${gAll})`, gAll > 20 && /garages/.test(await note(page, 'garages')));
   await page.locator('#nmGarScope [data-gs="route"]').click(); await page.waitForTimeout(400);
@@ -248,13 +251,13 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
 for(const [name, vp] of [['phone', { width: 390, height: 844 }], ['small phone', { width: 320, height: 640 }], ['tablet', { width: 820, height: 1100 }], ['desktop', { width: 1280, height: 800 }]]){
   const { ctx, page } = await openMap(vp);
   await addRoutes(page, '25');
-  await click(page, 'bridges'); await click(page, 'stops'); await click(page, 'inc');
+  await click(page, 'bridges'); await click(page, 'stops'); await click(page, 'inc');   // leaves the Layers tab open
   const m = await page.evaluate(() => {
     const panel = document.getElementById('nmPanel').getBoundingClientRect(), wrap = document.querySelector('.netmap-wrap').getBoundingClientRect();
     const bs = [...document.querySelectorAll('#nmLayers [data-lyr]')].map(b => { const r = b.getBoundingClientRect(); return { w: r.width, h: r.height, inPanel: r.left >= panel.left - 1 && r.right <= panel.right + 1 }; });
     return { panelInside: panel.left >= -1 && panel.right <= innerWidth + 1 && panel.bottom <= wrap.bottom + 1, scrollsX: document.documentElement.scrollWidth > innerWidth + 1, buttons: bs };
   });
-  F(`${name} (${vp.width}px): the layer buttons are all inside the panel and big enough to tap`, m.buttons.length === 8 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
+  F(`${name} (${vp.width}px): the layer rows are all inside the panel and big enough to tap`, m.buttons.length === 8 && m.buttons.every(b => b.inPanel && b.w >= 30 && b.h >= 30));
   F(`${name}: the panel fits the screen and nothing scrolls sideways`, m.panelInside && !m.scrollsX);
   await ctx.close();
 }
@@ -273,7 +276,7 @@ for(const [name, vp] of [['phone', { width: 390, height: 844 }], ['small phone',
 {
   const { ctx, page } = await openMap({ width: 1280, height: 800 }, { hash: '#/map?routes=25&embed=1', min: 1 });
   const f = await page.evaluate(() => document.getElementById('nmCount')?.textContent ?? '');
-  F('routes= focuses a route', /1 route focused/.test(f));
+  F('routes= focuses a route', /^1 of \d+ routes/.test(f));
   await ctx.close();
 }
 

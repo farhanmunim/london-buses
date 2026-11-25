@@ -106,9 +106,12 @@ async function hovers(page, sel, label){
 }
 {
   const { ctx, page } = await open('#/map');
-  await hovers(page, '#nmLayers [data-lyr]:not(.on):not(.is-gated)', 'layer button');
-  await page.click('#nmFilters'); await page.waitForTimeout(300);
+  await page.click('.nm-tabs [data-tab="layers"]'); await page.waitForTimeout(200);
+  await hovers(page, '#nmLayers [data-lyr]:not(.on):not(.is-gated)', 'layer row');
+  await hovers(page, '.nm-tabs [data-tab]:not(.on)', 'panel tab');
+  await page.click('.nm-tabs [data-tab="routes"]'); await page.click('#nmFilters'); await page.waitForTimeout(300);
   await hovers(page, '#nmPop .chip:not(.on)', 'map filter chip');
+  await page.click('.nm-tabs [data-tab="legend"]'); await page.waitForTimeout(200);
   await hovers(page, '.nm-colour .seg button:not(.on)', 'segmented control');
   await hovers(page, '#nmExport', 'Export CSV link');
   F('a pin lifts under the pointer', await (async () => {

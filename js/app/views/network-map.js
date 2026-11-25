@@ -1,4 +1,4 @@
-/* View: Network map — every route, with layers, filters, paint mode and heat. */
+/* View: Network map — every route, with a tabbed panel (Routes · Layers · Legend), filters, paint mode and heat. */
 import { D, nextPollS } from '../core/data.js';
 import { garagePinIcon } from '../core/incoming.js';
 import { addLiveTimer, gone, state } from '../core/nav.js';
@@ -14,6 +14,7 @@ const netmapState = {
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
   scopeIds: null, scopeTitle: '',                // set by a scoped link (an operator's or garage's routes)
   pinOn: false, pin: null, pinR: 1500, pinIds: null,   // catchment pin: armed?, {lat,lng}, radius (m), routes inside
+  tab: 'routes',                               // panel tab: routes | layers | legend
   rScope: null,                                // when routes are narrowed: 'all' fades the rest of the network in behind; anything else draws only the selection
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
@@ -33,40 +34,45 @@ export async function renderNetworkMap(){
           <button class="clear" id="nmqClear" aria-label="Clear search" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
         </div>
         <div class="nm-sugg" id="nmSugg" hidden></div>
-        <div class="nm-tools">
-          <button class="livebtn" id="nmFilters" style="margin:0">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
-            Filters<span id="nmFBadge" class="nm-badge" hidden></span>
-          </button>
-          <div class="nm-colour">
-            <span class="nm-lbl">Colour by</span>
-            <div class="seg">
-              <button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button>
-              <button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button>
-            </div>
+        <div class="nm-status" id="nmStatus" hidden><i class="nm-sdot"></i><span class="txt" id="nmStatusTxt"></span><a class="act" id="nmStatusAct" hidden></a></div>
+        <div class="nm-tabs" role="tablist" aria-label="Map panel">
+          <button type="button" role="tab" data-tab="routes" aria-selected="true" class="on">Routes<span class="nm-badge" id="nmTabRoutesN" hidden></span></button>
+          <button type="button" role="tab" data-tab="layers" aria-selected="false">Layers<span class="nm-badge" id="nmTabLayersN" hidden></span></button>
+          <button type="button" role="tab" data-tab="legend" aria-selected="false">Legend</button>
+        </div>
+        <div class="nm-pane" data-pane="routes" role="tabpanel">
+          <div class="nm-tools">
+            <button class="livebtn" id="nmFilters" style="margin:0">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+              Filters<span id="nmFBadge" class="nm-badge" hidden></span>
+            </button>
+            <div class="nm-gscope" id="nmRouteScope" hidden><div class="seg" role="group" aria-label="Which route lines to draw"><button type="button" data-rs="sel">Selected</button><button type="button" data-rs="all">All routes</button></div></div>
           </div>
+          <div class="nm-filters" id="nmPop" hidden></div>
+          <div class="nm-pinbox" id="nmPin" hidden>
+            <div class="nm-pinhead"><span class="nm-lbl">Catchment</span><span id="nmPinSum" class="nm-pinsum">Click the map to drop a pin</span><button type="button" class="reset" id="nmPinClear" hidden>Clear pin</button></div>
+            <label class="nm-pinr"><span>Radius</span><input type="range" id="nmPinR" min="250" max="5000" step="250" value="${netmapState.pinR}" aria-label="Catchment radius in metres"><b id="nmPinRv">${(netmapState.pinR / 1000).toFixed(netmapState.pinR % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km</b></label>
+            <div class="nm-pinops" id="nmPinOps"></div>
+            <div class="nm-pinroutes" id="nmPinRoutes"></div>
+          </div>
+          <div class="nm-body" id="nmInfo" hidden></div>
+          <div class="nm-cmp" id="nmCmpBar" hidden><span class="txt" id="nmCmpTxt"></span><a class="livebtn primary" id="nmCompare">Compare ›</a></div>
+          <div class="nm-hint" id="nmHint" hidden></div>
+          <div class="nm-empty" id="nmEmpty">Search a route, pick a filter, or tap a line on the map. Layers and the catchment pin are under <b>Layers</b>.</div>
         </div>
-        <div class="nm-layers">
-          <span class="nm-lbl">Layers</span>
-          <div class="nm-lbtns" id="nmLayers" role="group" aria-label="Map layers">${LAYER_UI.map(l => `<button type="button" class="livebtn iconb" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false">${l.icon}</button>`).join('')}<button type="button" class="livebtn iconb" data-lyr="pin" title="Catchment pin, drop a pin and list every route within a radius" aria-label="Catchment pin" aria-pressed="false">${PIN_ICON}</button></div>
+        <div class="nm-pane" data-pane="layers" role="tabpanel" hidden>
+          <div class="nm-llist" id="nmLayers" role="group" aria-label="Map layers">${[...LAYER_UI, { k:'pin', label:'Catchment pin', icon:PIN_ICON }].map(l => `<button type="button" class="nm-lrow" data-lyr="${l.k}" title="${l.label}" aria-label="${l.label}" aria-pressed="false"><span class="ico">${l.icon}</span><span class="t"><b>${l.label}</b><small data-note="${l.k}"></small></span><span class="sw" aria-hidden="true"></span></button>${l.k === 'garages' ? `<div class="nm-gscope nm-gsub" id="nmGarScope" hidden><span class="nm-lbl">Show</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes’</button><button type="button" data-gs="all">All garages</button></div></div>` : ''}`).join('')}</div>
+          <div class="nm-lnotes" id="nmLNotes" aria-live="polite" hidden></div>
         </div>
-        <div class="nm-gscope" id="nmRouteScope" hidden><span class="nm-lbl">Routes</span><div class="seg" role="group" aria-label="Which route lines to draw"><button type="button" data-rs="sel">Selected routes</button><button type="button" data-rs="all">All routes</button></div></div>
-        <div class="nm-gscope" id="nmGarScope" hidden><span class="nm-lbl">Garages</span><div class="seg" role="group" aria-label="Which garages to show"><button type="button" data-gs="route">Selected routes</button><button type="button" data-gs="all">All garages</button></div></div>
-        <div class="nm-pinbox" id="nmPin" hidden>
-          <div class="nm-pinhead"><span class="nm-lbl">Catchment</span><span id="nmPinSum" class="nm-pinsum">Click the map to drop a pin</span><button type="button" class="reset" id="nmPinClear" hidden>Clear pin</button></div>
-          <label class="nm-pinr"><span>Radius</span><input type="range" id="nmPinR" min="250" max="5000" step="250" value="${netmapState.pinR}" aria-label="Catchment radius in metres"><b id="nmPinRv">${(netmapState.pinR / 1000).toFixed(netmapState.pinR % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km</b></label>
-          <div class="nm-pinops" id="nmPinOps"></div>
-          <div class="nm-pinroutes" id="nmPinRoutes"></div>
+        <div class="nm-pane" data-pane="legend" role="tabpanel" hidden>
+          <div class="nm-colour"><span class="nm-lbl">Colour by</span><div class="seg"><button data-cb="operator" class="${netmapState.colorBy==='operator'?'on':''}">Operator</button><button data-cb="type" class="${netmapState.colorBy==='type'?'on':''}">Type</button></div></div>
+          <div class="nm-legend" id="nmLegend"></div>
         </div>
-        <div class="nm-lnotes" id="nmLNotes" aria-live="polite" hidden></div>
-        <div class="nm-legend" id="nmLegend" hidden></div>
-        <div class="nm-filters" id="nmPop" hidden></div>
-        <div class="nm-body" id="nmInfo" hidden></div>
-        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record">Export CSV</button><button class="reset" id="nmExportAll" style="margin-left:0" title="Every route, ignoring the search, filters and pin" hidden>All routes</button><a class="reset" id="nmCompare" style="margin-left:0" hidden>Compare</a><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
+        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record">Export CSV</button><button class="reset" id="nmExportAll" style="margin-left:0" title="Every route, ignoring the search, filters and pin" hidden>All routes</button><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
       </div>
     </div>`;
 
-  const [ov, meta, routes, garages] = await Promise.all([D.overview(), D.meta(), D.routes(), D.garages()]);
+  const [ov, meta, routes, garages, dest] = await Promise.all([D.overview(), D.meta(), D.routes(), D.garages(), D.destinations().catch(() => ({}))]);
   if(gone(tok) || !document.getElementById('netmap')) return;
   if(!ov?.features?.length || !routes){ document.getElementById('nmCount').textContent = 'The map data is unreachable right now.'; return; }
 
@@ -245,7 +251,7 @@ export async function renderNetworkMap(){
     const filtered = filteredNow();
     const cEl = document.getElementById('nmCount');
     if(cEl) cEl.textContent = st.pills.length
-      ? `${st.pills.length} route${st.pills.length===1?'':'s'} focused · ${vis.size} in view`
+      ? `${st.pills.length} of ${nOf(allNames.size, 'route')}`
       : st.pinIds ? `${nOf(vis.size, 'route')} within ${fmtKm(st.pinR)} of the pin`
       : (filtered ? `${vis.size} of ${nOf(allNames.size, 'route')}` : `${nOf(allNames.size, 'route')}`);
     const reset = document.getElementById('nmReset');
@@ -254,8 +260,14 @@ export async function renderNetworkMap(){
     const narrowed = st.pills.length || filtered, exp = document.getElementById('nmExport'), expAll = document.getElementById('nmExportAll');
     if(exp){ const n = narrowed ? (st.pills.length ? st.pills.length : vis.size) : allNames.size; exp.textContent = narrowed ? `Export ${n} route${n === 1 ? '' : 's'}` : 'Export CSV'; exp.title = narrowed ? 'The routes currently selected, with their full record' : 'Every route with its full record'; }
     if(expAll) expAll.hidden = !narrowed;
-    const cmp = document.getElementById('nmCompare');
-    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.textContent = `Compare ${st.pills.length} routes`; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The focused routes side by side'; }
+    // Compare bar: from the second selected route.
+    const bar = document.getElementById('nmCmpBar'), cmp = document.getElementById('nmCompare'), cmpT = document.getElementById('nmCmpTxt');
+    if(bar){ bar.hidden = st.pills.length < 2; if(cmpT) cmpT.innerHTML = `Compare <b>${nOf(st.pills.length, 'route')}</b> side by side`; }
+    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The selected routes side by side'; }
+    const hint = document.getElementById('nmHint'); if(hint){ hint.hidden = st.pills.length !== 1; hint.textContent = 'Add another route to compare them side by side.'; }
+    const empty = document.getElementById('nmEmpty'); if(empty) empty.hidden = !!(st.pills.length || narrowed || st.pinOn || st.panelOpen);
+    const rb = document.getElementById('nmTabRoutesN'); if(rb){ rb.hidden = !st.pills.length; rb.textContent = st.pills.length; }
+    syncStatus(vis);
     syncTermini();
     syncLegend();
     syncLayers();
@@ -266,15 +278,43 @@ export async function renderNetworkMap(){
   function syncLegend(){
     const el = document.getElementById('nmLegend');
     if(!el) return;
-    el.hidden = !!st.pills.length;
-    // Colour-by has no effect while routes are focused — hide the control.
+    // Colour-by has no effect while routes are selected: the colours belong to the routes, so the key lists them.
     const cb = document.querySelector('.nm-colour');
     if(cb) cb.hidden = !!st.pills.length;
-    if(el.hidden){ el.innerHTML = ''; return; }
-    el.innerHTML = st.colorBy === 'type'
-      ? Object.entries(TYPE_LABEL).map(([v,l]) => `<span><i style="background:${TYPE_COLORS[v]}"></i>${esc(l)}</span>`).join('')
-      : ops.map(o => `<span><i style="background:${opColor(o)}"></i>${esc(shortOp(o))}</span>`).join('');
+    el.innerHTML = st.pills.length
+      ? st.pills.map(p => `<span><i style="background:${focusColor(p)}"></i>${esc(p)}</span>`).join('') + `<span class="nm-lsub">Other routes are drawn faint in their own colour when “All routes” is on.</span>`
+      : st.colorBy === 'type'
+        ? Object.entries(TYPE_LABEL).map(([v,l]) => `<span><i style="background:${TYPE_COLORS[v]}"></i>${esc(l)}</span>`).join('')
+        : ops.map(o => `<span><i style="background:${opColor(o)}"></i>${esc(shortOp(o))}</span>`).join('');
   }
+  /* The line under the search: what the map is showing right now, and the most likely next step. */
+  let liveCount = null;
+  function syncStatus(vis = visibleNames()){
+    const box = document.getElementById('nmStatus'), txt = document.getElementById('nmStatusTxt'), act = document.getElementById('nmStatusAct');
+    if(!box) return;
+    const n = st.pills.length, filtered = filteredNow();
+    box.hidden = !(n || filtered || (st.pinOn && !st.pin));
+    if(box.hidden) return;
+    const bits = [];
+    if(n) bits.push(`Showing ${nOf(n, 'route')}${routesAll() ? ', others faded' : ''}`);
+    else if(st.pinOn && !st.pin) bits.push('Click the map to drop the catchment pin');
+    else if(st.pinIds) bits.push(`${nOf(vis.size, 'route')} within ${fmtKm(st.pinR)} of the pin`);
+    else bits.push(`${nOf(vis.size, 'route')} match the filters`);
+    if(st.ly.live && liveCount != null) bits.push(liveCount ? `${liveCount} live bus${liveCount === 1 ? '' : 'es'}` : 'no live buses');
+    if(st.ly.stops && layerScope().length) bits.push('stops on');
+    txt.textContent = bits.join(' · ');
+    if(n === 1){ act.hidden = false; act.textContent = 'Open route ›'; act.href = '#/route/' + encodeURIComponent(st.pills[0]); act.dataset.tab = ''; }
+    else if(n >= 2){ act.hidden = false; act.textContent = 'Compare ›'; act.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; act.dataset.tab = ''; }
+    else { act.hidden = true; }
+  }
+  /* ── tabs ── */
+  function setTab(name){
+    st.tab = name;
+    document.querySelectorAll('#nmPanel .nm-tabs [data-tab]').forEach(b => { const on = b.dataset.tab === name; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+    document.querySelectorAll('#nmPanel .nm-pane').forEach(p => { p.hidden = p.dataset.pane !== name; });
+  }
+  document.querySelector('#nmPanel .nm-tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if(b) setTab(b.dataset.tab); });
+  setTab(st.tab ?? 'routes');
 
   /* ── filter section — inline in the panel, grouped multi-select ── */
   const ops = [...new Set(Object.values(meta ?? {}).map(m => m?.operator).filter(Boolean))].sort();
@@ -304,23 +344,25 @@ export async function renderNetworkMap(){
     const badge = document.getElementById('nmFBadge');
     if(badge){ badge.hidden = !n; badge.textContent = n; }
     document.getElementById('nmFilters')?.classList.toggle('on', st.panelOpen || n > 0);
+    const emp = document.getElementById('nmEmpty'); if(emp && st.panelOpen) emp.hidden = true;
   }
 
-  /* ── focused-route cards ── */
+  /* ── selected-route cards: one route gets the full card, several get compact cards in their line colour ── */
+  const shortDest = x => String(x?.destination ?? '').replace(/,.*$/, '').trim();
+  const corridor = p => { const d = dest?.[p] ?? dest?.[p.toLowerCase()]; const a = shortDest(d?.outbound), b = shortDest(d?.inbound); return a && b ? `${a} ⇄ ${b}` : a || b || ''; };
+  const fmtMonth = iso => iso ? new Date(iso).toLocaleDateString('en-GB', { month:'short', year:'numeric' }) : null;
   function cardsHtml(){
+    const one = st.pills.length === 1;
     return st.pills.map(p => {
       const m = meta?.[p] ?? {};
-      const t = typeInfo.get(p);
-      return `<div class="netmap-card" style="border-left:4px solid ${focusColor(p)}">
+      const t = typeInfo.get(p), col = focusColor(p), where = corridor(p);
+      const sub = [m.operator ? shortOp(m.operator) : null, m.garageName ?? null, num(m.pvr) ? `PVR ${m.pvr}` : null].filter(Boolean).map(esc).join(' · ');
+      const facts = one ? [num(m.pvr) ? ['PVR', m.pvr] : null, num(m.lengthKm) ? ['Length', `${m.lengthKm} km`] : null, m.propulsion ? ['Power', title(m.propulsion)] : null, m.contractEnd ? ['Contract to', fmtMonth(m.contractEnd)] : null].filter(Boolean) : [];
+      return `<div class="netmap-card ${one ? 'full' : 'compact'}" style="border-left-color:${col}">
+        <span class="rnum ${esc(t)}">${esc(p)}</span>
+        <div class="t"><b>${esc(where || m.operator || '')}</b><small><i class="nm-dot" style="background:${col}"></i>${where ? sub : [TYPE_LABEL[t], m.garageName].filter(Boolean).map(esc).join(' · ')}</small></div>
         <button class="close" data-rm="${esc(p)}" aria-label="Remove ${esc(p)}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-        <div style="display:flex;align-items:center;gap:9px">
-          <span class="rnum ${esc(t)}" style="min-width:40px;height:27px;font-size:13px">${esc(p)}</span>
-          <div style="min-width:0;font-size:12px;color:var(--tx2)">
-            <b style="color:var(--tx);font-size:12.5px">${esc(m.operator ?? '')}</b><br>
-            ${[TYPE_LABEL[t], m.garageName ? `${m.garageName} (${m.garage})` : null, num(m.pvr) ? `PVR ${m.pvr}` : null].filter(Boolean).map(esc).join(' · ')}
-          </div>
-        </div>
-        <a href="#/route/${encodeURIComponent(p)}" style="display:inline-block;margin-top:7px;color:var(--acc);font-weight:600;font-size:12.5px">Open route page ›</a>
+        ${one ? `<div class="facts">${facts.map(([k, v]) => `<span>${esc(k)} <b>${esc(String(v))}</b></span>`).join('')}<a href="#/route/${encodeURIComponent(p)}">Open route ›</a></div>` : `<a class="go" href="#/route/${encodeURIComponent(p)}" aria-label="Open route ${esc(p)}" title="Open route ${esc(p)}">›</a>`}
       </div>`;
     }).join('');
   }
@@ -328,6 +370,7 @@ export async function renderNetworkMap(){
     const info = document.getElementById('nmInfo');
     info.hidden = !st.pills.length;
     info.innerHTML = cardsHtml();
+    if(fit && st.pills.length) setTab('routes');
     repaint();
     if(fit && st.pills.length){
       const feats = ov.features.filter(f => st.pills.includes((f.properties?.name ?? '').toUpperCase()));
@@ -378,15 +421,23 @@ export async function renderNetworkMap(){
     return corridors.get(key);
   };
 
+  const LY_DESC = { garages:'Every garage, or the selected routes’ own', stops:'Every stop on the selected routes', live:'Live positions, refreshed every ~15 s', bridges:'Zoom in to see each bridge', inc:'Bus and coach collisions, 2021 to 2025', sw:'Zoom in to see current works', tro:'Zoom in to see each order', pin:'Drop a pin and list every route within a radius' };
   const lyNotes = {};
   const renderLyNotes = () => {
+    for(const k of Object.keys(LY_DESC)){
+      const el = document.querySelector(`#nmLayers [data-note="${k}"]`); if(!el) continue;
+      const on = k === 'pin' ? st.pinOn : !!st.ly[k], gated = needsFocus(k) && !layerScope().length;
+      el.innerHTML = on && lyNotes[k] ? lyNotes[k] : gated ? 'Needs 1 to 3 routes selected' : LY_DESC[k];
+      el.classList.toggle('live', on && !!lyNotes[k]);
+    }
     const el = document.getElementById('nmLNotes'); if(!el) return;
-    const rows = Object.entries(lyNotes).filter(([, h]) => h);
+    const rows = Object.entries(lyNotes).filter(([k, h]) => h && !(k in LY_DESC));
     el.hidden = !rows.length;
     el.innerHTML = rows.map(([k, h]) => `<div class="nm-lnote" data-lyr="${k}">${h}</div>`).join('');
+    const lb = document.getElementById('nmTabLayersN'), n = Object.values(st.ly).filter(Boolean).length + (st.pinOn ? 1 : 0);
+    if(lb){ lb.hidden = !n; lb.textContent = n; }
   };
   const setLyNote = (k, html) => { lyNotes[k] = html; renderLyNotes(); };
-
   /* Draws only what is on screen, and only once zoomed in past minZoom — for layers too dense to show whole. */
   function viewportLayer(k, { items, pos, build, cap, gated, shown }){
     const host = L.layerGroup().addTo(state.map);
@@ -454,7 +505,7 @@ export async function renderNetworkMap(){
     async live(scope, alive){
       let layer = null, count = 0, nextIn = 15;
       const text = () => `<b>${count ? plural(count, 'live bus', 'live buses') : 'No buses tracked right now'}</b>${scope.length > 1 ? ' on ' + scope.join(', ') : ''} · ${nextIn > 0 ? `next update in ${nextIn} s` : 'updating…'}`;
-      const show = html => { lyNotes.live = html; const n = document.querySelector('#nmLNotes [data-lyr="live"]'); if(n) n.innerHTML = html; else renderLyNotes(); };
+      const show = html => { lyNotes.live = html; liveCount = count; const n = document.querySelector('#nmLayers [data-note="live"]'); if(n && st.ly.live) n.innerHTML = html; else renderLyNotes(); syncStatus(); };
       const poll = async () => {
         const [raws, reg] = await Promise.all([Promise.all(scope.map(n => D.liveVehicles(n))), D.vehiclesReg()]);
         if(!alive()) return;
@@ -463,7 +514,7 @@ export async function renderNetworkMap(){
         const rows = raws.flatMap((raw, i) => (raw?.data ?? []).filter(v => Number.isFinite(v.lat) && Number.isFinite(v.lng)).map(v => ({ ...v, _route:scope[i] })));
         if(layer) state.map.removeLayer(layer);
         layer = busesLayer(rows, reg).addTo(state.map);
-        count = rows.length; show(text());
+        count = rows.length; liveCount = count; show(text());
       };
       await poll();
       if(!alive()) return layer ? { remove: () => state.map.removeLayer(layer) } : null;
@@ -472,7 +523,7 @@ export async function renderNetworkMap(){
         nextIn -= 1; show(text());
         if(nextIn <= 0){ nextIn = 999; poll(); }
       }, 1000));
-      return { remove(){ clearInterval(timer); if(layer) state.map.removeLayer(layer); } };
+      return { remove(){ clearInterval(timer); liveCount = null; if(layer) state.map.removeLayer(layer); } };
     },
 
     async bridges(scope, alive){
@@ -581,6 +632,7 @@ export async function renderNetworkMap(){
       b.classList.toggle('is-gated', gated); b.setAttribute('aria-disabled', String(gated));
       b.title = gated ? `${LY_LABEL[k]}, search or filter to 1–3 routes to enable` : LY_LABEL[k];
     });
+    renderLyNotes();
   }
   /* Called from repaint(): rebuild the active layers when the scope changes. */
   let lastScope = '', lastGKey = '', rebuildTimer = 0;
@@ -608,7 +660,7 @@ export async function renderNetworkMap(){
     const k = b.dataset.lyr;
     if(k === 'pin'){ st.pinOn ? pinOff() : pinArm(); return; }
     if(needsFocus(k) && !layerScope().length){
-      setLyNote('hint', `${LY_LABEL[k]} appear when 1–3 routes are searched or filtered. The live feed isn’t polled for the whole network.`);
+      setLyNote('hint', `${LY_LABEL[k]} appear once 1 to 3 routes are selected. The live feed isn’t polled for the whole network.`);
       clearTimeout(hintTimer); hintTimer = setTimeout(() => setLyNote('hint', ''), 6000);
       return;
     }
@@ -649,6 +701,7 @@ export async function renderNetworkMap(){
     const b = document.querySelector('#nmLayers [data-lyr="pin"]');
     if(b){ b.classList.toggle('on', st.pinOn); b.setAttribute('aria-pressed', String(st.pinOn)); }
     pinBox.hidden = !st.pinOn;
+    const emp = document.getElementById('nmEmpty'); if(emp && st.pinOn) emp.hidden = true;
     document.getElementById('netmap').classList.toggle('pin-arm', st.pinOn && !st.pin);
     document.getElementById('nmPinClear').hidden = !st.pin;
     document.getElementById('nmPinRv').textContent = fmtKm(st.pinR);
@@ -658,6 +711,7 @@ export async function renderNetworkMap(){
     const byOp = {}; for(const n of names){ const o = meta?.[n]?.operator ?? meta?.[Object.keys(meta ?? {}).find(k => k.toUpperCase() === n) ?? '']?.operator ?? 'Unknown'; byOp[o] = (byOp[o] ?? 0) + 1; }
     const opsSorted = Object.entries(byOp).sort((a, b) => b[1] - a[1]);
     sum.innerHTML = `<b>${nOf(names.length, 'route')}</b> within ${fmtKm(st.pinR)} · ${nOf(opsSorted.length, 'operator')}`;
+    lyNotes.pin = `${nOf(names.length, 'route')} within ${fmtKm(st.pinR)}`; renderLyNotes();
     ops.innerHTML = opsSorted.map(([o, n]) => `<span class="nm-chip"><span class="nm-dot" style="background:${opColor(o)}"></span>${esc(o.replace(' London', '').replace(' Bus', ''))} <b>${n}</b></span>`).join('');
     list.innerHTML = names.map(n => `<a class="rnum ${esc(typeInfo.get(n) ?? 'regular')}" href="#/route/${encodeURIComponent(n)}" title="Open route ${esc(n)}">${esc(n)}</a>`).join('');
   }
@@ -682,11 +736,12 @@ export async function renderNetworkMap(){
     // Phones: the panel is a short sheet over the map, so bring the results into view and keep the pin visible.
     if(innerWidth < 760){ pinBox.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); const panel = document.getElementById('nmPanel'), pt = state.map.latLngToContainerPoint([lat, lng]); if(pt.y < panel.offsetTop + panel.offsetHeight + 24) state.map.panBy([0, pt.y - (panel.offsetTop + panel.offsetHeight + 90)], { animate: true }); }
   }
-  function pinArm(){ st.pinOn = true; syncPinBox(); setLyNote('pin', st.pin ? '' : 'Click anywhere on the map to drop the catchment pin. Drag it to move it; the slider sets the radius.'); if(st.pin){ drawPin(); recomputePin(); } }
+  const PIN_ASK = 'Click the map to drop the catchment pin';
+  function pinArm(){ st.pinOn = true; syncPinBox(); setLyNote('pin', st.pin ? lyNotes.pin : PIN_ASK); setTab('routes'); syncStatus(); if(st.pin){ drawPin(); recomputePin(); } }
   function pinOff(){ st.pinOn = false; st.pin = null; st.pinIds = null; drawPin(); setLyNote('pin', ''); syncPinBox(); repaint(); }
-  state.map.on('click', e => { if(!st.pinOn) return; setLyNote('pin', ''); setPin(e.latlng.lat, e.latlng.lng); });
+  state.map.on('click', e => { if(!st.pinOn) return; setPin(e.latlng.lat, e.latlng.lng); });
   document.getElementById('nmPinR').addEventListener('input', e => { st.pinR = Number(e.target.value) || 1500; document.getElementById('nmPinRv').textContent = fmtKm(st.pinR); pinCircle?.setRadius(st.pinR); clearTimeout(pinTimer); pinTimer = setTimeout(recomputePin, 80); });
-  document.getElementById('nmPinClear').addEventListener('click', () => { st.pin = null; st.pinIds = null; drawPin(); syncPinBox(); repaint(); setLyNote('pin', 'Click anywhere on the map to drop the catchment pin.'); });
+  document.getElementById('nmPinClear').addEventListener('click', () => { st.pin = null; st.pinIds = null; drawPin(); setLyNote('pin', PIN_ASK); syncPinBox(); repaint(); });
   document.getElementById('netmap').addEventListener('click', e => {
     const b = e.target.closest('[data-pinat]'); if(!b) return;
     const [lat, lng] = b.dataset.pinat.split(',').map(Number); if(!Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -782,10 +837,10 @@ export async function renderNetworkMap(){
     if(e.target.closest('#nmFClear')){ st.f.type.clear(); st.f.prop.clear(); st.f.deck.clear(); st.f.freq.clear(); st.f.op.clear(); syncPop(); repaint(); }
     if(e.target.closest('#nmFDone')){ st.panelOpen = false; syncPop(); }
   });
-  document.querySelector('.nm-tools .seg').addEventListener('click', e => {
+  document.querySelector('.nm-colour .seg').addEventListener('click', e => {
     const b = e.target.closest('button[data-cb]'); if(!b) return;
     st.colorBy = b.dataset.cb;
-    document.querySelectorAll('.nm-tools .seg button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.nm-colour .seg button').forEach(x => x.classList.toggle('on', x === b));
     repaint();
   });
   // Export EVERY route's full record — deliberately ignores the active

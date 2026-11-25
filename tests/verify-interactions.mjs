@@ -113,6 +113,7 @@ await typeChip.click(); await page.waitForTimeout(700);
 F(`netmap: filter chip changes count (${beforeCount.trim()} → ${(await txt('#nmCount')).trim()})`, (await txt('#nmCount')) !== beforeCount);
 await page.click('#nmReset'); await page.waitForTimeout(500);
 F('netmap: reset restores', (await txt('#nmCount')) === beforeCount);
+await page.click('.nm-tabs [data-tab="legend"]'); await page.waitForTimeout(150);
 await page.click('.nm-colour .seg button:has-text("Type")'); await page.waitForTimeout(600);
 F('netmap: colour-by segment switches', await page.evaluate(() => [...document.querySelectorAll('.nm-colour .seg button')].some(b => b.textContent.trim()==='Type' && b.classList.contains('on'))));
 
@@ -227,8 +228,8 @@ if(errors.length) console.log('  errors: ' + [...new Set(errors)].join(' | '));
   await p2.locator('[data-rm]').first().click(); await p2.waitForTimeout(800);
   F('and removed again', (await p2.evaluate(() => document.querySelectorAll('table.cmp thead th').length - 1)) === 2);
   await p2.goto('http://127.0.0.1:8904/#/map?routes=25,88', { waitUntil:'load' }); await p2.waitForSelector('#nmInfo .netmap-card', { timeout: 20000 }); await p2.waitForTimeout(600);
-  const link = await p2.evaluate(() => { const a = document.getElementById('nmCompare'); return { hidden: a.hidden, text: a.textContent, href: a.getAttribute('href') }; });
-  F(`with two routes focused the map offers "${link.text}"`, !link.hidden && /Compare 2 routes/.test(link.text) && /#\/compare\/25,88\?from=map/.test(link.href));
+  const link = await p2.evaluate(() => { const a = document.getElementById('nmCompare'); return { hidden: a.hidden, text: a.textContent, bar: document.getElementById('nmCmpTxt')?.textContent ?? '', href: a.getAttribute('href') }; });
+  F(`with two routes focused the map offers a compare bar ("${link.bar}")`, !link.hidden && /Compare/.test(link.text) && /2 routes/.test(link.bar) && /#\/compare\/25,88\?from=map/.test(link.href));
   await p2.click('#nmCompare'); await p2.waitForSelector('table.cmp', { timeout: 15000 });
   F('the comparison from the map leads back to the map', /#\/map\?routes=25,88/.test(await p2.locator('.backrow').first().getAttribute('href') ?? ''));
   F('zero page errors (compare)', errs2.length === 0);

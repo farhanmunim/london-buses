@@ -7,8 +7,9 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .netmap-panel{position:absolute;top:12px;left:12px;right:12px;z-index:20;display:flex;flex-direction:column;background:color-mix(in srgb, var(--surf) 97%, transparent);backdrop-filter:blur(12px);border:1px solid var(--bd2);border-radius:14px;box-shadow:0 6px 26px rgba(28,25,23,.15);max-height:calc(100% - 24px);overflow:hidden}
 @media(min-width:760px){.netmap-panel{right:auto;width:342px}}
 /* On a phone the panel is capped so it can never cover the map it controls; its notes and route cards scroll inside it. */
-@media(max-width:759px){.netmap-panel{max-height:min(50dvh, calc(100% - 24px));overflow-y:auto;overscroll-behavior:contain}
-  .nm-pinroutes{max-height:96px}.nm-pinhead .reset{margin-left:0}.nm-pinbox{padding-bottom:8px}}
+@media(max-width:759px){.netmap-panel{max-height:min(52dvh, calc(100% - 24px));overflow-y:auto;overscroll-behavior:contain}
+  .nm-pinroutes{max-height:96px}.nm-pinhead .reset{margin-left:0}.nm-pinbox{padding-bottom:8px}
+  .nm-tabs [data-tab]{padding:8px 0 7px;font-size:12px}.nm-status{font-size:11px}}
 .embed .topbar,.embed .tabbar,.embed .app-footer{display:none!important}
 .embed{--hdr-h:0px;--sb-h:0px}
 .embed .nm-scope{display:none}
@@ -28,15 +29,46 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .nm-sug .ty{margin-left:auto;font-size:11px;color:var(--mu);flex:none;padding-left:8px}
 .nm-sug.act,.nm-sug:hover{background:var(--bg)}
 .nm-nores{padding:9px 10px;font-size:12.5px;color:var(--mu)}
-.nm-tools{display:flex;align-items:center;gap:7px;padding:9px 11px;flex-wrap:wrap;border-top:1px solid var(--bd)}
+.nm-tools{display:flex;align-items:center;gap:8px;padding:10px 11px 0}
 .nm-lbl{font-size:11px;color:var(--mu);font-weight:600}
-.nm-colour{display:flex;align-items:center;justify-content:space-between;flex:1 0 100%}
-.nm-gscope{display:flex;align-items:center;gap:10px;padding:0 11px 9px}
-.nm-gscope .seg{flex:1}.nm-gscope .seg button{flex:1;padding:5px 8px;font-size:12px}
-.nm-layers{display:flex;align-items:center;gap:10px;padding:8px 11px;border-top:1px solid var(--bd)}
-.nm-lbtns{display:flex;gap:6px;flex-wrap:wrap}
-.nm-lbtns .livebtn{margin:0}
-.nm-lbtns .livebtn.is-gated{opacity:.45}
+.nm-colour{display:flex;align-items:center;justify-content:space-between;padding:10px 13px 2px}
+.nm-gscope{display:flex;align-items:center;gap:10px;margin-left:auto}
+.nm-gscope .seg button{padding:4px 9px;font-size:11.5px}
+.nm-gsub{margin:0 0 4px 36px;padding:2px 0 6px}
+/* Layers tab: one row per layer with a switch and a one-line note */
+.nm-llist{display:flex;flex-direction:column;padding:4px 11px 6px}
+.nm-lrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 2px;border-bottom:1px solid var(--bd);color:var(--tx2);cursor:pointer;border-radius:6px}
+.nm-lrow:last-of-type{border-bottom:0}
+.nm-lrow .ico{width:26px;height:26px;border-radius:50%;border:1px solid var(--bd2);background:var(--surf);display:grid;place-items:center;flex:none;color:var(--tx2)}
+.nm-lrow.on .ico{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
+.nm-lrow .t{flex:1;min-width:0;font-size:12px;line-height:1.3}
+.nm-lrow .t b{display:block;color:var(--tx);font-weight:600;font-size:12.5px}
+.nm-lrow .t small{display:block;font-size:11px;color:var(--mu);overflow-wrap:anywhere}
+.nm-lrow .t small.live{color:var(--tx2)}.nm-lrow .t small b{display:inline;font-size:11px}
+.nm-lrow .sw{flex:none;width:30px;height:18px;border-radius:999px;background:var(--bd2);position:relative;transition:background .15s}
+.nm-lrow .sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.nm-lrow.on .sw{background:var(--acc)}.nm-lrow.on .sw::after{left:14px}
+.nm-lrow.is-gated{opacity:.55;cursor:not-allowed}
+.nm-lrow:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+@media(hover:hover){.nm-lrow:not(.is-gated):hover{background:var(--bg)}}
+/* tabs */
+.nm-tabs{display:flex;border-bottom:1px solid var(--bd)}
+.nm-tabs [data-tab]{flex:1;text-align:center;padding:9px 0 8px;font-size:12.5px;font-weight:600;color:var(--mu);position:relative;cursor:pointer}
+.nm-tabs [data-tab].on{color:var(--tx)}
+.nm-tabs [data-tab].on::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:2px;background:var(--acc);border-radius:2px}
+.nm-tabs .nm-badge{margin-left:5px;vertical-align:1px}
+.nm-pane{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+/* status line under the search */
+.nm-status{display:flex;align-items:center;gap:7px;padding:0 13px 9px;font-size:11.5px;color:var(--tx2);white-space:nowrap}
+.nm-status .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.nm-status .act{color:var(--acc);font-weight:600;flex:none}
+.nm-sdot{width:7px;height:7px;border-radius:50%;background:#15803d;box-shadow:0 0 0 3px rgba(21,128,61,.15);flex:none}
+.nm-empty{padding:10px 13px 12px;font-size:12px;color:var(--mu);line-height:1.45}.nm-empty b{color:var(--tx2)}
+.nm-hint{padding:0 13px 10px;font-size:11.5px;color:var(--mu)}
+.nm-cmp{display:flex;align-items:center;gap:8px;margin:2px 11px 10px;padding:7px 8px 7px 12px;border-radius:10px;background:var(--surf2);font-size:12px;color:var(--tx2);white-space:nowrap}
+.nm-cmp .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.nm-cmp b{color:var(--tx)}
+.nm-cmp .livebtn{margin:0;padding:5px 11px}.nm-cmp .livebtn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.nm-lsub{flex:1 0 100%;font-size:11px;color:var(--mu)}
 .nm-pinbox{padding:4px 13px 10px;border-top:1px solid var(--bd)}
 .nm-pinhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:7px}
 .nm-pinsum{font-size:12px;color:var(--tx2);flex:1;min-width:0}.nm-pinsum b{color:var(--tx)}
@@ -44,29 +76,42 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .nm-pinr{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;color:var(--tx2)}
 .nm-pinr input{flex:1;min-width:0;accent-color:#dc2626}
 .nm-pinr b{font-family:var(--mono);font-size:12px;color:var(--tx);min-width:52px;text-align:right}
-.nm-pinops{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.nm-pinops{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;font-size:12px;color:var(--tx2)}.nm-pinops b{color:var(--tx)}
 .nm-pinroutes{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;max-height:150px;overflow-y:auto}
 .nm-pinroutes .rnum{min-width:34px;height:22px;font-size:11px}
 #netmap.pin-arm .leaflet-container,#netmap.pin-arm .leaflet-interactive{cursor:crosshair!important}
 .lb-pin{filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
-.nm-lnotes{display:flex;flex-direction:column;gap:5px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;line-height:1.45;color:var(--tx2);max-height:132px;overflow-y:auto}
+.nm-lnotes{display:flex;flex-direction:column;gap:5px;padding:0 13px 9px;font-size:11px;line-height:1.45;color:var(--tx2)}
 .nm-lnote b{color:var(--tx);font-weight:600}
 .nm-chip{display:inline-flex;align-items:center;gap:5px;margin-right:9px;white-space:nowrap}
 .nm-dot{display:inline-block;width:8px;height:8px;border-radius:50%;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.12);vertical-align:baseline}
-.nm-legend{display:flex;flex-wrap:wrap;gap:4px 12px;padding:8px 13px 9px;border-top:1px solid var(--bd);font-size:11px;color:var(--tx2)}
+.nm-legend{display:flex;flex-wrap:wrap;gap:5px 12px;padding:8px 13px 11px;font-size:11.5px;color:var(--tx2)}
 .nm-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .nm-legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
 .nm-badge{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:#fff;font-size:10px;font-weight:700;margin-left:5px}
 .nm-term{transform:translate(-50%,-50%);display:inline-block;color:#fff;border:1.5px solid #fff;border-radius:7px;padding:1px 5px;font-family:var(--mono);font-weight:700;font-size:9.5px;white-space:nowrap;box-shadow:0 2px 7px rgba(0,0,0,.35)}
-.nm-filters{border-top:1px solid var(--bd);padding:11px 13px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
+.nm-filters{padding:11px 13px 6px;display:flex;flex-direction:column;gap:11px;max-height:32dvh;overflow-y:auto}
 .nm-group-h{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
 .nm-group-chips{display:flex;flex-wrap:wrap;gap:6px}
-.nm-body{border-top:1px solid var(--bd);overflow-y:auto;padding:9px 11px;display:flex;flex-direction:column;gap:8px}
-.netmap-card{position:relative;border:1px solid var(--bd);border-radius:11px;padding:10px 12px;background:var(--surf)}
-.netmap-card .close{position:absolute;top:8px;right:8px;color:var(--mu);padding:3px;border-radius:6px}
-.netmap-card .close:hover{color:var(--tx);background:var(--bg)}
+.nm-body{padding:9px 11px 8px;display:flex;flex-direction:column;gap:6px;flex:none}
+.netmap-card{display:grid;grid-template-columns:auto 1fr auto auto;gap:0 9px;align-items:center;border:1px solid var(--bd);border-left:4px solid var(--acc);border-radius:10px;padding:7px 6px 7px 9px;background:var(--surf)}
+.netmap-card .rnum{min-width:38px;height:24px;font-size:12px}
+.netmap-card.full .rnum{min-width:42px;height:27px;font-size:13px}
+.netmap-card .t{min-width:0;font-size:11.5px;color:var(--tx2);line-height:1.3}
+.netmap-card .t b{display:block;color:var(--tx);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.netmap-card .t small{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.netmap-card .t small .nm-dot{margin-right:4px;border:0;box-shadow:none}
+.netmap-card .close,.netmap-card .go{width:24px;height:24px;display:grid;place-items:center;color:var(--mu);border-radius:50%;text-decoration:none;font-size:16px;font-weight:600;line-height:1}
+.netmap-card .close:hover,.netmap-card .go:hover{color:var(--tx);background:var(--bg)}
+.netmap-card .go{order:3}.netmap-card .close{order:4}
+.netmap-card .facts{order:5;grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:7px;padding-top:7px;border-top:1px dashed var(--bd);font-size:11.5px;color:var(--tx2)}
+.netmap-card .facts b{color:var(--tx);font-weight:600;font-variant-numeric:tabular-nums}
+.netmap-card .facts a{margin-left:auto;color:var(--acc);font-weight:600;text-decoration:none}
 .nm-foot{display:flex;align-items:center;gap:8px;padding:9px 13px;border-top:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--tx2)}
+.nm-foot #nmCount{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nm-foot .reset{margin-left:auto;color:var(--acc);font-weight:600;font-size:12px}
+/* phones: the whole panel scrolls as one sheet, so the panes do not shrink */
+@media(max-width:759px){.nm-pane{flex:none;overflow:visible}}
 
 /* leaflet touches */
 .leaflet-container{font-family:var(--sans)}
@@ -98,5 +143,5 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 
 /* layout fixes from the production audit */
 .opcard .chiprow{padding:0}
-.livebtn,.reset,.nm-lbtns button{white-space:nowrap}
+.livebtn,.reset{white-space:nowrap}
 @media(max-width:640px){.fact .v{white-space:normal;overflow:visible;overflow-wrap:anywhere;line-height:1.3}}
