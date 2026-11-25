@@ -229,9 +229,11 @@ if(errors.length) console.log('  errors: ' + [...new Set(errors)].join(' | '));
   F('and removed again', (await p2.evaluate(() => document.querySelectorAll('table.cmp thead th').length - 1)) === 2);
   await p2.goto('http://127.0.0.1:8904/#/map?routes=25,88', { waitUntil:'load' }); await p2.waitForSelector('#nmInfo .netmap-card', { timeout: 20000 }); await p2.waitForTimeout(600);
   const link = await p2.evaluate(() => { const a = document.getElementById('nmCompare'); return { hidden: a.hidden, text: a.textContent, bar: document.getElementById('nmCmpTxt')?.textContent ?? '', href: a.getAttribute('href') }; });
-  F(`with two routes focused the map offers a side-by-side bar ("${link.bar}")`, !link.hidden && /side by side/i.test(link.text) && /2 routes/.test(link.bar) && /#\/compare\/25,88\?from=map/.test(link.href));
+  F(`with two routes focused the map offers a side-by-side bar ("${link.bar}")`, !link.hidden && /side by side/i.test(link.text) && /2 routes/.test(link.bar) && /#\/side-by-side\/25,88\?from=map/.test(link.href));
   await p2.click('#nmCompare'); await p2.waitForSelector('table.cmp', { timeout: 15000 });
   F('the comparison from the map leads back to the map', /#\/map\?routes=25,88/.test(await p2.locator('.backrow').first().getAttribute('href') ?? ''));
+  await p2.goto('http://127.0.0.1:8904/#/compare/25,88', { waitUntil:'load' }); await p2.waitForSelector('table.cmp', { timeout: 15000 });
+  F('an old #/compare link lands on #/side-by-side', /^#\/side-by-side\/25,88$/.test(await p2.evaluate(() => location.hash)));
   F('zero page errors (compare)', errs2.length === 0);
   await ctx2.close();
 }

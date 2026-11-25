@@ -263,7 +263,7 @@ export async function renderNetworkMap(){
     // Compare bar: from the second selected route.
     const bar = document.getElementById('nmCmpBar'), cmp = document.getElementById('nmCompare'), cmpT = document.getElementById('nmCmpTxt');
     if(bar){ bar.hidden = st.pills.length < 2; if(cmpT) cmpT.innerHTML = `<b>${nOf(st.pills.length, 'route')}</b> selected`; }
-    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The selected routes, side by side'; }
+    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.href = '#/side-by-side/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The selected routes, side by side'; }
     const hint = document.getElementById('nmHint'); if(hint){ hint.hidden = st.pills.length !== 1; hint.textContent = 'Add another route to see them side by side.'; }
     const empty = document.getElementById('nmEmpty'); if(empty) empty.hidden = !!(st.pills.length || narrowed || st.pinOn || st.panelOpen);
     const rb = document.getElementById('nmTabRoutesN'); if(rb){ rb.hidden = !st.pills.length; rb.textContent = st.pills.length; }
@@ -312,7 +312,7 @@ export async function renderNetworkMap(){
     if(st.ly.stops && layerScope().length) bits.push('stops on');
     txt.textContent = bits.join(' · ');
     if(n === 1){ act.hidden = false; act.textContent = 'Open route ›'; act.href = '#/route/' + encodeURIComponent(st.pills[0]); act.dataset.tab = ''; }
-    else if(n >= 2){ act.hidden = false; act.textContent = 'Side by side ›'; act.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; act.dataset.tab = ''; }
+    else if(n >= 2){ act.hidden = false; act.textContent = 'Side by side ›'; act.href = '#/side-by-side/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; act.dataset.tab = ''; }
     else { act.hidden = true; }
   }
   /* ── tabs ── */

@@ -29,10 +29,12 @@ export function navigate(){
   const safeDecode = x => { try{ return decodeURIComponent(x); }catch{ return x; } };
   // A query on any page (#/tender?x=1, #/route/88?x=1) is ignored, never mistaken for part of the route; the vehicle
   // page keeps its own (it reads its query from the hash itself).
+  // #/compare/… was the side-by-side view's first address; old links land on the new one.
+  if(/^compare(\/|$)/.test(h)){ location.replace('#/side-by-side' + h.slice('compare'.length)); return; }
   const pathOnly = h.split('?')[0];
-  let [seg, arg] = (['vehicle', 'compare'].includes(pathOnly.split('/')[0]) ? h : pathOnly).split('/').map(safeDecode);   // vehicle and compare keep their query (?line=, ?from=)
+  let [seg, arg] = (['vehicle', 'side-by-side'].includes(pathOnly.split('/')[0]) ? h : pathOnly).split('/').map(safeDecode);   // vehicle and side-by-side keep their query (?line=, ?from=)
   const view = seg === '' ? 'routes' : seg;
-  const navKey = view === 'route' || view === 'compare' ? 'routes' : view === 'garage' ? 'garages'
+  const navKey = view === 'route' || view === 'side-by-side' ? 'routes' : view === 'garage' ? 'garages'
     : view === 'operator' ? 'operators' : view === 'stop' ? 'stops' : view === 'vehicle' ? 'routes' : view;
   document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('on', a.dataset.nav === navKey));
   // The More button/tab (both breakpoints) lights when any of the pages the
@@ -50,7 +52,7 @@ export function navigate(){
   // Per-view titles so history entries and tabs are tellable apart.
   const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
     garages:'Garages', tender:'Tender', diversions:'Diversions', streetworks:'Street works', tro:'Traffic orders', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
-    route:`Route ${arg ?? ''}`, compare:'Routes side by side', stop:'Stop', operator: arg ?? 'Operator',
+    route:`Route ${arg ?? ''}`, 'side-by-side':'Routes side by side', stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'londonbuses.org';
   // One page_view per hash navigation (initial load included — send_page_view
@@ -59,7 +61,7 @@ export function navigate(){
   if(view === 'routes')         renderRoutes();
   else if(view === 'map')       renderNetworkMap();
   else if(view === 'route')     renderRouteDetail(arg);
-  else if(view === 'compare')   renderCompare(arg);
+  else if(view === 'side-by-side') renderCompare(arg);
   else if(view === 'stops')     renderStops();
   else if(view === 'stop')      renderStopDetail(arg);
   else if(view === 'operators') renderOperators();

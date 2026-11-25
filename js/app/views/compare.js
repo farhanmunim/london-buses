@@ -1,5 +1,5 @@
 /* View: Compare — several routes side by side, one column each, the key facts in rows. Opened from the Routes
-   page's Compare mode or from the map with two or more routes focused (#/compare/25,88,N38?from=map). */
+   page's Multiselect or from the map with two or more routes selected (#/side-by-side/25,88,N38?from=map). */
 import { D } from '../core/data.js';
 import { gone, routesViewState, state } from '../core/nav.js';
 import { main } from '../core/shell.js';
@@ -16,7 +16,7 @@ export function parseCompare(arg){
   const ids = [...new Set(list.split(',').map(s => s.trim().toUpperCase()).filter(Boolean))].slice(0, MAX);
   return { ids, from };
 }
-export const compareHref = (ids, from) => '#/compare/' + ids.map(encodeURIComponent).join(',') + (from ? '?from=' + from : '');
+export const compareHref = (ids, from) => '#/side-by-side/' + ids.map(encodeURIComponent).join(',') + (from ? '?from=' + from : '');
 
 /* One route's facts, from every dataset the route page reads. */
 function facts(id, d){
