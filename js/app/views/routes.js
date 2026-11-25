@@ -18,7 +18,7 @@ export async function renderRoutes(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 2px 0" id="ropRow"></div>
       <div class="chips" id="chips"></div>
     </div>
-    <div class="count-row"><div class="count-note" id="countNote"></div><button class="livebtn cmp-toggle ${routesViewState.selecting ? 'on' : ''}" id="cmpMode" aria-pressed="${routesViewState.selecting}" title="Tick routes to see them side by side"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/></svg>Compare</button></div>
+    <div class="count-row"><div class="count-note" id="countNote"></div><button class="livebtn cmp-toggle ${routesViewState.selecting ? 'on' : ''}" id="cmpMode" aria-pressed="${routesViewState.selecting}" title="Tick several routes to see them side by side"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/></svg>Multiselect</button></div>
     <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>
     <div class="cmp-bar" id="cmpBar" hidden><span id="cmpBarText"></span><a class="livebtn primary" id="cmpGo" href="#/compare/">Compare ›</a><button class="reset" id="cmpBarClear">Clear</button></div>`;
 

@@ -87,7 +87,7 @@ export async function renderCompare(arg){
         <button class="reset" id="cmpClear" ${cols.length ? '' : 'hidden'}>Clear</button>
       </div>
     </div>`;
-  if(!cols.length){ main.innerHTML = head + `<div class="empty">No routes selected. Add one above, or open <a href="#/">Routes</a>, press <b>Compare</b> and tick the routes you want.</div>`; wire(); return; }
+  if(!cols.length){ main.innerHTML = head + `<div class="empty">No routes selected. Add one above, or open <a href="#/">Routes</a>, press <b>Multiselect</b> and tick the routes you want.</div>`; wire(); return; }
   // best-value marks per numeric row (low = lower is better, high = higher, rel = depends on the metric)
   const best = new Map();
   for(const [, label, , kind, raw] of ROWS){

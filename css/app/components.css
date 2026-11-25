@@ -185,7 +185,7 @@ a.plate:hover{background:#ffd83d}
 .tipbox .src{color:#d6d3d1}
 
 /* compare: Routes-page mode, bottom bar and the side-by-side table ------------ */
-.count-row{display:flex;align-items:center;gap:10px}.count-row .count-note{flex:1;margin-right:0}
+.count-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}.count-row .count-note{flex:1;margin-right:0}
 .cmp-toggle{margin:6px 0 0;padding:5px 11px;font-size:12px;gap:6px}
 .rrow.selectable{cursor:pointer}.rtick{flex:none;width:20px;height:20px;border-radius:6px;border:1.5px solid var(--bd2);display:grid;place-items:center;color:#fff;background:var(--surf)}
 .rrow.picked{border-color:var(--acc);background:var(--acc-soft)}.rrow.picked .rtick{background:var(--acc);border-color:var(--acc)}

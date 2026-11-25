@@ -215,7 +215,7 @@ if(errors.length) console.log('  errors: ' + [...new Set(errors)].join(' | '));
   await p2.route('**://unpkg.com/**', r => { const u = r.request().url(), fx = f => readFileSync(new URL('./fixtures/' + f, import.meta.url), 'utf8'); if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body: fx('leaflet-heat.js') }); if(u.endsWith('leaflet.js')) return r.fulfill({ contentType:'text/javascript', body: fx('leaflet.js') }); if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body: fx('leaflet.css') }); return r.abort(); });
   await p2.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk|openfreemap/, r => r.abort());
   await p2.goto('http://127.0.0.1:8904/#/', { waitUntil:'load' }); await p2.waitForSelector('.rrow'); await p2.waitForTimeout(400);
-  F('the Routes page offers a Compare mode', await p2.locator('#cmpMode').count() === 1 && await p2.evaluate(() => document.getElementById('cmpBar').hidden));
+  F('the Routes page offers a Multiselect mode', await p2.locator('#cmpMode').count() === 1 && await p2.evaluate(() => document.getElementById('cmpBar').hidden));
   await p2.click('#cmpMode'); await p2.waitForTimeout(200); await p2.locator('.rrow').nth(0).click(); await p2.locator('.rrow').nth(1).click(); await p2.waitForTimeout(200);
   const bar = await p2.evaluate(() => ({ hidden: document.getElementById('cmpBar').hidden, text: document.getElementById('cmpBarText').textContent, picked: document.querySelectorAll('.rrow.picked').length, hash: location.hash }));
   F(`ticking two routes keeps you on the list and fills the compare bar ("${bar.text}")`, !bar.hidden && bar.picked === 2 && /2.*of 8 ticked/.test(bar.text) && bar.hash === '#/');
