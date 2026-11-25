@@ -109,11 +109,11 @@ const inView = n => Number((/^([\d,]+)/.exec(n.replace(/^.*?(\d[\d,]*) (?:height
   const { ctx, page } = await openMap({ width: 1280, height: 800 });
   F('with nothing narrowed there is no Routes control', await page.evaluate(() => document.getElementById('nmRouteScope').hidden));
   await addRoutes(page, '25');
-  const all0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3');
-  F(`searching a route shows the Routes control on "All routes", the rest faded behind (${all0} faded lines)`, !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="all"]').classList.contains('on'))) && all0 > 200);
-  await page.click('#nmRouteScope [data-rs="sel"]'); await page.waitForTimeout(400);
-  const faded1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
-  F(`"Selected routes" draws only the searched route (${bright1} lines, ${faded1} faded)`, faded1 === 0 && bright1 >= 1 && bright1 <= 6);
+  const faded0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3'), bright0 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity > 0.5');
+  F(`searching a route shows the Routes control on "Selected routes" and draws only that route (${bright0} lines, ${faded0} faded)`, !(await page.evaluate(() => document.getElementById('nmRouteScope').hidden)) && (await page.evaluate(() => document.querySelector('#nmRouteScope [data-rs="sel"]').classList.contains('on'))) && faded0 === 0 && bright0 >= 1 && bright0 <= 6);
+  await page.click('#nmRouteScope [data-rs="all"]'); await page.waitForTimeout(400);
+  const faded1 = await count(page, 'l instanceof L.Path && l.feature && l.options.opacity < 0.3');
+  F(`"All routes" fades the rest of the network in behind the searched route (${faded1} faded lines)`, faded1 > 200);
   F('the export follows the selection: "Export 1 route", with an All routes alternative', (await page.textContent('#nmExport')).trim() === 'Export 1 route' && !(await page.evaluate(() => document.getElementById('nmExportAll').hidden)));
   const [dlSel] = await Promise.all([page.waitForEvent('download', { timeout: 6000 }).catch(() => null), page.click('#nmExport')]);
   const selCsv = dlSel ? readFileSync(await dlSel.path(), 'utf8') : '';

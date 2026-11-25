@@ -14,7 +14,7 @@ const netmapState = {
   colorBy: 'operator', garages: true, garagesAll: false, panelOpen: false,
   scopeIds: null, scopeTitle: '',                // set by a scoped link (an operator's or garage's routes)
   pinOn: false, pin: null, pinR: 1500, pinIds: null,   // catchment pin: armed?, {lat,lng}, radius (m), routes inside
-  rScope: null,                                // when routes are narrowed: 'sel' draws only them, 'all' fades the rest in behind; null = the default for the narrowing
+  rScope: null,                                // when routes are narrowed: 'all' fades the rest of the network in behind; anything else draws only the selection
 };
 const FOCUS_COLORS = ['#2563eb','#c2410c','#199e70','#7c3aed','#a16207','#be185d','#15803d','#86198f'];
 const fmtKm = m => m >= 1000 ? `${(m / 1000).toFixed(m % 1000 ? 2 : 0).replace(/\.?0+$/, '')} km` : `${m} m`;
@@ -217,7 +217,7 @@ export async function renderNetworkMap(){
       const focused = st.pills.includes(up);
       const visible = focused || (st.pills.length && !routesAll() ? false : passes(name));   // searched routes + "Selected": nothing else
       // Routes outside the selection: drawn faded and inert ("All routes") or not at all ("Selected routes").
-      // The default keeps the old behaviour — context lines behind searched routes, nothing behind a filter.
+      // Default: only the selected routes, whether searched, filtered or pinned.
       if(!visible && !routesAll()){
         if(ly.getTooltip()){ ly.closeTooltip(); ly.unbindTooltip(); }
         if(state.map.hasLayer(ly)) state.map.removeLayer(ly);
@@ -556,7 +556,7 @@ export async function renderNetworkMap(){
     lyRT[k] = handle;
   }
   const narrowingNow = () => st.pills.length > 0 || filteredNow();
-  const routesAll = () => st.rScope ? st.rScope === 'all' : st.pills.length > 0;
+  const routesAll = () => st.rScope === 'all';   // default is the selected routes alone, for a search, a filter and the pin alike
   function syncRouteScope(){
     const box = document.getElementById('nmRouteScope'); if(!box) return;
     box.hidden = !narrowingNow();
