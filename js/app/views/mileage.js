@@ -111,7 +111,9 @@ export async function renderMileage(){
     }
     rows = rows.filter(r => r.op != null || r.rel != null);
     if(mst.op) rows = rows.filter(r => mOpOf[r.route] === mst.op);
-    if(mst.below) rows = rows.filter(r => r.op != null && r.minStd != null && r.op < r.minStd);
+    // Compare at the precision the table shows (1 dp): a route at 97.97% against a 98.0% standard reads as
+    // "98.0% vs 98.0%" and must not be listed as below it.
+    if(mst.below) rows = rows.filter(r => r.op != null && r.minStd != null && Math.round(r.op * 10) < Math.round(r.minStd * 10));
     return rows;
   };
   function mDraw(){
@@ -122,7 +124,7 @@ export async function renderMileage(){
     document.getElementById('mBody').innerHTML = shown.length ? shown.map(r => `<tr>
       <td>${routeChip(r.route)}</td>
       <td class="num" style="text-align:left;white-space:nowrap">${esc(r.period)}</td>
-      <td class="num"${r.op != null && r.minStd != null && r.op < r.minStd ? ' style="color:var(--bad);font-weight:600" title="Below the contractual minimum standard"' : ''}>${r.op != null ? r.op.toFixed(1) + '%' : '—'}</td>
+      <td class="num"${r.op != null && r.minStd != null && Math.round(r.op * 10) < Math.round(r.minStd * 10) ? ' style="color:var(--bad);font-weight:600" title="Below the contractual minimum standard"' : ''}>${r.op != null ? r.op.toFixed(1) + '%' : '—'}</td>
       <td class="num">${r.minStd != null ? r.minStd.toFixed(1) + '%' : '—'}</td>
       <td class="num" style="white-space:nowrap">${r.rel != null ? esc(String(r.rel)) + ' <span style="color:var(--mu);font-size:11px">' + esc(r.metric) + '</span>' : '—'}</td>
       <td class="num" title="Estimated from the current timetable — 20 weekdays + 4 Saturdays + 4 Sundays">${r.ek != null ? '<span style="color:var(--mu);font-size:10.5px">est.</span> ' + Math.round(r.ek).toLocaleString('en-GB') : '—'}</td>

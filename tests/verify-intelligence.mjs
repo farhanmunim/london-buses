@@ -163,7 +163,7 @@ F('the network map opens full page and titles itself', await page.evaluate(() =>
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 await page.click('#opBtn'); await page.click('#opMenu [data-op="Go-Ahead London"]'); await page.waitForTimeout(300);
 await page.click('.acts [data-expand="net"]'); await fr.locator('#nmCount').waitFor({ timeout: 30000 }); await page.waitForTimeout(800);
-F('an operator\'s expanded map is the main map filtered to its routes', /ids=/.test(await page.locator('#mfBody iframe').getAttribute('src')) && new RegExp(`${exp('Go-Ahead London').n} of 675 routes`).test(await fr.locator('#nmCount').textContent()));
+F('an operator\'s expanded map is the main map filtered to its routes', /ids=/.test(await page.locator('#mfBody iframe').getAttribute('src')) && new RegExp(`${exp("Go-Ahead London").n} of ${Object.keys(meta).length} routes`).test(await fr.locator('#nmCount').textContent()));
 F('its garages layer shows that operator\'s garages', await fr.locator('[data-lyr="garages"].on').count() === 1);
 await page.keyboard.press('Escape'); await page.waitForTimeout(200);
 F('Esc closes the full-page map', await page.evaluate(() => document.getElementById('mapfs').hidden));
