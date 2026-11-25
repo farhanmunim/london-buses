@@ -11,6 +11,6 @@
      map         — the current view's Leaflet instance, removed on navigation. */
 export const state = { navToken: 0, liveTimers: [], pendingMapQ: null, map: null };
 
-export const routesViewState = { q:'', type:null, op:null, prop:null, deck:null, freq:null, compare:new Set(), selecting:false };  // survives back-nav; compare = routes ticked for side-by-side
+export const routesViewState = { q:'', type:null, op:null, prop:null, deck:null, freq:null, compare:new Set(), autoTicks:new Set(), selecting:false };  // survives back-nav; compare = routes ticked for side-by-side
 export const addLiveTimer = t => { state.liveTimers.push(t); return t; };
 export const gone = tok => tok !== state.navToken;

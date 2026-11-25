@@ -101,13 +101,14 @@ export async function renderRoutes(){
     const row = e.target.closest('.rrow'); if(!row || !routesViewState.selecting) return;
     e.preventDefault();
     const id = row.dataset.r, set = routesViewState.compare;
+    routesViewState.autoTicks.delete(id);
     if(set.has(id)) set.delete(id); else if(set.size < MAX) set.add(id); else { document.getElementById('cmpBarText').innerHTML = `<b>Up to ${MAX} routes</b> at a time, untick one first`; return; }
     row.classList.toggle('picked', set.has(id)); row.setAttribute('aria-checked', String(set.has(id)));
     row.querySelector('.rtick').innerHTML = set.has(id) ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>' : '';
     syncBar();
   });
   document.getElementById('cmpMode').addEventListener('click', () => { routesViewState.selecting = !routesViewState.selecting; rerender(); });
-  document.getElementById('cmpBarClear').addEventListener('click', () => { routesViewState.compare.clear(); routesViewState.selecting = false; rerender(); });
+  document.getElementById('cmpBarClear').addEventListener('click', () => { routesViewState.compare.clear(); routesViewState.autoTicks.clear(); routesViewState.selecting = false; rerender(); });
   document.getElementById('cmpGo').addEventListener('click', e => { if(!routesViewState.compare.size) e.preventDefault(); });
   chips.innerHTML = chipsHtml();
   document.getElementById('ropRow').innerHTML = opFilterHtml('rop', ops, routesViewState.op ?? '');
@@ -131,10 +132,14 @@ export async function renderRoutes(){
     routesViewState.q = q.value;
     qClear.hidden = !q.value;
     // a comma-separated list is a multiselect: tick every exact match so the side-by-side view is one tap away
+    // The ticks follow the list as it is typed: "181,2" ticks 2, "181,22" swaps it for 22, so only the final
+    // exact tokens stay ticked. Ticks the user made by hand are left alone.
     if(/[,;]/.test(q.value)){
       const names = new Map(routes.map(r => [r.name.toUpperCase(), r.name]));
       const hits = q.value.toUpperCase().split(/[,;]+/).map(x => x.trim()).filter(x => names.has(x)).map(x => names.get(x));
-      if(hits.length >= 2){ routesViewState.selecting = true; for(const h of hits) if(routesViewState.compare.size < MAX) routesViewState.compare.add(h); }
+      for(const h of routesViewState.autoTicks) routesViewState.compare.delete(h);
+      routesViewState.autoTicks.clear();
+      if(hits.length >= 2){ routesViewState.selecting = true; for(const h of hits) if(!routesViewState.compare.has(h) && routesViewState.compare.size < MAX){ routesViewState.compare.add(h); routesViewState.autoTicks.add(h); } }
     }
     clearTimeout(qT); qT = setTimeout(rerender, 90);
   });
