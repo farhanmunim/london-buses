@@ -20,7 +20,7 @@ export async function renderRoutes(){
     </div>
     <div class="count-row"><div class="count-note" id="countNote"></div><button class="livebtn cmp-toggle ${routesViewState.selecting ? 'on' : ''}" id="cmpMode" aria-pressed="${routesViewState.selecting}" title="Tick several routes to see them side by side"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/></svg>Multiselect</button></div>
     <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>
-    <div class="cmp-bar" id="cmpBar" hidden><span id="cmpBarText"></span><a class="livebtn primary" id="cmpGo" href="#/compare/">Compare ›</a><button class="reset" id="cmpBarClear">Clear</button></div>`;
+    <div class="cmp-bar" id="cmpBar" hidden><span id="cmpBarText"></span><a class="livebtn primary" id="cmpGo" href="#/compare/">View side by side ›</a><button class="reset" id="cmpBarClear">Clear</button></div>`;
 
   const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
   if(gone(tok)) return;
@@ -48,9 +48,11 @@ export async function renderRoutes(){
   function rowsHtml(){
     const st = routesViewState;
     const q = st.q.trim().toUpperCase();
+    // "181,225,284" lists exactly those routes; a single term matches by prefix as before
+    const many = /[,;]/.test(q) ? new Set(q.split(/[,;]+/).map(x => x.trim()).filter(Boolean)) : null;
     let list = routes.filter(r => {
       const m = meta[r.name] ?? {};
-      if(q && !r.name.toUpperCase().startsWith(q)) return false;
+      if(many ? !many.has(r.name.toUpperCase()) : (q && !r.name.toUpperCase().startsWith(q))) return false;
       if(st.type && r.type !== st.type) return false;
       if(st.op && m.operator !== st.op) return false;
       if(st.prop && m.propulsion !== st.prop) return false;
@@ -84,13 +86,13 @@ export async function renderRoutes(){
 
   const chips = document.getElementById('chips');
   const rlist = document.getElementById('rlist');
-  /* Compare mode: rows tick instead of opening; the bar below says what is ticked and opens the comparison. */
+  /* Multiselect: rows tick instead of opening; the bar below says what is ticked and opens the side-by-side view. */
   const MAX = 8;
   const syncBar = () => {
     const bar = document.getElementById('cmpBar'), n = routesViewState.compare.size; if(!bar) return;
     bar.hidden = !(routesViewState.selecting || n);
     const ids = [...routesViewState.compare].sort(cmpRoute);
-    document.getElementById('cmpBarText').innerHTML = n ? `<b>${n}</b> of ${MAX} ticked · ${ids.map(esc).join(', ')}` : 'Tick routes to compare them side by side';
+    document.getElementById('cmpBarText').innerHTML = n ? `<b>${n}</b> of ${MAX} ticked · ${ids.map(esc).join(', ')}` : 'Tick routes to see them side by side';
     const go = document.getElementById('cmpGo'); go.href = '#/compare/' + ids.map(encodeURIComponent).join(','); go.classList.toggle('disabled', n < 1); go.setAttribute('aria-disabled', String(n < 1));
     document.getElementById('cmpMode')?.classList.toggle('on', routesViewState.selecting);
   };
@@ -128,6 +130,12 @@ export async function renderRoutes(){
   q.addEventListener('input', () => {
     routesViewState.q = q.value;
     qClear.hidden = !q.value;
+    // a comma-separated list is a multiselect: tick every exact match so the side-by-side view is one tap away
+    if(/[,;]/.test(q.value)){
+      const names = new Map(routes.map(r => [r.name.toUpperCase(), r.name]));
+      const hits = q.value.toUpperCase().split(/[,;]+/).map(x => x.trim()).filter(x => names.has(x)).map(x => names.get(x));
+      if(hits.length >= 2){ routesViewState.selecting = true; for(const h of hits) if(routesViewState.compare.size < MAX) routesViewState.compare.add(h); }
+    }
     clearTimeout(qT); qT = setTimeout(rerender, 90);
   });
   qClear.addEventListener('click', () => { q.value=''; routesViewState.q=''; qClear.hidden=true; rerender(); q.focus(); });

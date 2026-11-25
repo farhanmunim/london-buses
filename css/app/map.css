@@ -69,7 +69,12 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 .nm-cmp{display:flex;align-items:center;gap:8px;margin:2px 11px 10px;padding:7px 8px 7px 12px;border-radius:10px;background:var(--surf2);font-size:12px;color:var(--tx2);white-space:nowrap}
 .nm-cmp .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.nm-cmp b{color:var(--tx)}
 .nm-cmp .livebtn{margin:0;padding:5px 11px}.nm-cmp .livebtn.primary{background:var(--acc);border-color:var(--acc);color:#fff}
-.nm-lsub{flex:1 0 100%;font-size:11px;color:var(--mu)}
+.nm-lkey{display:flex;flex-direction:column;gap:6px;width:100%}
+.nm-lrt{display:flex;align-items:center;gap:9px;min-width:0}
+.nm-lrt i{display:inline-block;width:22px;height:4px;border-radius:2px;flex:none}
+.nm-lrt .rnum{min-width:36px;height:22px;font-size:11.5px}
+.nm-lrt .who{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--tx2)}
+.nm-lsub{flex:1 0 100%;margin:8px 0 0;font-size:11px;line-height:1.45;color:var(--mu);white-space:normal}
 .nm-pinbox{padding:4px 13px 10px;border-top:1px solid var(--bd)}
 .nm-pinhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:7px}
 .nm-pinsum{font-size:12px;color:var(--tx2);flex:1;min-width:0}.nm-pinsum b{color:var(--tx)}

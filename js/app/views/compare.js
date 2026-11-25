@@ -80,7 +80,7 @@ export async function renderCompare(arg){
   const head = `
     <a class="backrow" href="${back.href}">${back.label}</a>
     <div class="cmp-head">
-      <div><h1 style="margin:0;font-size:22px;letter-spacing:-.02em">Compare routes</h1><div class="sub2">${cols.length ? `${cols.length} route${cols.length === 1 ? '' : 's'} side by side · up to ${MAX}` : 'Pick routes to compare'}</div></div>
+      <div><h1 style="margin:0;font-size:22px;letter-spacing:-.02em">Routes side by side</h1><div class="sub2">${cols.length ? `${cols.length} route${cols.length === 1 ? '' : 's'} side by side · up to ${MAX}` : 'Pick routes to compare'}</div></div>
       <div class="cmp-tools">
         <form class="search cmp-add" id="cmpAdd" autocomplete="off"><input id="cmpQ" placeholder="Add a route, e.g. 88" aria-label="Add a route" inputmode="search" enterkeyhint="done"></form>
         <button class="livebtn" id="cmpCsv" ${cols.length ? '' : 'disabled'}>Export CSV</button>

@@ -50,7 +50,7 @@ export function navigate(){
   // Per-view titles so history entries and tabs are tellable apart.
   const TITLES = { routes:'Routes', map:'Network map', stops:'Stops', operators:'Operators',
     garages:'Garages', tender:'Tender', diversions:'Diversions', streetworks:'Street works', tro:'Traffic orders', mileage:'Mileage', cpi:'CPI-CPA', about:'About',
-    route:`Route ${arg ?? ''}`, compare:'Compare routes', stop:'Stop', operator: arg ?? 'Operator',
+    route:`Route ${arg ?? ''}`, compare:'Routes side by side', stop:'Stop', operator: arg ?? 'Operator',
     garage:`Garage ${arg ?? ''}`, vehicle: arg ? String(arg).split('?')[0] : 'Vehicle' };
   document.title = (TITLES[view] ? TITLES[view] + ' · ' : '') + 'londonbuses.org';
   // One page_view per hash navigation (initial load included — send_page_view

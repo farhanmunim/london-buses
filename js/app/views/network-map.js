@@ -56,7 +56,7 @@ export async function renderNetworkMap(){
             <div class="nm-pinroutes" id="nmPinRoutes"></div>
           </div>
           <div class="nm-body" id="nmInfo" hidden></div>
-          <div class="nm-cmp" id="nmCmpBar" hidden><span class="txt" id="nmCmpTxt"></span><a class="livebtn primary" id="nmCompare">Compare ›</a></div>
+          <div class="nm-cmp" id="nmCmpBar" hidden><span class="txt" id="nmCmpTxt"></span><a class="livebtn primary" id="nmCompare">View side by side ›</a></div>
           <div class="nm-hint" id="nmHint" hidden></div>
           <div class="nm-empty" id="nmEmpty">Search a route, pick a filter, or tap a line on the map. Layers and the catchment pin are under <b>Layers</b>.</div>
         </div>
@@ -262,9 +262,9 @@ export async function renderNetworkMap(){
     if(expAll) expAll.hidden = !narrowed;
     // Compare bar: from the second selected route.
     const bar = document.getElementById('nmCmpBar'), cmp = document.getElementById('nmCompare'), cmpT = document.getElementById('nmCmpTxt');
-    if(bar){ bar.hidden = st.pills.length < 2; if(cmpT) cmpT.innerHTML = `Compare <b>${nOf(st.pills.length, 'route')}</b> side by side`; }
-    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The selected routes side by side'; }
-    const hint = document.getElementById('nmHint'); if(hint){ hint.hidden = st.pills.length !== 1; hint.textContent = 'Add another route to compare them side by side.'; }
+    if(bar){ bar.hidden = st.pills.length < 2; if(cmpT) cmpT.innerHTML = `<b>${nOf(st.pills.length, 'route')}</b> selected`; }
+    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The selected routes, side by side'; }
+    const hint = document.getElementById('nmHint'); if(hint){ hint.hidden = st.pills.length !== 1; hint.textContent = 'Add another route to see them side by side.'; }
     const empty = document.getElementById('nmEmpty'); if(empty) empty.hidden = !!(st.pills.length || narrowed || st.pinOn || st.panelOpen);
     const rb = document.getElementById('nmTabRoutesN'); if(rb){ rb.hidden = !st.pills.length; rb.textContent = st.pills.length; }
     syncStatus(vis);
@@ -275,6 +275,14 @@ export async function renderNetworkMap(){
   /* Colour key for the current mode. Hidden while routes are focused —
      there the colours belong to the route cards, not the categories. */
   const shortOp = o => String(o).replace(' London','').replace(' Bus','').replace(/\s*\(.*\)$/,'');
+  /* Legend while routes are selected: one row per route, its line colour, number and operator/garage. */
+  function routeKeyHtml(){
+    const rows = st.pills.map(p => {
+      const m = meta?.[p] ?? {}, who = [m.operator ? shortOp(m.operator) : null, m.garageName ?? null].filter(Boolean).map(esc).join(' · ');
+      return '<div class="nm-lrt"><i style="background:' + focusColor(p) + '"></i><span class="rnum ' + esc(typeInfo.get(p) ?? 'regular') + '">' + esc(p) + '</span><span class="who">' + who + '</span></div>';
+    }).join('');
+    return '<div class="nm-lkey">' + rows + '</div><p class="nm-lsub">Selected routes are drawn in these colours. With “All routes” on, the rest of the network shows faint in its own operator colour.</p>';
+  }
   function syncLegend(){
     const el = document.getElementById('nmLegend');
     if(!el) return;
@@ -282,7 +290,7 @@ export async function renderNetworkMap(){
     const cb = document.querySelector('.nm-colour');
     if(cb) cb.hidden = !!st.pills.length;
     el.innerHTML = st.pills.length
-      ? st.pills.map(p => `<span><i style="background:${focusColor(p)}"></i>${esc(p)}</span>`).join('') + `<span class="nm-lsub">Other routes are drawn faint in their own colour when “All routes” is on.</span>`
+      ? routeKeyHtml()
       : st.colorBy === 'type'
         ? Object.entries(TYPE_LABEL).map(([v,l]) => `<span><i style="background:${TYPE_COLORS[v]}"></i>${esc(l)}</span>`).join('')
         : ops.map(o => `<span><i style="background:${opColor(o)}"></i>${esc(shortOp(o))}</span>`).join('');
@@ -304,7 +312,7 @@ export async function renderNetworkMap(){
     if(st.ly.stops && layerScope().length) bits.push('stops on');
     txt.textContent = bits.join(' · ');
     if(n === 1){ act.hidden = false; act.textContent = 'Open route ›'; act.href = '#/route/' + encodeURIComponent(st.pills[0]); act.dataset.tab = ''; }
-    else if(n >= 2){ act.hidden = false; act.textContent = 'Compare ›'; act.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; act.dataset.tab = ''; }
+    else if(n >= 2){ act.hidden = false; act.textContent = 'Side by side ›'; act.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; act.dataset.tab = ''; }
     else { act.hidden = true; }
   }
   /* ── tabs ── */
