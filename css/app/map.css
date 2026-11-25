@@ -53,10 +53,11 @@ main.fullbleed{max-width:none;display:flex;flex-direction:column;padding:0}
 @media(hover:hover){.nm-lrow:not(.is-gated):hover{background:var(--bg)}}
 /* tabs */
 .nm-tabs{display:flex;border-bottom:1px solid var(--bd)}
-.nm-tabs [data-tab]{flex:1;text-align:center;padding:9px 0 8px;font-size:12.5px;font-weight:600;color:var(--mu);position:relative;cursor:pointer}
+.nm-tabs [data-tab]{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 0 8px;font-size:12.5px;line-height:16px;font-weight:600;color:var(--mu);position:relative;cursor:pointer}
 .nm-tabs [data-tab].on{color:var(--tx)}
-.nm-tabs [data-tab].on::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:2px;background:var(--acc);border-radius:2px}
-.nm-tabs .nm-badge{margin-left:5px;vertical-align:1px}
+.nm-tabs [data-tab] .lbl{display:inline-flex;align-items:center;gap:5px;position:relative;padding:0 2px}
+.nm-tabs [data-tab].on .lbl::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:2px;background:var(--acc);border-radius:2px}
+.nm-tabs .nm-badge{margin:0;line-height:1}
 .nm-pane{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain}
 /* status line under the search */
 .nm-status{display:flex;align-items:center;gap:7px;padding:0 13px 9px;font-size:11.5px;color:var(--tx2);white-space:nowrap}

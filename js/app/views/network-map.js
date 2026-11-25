@@ -36,9 +36,9 @@ export async function renderNetworkMap(){
         <div class="nm-sugg" id="nmSugg" hidden></div>
         <div class="nm-status" id="nmStatus" hidden><i class="nm-sdot"></i><span class="txt" id="nmStatusTxt"></span><a class="act" id="nmStatusAct" hidden></a></div>
         <div class="nm-tabs" role="tablist" aria-label="Map panel">
-          <button type="button" role="tab" data-tab="routes" aria-selected="true" class="on">Routes<span class="nm-badge" id="nmTabRoutesN" hidden></span></button>
-          <button type="button" role="tab" data-tab="layers" aria-selected="false">Layers<span class="nm-badge" id="nmTabLayersN" hidden></span></button>
-          <button type="button" role="tab" data-tab="legend" aria-selected="false">Legend</button>
+          <button type="button" role="tab" data-tab="routes" aria-selected="true" class="on"><span class="lbl">Routes<span class="nm-badge" id="nmTabRoutesN" hidden></span></span></button>
+          <button type="button" role="tab" data-tab="layers" aria-selected="false"><span class="lbl">Layers<span class="nm-badge" id="nmTabLayersN" hidden></span></span></button>
+          <button type="button" role="tab" data-tab="legend" aria-selected="false"><span class="lbl">Legend</span></button>
         </div>
         <div class="nm-pane" data-pane="routes" role="tabpanel">
           <div class="nm-tools">
