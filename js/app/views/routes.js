@@ -18,8 +18,9 @@ export async function renderRoutes(){
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 2px 0" id="ropRow"></div>
       <div class="chips" id="chips"></div>
     </div>
-    <div class="count-note" id="countNote"></div>
-    <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>`;
+    <div class="count-row"><div class="count-note" id="countNote"></div><button class="livebtn cmp-toggle ${routesViewState.selecting ? 'on' : ''}" id="cmpMode" aria-pressed="${routesViewState.selecting}" title="Tick routes to see them side by side"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/></svg>Compare</button></div>
+    <div class="rlist" id="rlist">${'<div class="skel" style="height:56px"></div>'.repeat(8)}</div>
+    <div class="cmp-bar" id="cmpBar" hidden><span id="cmpBarText"></span><a class="livebtn primary" id="cmpGo" href="#/compare/">Compare ›</a><button class="reset" id="cmpBarClear">Clear</button></div>`;
 
   const [routes, meta, lineStatus] = await Promise.all([D.routes(), D.meta(), D.lineStatus()]);
   if(gone(tok)) return;
@@ -65,7 +66,9 @@ export async function renderRoutes(){
     return list.map(r => {
       const m = meta[r.name] ?? {};
       const ga = [m.garageName, m.garage ? `(${m.garage})` : null].filter(Boolean).join(' ');
-      return `<a class="rrow" href="#/route/${encodeURIComponent(r.name)}">
+      const sel = routesViewState.selecting, on = routesViewState.compare.has(r.name);
+      return `<a class="rrow ${sel ? 'selectable' : ''} ${on ? 'picked' : ''}" href="#/route/${encodeURIComponent(r.name)}" data-r="${esc(r.name)}" ${sel ? 'role="checkbox" aria-checked="' + on + '"' : ''}>
+        ${sel ? `<span class="rtick" aria-hidden="true">${on ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>' : ''}</span>` : ''}
         <span class="rnum ${esc(r.type)}">${esc(r.name)}</span>
         <span class="rmeta">
           <span class="op">${esc(m.operator ?? '—')}
@@ -81,7 +84,29 @@ export async function renderRoutes(){
 
   const chips = document.getElementById('chips');
   const rlist = document.getElementById('rlist');
-  const rerender = () => { rlist.innerHTML = rowsHtml(); };
+  /* Compare mode: rows tick instead of opening; the bar below says what is ticked and opens the comparison. */
+  const MAX = 8;
+  const syncBar = () => {
+    const bar = document.getElementById('cmpBar'), n = routesViewState.compare.size; if(!bar) return;
+    bar.hidden = !(routesViewState.selecting || n);
+    const ids = [...routesViewState.compare].sort(cmpRoute);
+    document.getElementById('cmpBarText').innerHTML = n ? `<b>${n}</b> of ${MAX} ticked · ${ids.map(esc).join(', ')}` : 'Tick routes to compare them side by side';
+    const go = document.getElementById('cmpGo'); go.href = '#/compare/' + ids.map(encodeURIComponent).join(','); go.classList.toggle('disabled', n < 1); go.setAttribute('aria-disabled', String(n < 1));
+    document.getElementById('cmpMode')?.classList.toggle('on', routesViewState.selecting);
+  };
+  const rerender = () => { rlist.innerHTML = rowsHtml(); syncBar(); };
+  rlist.addEventListener('click', e => {
+    const row = e.target.closest('.rrow'); if(!row || !routesViewState.selecting) return;
+    e.preventDefault();
+    const id = row.dataset.r, set = routesViewState.compare;
+    if(set.has(id)) set.delete(id); else if(set.size < MAX) set.add(id); else { document.getElementById('cmpBarText').innerHTML = `<b>Up to ${MAX} routes</b> at a time — untick one first`; return; }
+    row.classList.toggle('picked', set.has(id)); row.setAttribute('aria-checked', String(set.has(id)));
+    row.querySelector('.rtick').innerHTML = set.has(id) ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>' : '';
+    syncBar();
+  });
+  document.getElementById('cmpMode').addEventListener('click', () => { routesViewState.selecting = !routesViewState.selecting; rerender(); });
+  document.getElementById('cmpBarClear').addEventListener('click', () => { routesViewState.compare.clear(); routesViewState.selecting = false; rerender(); });
+  document.getElementById('cmpGo').addEventListener('click', e => { if(!routesViewState.compare.size) e.preventDefault(); });
   chips.innerHTML = chipsHtml();
   document.getElementById('ropRow').innerHTML = opFilterHtml('rop', ops, routesViewState.op ?? '');
   rerender();

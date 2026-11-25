@@ -62,7 +62,7 @@ export async function renderNetworkMap(){
         <div class="nm-legend" id="nmLegend" hidden></div>
         <div class="nm-filters" id="nmPop" hidden></div>
         <div class="nm-body" id="nmInfo" hidden></div>
-        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record">Export CSV</button><button class="reset" id="nmExportAll" style="margin-left:0" title="Every route, ignoring the search, filters and pin" hidden>All routes</button><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
+        <div class="nm-foot"><span id="nmCount">Loading network…</span><button class="reset" id="nmExport" style="margin-left:auto" title="Every route with its full record">Export CSV</button><button class="reset" id="nmExportAll" style="margin-left:0" title="Every route, ignoring the search, filters and pin" hidden>All routes</button><a class="reset" id="nmCompare" style="margin-left:0" hidden>Compare</a><button class="reset" id="nmReset" style="margin-left:0" hidden>Reset all</button></div>
       </div>
     </div>`;
 
@@ -254,6 +254,8 @@ export async function renderNetworkMap(){
     const narrowed = st.pills.length || filtered, exp = document.getElementById('nmExport'), expAll = document.getElementById('nmExportAll');
     if(exp){ const n = narrowed ? (st.pills.length ? st.pills.length : vis.size) : allNames.size; exp.textContent = narrowed ? `Export ${n} route${n === 1 ? '' : 's'}` : 'Export CSV'; exp.title = narrowed ? 'The routes currently selected, with their full record' : 'Every route with its full record'; }
     if(expAll) expAll.hidden = !narrowed;
+    const cmp = document.getElementById('nmCompare');
+    if(cmp){ cmp.hidden = st.pills.length < 2; cmp.textContent = `Compare ${st.pills.length} routes`; cmp.href = '#/compare/' + st.pills.map(encodeURIComponent).join(',') + '?from=map'; cmp.title = 'The focused routes side by side'; }
     syncTermini();
     syncLegend();
     syncLayers();

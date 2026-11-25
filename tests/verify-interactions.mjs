@@ -208,6 +208,33 @@ await page.click('#themeBtn'); await page.waitForTimeout(400);
 
 F('zero page errors across the whole matrix', errors.length === 0);
 if(errors.length) console.log('  errors: ' + [...new Set(errors)].join(' | '));
+
+/* ── compare: tick routes on the Routes page, see them side by side; the map offers the same for focused routes ── */
+{
+  const ctx2 = await browser.newContext({ viewport:{ width:1280, height:900 } }); const p2 = await ctx2.newPage(); const errs2 = []; p2.on('pageerror', e => errs2.push(String(e.message)));
+  await p2.route('**://unpkg.com/**', r => { const u = r.request().url(), fx = f => readFileSync(new URL('./fixtures/' + f, import.meta.url), 'utf8'); if(u.endsWith('leaflet-heat.js')) return r.fulfill({ contentType:'text/javascript', body: fx('leaflet-heat.js') }); if(u.endsWith('leaflet.js')) return r.fulfill({ contentType:'text/javascript', body: fx('leaflet.js') }); if(u.endsWith('leaflet.css')) return r.fulfill({ contentType:'text/css', body: fx('leaflet.css') }); return r.abort(); });
+  await p2.route(/cartocdn|openstreetmap\.org|fonts\.|googletagmanager|api\.tfl\.gov\.uk|openfreemap/, r => r.abort());
+  await p2.goto('http://127.0.0.1:8904/#/', { waitUntil:'load' }); await p2.waitForSelector('.rrow'); await p2.waitForTimeout(400);
+  F('the Routes page offers a Compare mode', await p2.locator('#cmpMode').count() === 1 && await p2.evaluate(() => document.getElementById('cmpBar').hidden));
+  await p2.click('#cmpMode'); await p2.waitForTimeout(200); await p2.locator('.rrow').nth(0).click(); await p2.locator('.rrow').nth(1).click(); await p2.waitForTimeout(200);
+  const bar = await p2.evaluate(() => ({ hidden: document.getElementById('cmpBar').hidden, text: document.getElementById('cmpBarText').textContent, picked: document.querySelectorAll('.rrow.picked').length, hash: location.hash }));
+  F(`ticking two routes keeps you on the list and fills the compare bar ("${bar.text}")`, !bar.hidden && bar.picked === 2 && /2.*of 8 ticked/.test(bar.text) && bar.hash === '#/');
+  await p2.click('#cmpGo'); await p2.waitForSelector('table.cmp', { timeout: 15000 }); await p2.waitForTimeout(500);
+  const tbl = await p2.evaluate(() => ({ cols: document.querySelectorAll('table.cmp thead th').length - 1, rows: document.querySelectorAll('table.cmp tbody tr:not(.cmp-g)').length, groups: [...document.querySelectorAll('tr.cmp-g th')].map(t => t.textContent.trim()), raw: /<br>/.test(document.querySelector('table.cmp').textContent) }));
+  F(`the compare table has one column per route and the four groups (${tbl.rows} rows)`, tbl.cols === 2 && tbl.rows >= 15 && tbl.groups.join() === 'Service,Operation,Contract,Performance' && !tbl.raw);
+  await p2.fill('#cmpQ', '88'); await p2.press('#cmpQ', 'Enter'); await p2.waitForTimeout(800);
+  F('a route can be added from the compare page', (await p2.evaluate(() => document.querySelectorAll('table.cmp thead th').length - 1)) === 3 && /88/.test(await p2.evaluate(() => location.hash)));
+  await p2.locator('[data-rm]').first().click(); await p2.waitForTimeout(800);
+  F('and removed again', (await p2.evaluate(() => document.querySelectorAll('table.cmp thead th').length - 1)) === 2);
+  await p2.goto('http://127.0.0.1:8904/#/map?routes=25,88', { waitUntil:'load' }); await p2.waitForSelector('#nmInfo .netmap-card', { timeout: 20000 }); await p2.waitForTimeout(600);
+  const link = await p2.evaluate(() => { const a = document.getElementById('nmCompare'); return { hidden: a.hidden, text: a.textContent, href: a.getAttribute('href') }; });
+  F(`with two routes focused the map offers "${link.text}"`, !link.hidden && /Compare 2 routes/.test(link.text) && /#\/compare\/25,88\?from=map/.test(link.href));
+  await p2.click('#nmCompare'); await p2.waitForSelector('table.cmp', { timeout: 15000 });
+  F('the comparison from the map leads back to the map', /#\/map\?routes=25,88/.test(await p2.locator('.backrow').first().getAttribute('href') ?? ''));
+  F('zero page errors (compare)', errs2.length === 0);
+  await ctx2.close();
+}
+
 console.log(`\n${pass}/${pass+fail} interaction checks passed`);
 await browser.close(); srv.close();
 process.exit(fail ? 1 : 0);

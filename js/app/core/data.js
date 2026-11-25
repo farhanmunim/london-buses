@@ -87,6 +87,7 @@ export const D = {
     return { ...d, entries };
   }),
   dtro:        () => get('/dtro'),                                       // DfT D-TRO — statutory traffic regulation orders, bus-relevant, Greater London
+  destinations:() => get('/route-destinations').then(d => d?.routes ?? d ?? {}),   // outbound / inbound termini per route
   routePerf:   () => get('/route-performance'),                          // TfL QSI + mileage per period — may be absent while its crawler finishes
   schedMiles:  () => get('/scheduled-mileage'),                          // timetable-derived daily km — may be absent while its crawler finishes
   bridges:     () => get('/bridges').then(d => d?.bridges ?? []),        // static snapshot — TfL EPOWR height restrictions
