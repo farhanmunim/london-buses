@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-11-26T12:54:57Z",
-  "stop_count": 20004,
+  "generated_at_utc": "2026-11-27T12:44:00Z",
+  "stop_count": 20007,
   "stops": {
     "1500617": {
       "name": "Lee Valley Campsite",
@@ -21418,6 +21418,15 @@
       "lon": -0.0779,
       "routes": [
         "W4"
+      ]
+    },
+    "490000876Z": {
+      "name": "Kimberley Drive",
+      "indicator": "->S",
+      "lat": 51.43478,
+      "lon": 0.12663,
+      "routes": [
+        "B14"
       ]
     },
     "490000877Z": {
@@ -122104,6 +122113,15 @@
         "215"
       ]
     },
+    "490009613A": {
+      "name": "Longmead Drive / Albany Park",
+      "indicator": "Stop A",
+      "lat": 51.43486,
+      "lon": 0.12666,
+      "routes": [
+        "B14"
+      ]
+    },
     "490009613N": {
       "name": "Mansfield Road",
       "indicator": "->N",
@@ -135632,6 +135650,15 @@
         "381",
         "C10",
         "N381"
+      ]
+    },
+    "490010599Z": {
+      "name": "Longmead Drive / Onslow Drive",
+      "indicator": "Stop B",
+      "lat": 51.43447,
+      "lon": 0.12247,
+      "routes": [
+        "B14"
       ]
     },
     "490010600E": {
