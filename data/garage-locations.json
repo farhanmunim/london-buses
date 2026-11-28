@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-27T13:03:59.470Z",
-  "count": 76,
+  "generatedAt": "2026-11-28T12:31:05.390Z",
+  "count": 75,
   "garages": {
     "A": {
       "code": "A",
@@ -9,7 +9,7 @@
       "address": "Bushey Road, Sutton, SM1 1QJ",
       "lat": 51.369141,
       "lon": -0.19923,
-      "pvr": 86,
+      "pvr": 83,
       "capacity": 94
     },
     "AC": {
@@ -59,7 +59,7 @@
       "address": "High Street, London, SW19 1DN",
       "lat": 51.416567,
       "lon": -0.181662,
-      "pvr": 126,
+      "pvr": 131,
       "capacity": 217
     },
     "AO": {
@@ -179,7 +179,7 @@
       "address": "134 Beddington Lane, Beddington, Croydon, CR0 4TD",
       "lat": 51.383725,
       "lon": -0.1386,
-      "pvr": 102,
+      "pvr": 110,
       "capacity": 147
     },
     "CT": {
@@ -281,16 +281,6 @@
       "lon": -0.35306,
       "pvr": 91,
       "capacity": 151
-    },
-    "GM": {
-      "code": "GM",
-      "name": "Ellis Road",
-      "operator": "Go-Ahead",
-      "address": "Goat Road, CR4 4HU",
-      "lat": 51.38872,
-      "lon": -0.159942,
-      "pvr": 12,
-      "capacity": 37
     },
     "GW": {
       "code": "GW",
